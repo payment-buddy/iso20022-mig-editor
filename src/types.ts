@@ -1,3 +1,9 @@
+export interface Constraint {
+    name: string
+    definition: string
+    expression: string
+}
+
 export interface MessageElement {
     id: string
     name: string
@@ -6,6 +12,7 @@ export interface MessageElement {
     minOccurs: number
     maxOccurs: number
     typeId: string
+    constraints: Constraint[]
 }
 
 export interface Code {
@@ -16,6 +23,7 @@ export interface Code {
 export interface DataType {
     name: string
     definition: string
+    constraints: Constraint[]
 }
 
 export interface Simpletype extends DataType {
@@ -44,6 +52,7 @@ export interface MessageDefinition {
     definition: string
     xmlTag: string
     elements: MessageElement[]
+    constraints: Constraint[]
 }
 
 export interface BusinessArea {
