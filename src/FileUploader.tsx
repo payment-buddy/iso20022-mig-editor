@@ -30,7 +30,7 @@ export function FileUploader({onParsed}: {
             <input
                 ref={inputRef}
                 type="file"
-                accept=".iso20022"
+                accept=".iso20022,.zip"
                 onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (f) handleFile(f)
