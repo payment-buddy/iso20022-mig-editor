@@ -1,15 +1,16 @@
 import type {ERepository, MessageImplementationGuide} from "./types.ts"
 
 const DB_NAME = 'iso20022'
-const DB_VERSION = 2
+const DB_VERSION = 1
 const RECORD_KEY = 'current'
 
 function openDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION)
         request.onupgradeneeded = () => {
-            request.result.createObjectStore('eRepository')
-            request.result.createObjectStore('mig')
+            const db = request.result
+            db.createObjectStore('eRepository')
+            db.createObjectStore('mig')
         }
         request.onsuccess = () => resolve(request.result)
         request.onerror = () => reject(request.error)
@@ -45,4 +46,12 @@ export async function loadAllMigs(): Promise<MessageImplementationGuide[]> {
 
 export async function deleteMig(id: string): Promise<void> {
     await request("mig", store => store.delete(id), 'readwrite')
+}
+
+export function deleteDatabase(): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.deleteDatabase(DB_NAME)
+        req.onsuccess = () => resolve()
+        req.onerror = () => reject(req.error)
+    })
 }
