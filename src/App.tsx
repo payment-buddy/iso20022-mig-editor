@@ -3,17 +3,19 @@ import {useEffect, useState} from "react";
 import {BusinessAreaList} from './BusinessAreaList'
 import {MessageDetail} from './MessageDetail.tsx'
 import {useHash} from "./useHash.ts";
-import type {ERepository} from "./types.ts";
-import {loadERepository, saveERepository} from "./localStore.ts";
+import type {ERepository, MessageImplementationGuide} from "./types.ts";
+import {loadAllMigs, loadERepository, saveERepository} from "./localStore.ts";
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
+    const [migs, setMigs] = useState<MessageImplementationGuide[]>([])
     const [loading, setLoading] = useState(true)
     const hash = useHash()
 
     useEffect(() => {
-        void loadERepository().then(stored => {
-            if (stored) setERepository(stored)
+        void Promise.all([loadERepository(), loadAllMigs()]).then(([stored, migs]) => {
+            setERepository(stored)
+            setMigs(migs)
             setLoading(false)
         })
     }, [])
