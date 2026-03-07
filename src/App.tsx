@@ -1,6 +1,7 @@
 import {FileUploader} from './FileUploader'
 import {useState} from "react";
 import type {BusinessArea, ERepository} from "./eRepository.ts";
+import {BusinessAreaList} from './BusinessAreaList'
 
 function App() {
     const [businessAreas, setBusinessAreas] = useState<BusinessArea[]>([])
@@ -12,14 +13,12 @@ function App() {
     return (
         <>
             <h1>ISO 20022 Explorer</h1>
-            <FileUploader onParsed={handleParsed}/>
-            <ul>
-                {businessAreas.map((ba) => {
-                    return (
-                        <li key={ba.code}>{ba.name}</li>
-                    )
-                })}
-            </ul>
+
+            {businessAreas.length === 0 && (
+                <FileUploader onParsed={handleParsed}/>
+            )}
+
+            <BusinessAreaList businessAreas={businessAreas}/>
         </>
     )
 }
