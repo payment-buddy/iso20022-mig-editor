@@ -1,4 +1,4 @@
-import type {BusinessArea, DataType, MessageDefinition} from './eRepository.ts'
+import type {BusinessArea, DataType, MessageDefinition} from "./types.ts";
 
 function versionLabel(name: string) {
     return name.match(/V\d+$/)?.[0] ?? name
@@ -55,8 +55,8 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes}: {
                     </span>
                     </div>
                     <p>{block.definition}</p>
-                    {block.simpleType && (() => {
-                        const dataType = dataTypes.get(block.simpleType!)
+                    {block.simpleTypeId && (() => {
+                        const dataType = dataTypes.get(block.simpleTypeId!)
                         if (!dataType) return null
                         const entries = Object.entries(dataType).filter(([, v]) => !!v)
                         return (

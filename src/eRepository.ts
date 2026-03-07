@@ -1,79 +1,14 @@
 import sax from 'sax'
 import {unzipToStream} from "./unzip.ts";
-
-export interface MessageElement {
-    name: string
-    xmlTag: string
-    definition: string
-    minOccurs: number,
-    maxOccurs: number | null,
-    isComplexTypeId: boolean,
-    typeId: string
-}
-
-export interface Code {
-    codeName: string
-    definition: string
-}
-
-export interface DataType {
-    name: string
-    definition: string
-}
-
-export interface Simpletype extends DataType {
-    minInclusive: string | null,
-    maxInclusive: string | null,
-    totalDigits: string | null,
-    fractionDigits: string | null,
-    length: string | null,
-    minLength: string | null,
-    maxLength: string | null,
-    pattern: string | null
-    baseValue: string | null,
-    codes: Code[]
-}
-
-export interface IndicatorType extends DataType {
-    meaningWhenTrue: string | null
-    meaningWhenFalse: string | null
-}
-
-export interface ComplexType extends DataType {
-    isChoice: boolean
-    elements: MessageElement[]
-}
-
-export interface MessageBlock {
-    name: string
-    xmlTag: string
-    definition: string
-    minOccurs: string
-    maxOccurs: string
-    complexType: string | null
-    simpleType: string | null
-}
-
-export interface MessageDefinition {
-    name: string
-    identifier: string
-    shortCode: string
-    definition: string
-    xmlTag: string
-    blocks: MessageBlock[]
-}
-
-export interface BusinessArea {
-    name: string
-    code: string
-    definition: string
-    messages: MessageDefinition[]
-}
-
-export interface ERepository {
-    dataTypes: Map<string, DataType>
-    businessAreas: BusinessArea[]
-}
+import type {
+    BusinessArea,
+    ComplexType,
+    DataType,
+    ERepository,
+    IndicatorType,
+    MessageDefinition,
+    Simpletype
+} from "./types.ts";
 
 export async function parseRepository(file: File): Promise<ERepository> {
     const parser = sax.parser(true) // strict mode — attribute names kept as-is
@@ -94,8 +29,8 @@ export async function parseRepository(file: File): Promise<ERepository> {
                 if (attrs['registrationStatus'] !== 'Obsolete') {
                     businessArea = {
                         name: attrs['name'],
-                        definition: attrs['definition'] || '',
-                        code: attrs['code'] || ' ',
+                        definition: attrs['definition'] ?? '',
+                        code: attrs['code'] ?? ' ',
                         messages: [],
                     };
                 }
@@ -104,7 +39,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
              if (xsiType === 'iso20022:MessageComponent' || xsiType === 'iso20022:ChoiceComponent') {
                 complexType = {
                     name: attrs['name'],
-                    definition: attrs['definition'] || '',
+                    definition: attrs['definition'] ?? '',
                     isChoice: xsiType === 'iso20022:ChoiceComponent',
                     elements: [],
                 }
@@ -112,15 +47,15 @@ export async function parseRepository(file: File): Promise<ERepository> {
             } else if (xsiType === 'iso20022:Indicator') {
                 const indicatorType: IndicatorType = {
                     name: attrs['name'],
-                    definition: attrs['definition'] || '',
-                    meaningWhenFalse: attrs['meaningWhenFalse'] || null,
-                    meaningWhenTrue: attrs['meaningWhenTrue'] || null,
+                    definition: attrs['definition'] ?? '',
+                    meaningWhenFalse: attrs['meaningWhenFalse'] ?? null,
+                    meaningWhenTrue: attrs['meaningWhenTrue'] ?? null,
                 }
                 dataTypes.set(attrs['xmi:id'], indicatorType)
             } else {
                 simpleType = {
                     name: attrs['name'],
-                    definition: attrs['definition'] || '',
+                    definition: attrs['definition'] ?? '',
                     minInclusive: attrs['minInclusive'],
                     maxInclusive: attrs['maxInclusive'],
                     length: attrs['length'],
@@ -142,10 +77,10 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     name: attrs['name'],
                     xmlTag: attrs['xmlTag'],
                     definition: attrs['definition'] ?? '',
-                    minOccurs: parseInt(attrs['minOccurs']) ?? 0,
-                    maxOccurs: parseInt(attrs['maxOccurs']) ?? null,
-                    isComplexTypeId: !!attrs['complexType'],
-                    typeId: attrs['simpleType'] ?? attrs['complexType'],
+                    minOccurs: attrs['minOccurs'] ?? '1',
+                    maxOccurs: attrs['maxOccurs'] ?? '1',
+                    complexTypeId: attrs['complexType'] ?? null,
+                    simpleTypeId: attrs['simpleType'] ?? null,
                 })
             }
         } else if (node.name === 'messageDefinition') {
@@ -153,7 +88,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                 messageDefinition = {
                     name: attrs['name'],
                     xmlTag: attrs['xmlTag'],
-                    definition: attrs['definition'] || '',
+                    definition: attrs['definition'] ?? '',
                     identifier: '',
                     shortCode: '',
                     blocks: [],
@@ -164,12 +99,12 @@ export async function parseRepository(file: File): Promise<ERepository> {
             if (messageDefinition) {
                 messageDefinition.blocks.push({
                     name: attrs['name'],
-                    xmlTag: attrs['xmlTag'] || '',
-                    definition: attrs['definition'] || '',
+                    xmlTag: attrs['xmlTag'] ?? '',
+                    definition: attrs['definition'] ?? '',
                     minOccurs: attrs['minOccurs'] ?? '1',
                     maxOccurs: attrs['maxOccurs'] ?? '1',
-                    complexType: attrs['complexType'] || null,
-                    simpleType: attrs['simpleType'] || null,
+                    complexTypeId: attrs['complexType'] ?? null,
+                    simpleTypeId: attrs['simpleType'] ?? null,
                 })
             }
         } else if (node.name === 'messageDefinitionIdentifier') {
