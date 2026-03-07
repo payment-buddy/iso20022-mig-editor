@@ -53,18 +53,20 @@ export async function parseRepository(file: File): Promise<ERepository> {
                 }
                 dataTypes.set(attrs['xmi:id'], indicatorType)
             } else {
+                const num = (v: string | undefined) => v != null ? Number(v) : null
+                const int = (v: string | undefined) => v != null ? parseInt(v, 10) : null
                 simpleType = {
                     name: attrs['name'],
                     definition: attrs['definition'] ?? '',
-                    minInclusive: attrs['minInclusive'],
-                    maxInclusive: attrs['maxInclusive'],
-                    length: attrs['length'],
-                    minLength: attrs['minLength'],
-                    maxLength: attrs['maxLength'],
-                    totalDigits: attrs['totalDigits'],
-                    fractionDigits: attrs['fractionDigits'],
-                    pattern: attrs['pattern'],
-                    baseValue: attrs['baseValue'],
+                    minInclusive: num(attrs['minInclusive']),
+                    maxInclusive: num(attrs['maxInclusive']),
+                    length: int(attrs['length']),
+                    minLength: int(attrs['minLength']),
+                    maxLength: int(attrs['maxLength']),
+                    totalDigits: int(attrs['totalDigits']),
+                    fractionDigits: int(attrs['fractionDigits']),
+                    pattern: attrs['pattern'] ?? null,
+                    baseValue: attrs['baseValue'] ?? null,
                     codes: [],
                 }
                 dataTypes.set(attrs['xmi:id'], simpleType)
@@ -78,8 +80,8 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     name: attrs['name'],
                     xmlTag: attrs['xmlTag'],
                     definition: attrs['definition'] ?? '',
-                    minOccurs: attrs['minOccurs'] ?? '1',
-                    maxOccurs: attrs['maxOccurs'] ?? '1',
+                    minOccurs: parseInt(attrs['minOccurs'] ?? '1', 10),
+                    maxOccurs: parseInt(attrs['maxOccurs'] ?? '1', 10),
                     typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
                 })
             }
@@ -102,8 +104,8 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     name: attrs['name'],
                     xmlTag: attrs['xmlTag'] ?? '',
                     definition: attrs['definition'] ?? '',
-                    minOccurs: attrs['minOccurs'] ?? '1',
-                    maxOccurs: attrs['maxOccurs'] ?? '1',
+                    minOccurs: parseInt(attrs['minOccurs'] ?? '1', 10),
+                    maxOccurs: parseInt(attrs['maxOccurs'] ?? '1', 10),
                     typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
                 })
             }

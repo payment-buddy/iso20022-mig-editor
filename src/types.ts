@@ -3,8 +3,8 @@ export interface MessageElement {
     name: string
     xmlTag: string
     definition: string
-    minOccurs: string
-    maxOccurs: string
+    minOccurs: number
+    maxOccurs: number
     typeId: string
 }
 
@@ -19,13 +19,13 @@ export interface DataType {
 }
 
 export interface Simpletype extends DataType {
-    minInclusive: string | null
-    maxInclusive: string | null
-    totalDigits: string | null
-    fractionDigits: string | null
-    length: string | null
-    minLength: string | null
-    maxLength: string | null
+    minInclusive: number | null
+    maxInclusive: number | null
+    totalDigits: number | null
+    fractionDigits: number | null
+    length: number | null
+    minLength: number | null
+    maxLength: number | null
     pattern: string | null
     baseValue: string | null
     codes: Code[]
