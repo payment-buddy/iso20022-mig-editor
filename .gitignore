@@ -1,6 +1,8 @@
 node_modules
 dist
 *.local
+eRepository/*.iso20022
+eRepository/*.zip
 
 # Editor directories and files
 .vscode/*
