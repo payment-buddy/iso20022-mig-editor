@@ -4,11 +4,11 @@ import {BusinessAreaList} from './BusinessAreaList'
 import {MessageDetail} from './MessageDetail.tsx'
 import {useHash} from "./useHash.ts";
 import type {ERepository, MessageImplementationGuide} from "./types.ts";
-import {deleteDatabase, loadAllMigs, loadERepository, saveERepository} from "./localStore.ts";
+import {deleteDatabase, loadAllMigs, loadERepository, saveERepository, saveMig} from "./localStore.ts";
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
-    const [migs, setMigs] = useState<MessageImplementationGuide[]>([])
+    const [_migs, setMigs] = useState<MessageImplementationGuide[]>([])
     const [loading, setLoading] = useState(true)
     const [dbError, setDbError] = useState(false)
     const hash = useHash()
@@ -27,6 +27,12 @@ function App() {
     function handleParsed(eRepository: ERepository) {
         void saveERepository(eRepository)
         setERepository(eRepository)
+    }
+
+    function handleMigCreated(mig: MessageImplementationGuide) {
+        void saveMig(mig).then(() => {
+            setMigs(prev => [...prev, mig])
+        })
     }
 
     function handleDeleteDatabase() {
@@ -53,12 +59,12 @@ function App() {
             for (const businessArea of eRepository.businessAreas) {
                 for (const message of businessArea.messages) {
                     if (message.identifier === code) {
-                        return <MessageDetail messageId={message.identifier} versions={businessArea.messages.filter(msg => msg.shortCode === message.shortCode)} businessArea={businessArea} dataTypes={eRepository.dataTypes}/>
+                        return <MessageDetail messageId={message.identifier} versions={businessArea.messages.filter(msg => msg.shortCode === message.shortCode)} businessArea={businessArea} dataTypes={eRepository.dataTypes} onMigCreated={handleMigCreated}/>
                     }
                 }
                 for (const message of businessArea.messages) {
                     if (message.shortCode === code) {
-                        return <MessageDetail messageId={null} versions={businessArea.messages.filter(msg => msg.shortCode === code)} businessArea={businessArea} dataTypes={eRepository.dataTypes}/>
+                        return <MessageDetail messageId={null} versions={businessArea.messages.filter(msg => msg.shortCode === code)} businessArea={businessArea} dataTypes={eRepository.dataTypes} onMigCreated={handleMigCreated}/>
                     }
                 }
             }
