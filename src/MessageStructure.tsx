@@ -18,7 +18,7 @@ export function MessageStructure({message, dataTypes}: {
             <div style={{display: 'flex', gap: '1em'}}>
                 <div style={{flex: 3}}>
                     <div>{showXmlTags ? message.xmlTag : message.name}</div>
-                    {message.blocks.map((block) => (
+                    {message.elements.map((block) => (
                         <ElementNode key={block.id} element={block} selectedElement={selectedElement}
                                      dataTypes={dataTypes} showXmlTags={showXmlTags}
                                      onSelect={(elem) => setSelectedElement(elem)}/>

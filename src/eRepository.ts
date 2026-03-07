@@ -91,13 +91,13 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     definition: attrs['definition'] ?? '',
                     identifier: '',
                     shortCode: '',
-                    blocks: [],
+                    elements: [],
                 }
                 businessArea.messages.push(messageDefinition)
             }
         } else if (node.name === 'messageBuildingBlock') {
             if (messageDefinition) {
-                messageDefinition.blocks.push({
+                messageDefinition.elements.push({
                     id: attrs['xmi:id'],
                     name: attrs['name'],
                     xmlTag: attrs['xmlTag'] ?? '',

@@ -47,7 +47,7 @@ export interface MessageDefinition {
     shortCode: string
     definition: string
     xmlTag: string
-    blocks: MessageElement[]
+    elements: MessageElement[]
 }
 
 export interface BusinessArea {
