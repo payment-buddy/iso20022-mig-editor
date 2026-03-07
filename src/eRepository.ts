@@ -1,4 +1,5 @@
 import sax from 'sax'
+import {unzipToStream} from "./unzip.ts";
 
 export interface BusinessArea {
     name: string
@@ -10,7 +11,7 @@ export interface ERepository {
     businessAreas: BusinessArea[]
 }
 
-export async function parseRepository(source: File): Promise<ERepository> {
+export async function parseRepository(file: File): Promise<ERepository> {
     const parser = sax.parser(true) // strict mode — attribute names kept as-is
 
     const businessAreas: BusinessArea[] = []
@@ -31,16 +32,14 @@ export async function parseRepository(source: File): Promise<ERepository> {
         }
     }
 
-    const stream = typeof source.stream === 'function' ? source.stream() : source as unknown as ReadableStream<Uint8Array>
+    const stream = file.name.endsWith('.zip') ? unzipToStream(file) : file.stream()
     const reader = stream.getReader()
     const decoder = new TextDecoder('utf-8')
-
     while (true) {
         const {done, value} = await reader.read()
         if (done) break
         parser.write(decoder.decode(value, {stream: true}))
     }
-
     parser.close()
 
     return {businessAreas}
