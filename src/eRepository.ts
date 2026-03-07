@@ -1,14 +1,6 @@
 import sax from 'sax'
 import {unzipToStream} from "./unzip.ts";
-import type {
-    BusinessArea,
-    ComplexType,
-    DataType,
-    ERepository,
-    IndicatorType,
-    MessageDefinition,
-    Simpletype
-} from "./types.ts";
+import type {BusinessArea, ComplexType, DataType, ERepository, MessageDefinition, Simpletype} from "./types.ts";
 
 export async function parseRepository(file: File): Promise<ERepository> {
     const parser = sax.parser(true) // strict mode — attribute names kept as-is
@@ -44,20 +36,13 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     elements: [],
                 }
                 dataTypes.set(attrs['xmi:id'], complexType)
-            } else if (xsiType === 'iso20022:Indicator') {
-                const indicatorType: IndicatorType = {
-                    name: attrs['name'],
-                    definition: attrs['definition'] ?? '',
-                    meaningWhenFalse: attrs['meaningWhenFalse'] ?? null,
-                    meaningWhenTrue: attrs['meaningWhenTrue'] ?? null,
-                }
-                dataTypes.set(attrs['xmi:id'], indicatorType)
             } else {
                 const num = (v: string | undefined) => v != null ? Number(v) : null
                 const int = (v: string | undefined) => v != null ? parseInt(v, 10) : null
                 simpleType = {
                     name: attrs['name'],
                     definition: attrs['definition'] ?? '',
+                    baseType: xsiType?.replace(/^iso20022:/, '') ?? null,
                     minInclusive: num(attrs['minInclusive']),
                     maxInclusive: num(attrs['maxInclusive']),
                     length: int(attrs['length']),

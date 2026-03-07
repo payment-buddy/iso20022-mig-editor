@@ -19,6 +19,7 @@ export interface DataType {
 }
 
 export interface Simpletype extends DataType {
+    baseType: string
     minInclusive: number | null
     maxInclusive: number | null
     totalDigits: number | null
@@ -29,11 +30,6 @@ export interface Simpletype extends DataType {
     pattern: string | null
     baseValue: string | null
     codes: Code[]
-}
-
-export interface IndicatorType extends DataType {
-    meaningWhenTrue: string | null
-    meaningWhenFalse: string | null
 }
 
 export interface ComplexType extends DataType {
