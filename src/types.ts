@@ -1,11 +1,11 @@
 export interface MessageElement {
+    id: string
     name: string
     xmlTag: string
     definition: string
     minOccurs: string
     maxOccurs: string
-    complexTypeId: string | null
-    simpleTypeId: string | null
+    typeId: string
 }
 
 export interface Code {

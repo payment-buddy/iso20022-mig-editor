@@ -1,12 +1,8 @@
 import type {BusinessArea, DataType, MessageDefinition} from "./types.ts";
+import {ElementNode} from "./ElementNode.tsx";
 
 function versionLabel(name: string) {
     return name.match(/V\d+$/)?.[0] ?? name
-}
-
-function cardinality(minOccurs: string, maxOccurs: string) {
-    const max = maxOccurs === 'unbounded' ? 'n' : maxOccurs
-    return `${minOccurs}..${max}`
 }
 
 export function MessageDetail({messageId, versions, businessArea, dataTypes}: {
@@ -47,31 +43,11 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes}: {
 
             <p style={{whiteSpace: 'pre-wrap'}}>{message.definition}</p>
 
-            {message.blocks.map(block => (
-                <>
-                    <div><strong>{block.name}</strong>
-                        <span style={{color: '#888', marginLeft: '0.4em'}}>
-                        [{cardinality(block.minOccurs, block.maxOccurs)}]
-                    </span>
-                    </div>
-                    <p>{block.definition}</p>
-                    {block.simpleTypeId && (() => {
-                        const dataType = dataTypes.get(block.simpleTypeId!)
-                        if (!dataType) return null
-                        const entries = Object.entries(dataType).filter(([, v]) => !!v)
-                        return (
-                            <dl>
-                                {entries.map(([key, value]) => (
-                                    <>
-                                        <dt key={key}>{key}</dt>
-                                        <dd>{String(value)}</dd>
-                                    </>
-                                ))}
-                            </dl>
-                        )
-                    })()}
-                </>
-            ))}
+            <ul style={{paddingLeft: 0, listStyle: 'none'}}>
+                {message.blocks.map((block, i) => (
+                    <ElementNode key={i} element={block} dataTypes={dataTypes}/>
+                ))}
+            </ul>
         </div>
     )
 }

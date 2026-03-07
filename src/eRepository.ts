@@ -36,7 +36,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                 }
             }
         } else if (node.name === 'topLevelDictionaryEntry') {
-             if (xsiType === 'iso20022:MessageComponent' || xsiType === 'iso20022:ChoiceComponent') {
+            if (xsiType === 'iso20022:MessageComponent' || xsiType === 'iso20022:ChoiceComponent') {
                 complexType = {
                     name: attrs['name'],
                     definition: attrs['definition'] ?? '',
@@ -74,13 +74,13 @@ export async function parseRepository(file: File): Promise<ERepository> {
         if (node.name === 'messageElement') {
             if (complexType) {
                 complexType.elements.push({
+                    id: attrs['xmi:id'],
                     name: attrs['name'],
                     xmlTag: attrs['xmlTag'],
                     definition: attrs['definition'] ?? '',
                     minOccurs: attrs['minOccurs'] ?? '1',
                     maxOccurs: attrs['maxOccurs'] ?? '1',
-                    complexTypeId: attrs['complexType'] ?? null,
-                    simpleTypeId: attrs['simpleType'] ?? null,
+                    typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
                 })
             }
         } else if (node.name === 'messageDefinition') {
@@ -98,13 +98,13 @@ export async function parseRepository(file: File): Promise<ERepository> {
         } else if (node.name === 'messageBuildingBlock') {
             if (messageDefinition) {
                 messageDefinition.blocks.push({
+                    id: attrs['xmi:id'],
                     name: attrs['name'],
                     xmlTag: attrs['xmlTag'] ?? '',
                     definition: attrs['definition'] ?? '',
                     minOccurs: attrs['minOccurs'] ?? '1',
                     maxOccurs: attrs['maxOccurs'] ?? '1',
-                    complexTypeId: attrs['complexType'] ?? null,
-                    simpleTypeId: attrs['simpleType'] ?? null,
+                    typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
                 })
             }
         } else if (node.name === 'messageDefinitionIdentifier') {
@@ -126,6 +126,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
     parser.onclosetag = (name) => {
         if (name === 'topLevelDictionaryEntry') {
             complexType = null
+            simpleType = null
         } else if (name === 'messageDefinition') {
             messageDefinition = null
         } else if (name === 'topLevelCatalogueEntry' && businessArea) {
