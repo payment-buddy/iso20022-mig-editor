@@ -16,9 +16,11 @@ function serializeElement(element: MessageElement, dataTypes: Map<string, DataTy
     const dataType = dataTypes.get(element.typeId) as ComplexType
     const children = dataType?.elements
     const isComplex = !!children
-    const {id: _, typeId: __, ...rest} = element
+    const {id, typeId, minOccurs, maxOccurs, ...rest} = element
     return {
         ...rest,
+        ...(minOccurs !== 1 ? {minOccurs} : {}),
+        ...(maxOccurs !== 1 ? {maxOccurs} : {}),
         ...(!isComplex ? {type: dataType?.name} : {}),
         ...(dataType?.isChoice ? {isChoice: true} : {}),
         ...(children?.length ? {elements: children.map(child => serializeElement(child, dataTypes))} : {}),
