@@ -1,36 +1,36 @@
 import {FileUploader} from './FileUploader'
 import {useState} from "react";
-import type {BusinessArea, ERepository} from "./eRepository.ts";
+import type {ERepository} from "./eRepository.ts";
 import {BusinessAreaList} from './BusinessAreaList'
 import {MessageDetail} from './MessageDetail.tsx'
 import {useHash} from "./useHash.ts";
 
 function App() {
-    const [businessAreas, setBusinessAreas] = useState<BusinessArea[]>([])
+    const [eRepository, setERepository] = useState<ERepository | null>(null)
     const hash = useHash()
 
     function handleParsed(eRepository: ERepository) {
-        setBusinessAreas(eRepository.businessAreas)
+        setERepository(eRepository)
     }
 
     function getView() {
-        if (hash.startsWith('#')) {
+        if (hash.startsWith('#') && eRepository) {
             const code = hash.substring(1)
-            for (const businessArea of businessAreas) {
+            for (const businessArea of eRepository.businessAreas) {
                 for (const message of businessArea.messages) {
                     if (message.identifier === code) {
-                        return <MessageDetail messageId={message.identifier} versions={businessArea.messages.filter(msg => msg.shortCode === message.shortCode)} businessArea={businessArea}/>
+                        return <MessageDetail messageId={message.identifier} versions={businessArea.messages.filter(msg => msg.shortCode === message.shortCode)} businessArea={businessArea} dataTypes={eRepository.dataTypes}/>
                     }
                 }
                 for (const message of businessArea.messages) {
                     if (message.shortCode === code) {
-                        return <MessageDetail messageId={null} versions={businessArea.messages.filter(msg => msg.shortCode === code)} businessArea={businessArea}/>
+                        return <MessageDetail messageId={null} versions={businessArea.messages.filter(msg => msg.shortCode === code)} businessArea={businessArea} dataTypes={eRepository.dataTypes}/>
                     }
                 }
             }
         }
-        if (businessAreas.length > 0) {
-            return <BusinessAreaList businessAreas={businessAreas}/>
+        if (eRepository) {
+            return <BusinessAreaList businessAreas={eRepository.businessAreas}/>
         }
         return <FileUploader onParsed={handleParsed}/>
     }

@@ -1,4 +1,4 @@
-import type {BusinessArea, MessageDefinition} from './eRepository.ts'
+import type {BusinessArea, DataType, MessageDefinition} from './eRepository.ts'
 
 function versionLabel(name: string) {
     return name.match(/V\d+$/)?.[0] ?? name
@@ -9,10 +9,11 @@ function cardinality(minOccurs: string, maxOccurs: string) {
     return `${minOccurs}..${max}`
 }
 
-export function MessageDetail({messageId, versions, businessArea}: {
+export function MessageDetail({messageId, versions, businessArea, dataTypes}: {
     messageId: string | null,
     versions: MessageDefinition[],
     businessArea: BusinessArea
+    dataTypes: Map<string, DataType>
 }) {
     let message = versions.find(value => value.identifier === messageId)
     if (!message) {
@@ -54,6 +55,21 @@ export function MessageDetail({messageId, versions, businessArea}: {
                     </span>
                     </div>
                     <p>{block.definition}</p>
+                    {block.simpleType && (() => {
+                        const dataType = dataTypes.get(block.simpleType!)
+                        if (!dataType) return null
+                        const entries = Object.entries(dataType).filter(([, v]) => !!v)
+                        return (
+                            <dl>
+                                {entries.map(([key, value]) => (
+                                    <>
+                                        <dt key={key}>{key}</dt>
+                                        <dd>{String(value)}</dd>
+                                    </>
+                                ))}
+                            </dl>
+                        )
+                    })()}
                 </>
             ))}
         </div>
