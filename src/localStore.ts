@@ -48,6 +48,24 @@ export async function deleteMig(id: string): Promise<void> {
     await request("mig", store => store.delete(id), 'readwrite')
 }
 
+export function loadMigsForBackup(): Promise<unknown[]> {
+    return new Promise((resolve) => {
+        const req = indexedDB.open(DB_NAME) // no version — opens as-is, no upgrade
+        req.onupgradeneeded = () => resolve([]) // DB didn't exist
+        req.onerror = () => resolve([])
+        req.onsuccess = () => {
+            const db = req.result
+            try {
+                const getAll = db.transaction('mig', 'readonly').objectStore('mig').getAll()
+                getAll.onsuccess = () => resolve(getAll.result ?? [])
+                getAll.onerror = () => resolve([])
+            } catch {
+                resolve([])
+            }
+        }
+    })
+}
+
 export function deleteDatabase(): Promise<void> {
     return new Promise((resolve, reject) => {
         const req = indexedDB.deleteDatabase(DB_NAME)

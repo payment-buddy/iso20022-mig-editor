@@ -4,7 +4,15 @@ import {BusinessAreaList} from './BusinessAreaList'
 import {MessageDetail} from './MessageDetail.tsx'
 import {useHash} from "./useHash.ts";
 import type {ERepository, MessageImplementationGuide} from "./types.ts";
-import {deleteDatabase, loadAllMigs, loadERepository, saveERepository, saveMig} from "./localStore.ts";
+import {
+    deleteDatabase,
+    loadAllMigs,
+    loadERepository,
+    loadMigsForBackup,
+    saveERepository,
+    saveMig
+} from "./localStore.ts";
+import {stringify} from "yaml";
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
@@ -35,6 +43,18 @@ function App() {
         })
     }
 
+    async function handleDownloadMigBackup() {
+        const migs = await loadMigsForBackup()
+        const yaml = stringify(migs)
+        const blob = new Blob([yaml], {type: 'text/yaml'})
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'mig-backup.yaml'
+        a.click()
+        URL.revokeObjectURL(url)
+    }
+
     function handleDeleteDatabase() {
         void deleteDatabase().then(() => {
             setDbError(false)
@@ -48,8 +68,11 @@ function App() {
         if (dbError) {
             return (
                 <div style={{border: '1px solid #c00', padding: '1rem', maxWidth: 480}}>
-                    <p><strong>Failed to open the local database.</strong> This can happen after an app update that changed the data format.</p>
-                    <p>You can delete all stored data and start fresh, or downgrade to an older version of the app that is compatible with your data.</p>
+                    <p><strong>Failed to open the local database.</strong> This can happen after an app update that
+                        changed the data format.</p>
+                    <p>You can delete all stored data and start fresh, or downgrade to an older version of the app that
+                        is compatible with your data.</p>
+                    <button onClick={() => handleDownloadMigBackup()}>Download MIG backup</button>
                     <button onClick={handleDeleteDatabase}>Delete stored data</button>
                 </div>
             )
@@ -59,12 +82,20 @@ function App() {
             for (const businessArea of eRepository.businessAreas) {
                 for (const message of businessArea.messages) {
                     if (message.identifier === code) {
-                        return <MessageDetail messageId={message.identifier} versions={businessArea.messages.filter(msg => msg.shortCode === message.shortCode)} businessArea={businessArea} dataTypes={eRepository.dataTypes} onMigCreated={handleMigCreated}/>
+                        return <MessageDetail messageId={message.identifier}
+                                              versions={businessArea.messages.filter(msg => msg.shortCode === message.shortCode)}
+                                              businessArea={businessArea}
+                                              dataTypes={eRepository.dataTypes}
+                                              onMigCreated={handleMigCreated}/>
                     }
                 }
                 for (const message of businessArea.messages) {
                     if (message.shortCode === code) {
-                        return <MessageDetail messageId={null} versions={businessArea.messages.filter(msg => msg.shortCode === code)} businessArea={businessArea} dataTypes={eRepository.dataTypes} onMigCreated={handleMigCreated}/>
+                        return <MessageDetail messageId={null}
+                                              versions={businessArea.messages.filter(msg => msg.shortCode === code)}
+                                              businessArea={businessArea}
+                                              dataTypes={eRepository.dataTypes}
+                                              onMigCreated={handleMigCreated}/>
                     }
                 }
             }
