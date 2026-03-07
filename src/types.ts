@@ -66,3 +66,30 @@ export interface ERepository {
     dataTypes: Map<string, DataType>
     businessAreas: BusinessArea[]
 }
+
+export interface ElementOverride {
+    xmlPath: string
+    definition: string | null
+    minOccurs: number | null
+    maxOccurs: number | null
+    minInclusive: number | null
+    maxInclusive: number | null
+    totalDigits: number | null
+    fractionDigits: number | null
+    length: number | null
+    minLength: number | null
+    maxLength: number | null
+    pattern: string | null
+    codes: Code[]
+    additionalConstraints: Constraint[]
+}
+
+export interface MessageImplementationGuide {
+    id: string
+    name: string
+    description: string | null
+    version: string
+    messageIdentifier: string
+    elementOverrides: ElementOverride[]
+    additionalConstraints: Constraint[]
+}
