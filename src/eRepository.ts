@@ -1,6 +1,14 @@
 import sax from 'sax'
 import {unzipToStream} from "./unzip.ts";
-import type {BusinessArea, ComplexType, DataType, ERepository, MessageDefinition, Simpletype} from "./types.ts";
+import type {
+    BusinessArea,
+    ComplexType,
+    DataType,
+    ERepository,
+    MessageDefinition,
+    MessageElement,
+    Simpletype
+} from "./types.ts";
 
 export async function parseRepository(file: File): Promise<ERepository> {
     const parser = sax.parser(true) // strict mode — attribute names kept as-is
@@ -10,6 +18,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
     let businessArea: BusinessArea | null = null
     let complexType: ComplexType | null = null
     let simpleType: Simpletype | null = null
+    let messageElement: MessageElement | null = null
     let messageDefinition: MessageDefinition | null = null
 
     parser.onopentag = (node: sax.Tag) => {
@@ -34,6 +43,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     definition: attrs['definition'] ?? '',
                     isChoice: xsiType === 'iso20022:ChoiceComponent',
                     elements: [],
+                    constraints: [],
                 }
                 dataTypes.set(attrs['xmi:id'], complexType)
             } else {
@@ -53,6 +63,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     pattern: attrs['pattern'] ?? null,
                     baseValue: attrs['baseValue'] ?? null,
                     codes: [],
+                    constraints: [],
                 }
                 dataTypes.set(attrs['xmi:id'], simpleType)
             }
@@ -60,7 +71,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
 
         if (node.name === 'messageElement') {
             if (complexType) {
-                complexType.elements.push({
+                messageElement = {
                     id: attrs['xmi:id'],
                     name: attrs['name'],
                     xmlTag: attrs['xmlTag'],
@@ -68,7 +79,9 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     minOccurs: parseInt(attrs['minOccurs'] ?? '1', 10),
                     maxOccurs: parseInt(attrs['maxOccurs'] ?? '1', 10),
                     typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
-                })
+                    constraints: []
+                };
+                complexType.elements.push(messageElement)
             }
         } else if (node.name === 'messageDefinition') {
             if (businessArea && attrs['registrationStatus'] !== 'Obsolete') {
@@ -79,6 +92,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     identifier: '',
                     shortCode: '',
                     elements: [],
+                    constraints: [],
                 }
                 businessArea.messages.push(messageDefinition)
             }
@@ -92,6 +106,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     minOccurs: parseInt(attrs['minOccurs'] ?? '1', 10),
                     maxOccurs: parseInt(attrs['maxOccurs'] ?? '1', 10),
                     typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
+                    constraints: [],
                 })
             }
         } else if (node.name === 'messageDefinitionIdentifier') {
@@ -107,6 +122,21 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     definition: attrs['definition'],
                 })
             }
+        } else if (node.name === 'constraint') {
+            const constraint = {
+                name: attrs['name'],
+                definition: attrs['definition'],
+                expression: attrs['expression'],
+            }
+            if (messageElement) {
+                messageElement.constraints.push(constraint)
+            } else if (simpleType) {
+                simpleType.constraints.push(constraint)
+            } else if (complexType) {
+                complexType.constraints.push(constraint)
+            } else if (messageDefinition) {
+                messageDefinition.constraints.push(constraint)
+            }
         }
     }
 
@@ -116,6 +146,8 @@ export async function parseRepository(file: File): Promise<ERepository> {
             simpleType = null
         } else if (name === 'messageDefinition') {
             messageDefinition = null
+        } else if (name === 'messageElement') {
+            messageElement = null
         } else if (name === 'topLevelCatalogueEntry' && businessArea) {
             businessAreas.push(businessArea)
             businessArea = null
