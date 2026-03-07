@@ -1,6 +1,7 @@
 import {FileUploader} from './FileUploader'
 import {useEffect, useState} from "react";
 import {BusinessAreaList} from './BusinessAreaList'
+import {MigList} from './MigList.tsx'
 import {MessageDetail} from './MessageDetail.tsx'
 import {useHash} from "./useHash.ts";
 import type {ERepository, MessageImplementationGuide} from "./types.ts";
@@ -16,9 +17,10 @@ import {stringify} from "yaml";
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
-    const [_migs, setMigs] = useState<MessageImplementationGuide[]>([])
+    const [migs, setMigs] = useState<MessageImplementationGuide[]>([])
     const [loading, setLoading] = useState(true)
     const [dbError, setDbError] = useState(false)
+    const [browsingMessages, setBrowsingMessages] = useState(false)
     const hash = useHash()
 
     useEffect(() => {
@@ -40,6 +42,7 @@ function App() {
     function handleMigCreated(mig: MessageImplementationGuide) {
         void saveMig(mig).then(() => {
             setMigs(prev => [...prev, mig])
+            setBrowsingMessages(false)
         })
     }
 
@@ -99,6 +102,9 @@ function App() {
                     }
                 }
             }
+        }
+        if (migs.length > 0 && !browsingMessages) {
+            return <MigList migs={migs} onCreateMig={() => setBrowsingMessages(true)}/>
         }
         if (eRepository) {
             return <BusinessAreaList businessAreas={eRepository.businessAreas}/>
