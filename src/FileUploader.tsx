@@ -23,19 +23,32 @@ export function FileUploader({onParsed}: {
 
     return (
         <div>
-            <p>
-                Download <a href="https://www.iso20022.org/iso20022-repository/e-repository" target="_blank"
-                            rel="noopener noreferrer">ISO 20022 eRepository</a> and upload the file here
-            </p>
+            <p>Load ISO 20022 <a href="https://www.iso20022.org/iso20022-repository/e-repository" target="_blank"
+                                 rel="noopener noreferrer">e-Repository</a> file</p>
             <input
                 ref={inputRef}
                 type="file"
                 accept=".iso20022,.zip"
+                disabled={status === 'parsing'}
+                style={{width: '500px'}}
                 onChange={(e) => {
                     const f = e.target.files?.[0];
-                    if (f) handleFile(f)
+                    if (f) {
+                        handleFile(f)
+                    }
                 }}
             />
+            {status === 'parsing' && (
+                <p>
+                    <style>{`@keyframes iso-dot{0%,80%,100%{opacity:0}40%{opacity:1}}`}</style>
+                    Loading
+                    <span>
+                        <span style={{animation: 'iso-dot 1.4s 0.0s infinite'}}>.</span>
+                        <span style={{animation: 'iso-dot 1.4s 0.2s infinite'}}>.</span>
+                        <span style={{animation: 'iso-dot 1.4s 0.4s infinite'}}>.</span>
+                    </span>
+                </p>
+            )}
             {status === 'error' && (
                 <p style={{color: 'red'}}>
                     Failed to parse file.
