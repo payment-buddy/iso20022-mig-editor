@@ -25,7 +25,7 @@ export function MessageStructure({message, dataTypes}: {
                     ))}
                 </div>
                 <div style={{flex: 4}}>
-                    {selectedElement && <ElementDetail element={selectedElement}/>}
+                    {selectedElement && <ElementDetail element={selectedElement} dataType={dataTypes.get(selectedElement.typeId)!}/>}
                 </div>
             </div>
         </>
