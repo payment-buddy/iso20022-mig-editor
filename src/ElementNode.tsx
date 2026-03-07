@@ -8,19 +8,21 @@ function Cardinality({element}: { element: MessageElement }) {
     )
 }
 
-export function ElementNode({element, selectedElement, dataTypes, showXmlTags, onSelect}: {
+export function ElementNode({element, selectedElement, dataTypes, showXmlTags, xmlPath, onSelect}: {
     element: MessageElement
     selectedElement: MessageElement | null
     dataTypes: Map<string, DataType>
     showXmlTags: boolean
-    onSelect: (elem: MessageElement) => void
+    xmlPath: string[]
+    onSelect: (elem: MessageElement, xmlPath: string[]) => void
 }) {
     const dataType = dataTypes.get(element.typeId) as ComplexType
     const background = element.id === selectedElement?.id ? '#2b5ce6' : 'transparent'
+    const elementPath = [...xmlPath, element.xmlTag]
 
     if (!dataType.elements?.length) {
         return (
-            <div style={{marginLeft: '1em', cursor: 'pointer', background: background}} onClick={() => onSelect(element)}>
+            <div style={{marginLeft: '1em', cursor: 'pointer', background: background}} onClick={() => onSelect(element, elementPath)}>
                 {showXmlTags ? element.xmlTag : element.name}
                 <Cardinality element={element}/>
             </div>
@@ -29,13 +31,13 @@ export function ElementNode({element, selectedElement, dataTypes, showXmlTags, o
 
     return (
         <details style={{marginLeft: '1em', cursor: 'pointer'}}>
-            <summary style={{background: background}} onClick={() => onSelect(element)}>
+            <summary style={{background: background}} onClick={() => onSelect(element, elementPath)}>
                 {showXmlTags ? element.xmlTag : element.name}
                 <Cardinality element={element}/>
             </summary>
             {dataType.elements?.map(child => (
                 <ElementNode key={child.id} element={child} selectedElement={selectedElement} dataTypes={dataTypes}
-                             showXmlTags={showXmlTags} onSelect={onSelect}/>
+                             showXmlTags={showXmlTags} xmlPath={elementPath} onSelect={onSelect}/>
             ))}
         </details>
     )
