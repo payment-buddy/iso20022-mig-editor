@@ -4,12 +4,13 @@ import {BusinessAreaList} from './BusinessAreaList'
 import {MessageDetail} from './MessageDetail.tsx'
 import {useHash} from "./useHash.ts";
 import type {ERepository, MessageImplementationGuide} from "./types.ts";
-import {loadAllMigs, loadERepository, saveERepository} from "./localStore.ts";
+import {deleteDatabase, loadAllMigs, loadERepository, saveERepository} from "./localStore.ts";
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
     const [migs, setMigs] = useState<MessageImplementationGuide[]>([])
     const [loading, setLoading] = useState(true)
+    const [dbError, setDbError] = useState(false)
     const hash = useHash()
 
     useEffect(() => {
@@ -17,6 +18,9 @@ function App() {
             setERepository(stored)
             setMigs(migs)
             setLoading(false)
+        }).catch(() => {
+            setLoading(false)
+            setDbError(true)
         })
     }, [])
 
@@ -25,8 +29,25 @@ function App() {
         setERepository(eRepository)
     }
 
+    function handleDeleteDatabase() {
+        void deleteDatabase().then(() => {
+            setDbError(false)
+            setERepository(null)
+            setMigs([])
+        })
+    }
+
     function getView() {
         if (loading) return null
+        if (dbError) {
+            return (
+                <div style={{border: '1px solid #c00', padding: '1rem', maxWidth: 480}}>
+                    <p><strong>Failed to open the local database.</strong> This can happen after an app update that changed the data format.</p>
+                    <p>You can delete all stored data and start fresh, or downgrade to an older version of the app that is compatible with your data.</p>
+                    <button onClick={handleDeleteDatabase}>Delete stored data</button>
+                </div>
+            )
+        }
         if (hash.startsWith('#') && eRepository) {
             const code = hash.substring(1)
             for (const businessArea of eRepository.businessAreas) {
