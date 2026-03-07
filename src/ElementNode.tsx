@@ -1,8 +1,12 @@
 import type {ComplexType, DataType, MessageElement} from "./types.ts";
 
-function cardinality(minOccurs: string, maxOccurs: string) {
-    const max = maxOccurs === 'unbounded' ? 'n' : maxOccurs
-    return `${minOccurs}..${max}`
+function Cardinality({element}: { element: MessageElement }) {
+    const max = element.maxOccurs === 'unbounded' ? 'n' : element.maxOccurs
+    return (
+        <span style={{color: '#888', marginLeft: '0.4em'}}>
+            [{element.minOccurs}..{max}]
+        </span>
+    )
 }
 
 export function ElementNode({element, dataTypes}: {
@@ -10,19 +14,25 @@ export function ElementNode({element, dataTypes}: {
     dataTypes: Map<string, DataType>
 }) {
     const dataType = dataTypes.get(element.typeId) as ComplexType
+
+    if (!dataType.elements?.length) {
+        return (
+            <div style={{marginLeft: '1em'}}>
+                {element.name}
+                <Cardinality element={element}/>
+            </div>
+        )
+    }
+
     return (
-        <li>
-            <span>{element.name}</span>
-            <span style={{color: '#888', marginLeft: '0.4em'}}>
-                        [{cardinality(element.minOccurs, element.maxOccurs)}]
-                    </span>
-            {dataType.elements && (
-                <ul style={{listStyle: 'none'}}>
-                    {dataType.elements.map(child => (
-                        <ElementNode key={child.id} element={child} dataTypes={dataTypes}/>
-                    ))}
-                </ul>
-            )}
-        </li>
+        <details style={{marginLeft: '1em'}}>
+            <summary>
+                {element.name}
+                <Cardinality element={element}/>
+            </summary>
+            {dataType.elements?.map(child => (
+                <ElementNode key={child.id} element={child} dataTypes={dataTypes}/>
+            ))}
+        </details>
     )
 }
