@@ -43,11 +43,10 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes}: {
 
             <p style={{whiteSpace: 'pre-wrap'}}>{message.definition}</p>
 
-            <ul style={{paddingLeft: 0, listStyle: 'none'}}>
-                {message.blocks.map((block, i) => (
-                    <ElementNode key={i} element={block} dataTypes={dataTypes}/>
-                ))}
-            </ul>
+            <div>{message.xmlTag}</div>
+            {message.blocks.map((block, i) => (
+                <ElementNode key={i} element={block} dataTypes={dataTypes}/>
+            ))}
         </div>
     )
 }
