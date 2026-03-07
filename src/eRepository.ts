@@ -1,12 +1,23 @@
 import sax from 'sax'
 import {unzipToStream} from "./unzip.ts";
 
+export interface MessageBlock {
+    name: string
+    xmlTag: string
+    definition: string
+    minOccurs: string
+    maxOccurs: string
+    complexType: string | null
+    simpleType: string | null
+}
+
 export interface MessageDefinition {
     name: string
     identifier: string
     shortCode: string
     definition: string
     xmlTag: string
+    blocks: MessageBlock[]
 }
 
 export interface BusinessArea {
@@ -48,8 +59,19 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     definition: attrs['definition'] || '',
                     identifier: '',
                     shortCode: '',
+                    blocks: [],
                 }
             }
+        } else if (node.name === 'messageBuildingBlock' && messageDefinition) {
+            messageDefinition.blocks.push({
+                name: attrs['name'],
+                xmlTag: attrs['xmlTag'] || '',
+                definition: attrs['definition'] || '',
+                minOccurs: attrs['minOccurs'] ?? '1',
+                maxOccurs: attrs['maxOccurs'] ?? '1',
+                complexType: attrs['complexType'] || null,
+                simpleType: attrs['simpleType'] || null,
+            })
         } else if (node.name === 'messageDefinitionIdentifier' && messageDefinition) {
             const {businessArea, messageFunctionality, flavour, version} = attrs
             messageDefinition.identifier = [businessArea, messageFunctionality, flavour, version]
@@ -67,7 +89,6 @@ export async function parseRepository(file: File): Promise<ERepository> {
             businessArea = null
         }
     }
-
 
     const stream = file.name.endsWith('.zip') ? unzipToStream(file) : file.stream()
     const reader = stream.getReader()

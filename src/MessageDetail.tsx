@@ -4,6 +4,11 @@ function versionLabel(name: string) {
     return name.match(/V\d+$/)?.[0] ?? name
 }
 
+function cardinality(minOccurs: string, maxOccurs: string) {
+    const max = maxOccurs === 'unbounded' ? 'n' : maxOccurs
+    return `${minOccurs}..${max}`
+}
+
 export function MessageDetail({messageId, versions, businessArea}: {
     messageId: string | null,
     versions: MessageDefinition[],
@@ -40,6 +45,17 @@ export function MessageDetail({messageId, versions, businessArea}: {
             </div>
 
             <p style={{whiteSpace: 'pre-wrap'}}>{message.definition}</p>
+
+            {message.blocks.map(block => (
+                <>
+                    <div><strong>{block.name}</strong>
+                        <span style={{color: '#888', marginLeft: '0.4em'}}>
+                        [{cardinality(block.minOccurs, block.maxOccurs)}]
+                    </span>
+                    </div>
+                    <p>{block.definition}</p>
+                </>
+            ))}
         </div>
     )
 }
