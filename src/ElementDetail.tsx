@@ -1,8 +1,9 @@
 import type {DataType, MessageElement} from "./types.ts";
 
-export function ElementDetail({element, dataType}: {
-    element: MessageElement,
+export function ElementDetail({element, dataType, xmlPath}: {
+    element: MessageElement
     dataType: DataType
+    xmlPath: string[]
 }) {
     return (
         <div>
@@ -21,6 +22,10 @@ export function ElementDetail({element, dataType}: {
             <details open={true}>
                 <summary>XML Tag</summary>
                 <div>{element.xmlTag}</div>
+            </details>
+            <details open={true}>
+                <summary>XML PAth</summary>
+                <div>/{xmlPath.join("/")}</div>
             </details>
         </div>
     )
