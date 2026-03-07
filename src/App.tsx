@@ -1,9 +1,9 @@
 import {FileUploader} from './FileUploader'
 import {useState} from "react";
-import type {ERepository} from "./eRepository.ts";
 import {BusinessAreaList} from './BusinessAreaList'
 import {MessageDetail} from './MessageDetail.tsx'
 import {useHash} from "./useHash.ts";
+import type {ERepository} from "./types.ts";
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)

@@ -1,4 +1,4 @@
-import type {BusinessArea, MessageDefinition} from './eRepository.ts'
+import type {BusinessArea, MessageDefinition} from "./types.ts";
 
 function baseName(name: string) {
     return name.replace(/V\d+$/, '')
