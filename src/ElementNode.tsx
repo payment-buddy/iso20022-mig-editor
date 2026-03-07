@@ -9,16 +9,17 @@ function Cardinality({element}: { element: MessageElement }) {
     )
 }
 
-export function ElementNode({element, dataTypes}: {
+export function ElementNode({element, dataTypes, showXmlTags}: {
     element: MessageElement
     dataTypes: Map<string, DataType>
+    showXmlTags: boolean
 }) {
     const dataType = dataTypes.get(element.typeId) as ComplexType
 
     if (!dataType.elements?.length) {
         return (
             <div style={{marginLeft: '1em'}}>
-                {element.name}
+                {showXmlTags ? element.xmlTag : element.name}
                 <Cardinality element={element}/>
             </div>
         )
@@ -27,11 +28,11 @@ export function ElementNode({element, dataTypes}: {
     return (
         <details style={{marginLeft: '1em'}}>
             <summary>
-                {element.name}
+                {showXmlTags ? element.xmlTag : element.name}
                 <Cardinality element={element}/>
             </summary>
             {dataType.elements?.map(child => (
-                <ElementNode key={child.id} element={child} dataTypes={dataTypes}/>
+                <ElementNode key={child.id} element={child} dataTypes={dataTypes} showXmlTags={showXmlTags}/>
             ))}
         </details>
     )
