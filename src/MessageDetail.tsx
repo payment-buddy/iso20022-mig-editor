@@ -1,5 +1,6 @@
 import type {BusinessArea, DataType, MessageDefinition} from "./types.ts";
 import {MessageStructure} from "./MessageStructure.tsx";
+import {exportMessageDefinition} from "./messageExport.ts";
 
 function versionLabel(name: string) {
     return name.match(/V\d+$/)?.[0] ?? name
@@ -22,7 +23,10 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes}: {
 
             <div>
                 <div style={{color: '#666', fontSize: '1em'}}>{businessArea.name}</div>
-                <h3 style={{marginTop: '0.2em'}}>{message.name}</h3>
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                    <h3 style={{marginTop: '0.2em'}}>{message.name}</h3>
+                    <button onClick={() => exportMessageDefinition(message, dataTypes)}>Export</button>
+                </div>
             </div>
 
             <div style={{display: 'flex', gap: '0.4rem', marginBottom: '1rem'}}>
