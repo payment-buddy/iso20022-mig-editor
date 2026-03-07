@@ -1,6 +1,5 @@
 import type {BusinessArea, DataType, MessageDefinition} from "./types.ts";
-import {ElementNode} from "./ElementNode.tsx";
-import {useState} from "react";
+import {MessageStructure} from "./MessageStructure.tsx";
 
 function versionLabel(name: string) {
     return name.match(/V\d+$/)?.[0] ?? name
@@ -12,7 +11,6 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes}: {
     businessArea: BusinessArea
     dataTypes: Map<string, DataType>
 }) {
-    const [showXmlTags, setShowXmlTags] = useState(false)
     let message = versions.find(value => value.identifier === messageId)
     if (!message) {
         message = versions[versions.length - 1]
@@ -45,14 +43,7 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes}: {
 
             <p style={{whiteSpace: 'pre-wrap'}}>{message.definition}</p>
 
-            <div>
-                <input type="checkbox" checked={showXmlTags} onChange={() => setShowXmlTags(show => !show)}/>
-                Show XML tags
-            </div>
-            <div>{showXmlTags ? message.xmlTag : message.name}</div>
-            {message.blocks.map((block) => (
-                <ElementNode key={block.id} element={block} dataTypes={dataTypes} showXmlTags={showXmlTags}/>
-            ))}
+            <MessageStructure message={message} dataTypes={dataTypes}/>
         </div>
     )
 }
