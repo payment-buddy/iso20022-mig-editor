@@ -32,12 +32,13 @@ export function ElementNode({
     const [open, setOpen] = useState(false)
     const dataType = dataTypes.get(element.typeId) as ComplexType
     const background = element.id === selectedElement?.id ? '#2b5ce6' : 'transparent'
+    const color = element.id === selectedElement?.id ? '#fff' : undefined
     const elementPath = xmlPath + '/' + element.xmlTag
     const hasChildren = dataType.elements?.length || element.constraints?.length
 
     if (!hasChildren) {
         return (
-            <div style={{marginLeft: '1em', cursor: 'pointer', background: background}}
+            <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
                  onClick={() => onSelect(element, elementPath)}>
                 {showXmlTags ? element.xmlTag : element.name}
                 <Cardinality element={element}/>
@@ -47,7 +48,7 @@ export function ElementNode({
 
     return (
         <div style={{marginLeft: '1em'}}>
-            <div style={{cursor: 'pointer', background: background}} onClick={() => {
+            <div style={{cursor: 'pointer', background, color}} onClick={() => {
                 onSelect(element, elementPath)
                 setOpen(o => !o)
             }}>
