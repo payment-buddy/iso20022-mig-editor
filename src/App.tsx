@@ -3,6 +3,7 @@ import {useEffect, useState} from "react";
 import {BusinessAreaList} from './BusinessAreaList'
 import {MigList} from './MigList.tsx'
 import {MessageDetail} from './MessageDetail.tsx'
+import {MigDetail} from './MigDetail.tsx'
 import {useHash} from "./useHash.ts";
 import type {ERepository, MessageImplementationGuide} from "./types.ts";
 import {
@@ -110,6 +111,11 @@ function App() {
         }
         if (hash === '#browse') {
             return <BusinessAreaList businessAreas={eRepository.businessAreas}/>
+        }
+        if (hash.startsWith('#mig/')) {
+            const id = hash.substring(5)
+            const mig = migs.find(m => m.id === id)
+            if (mig) return <MigDetail mig={mig}/>
         }
         if (hash.startsWith('#')) {
             const code = hash.substring(1)
