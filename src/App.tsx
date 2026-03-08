@@ -115,7 +115,7 @@ function App() {
         if (hash.startsWith('#mig/')) {
             const id = hash.substring(5)
             const mig = migs.find(m => m.id === id)
-            if (mig) return <MigDetail mig={mig}/>
+            if (mig) return <MigDetail mig={mig} eRepository={eRepository}/>
         }
         if (hash.startsWith('#')) {
             const code = hash.substring(1)
