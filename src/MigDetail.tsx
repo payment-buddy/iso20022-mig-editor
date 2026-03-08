@@ -5,12 +5,18 @@ import {ConstraintNode} from "./ConstraintNode.tsx";
 import {useState} from "react";
 import {ElementDetailEdit} from "./ElementDetailEdit.tsx";
 
-export function MigDetail({mig, eRepository}: { mig: MessageImplementationGuideline, eRepository: ERepository }) {
+export function MigDetail({mig, eRepository, onUpdate}: { mig: MessageImplementationGuideline, eRepository: ERepository, onUpdate: (updated: MessageImplementationGuideline) => void }) {
     const [showXmlTags, setShowXmlTags] = useState(false)
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
     const [selectedXmlPath, setSelectedXmlPath] = useState<string>('')
     const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
+    const [editingName, setEditingName] = useState(false)
+    const [editingVersion, setEditingVersion] = useState(false)
+    const [editingDescription, setEditingDescription] = useState(false)
+    const [nameValue, setNameValue] = useState('')
+    const [versionValue, setVersionValue] = useState('')
+    const [descriptionValue, setDescriptionValue] = useState('')
 
 
     let message = null
@@ -37,6 +43,37 @@ export function MigDetail({mig, eRepository}: { mig: MessageImplementationGuidel
         setSelectedDataType(eRepository.dataTypes.get(element.typeId) ?? null)
     }
 
+    function startEditName() {
+        setNameValue(mig.name)
+        setEditingName(true)
+    }
+
+    function handleNameSave() {
+        setEditingName(false)
+        if (nameValue !== mig.name) onUpdate({...mig, name: nameValue})
+    }
+
+    function startEditVersion() {
+        setVersionValue(mig.version)
+        setEditingVersion(true)
+    }
+
+    function handleVersionSave() {
+        setEditingVersion(false)
+        if (versionValue !== mig.version) onUpdate({...mig, version: versionValue})
+    }
+
+    function startEditDescription() {
+        setDescriptionValue(mig.description ?? '')
+        setEditingDescription(true)
+    }
+
+    function handleDescriptionSave() {
+        setEditingDescription(false)
+        const val = descriptionValue.trim()
+        if (val !== (mig.description ?? '')) onUpdate({...mig, description: val || null})
+    }
+
     function handleSelectContraint(constraint: Constraint) {
         setSelectedElement(null)
         setSelectedConstraint(constraint)
@@ -46,21 +83,57 @@ export function MigDetail({mig, eRepository}: { mig: MessageImplementationGuidel
     return (
         <div>
             <p><a href="#">← Back</a></p>
-
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                <h2 style={{margin: 0}}>{mig.name}</h2>
+                <h3>Message Implementation Guildeline <code style={{
+                    marginLeft: '0.2rem',
+                    padding: '0.1em 0.4em',
+                    border: '#999 solid 1px',
+                    borderRadius: 3,
+                    fontSize: '1em',
+                }}>{mig.messageIdentifier}</code></h3>
                 <button onClick={handleDownload}>Download</button>
             </div>
-            <div>
-                {mig.messageIdentifier}
+            <div style={{display: 'grid', gridTemplateColumns: 'max-content 1fr', alignItems: 'center', gap: '0.25em 0.5em'}}>
+                <label>Name:</label>
+                {editingName ? (
+                    <input
+                        autoFocus
+                        value={nameValue}
+                        onChange={e => setNameValue(e.target.value)}
+                        onBlur={handleNameSave}
+                        onKeyDown={e => { if (e.key === 'Enter') handleNameSave(); if (e.key === 'Escape') setEditingName(false) }}
+                    />
+                ) : (
+                    <span style={{cursor: 'pointer'}} onClick={startEditName}>{mig.name}</span>
+                )}
+                <label>Version:</label>
+                {editingVersion ? (
+                    <input
+                        autoFocus
+                        value={versionValue}
+                        onChange={e => setVersionValue(e.target.value)}
+                        onBlur={handleVersionSave}
+                        onKeyDown={e => { if (e.key === 'Enter') handleVersionSave(); if (e.key === 'Escape') setEditingVersion(false) }}
+                    />
+                ) : (
+                    <span style={{cursor: 'pointer'}} onClick={startEditVersion}>{mig.version}</span>
+                )}
+                <label style={{alignSelf: 'start', paddingTop: '0.2em'}}>Description:</label>
+                {editingDescription ? (
+                    <textarea
+                        autoFocus
+                        value={descriptionValue}
+                        onChange={e => setDescriptionValue(e.target.value)}
+                        onBlur={handleDescriptionSave}
+                        onKeyDown={e => { if (e.key === 'Escape') { setEditingDescription(false) } }}
+                        style={{resize: 'vertical', minHeight: '4em'}}
+                    />
+                ) : (
+                    <span style={{cursor: 'pointer', whiteSpace: 'pre-wrap'}} onClick={startEditDescription}>
+                        {mig.description || <em style={{color: '#999'}}>Click to add description</em>}
+                    </span>
+                )}
             </div>
-            <div>
-                {mig.version}
-            </div>
-
-            {mig.description && (
-                <p style={{whiteSpace: 'pre-wrap'}}>{mig.description}</p>
-            )}
 
             <div>
                 <input type="checkbox" checked={showXmlTags} onChange={() => setShowXmlTags(show => !show)}/>
