@@ -8,6 +8,7 @@ import {useHash} from "./useHash.ts";
 import type {ERepository, MessageImplementationGuideline} from "./types.ts";
 import {
     deleteDatabase,
+    deleteMig,
     loadAllMigs,
     loadERepository,
     loadMigsForBackup,
@@ -71,6 +72,13 @@ function App() {
         })
     }
 
+    function handleMigDeleted(id: string) {
+        void deleteMig(id).then(() => {
+            setMigs(prev => prev.filter(m => m.id !== id))
+            window.location.hash = ''
+        })
+    }
+
     function handleMigCreated(mig: MessageImplementationGuideline) {
         void saveMig(mig).then(() => {
             setMigs(prev => [...prev, mig])
@@ -121,7 +129,7 @@ function App() {
         if (hash.startsWith('#mig/')) {
             const id = hash.substring(5)
             const mig = migs.find(m => m.id === id)
-            if (mig) return <MigDetail mig={mig} eRepository={eRepository} onUpdate={handleMigUpdated}/>
+            if (mig) return <MigDetail mig={mig} eRepository={eRepository} onUpdate={handleMigUpdated} onDelete={handleMigDeleted}/>
         }
         if (hash.startsWith('#')) {
             const code = hash.substring(1)
