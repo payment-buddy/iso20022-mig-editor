@@ -2,10 +2,12 @@ import {useState} from "react";
 import type {ComplexType, Constraint, DataType, ElementOverride, MessageElement} from "./types.ts";
 import {ConstraintNode} from "./ConstraintNode.tsx";
 
-function Cardinality({element}: { element: MessageElement }) {
+function Cardinality({element, override}: { element: MessageElement, override: ElementOverride | undefined }) {
+    const min = override?.minOccurs ?? element.minOccurs
+    const max = override?.maxOccurs ?? element.maxOccurs
     return (
         <span style={{color: '#888', marginLeft: '0.4em'}}>
-            [{element.minOccurs}..{element.maxOccurs}]
+            [{min}..{max}]
         </span>
     )
 }
@@ -37,7 +39,8 @@ export function ElementNode({
     const color = element.id === selectedElement?.id ? '#fff' : undefined
     const elementPath = xmlPath + '/' + element.xmlTag
     const hasChildren = dataType.elements?.length || element.constraints?.length
-    const isExcluded = elementOverrides.some(o => o.xmlPath === elementPath && o.maxOccurs === 0)
+    const override = elementOverrides.find(o => o.xmlPath === elementPath)
+    const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
     const nameStyle = isExcluded ? {textDecoration: 'line-through' as const} : undefined
 
     if (!hasChildren) {
@@ -45,7 +48,7 @@ export function ElementNode({
             <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
                  onClick={() => onSelect(element, elementPath)}>
                 <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
-                <Cardinality element={element}/>
+                <Cardinality element={element} override={override}/>
             </div>
         )
     }
@@ -58,7 +61,7 @@ export function ElementNode({
             }}>
                 <span style={{marginRight: '0.3em', fontSize: '0.7em'}}>{open ? '▼' : '▶'}</span>
                 <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
-                <Cardinality element={element}/>
+                <Cardinality element={element} override={override}/>
             </div>
             {open && <>
                 {dataType.elements?.map(child => (
