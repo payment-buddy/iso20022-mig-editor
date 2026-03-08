@@ -45,7 +45,7 @@ function App() {
     }
 
     function handleMigDownload() {
-        const yaml = stringify(migs)
+        const yaml = stringify(migs, (_key, val) => val === null ? undefined : val)
         const blob = new Blob([yaml], {type: 'text/yaml'})
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -99,7 +99,7 @@ function App() {
 
     async function handleDownloadMigBackup() {
         const migs = await loadMigsForBackup()
-        const yaml = stringify(migs)
+        const yaml = stringify(migs, (_key, val) => val === null ? undefined : val)
         const blob = new Blob([yaml], {type: 'text/yaml'})
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
