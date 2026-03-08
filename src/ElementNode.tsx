@@ -20,6 +20,7 @@ export function ElementNode({
                                 showXmlTags,
                                 xmlPath,
                                 elementOverrides = [],
+                                showExcluded = true,
                                 onSelect,
                                 onSelectConstraint
                             }: {
@@ -30,6 +31,7 @@ export function ElementNode({
     showXmlTags: boolean
     xmlPath: string
     elementOverrides?: ElementOverride[]
+    showExcluded?: boolean
     onSelect: (elem: MessageElement, xmlPath: string) => void
     onSelectConstraint: (constraint: Constraint) => void
 }) {
@@ -42,6 +44,8 @@ export function ElementNode({
     const override = elementOverrides.find(o => o.xmlPath === elementPath)
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
     const nameStyle = isExcluded ? {textDecoration: 'line-through' as const} : undefined
+
+    if (isExcluded && !showExcluded) return null
 
     if (!hasChildren) {
         return (
@@ -73,6 +77,7 @@ export function ElementNode({
                                  showXmlTags={showXmlTags}
                                  xmlPath={elementPath}
                                  elementOverrides={elementOverrides}
+                                 showExcluded={showExcluded}
                                  onSelect={onSelect}
                                  onSelectConstraint={onSelectConstraint}/>
                 ))}
