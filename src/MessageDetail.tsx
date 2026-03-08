@@ -11,9 +11,9 @@ function MigForm({messageIdentifier, onSave, onCancel}: {
     onSave: (mig: MessageImplementationGuideline) => void
     onCancel: () => void
 }) {
-    const [name, setName] = useState('')
+    const [name, setName] = useState('MIG-' + messageIdentifier)
     const [description, setDescription] = useState('')
-    const [version, setVersion] = useState('')
+    const [version, setVersion] = useState('1.0-DRAFT')
 
     function handleSubmit(e: { preventDefault(): void }) {
         e.preventDefault()
