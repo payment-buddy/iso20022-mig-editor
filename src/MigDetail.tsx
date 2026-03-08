@@ -96,6 +96,20 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
         if (val !== (mig.description ?? '')) onUpdate({...mig, description: val || null})
     }
 
+    function handleUpdateElementOverride(override: ElementOverride | null) {
+        setSelectedElementOverride(override)
+        if (override === null) {
+            onUpdate({...mig, elementOverrides: mig.elementOverrides.filter(o => o.xmlPath !== selectedXmlPath)})
+        } else {
+            const exists = mig.elementOverrides.some(o => o.xmlPath === override.xmlPath)
+            if (exists) {
+                onUpdate({...mig, elementOverrides: mig.elementOverrides.map(o => o.xmlPath === override.xmlPath ? override : o)})
+            } else {
+                onUpdate({...mig, elementOverrides: [...mig.elementOverrides, override]})
+            }
+        }
+    }
+
     function handleSelectContraint(constraint: Constraint) {
         setSelectedElement(null)
         setSelectedConstraint(constraint)
@@ -210,7 +224,8 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                                 element={selectedElement}
                                 dataType={selectedDataType!}
                                 xmlPath={selectedXmlPath}
-                                elementOverride={selectedElementOverride}/>
+                                elementOverride={selectedElementOverride}
+                                onUpdateOverride={handleUpdateElementOverride}/>
                         }
                     </div>
                 </div>
