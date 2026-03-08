@@ -39,6 +39,17 @@ function App() {
         setERepository(eRepository)
     }
 
+    function handleMigDownload() {
+        const yaml = stringify(migs)
+        const blob = new Blob([yaml], {type: 'text/yaml'})
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'migs.yaml'
+        a.click()
+        URL.revokeObjectURL(url)
+    }
+
     function handleMigUpload(text: string) {
         const parsed: unknown = parse(text)
         const items: unknown[] = Array.isArray(parsed) ? parsed : [parsed]
@@ -119,7 +130,7 @@ function App() {
             }
         }
         if (migs.length > 0 && !browsingMessages) {
-            return <MigList migs={migs} onCreateMig={() => setBrowsingMessages(true)} onUpload={handleMigUpload}/>
+            return <MigList migs={migs} onCreateMig={() => setBrowsingMessages(true)} onUpload={handleMigUpload} onDownload={handleMigDownload}/>
         }
         if (eRepository) {
             return <BusinessAreaList businessAreas={eRepository.businessAreas}/>
