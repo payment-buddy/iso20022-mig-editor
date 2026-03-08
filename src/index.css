@@ -12,6 +12,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+body {
+    max-width: 1600px;
+    margin: 1em auto;
+    padding: 2em;
+}
 
 a {
     font-weight: 500;

@@ -47,7 +47,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     }
 
     return (
-        <div>
+        <div style={{display: 'flex', flexDirection: 'column', gap: '0.7em'}}>
             <div>
                 <div>XML Tag</div>
                 <div>{element.xmlTag}</div>
