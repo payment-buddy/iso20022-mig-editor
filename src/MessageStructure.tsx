@@ -1,7 +1,7 @@
 import type {Constraint, DataType, MessageDefinition, MessageElement} from "./types.ts";
 import {ElementNode} from "./ElementNode.tsx";
 import {useState} from "react";
-import {ElementDetail} from "./ElementDetail.tsx";
+import {ElementDetailView} from "./ElementDetailView.tsx";
 import {ConstraintNode} from "./ConstraintNode.tsx";
 import {ConstraintDetail} from "./ConstraintDetail.tsx";
 
@@ -57,9 +57,9 @@ export function MessageStructure({message, dataTypes}: {
                 </div>
                 <div style={{flex: 4}}>
                     {selectedElement &&
-                        <ElementDetail element={selectedElement}
-                                       dataType={selectedDataType!}
-                                       xmlPath={selectedXmlPath}/>}
+                        <ElementDetailView element={selectedElement}
+                                           dataType={selectedDataType!}
+                                           xmlPath={selectedXmlPath}/>}
                     {selectedConstraint &&
                         <ConstraintDetail constraint={selectedConstraint}/>}
                 </div>
