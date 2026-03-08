@@ -13,7 +13,7 @@ import {
     saveERepository,
     saveMig
 } from "./localStore.ts";
-import {stringify} from "yaml";
+import {parse, stringify} from "yaml";
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
@@ -37,6 +37,21 @@ function App() {
     function handleParsed(eRepository: ERepository) {
         void saveERepository(eRepository)
         setERepository(eRepository)
+    }
+
+    function handleMigUpload(text: string) {
+        const parsed: unknown = parse(text)
+        const items: unknown[] = Array.isArray(parsed) ? parsed : [parsed]
+        const incoming = items.map((item) => {
+            const obj = item as Record<string, unknown>
+            return {...obj, id: typeof obj.id === 'string' ? obj.id : crypto.randomUUID()} as MessageImplementationGuide
+        })
+        void Promise.all(incoming.map(saveMig)).then(() => {
+            setMigs(prev => {
+                const existingIds = new Set(prev.map(m => m.id))
+                return [...prev, ...incoming.filter(m => !existingIds.has(m.id))]
+            })
+        })
     }
 
     function handleMigCreated(mig: MessageImplementationGuide) {
@@ -104,7 +119,7 @@ function App() {
             }
         }
         if (migs.length > 0 && !browsingMessages) {
-            return <MigList migs={migs} onCreateMig={() => setBrowsingMessages(true)}/>
+            return <MigList migs={migs} onCreateMig={() => setBrowsingMessages(true)} onUpload={handleMigUpload}/>
         }
         if (eRepository) {
             return <BusinessAreaList businessAreas={eRepository.businessAreas}/>
