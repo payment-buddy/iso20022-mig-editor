@@ -12,6 +12,7 @@ import {ConstraintNode} from "./ConstraintNode.tsx";
 import {useState} from "react";
 import {ElementDetailEdit} from "./ElementDetailEdit.tsx";
 import {ConstraintDetail} from "./ConstraintDetail.tsx";
+import {EditableText} from "./EditableText.tsx";
 
 export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     mig: MessageImplementationGuideline,
@@ -26,12 +27,6 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     const [selectedXmlPath, setSelectedXmlPath] = useState<string>('')
     const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
     const [selectedElementOverride, setSelectedElementOverride] = useState<ElementOverride | null>(null)
-    const [editingName, setEditingName] = useState(false)
-    const [editingVersion, setEditingVersion] = useState(false)
-    const [editingDescription, setEditingDescription] = useState(false)
-    const [nameValue, setNameValue] = useState('')
-    const [versionValue, setVersionValue] = useState('')
-    const [descriptionValue, setDescriptionValue] = useState('')
 
 
     let message = null
@@ -65,37 +60,6 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
         setSelectedXmlPath(xmlPath)
         setSelectedDataType(eRepository.dataTypes.get(element.typeId) ?? null)
         setSelectedElementOverride(mig.elementOverrides.find(override => override.xmlPath === xmlPath) ?? null)
-    }
-
-    function startEditName() {
-        setNameValue(mig.name)
-        setEditingName(true)
-    }
-
-    function handleNameSave() {
-        setEditingName(false)
-        if (nameValue !== mig.name) onUpdate({...mig, name: nameValue})
-    }
-
-    function startEditVersion() {
-        setVersionValue(mig.version)
-        setEditingVersion(true)
-    }
-
-    function handleVersionSave() {
-        setEditingVersion(false)
-        if (versionValue !== mig.version) onUpdate({...mig, version: versionValue})
-    }
-
-    function startEditDescription() {
-        setDescriptionValue(mig.description ?? '')
-        setEditingDescription(true)
-    }
-
-    function handleDescriptionSave() {
-        setEditingDescription(false)
-        const val = descriptionValue.trim()
-        if (val !== (mig.description ?? '')) onUpdate({...mig, description: val || null})
     }
 
     function isOverrideEmpty(override: ElementOverride) {
@@ -152,54 +116,24 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                 gap: '0.25em 0.5em'
             }}>
                 <label>Name:</label>
-                {editingName ? (
-                    <input
-                        autoFocus
-                        value={nameValue}
-                        onChange={e => setNameValue(e.target.value)}
-                        onBlur={handleNameSave}
-                        onKeyDown={e => {
-                            if (e.key === 'Enter') handleNameSave();
-                            if (e.key === 'Escape') setEditingName(false)
-                        }}
-                    />
-                ) : (
-                    <span style={{cursor: 'pointer'}} onClick={startEditName}>{mig.name}</span>
-                )}
+                <EditableText
+                    value={mig.name}
+                    isOverridden={false}
+                    onSave={val => { if (val !== mig.name) onUpdate({...mig, name: val}) }}
+                />
                 <label>Version:</label>
-                {editingVersion ? (
-                    <input
-                        autoFocus
-                        value={versionValue}
-                        onChange={e => setVersionValue(e.target.value)}
-                        onBlur={handleVersionSave}
-                        onKeyDown={e => {
-                            if (e.key === 'Enter') handleVersionSave();
-                            if (e.key === 'Escape') setEditingVersion(false)
-                        }}
-                    />
-                ) : (
-                    <span style={{cursor: 'pointer'}} onClick={startEditVersion}>{mig.version}</span>
-                )}
+                <EditableText
+                    value={mig.version}
+                    isOverridden={false}
+                    onSave={val => { if (val !== mig.version) onUpdate({...mig, version: val}) }}
+                />
                 <label style={{alignSelf: 'start', paddingTop: '0.2em'}}>Description:</label>
-                {editingDescription ? (
-                    <textarea
-                        autoFocus
-                        value={descriptionValue}
-                        onChange={e => setDescriptionValue(e.target.value)}
-                        onBlur={handleDescriptionSave}
-                        onKeyDown={e => {
-                            if (e.key === 'Escape') {
-                                setEditingDescription(false)
-                            }
-                        }}
-                        style={{resize: 'vertical', minHeight: '4em'}}
-                    />
-                ) : (
-                    <span style={{cursor: 'pointer', whiteSpace: 'pre-wrap'}} onClick={startEditDescription}>
-                        {mig.description || <em style={{color: '#999'}}>Click to add description</em>}
-                    </span>
-                )}
+                <EditableText
+                    value={mig.description ?? ''}
+                    isOverridden={false}
+                    multiline
+                    onSave={val => { if (val !== (mig.description ?? '')) onUpdate({...mig, description: val || null}) }}
+                />
             </div>
 
             <p style={{display: 'flex', gap: '1em'}}>
