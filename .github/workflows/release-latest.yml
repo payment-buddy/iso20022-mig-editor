@@ -1,0 +1,50 @@
+name: Build and Publish Latest Release
+
+on:
+  push:
+    branches: [ "master" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Prepare artifact
+        run: |
+          mkdir artifact
+          cp dist/index.html artifact/iso20022-mig-editor.html
+
+      - name: Delete existing 'latest' release
+        uses: dev-drprasad/delete-tag-and-release@v1.0
+        with:
+          tag_name: latest
+          delete_release: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create new release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest
+          draft: false
+          prerelease: false
+          files: artifact/iso20022-mig-editor.html
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
