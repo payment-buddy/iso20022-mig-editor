@@ -1,32 +1,40 @@
-import type {DataType, MessageElement} from "./types.ts";
+import type {DataType, ElementOverride, MessageElement} from "./types.ts";
 
-export function ElementDetailEdit({element, dataType, xmlPath}: {
+export function ElementDetailEdit({element, dataType, xmlPath, elementOverride}: {
     element: MessageElement
     dataType: DataType
     xmlPath: string
+    elementOverride: ElementOverride | null
 }) {
     return (
         <div>
-            <details open={true}>
-                <summary>Type</summary>
-                <div>{dataType.name}</div>
-            </details>
-            <details open={true}>
-                <summary>Description</summary>
-                <div>{element.definition}</div>
-            </details>
-            <details open={true}>
-                <summary>Multiplicity</summary>
-                <div>[{element.minOccurs}..{element.maxOccurs}]</div>
-            </details>
-            <details open={true}>
-                <summary>XML Tag</summary>
+            <div>
+                <div>XML Tag</div>
                 <div>{element.xmlTag}</div>
-            </details>
-            <details open={true}>
-                <summary>XML Path</summary>
+            </div>
+            <div>
+                <div>XML Path</div>
                 <div>{xmlPath}</div>
-            </details>
+            </div>
+            <div>
+                <div>Type</div>
+                <div>{dataType.name}</div>
+            </div>
+            <div>
+                <div>Definition</div>
+                <div>{elementOverride?.definition ?? element.definition}</div>
+            </div>
+            <div>
+                <div>Min Occurs</div>
+                <div>{elementOverride?.minOccurs ?? element.minOccurs}</div>
+            </div>
+            <div>
+                <div>Max Occurs</div>
+                <div>{elementOverride?.maxOccurs ?? element.maxOccurs}</div>
+            </div>
+            <div>
+                {JSON.stringify(elementOverride)}
+            </div>
         </div>
     )
 }

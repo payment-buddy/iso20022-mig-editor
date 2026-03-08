@@ -12,7 +12,7 @@ export function ElementDetailView({element, dataType, xmlPath}: {
                 <div>{dataType.name}</div>
             </details>
             <details open={true}>
-                <summary>Description</summary>
+                <summary>Definition</summary>
                 <div>{element.definition}</div>
             </details>
             <details open={true}>
