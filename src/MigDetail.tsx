@@ -26,7 +26,7 @@ export function MigDetail({mig, eRepository}: { mig: MessageImplementationGuidel
         const blob = new Blob([stringify(mig)], {type: 'text/yaml'})
         const a = document.createElement('a')
         a.href = URL.createObjectURL(blob)
-        a.download = `${mig.messageIdentifier}-${mig.name}-${mig.version}.yaml`
+        a.download = `${mig.name}-${mig.version}.yaml`
         a.click()
     }
 
