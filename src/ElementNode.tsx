@@ -54,6 +54,7 @@ export function ElementNode({
         return (
             <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
                  onClick={() => onSelect(element, elementPath)}>
+                <span style={{marginLeft: '0.1em', marginRight: '0.3em', fontSize: '1em'}}>-</span>
                 <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
                 <Cardinality element={element} override={override}/>
             </div>

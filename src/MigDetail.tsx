@@ -19,7 +19,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     onDelete: (id: string) => void
 }) {
     const [showXmlTags, setShowXmlTags] = useState(false)
-    const [showExcluded, setShowExcluded] = useState(true)
+    const [showExcluded, setShowExcluded] = useState(false)
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
     const [selectedXmlPath, setSelectedXmlPath] = useState<string>('')
@@ -202,12 +202,20 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
 
             <p style={{display: 'flex', gap: '1em'}}>
                 <label>
-                    <input type="checkbox" checked={showXmlTags} onChange={() => setShowXmlTags(show => !show)}/>
-                    {' '}Show XML tags
+                    <input
+                        type="checkbox"
+                        checked={showXmlTags}
+                        style={{marginRight: '0.5em'}}
+                        onChange={() => setShowXmlTags(show => !show)}/>
+                    Show XML tags
                 </label>
                 <label>
-                    <input type="checkbox" checked={showExcluded} onChange={() => setShowExcluded(v => !v)}/>
-                    {' '}Show excluded elements
+                    <input
+                        type="checkbox"
+                        checked={showExcluded}
+                        style={{marginRight: '0.5em'}}
+                        onChange={() => setShowExcluded(show => !show)}/>
+                    Show excluded elements
                 </label>
             </p>
 
