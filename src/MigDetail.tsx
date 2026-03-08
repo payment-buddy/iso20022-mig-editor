@@ -1,5 +1,12 @@
 import {stringify} from "yaml";
-import type {Constraint, DataType, ERepository, MessageElement, MessageImplementationGuideline} from "./types.ts";
+import type {
+    Constraint,
+    DataType,
+    ElementOverride,
+    ERepository,
+    MessageElement,
+    MessageImplementationGuideline
+} from "./types.ts";
 import {ElementNode} from "./ElementNode.tsx";
 import {ConstraintNode} from "./ConstraintNode.tsx";
 import {useState} from "react";
@@ -16,6 +23,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
     const [selectedXmlPath, setSelectedXmlPath] = useState<string>('')
     const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
+    const [selectedElementOverride, setSelectedElementOverride] = useState<ElementOverride | null>(null)
     const [editingName, setEditingName] = useState(false)
     const [editingVersion, setEditingVersion] = useState(false)
     const [editingDescription, setEditingDescription] = useState(false)
@@ -54,6 +62,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
         setSelectedConstraint(null)
         setSelectedXmlPath(xmlPath)
         setSelectedDataType(eRepository.dataTypes.get(element.typeId) ?? null)
+        setSelectedElementOverride(mig.elementOverrides.find(override => override.xmlPath === xmlPath) ?? null)
     }
 
     function startEditName() {
@@ -200,7 +209,8 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                             <ElementDetailEdit
                                 element={selectedElement}
                                 dataType={selectedDataType!}
-                                xmlPath={selectedXmlPath}/>
+                                xmlPath={selectedXmlPath}
+                                elementOverride={selectedElementOverride}/>
                         }
                     </div>
                 </div>
