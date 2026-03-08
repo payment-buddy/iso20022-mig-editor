@@ -1,6 +1,6 @@
 import type {DataType, MessageElement} from "./types.ts";
 
-export function ElementDetail({element, dataType, xmlPath}: {
+export function ElementDetailEdit({element, dataType, xmlPath}: {
     element: MessageElement
     dataType: DataType
     xmlPath: string[]
