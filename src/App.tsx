@@ -65,6 +65,12 @@ function App() {
         })
     }
 
+    function handleMigUpdated(updated: MessageImplementationGuideline) {
+        void saveMig(updated).then(() => {
+            setMigs(prev => prev.map(m => m.id === updated.id ? updated : m))
+        })
+    }
+
     function handleMigCreated(mig: MessageImplementationGuideline) {
         void saveMig(mig).then(() => {
             setMigs(prev => [...prev, mig])
@@ -115,7 +121,7 @@ function App() {
         if (hash.startsWith('#mig/')) {
             const id = hash.substring(5)
             const mig = migs.find(m => m.id === id)
-            if (mig) return <MigDetail mig={mig} eRepository={eRepository}/>
+            if (mig) return <MigDetail mig={mig} eRepository={eRepository} onUpdate={handleMigUpdated}/>
         }
         if (hash.startsWith('#')) {
             const code = hash.substring(1)
