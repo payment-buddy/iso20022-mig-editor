@@ -23,7 +23,7 @@ export function MigList({migs, onBrowse, onUpload, onDownload}: {
                 <div style={{display: 'flex', gap: '0.5rem'}}>
                     <input ref={fileInputRef} type="file" accept=".yaml,.yml" style={{display: 'none'}}
                            onChange={handleFileChange}/>
-                    <button onClick={onDownload}>Download all</button>
+                    {migs.length > 0 && <button onClick={onDownload}>Download all</button>}
                     <button onClick={() => fileInputRef.current?.click()}>Load MIG</button>
                     <button onClick={onBrowse}>Browse e-Repository</button>
                 </div>

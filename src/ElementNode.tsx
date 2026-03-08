@@ -54,7 +54,7 @@ export function ElementNode({
         return (
             <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
                  onClick={() => onSelect(element, elementPath)}>
-                <span style={{marginLeft: '0.1em', marginRight: '0.3em', fontSize: '1em'}}>-</span>
+                <span style={{marginRight: '0.5em', fontSize: '0.7em'}}>◇</span>
                 <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
                 <Cardinality element={element} override={override}/>
             </div>
@@ -67,7 +67,7 @@ export function ElementNode({
                 onSelect(element, elementPath)
                 setOpen(o => !o)
             }}>
-                <span style={{marginRight: '0.3em', fontSize: '0.7em'}}>{open ? '▼' : '▶'}</span>
+                <span style={{marginLeft: '0', marginRight: '0.4em', fontSize: '0.7em'}}>{open ? '▼' : '▶'}</span>
                 <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
                 <Cardinality element={element} override={override}/>
             </div>
