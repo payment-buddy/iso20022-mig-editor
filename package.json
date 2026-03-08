@@ -1,5 +1,5 @@
 {
-  "name": "iso20022-explorer",
+  "name": "iso20022-mig-editor",
   "private": true,
   "version": "0.0.0",
   "type": "module",

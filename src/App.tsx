@@ -56,7 +56,10 @@ function App() {
         const items: unknown[] = Array.isArray(parsed) ? parsed : [parsed]
         const incoming = items.map((item) => {
             const obj = item as Record<string, unknown>
-            return {...obj, id: typeof obj.id === 'string' ? obj.id : crypto.randomUUID()} as MessageImplementationGuideline
+            return {
+                ...obj,
+                id: typeof obj.id === 'string' ? obj.id : crypto.randomUUID()
+            } as MessageImplementationGuideline
         })
         void Promise.all(incoming.map(saveMig)).then(() => {
             setMigs(prev => {
@@ -106,63 +109,59 @@ function App() {
         })
     }
 
-    function getView() {
-        if (loading) return null
-        if (dbError) {
-            return (
-                <div style={{border: '1px solid #c00', padding: '1rem', maxWidth: 480}}>
-                    <p><strong>Failed to open the local database.</strong> This can happen after an app update that
-                        changed the data format.</p>
-                    <p>You can delete all stored data and start fresh, or downgrade to an older version of the app that
-                        is compatible with your data.</p>
-                    <button onClick={() => handleDownloadMigBackup()}>Download MIG backup</button>
-                    <button onClick={handleDeleteDatabase}>Delete stored data</button>
-                </div>
-            )
-        }
-        if (!eRepository) {
-            return <FileUploader onParsed={handleParsed}/>
-        }
-        if (hash === '#browse') {
-            return <BusinessAreaList businessAreas={eRepository.businessAreas}/>
-        }
-        if (hash.startsWith('#mig/')) {
-            const id = hash.substring(5)
-            const mig = migs.find(m => m.id === id)
-            if (mig) return <MigDetail mig={mig} eRepository={eRepository} onUpdate={handleMigUpdated} onDelete={handleMigDeleted}/>
-        }
-        if (hash.startsWith('#')) {
-            const code = hash.substring(1)
-            for (const businessArea of eRepository.businessAreas) {
-                for (const message of businessArea.messages) {
-                    if (message.identifier === code) {
-                        return <MessageDetail messageId={message.identifier}
-                                              versions={businessArea.messages.filter(msg => msg.shortCode === message.shortCode)}
-                                              businessArea={businessArea}
-                                              dataTypes={eRepository.dataTypes}
-                                              onMigCreated={handleMigCreated}/>
-                    }
+    if (loading) {
+        return null
+    }
+    if (dbError) {
+        return (
+            <div style={{border: '1px solid #c00', padding: '1rem', maxWidth: 480}}>
+                <p><strong>Failed to open the local database.</strong> This can happen after an app update that
+                    changed the data format.</p>
+                <p>You can delete all stored data and start fresh, or downgrade to an older version of the app that
+                    is compatible with your data.</p>
+                <button onClick={() => handleDownloadMigBackup()}>Download MIG backup</button>
+                <button onClick={handleDeleteDatabase}>Delete stored data</button>
+            </div>
+        )
+    }
+    if (!eRepository) {
+        return <FileUploader onParsed={handleParsed}/>
+    }
+    if (hash === '#browse') {
+        return <BusinessAreaList businessAreas={eRepository.businessAreas}/>
+    }
+    if (hash.startsWith('#mig/')) {
+        const id = hash.substring(5)
+        const mig = migs.find(m => m.id === id)
+        if (mig) return <MigDetail mig={mig} eRepository={eRepository} onUpdate={handleMigUpdated}
+                                   onDelete={handleMigDeleted}/>
+    }
+    if (hash.startsWith('#')) {
+        const code = hash.substring(1)
+        for (const businessArea of eRepository.businessAreas) {
+            for (const message of businessArea.messages) {
+                if (message.identifier === code) {
+                    return <MessageDetail messageId={message.identifier}
+                                          versions={businessArea.messages.filter(msg => msg.shortCode === message.shortCode)}
+                                          businessArea={businessArea}
+                                          dataTypes={eRepository.dataTypes}
+                                          onMigCreated={handleMigCreated}/>
                 }
-                for (const message of businessArea.messages) {
-                    if (message.shortCode === code) {
-                        return <MessageDetail messageId={null}
-                                              versions={businessArea.messages.filter(msg => msg.shortCode === code)}
-                                              businessArea={businessArea}
-                                              dataTypes={eRepository.dataTypes}
-                                              onMigCreated={handleMigCreated}/>
-                    }
+            }
+            for (const message of businessArea.messages) {
+                if (message.shortCode === code) {
+                    return <MessageDetail messageId={null}
+                                          versions={businessArea.messages.filter(msg => msg.shortCode === code)}
+                                          businessArea={businessArea}
+                                          dataTypes={eRepository.dataTypes}
+                                          onMigCreated={handleMigCreated}/>
                 }
             }
         }
-        return <MigList migs={migs} onBrowse={() => { window.location.hash = 'browse' }} onUpload={handleMigUpload} onDownload={handleMigDownload}/>
     }
-
-    return (
-        <>
-            <h1>ISO 20022 Explorer</h1>
-            {getView()}
-        </>
-    )
+    return <MigList migs={migs} onBrowse={() => {
+        window.location.hash = 'browse'
+    }} onUpload={handleMigUpload} onDownload={handleMigDownload}/>
 }
 
 export default App
