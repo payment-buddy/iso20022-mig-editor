@@ -96,18 +96,28 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
         if (val !== (mig.description ?? '')) onUpdate({...mig, description: val || null})
     }
 
-    function handleUpdateElementOverride(override: ElementOverride | null) {
+    function isOverrideEmpty(override: ElementOverride) {
+        const {xmlPath, codes, additionalConstraints, ...rest} = override
+        return codes.length === 0 && additionalConstraints.length === 0 && Object.values(rest).every(v => v === null)
+    }
+
+    function handleUpdateElementOverride(override: ElementOverride) {
         setSelectedElementOverride(override)
-        if (override === null) {
-            onUpdate({...mig, elementOverrides: mig.elementOverrides.filter(o => o.xmlPath !== selectedXmlPath)})
+        let elementOverrides: ElementOverride[];
+        if (isOverrideEmpty(override)) {
+            // Remove empty override
+            elementOverrides = mig.elementOverrides.filter(o => o.xmlPath !== selectedXmlPath);
         } else {
             const exists = mig.elementOverrides.some(o => o.xmlPath === override.xmlPath)
             if (exists) {
-                onUpdate({...mig, elementOverrides: mig.elementOverrides.map(o => o.xmlPath === override.xmlPath ? override : o)})
+                // Replace existing override
+                elementOverrides = mig.elementOverrides.map(o => o.xmlPath === override.xmlPath ? override : o);
             } else {
-                onUpdate({...mig, elementOverrides: [...mig.elementOverrides, override]})
+                // Add new override
+                elementOverrides = [...mig.elementOverrides, override];
             }
         }
+        onUpdate({...mig, elementOverrides})
     }
 
     function handleSelectContraint(constraint: Constraint) {

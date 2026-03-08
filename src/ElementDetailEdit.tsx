@@ -7,7 +7,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     dataType: DataType
     xmlPath: string
     elementOverride: ElementOverride | null
-    onUpdateOverride: (override: ElementOverride | null) => void
+    onUpdateOverride: (override: ElementOverride) => void
 }) {
     const isTextSimpleType = 'baseType' in dataType && (dataType as Simpletype).baseType === 'Text'
     const simpleType = isTextSimpleType ? dataType as Simpletype : null
@@ -32,24 +32,9 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
         }
     }
 
-    function isOverrideEmpty(o: ElementOverride) {
-        return o.definition === null &&
-            o.minOccurs === null &&
-            o.maxOccurs === null &&
-            o.minInclusive === null &&
-            o.maxInclusive === null &&
-            o.totalDigits === null &&
-            o.fractionDigits === null &&
-            o.minLength === null &&
-            o.maxLength === null &&
-            o.pattern === null &&
-            o.codes.length === 0 &&
-            o.additionalConstraints.length === 0
-    }
-
     function saveOverride(updates: Partial<ElementOverride>) {
         const updated = buildOverride(updates)
-        onUpdateOverride(isOverrideEmpty(updated) ? null : updated)
+        onUpdateOverride(updated)
     }
 
     function saveInt(field: string, original: number | null, val: string) {
