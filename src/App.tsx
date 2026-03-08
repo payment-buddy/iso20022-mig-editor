@@ -40,6 +40,10 @@ function App() {
         setERepository(eRepository)
     }
 
+    function handleBrowse() {
+        window.location.hash = 'browse'
+    }
+
     function handleMigDownload() {
         const yaml = stringify(migs)
         const blob = new Blob([yaml], {type: 'text/yaml'})
@@ -66,6 +70,10 @@ function App() {
                 const existingIds = new Set(prev.map(m => m.id))
                 return [...prev, ...incoming.filter(m => !existingIds.has(m.id))]
             })
+            if (!Array.isArray(parsed)) {
+                const mig = parsed as MessageImplementationGuideline;
+                window.location.hash = 'mig/' + mig.id
+            }
         })
     }
 
@@ -159,9 +167,7 @@ function App() {
             }
         }
     }
-    return <MigList migs={migs} onBrowse={() => {
-        window.location.hash = 'browse'
-    }} onUpload={handleMigUpload} onDownload={handleMigDownload}/>
+    return <MigList migs={migs} onBrowse={handleBrowse} onUpload={handleMigUpload} onDownload={handleMigDownload}/>
 }
 
 export default App
