@@ -19,12 +19,12 @@ export function MigList({migs, onBrowse, onUpload, onDownload}: {
     return (
         <div>
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                <h2>Message Implementation Guidelines</h2>
+                <h2>ISO 20022 Message Implementation Guidelines</h2>
                 <div style={{display: 'flex', gap: '0.5rem'}}>
                     <input ref={fileInputRef} type="file" accept=".yaml,.yml" style={{display: 'none'}}
                            onChange={handleFileChange}/>
                     <button onClick={onDownload}>Download all</button>
-                    <button onClick={() => fileInputRef.current?.click()}>Upload MIG</button>
+                    <button onClick={() => fileInputRef.current?.click()}>Load MIG</button>
                     <button onClick={onBrowse}>Browse e-Repository</button>
                 </div>
             </div>

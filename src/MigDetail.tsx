@@ -97,13 +97,13 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
         <div>
             <p><a href="#">← Back</a></p>
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                <h3>Message Implementation Guildeline <code style={{
+                <h2>Message Implementation Guildeline <code style={{
                     marginLeft: '0.2rem',
                     padding: '0.1em 0.4em',
                     border: '#999 solid 1px',
                     borderRadius: 3,
                     fontSize: '1em',
-                }}>{mig.messageIdentifier}</code></h3>
+                }}>{mig.messageIdentifier}</code></h2>
                 <div style={{display: 'flex', gap: '0.5em'}}>
                     <button onClick={handleDownload}>Download</button>
                     <button onClick={handleDelete}>Delete</button>

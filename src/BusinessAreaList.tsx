@@ -28,6 +28,7 @@ export function BusinessAreaList({businessAreas}: { businessAreas: BusinessArea[
     return (
         <>
             <p><a href="#">← Back</a></p>
+            <h2>ISO 20022 e-Repository</h2>
             <ul style={{listStyle: 'none', paddingLeft: 0}}>
                 {businessAreas.map((ba) => {
                     const groups = groupByBase(ba.messages)
