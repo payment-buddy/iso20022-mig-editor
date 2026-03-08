@@ -60,7 +60,7 @@ export function EditableText({value, isOverridden, multiline, monospace, onSave}
             }}
             onClick={startEdit}
         >
-            {value || '—'}
+            {value || '<none>'}
         </span>
     )
 }
