@@ -6,13 +6,13 @@ function versionLabel(name: string) {
     return name.match(/V\d+$/)?.[0] ?? name
 }
 
-function MigForm({messageIdentifier, onSave, onCancel}: {
-    messageIdentifier: string
+function MigForm({message, onSave, onCancel}: {
+    message: MessageDefinition
     onSave: (mig: MessageImplementationGuideline) => void
     onCancel: () => void
 }) {
-    const [name, setName] = useState('MIG-' + messageIdentifier)
-    const [description, setDescription] = useState('')
+    const [name, setName] = useState('MIG-' + message.identifier)
+    const [description, setDescription] = useState(message.definition)
     const [version, setVersion] = useState('1.0-DRAFT')
 
     function handleSubmit(e: { preventDefault(): void }) {
@@ -22,7 +22,7 @@ function MigForm({messageIdentifier, onSave, onCancel}: {
             name: name.trim(),
             description: description.trim() || null,
             version: version.trim(),
-            messageIdentifier,
+            messageIdentifier: message.identifier,
             elementOverrides: [],
             additionalConstraints: [],
         }
@@ -105,7 +105,7 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes, onM
             </div>
 
             {showMigForm && (
-                <MigForm messageIdentifier={message.identifier} onSave={handleMigSave} onCancel={() => setShowMigForm(false)}/>
+                <MigForm message={message} onSave={handleMigSave} onCancel={() => setShowMigForm(false)}/>
             )}
 
             <p style={{whiteSpace: 'pre-wrap'}}>{message.definition}</p>
