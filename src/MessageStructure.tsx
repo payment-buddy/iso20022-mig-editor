@@ -24,6 +24,7 @@ export function MessageStructure({message, dataTypes}: {
 
     function handleSelectContraint(constraint: Constraint) {
         setSelectedConstraint(constraint)
+        setSelectedXmlPath('')
         setSelectedDataType(null)
         setSelectedElement(null)
     }
