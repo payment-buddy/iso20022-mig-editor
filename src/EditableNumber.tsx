@@ -38,14 +38,14 @@ export function EditableNumber({value, originalValue, onSave}: {
         <>
             {value !== originalValue && (
                 <span style={{textDecoration: 'line-through', marginRight: '1em'}}>
-                {originalValue}
+                {originalValue ?? '<none>'}
             </span>
             )}
             <span
                 style={{cursor: 'pointer'}}
                 onClick={startEdit}
             >
-                {value || '—'}
+                {value ?? '<none>'}
             </span>
         </>
     )
