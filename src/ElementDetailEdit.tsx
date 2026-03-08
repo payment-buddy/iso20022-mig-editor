@@ -1,5 +1,6 @@
-import {useState} from "react";
-import type {DataType, ElementOverride, MessageElement} from "./types.ts";
+import type {DataType, ElementOverride, MessageElement, Simpletype} from "./types.ts";
+import {EditableText} from "./EditableText.tsx";
+import {EditableNumber} from "./EditableNumber.tsx";
 
 export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, onUpdateOverride}: {
     element: MessageElement
@@ -8,12 +9,8 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     elementOverride: ElementOverride | null
     onUpdateOverride: (override: ElementOverride | null) => void
 }) {
-    const [editingDefinition, setEditingDefinition] = useState(false)
-    const [editingMinOccurs, setEditingMinOccurs] = useState(false)
-    const [editingMaxOccurs, setEditingMaxOccurs] = useState(false)
-    const [definitionValue, setDefinitionValue] = useState('')
-    const [minOccursValue, setMinOccursValue] = useState('')
-    const [maxOccursValue, setMaxOccursValue] = useState('')
+    const isTextSimpleType = 'baseType' in dataType && (dataType as Simpletype).baseType === 'Text'
+    const simpleType = isTextSimpleType ? dataType as Simpletype : null
 
     function buildOverride(updates: Partial<ElementOverride>): ElementOverride {
         return {
@@ -25,7 +22,6 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             maxInclusive: null,
             totalDigits: null,
             fractionDigits: null,
-            length: null,
             minLength: null,
             maxLength: null,
             pattern: null,
@@ -44,7 +40,6 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             o.maxInclusive === null &&
             o.totalDigits === null &&
             o.fractionDigits === null &&
-            o.length === null &&
             o.minLength === null &&
             o.maxLength === null &&
             o.pattern === null &&
@@ -57,42 +52,14 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
         onUpdateOverride(isOverrideEmpty(updated) ? null : updated)
     }
 
-    function startEditDefinition() {
-        setDefinitionValue(elementOverride?.definition ?? element.definition)
-        setEditingDefinition(true)
+    function saveInt(field: string, original: number | null, val: string) {
+        if (val === '') {
+            saveOverride({[field]: null})
+        } else {
+            const num = parseInt(val, 10)
+            if (!isNaN(num)) saveOverride({[field]: num === original ? null : num})
+        }
     }
-
-    function handleDefinitionSave() {
-        setEditingDefinition(false)
-        const val = definitionValue.trim()
-        saveOverride({definition: val === element.definition ? null : val})
-    }
-
-    function startEditMinOccurs() {
-        setMinOccursValue(String(elementOverride?.minOccurs ?? element.minOccurs))
-        setEditingMinOccurs(true)
-    }
-
-    function handleMinOccursSave() {
-        setEditingMinOccurs(false)
-        const num = parseInt(minOccursValue, 10)
-        if (isNaN(num)) return
-        saveOverride({minOccurs: num === element.minOccurs ? null : num})
-    }
-
-    function startEditMaxOccurs() {
-        setMaxOccursValue(String(elementOverride?.maxOccurs ?? element.maxOccurs))
-        setEditingMaxOccurs(true)
-    }
-
-    function handleMaxOccursSave() {
-        setEditingMaxOccurs(false)
-        const num = parseInt(maxOccursValue, 10)
-        if (isNaN(num)) return
-        saveOverride({maxOccurs: num === element.maxOccurs ? null : num})
-    }
-
-    const overriddenStyle = {color: '#0066cc'}
 
     return (
         <div>
@@ -110,72 +77,59 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             </div>
             <div>
                 <div>Definition</div>
-                {editingDefinition ? (
-                    <textarea
-                        autoFocus
-                        value={definitionValue}
-                        onChange={e => setDefinitionValue(e.target.value)}
-                        onBlur={handleDefinitionSave}
-                        onKeyDown={e => {
-                            if (e.key === 'Escape') setEditingDefinition(false)
-                        }}
-                        style={{resize: 'vertical', minHeight: '4em', width: '100%'}}
-                    />
-                ) : (
-                    <span
-                        style={{cursor: 'pointer', whiteSpace: 'pre-wrap', ...(elementOverride?.definition != null ? overriddenStyle : {})}}
-                        onClick={startEditDefinition}
-                    >
-                        {elementOverride?.definition ?? element.definition}
-                    </span>
-                )}
+                <EditableText
+                    value={elementOverride?.definition ?? element.definition}
+                    isOverridden={elementOverride?.definition != null}
+                    multiline
+                    onSave={val => saveOverride({definition: val === element.definition ? null : val})}
+                />
             </div>
             <div>
                 <div>Min Occurs</div>
-                {editingMinOccurs ? (
-                    <input
-                        autoFocus
-                        type="number"
-                        value={minOccursValue}
-                        onChange={e => setMinOccursValue(e.target.value)}
-                        onBlur={handleMinOccursSave}
-                        onKeyDown={e => {
-                            if (e.key === 'Enter') handleMinOccursSave()
-                            if (e.key === 'Escape') setEditingMinOccurs(false)
-                        }}
-                    />
-                ) : (
-                    <span
-                        style={{cursor: 'pointer', ...(elementOverride?.minOccurs != null ? overriddenStyle : {})}}
-                        onClick={startEditMinOccurs}
-                    >
-                        {elementOverride?.minOccurs ?? element.minOccurs}
-                    </span>
-                )}
+                <EditableNumber
+                    value={elementOverride?.minOccurs ?? element.minOccurs}
+                    originalValue={element.minOccurs}
+                    onSave={val => saveInt('minOccurs', element.minOccurs, val)}
+                />
             </div>
             <div>
                 <div>Max Occurs</div>
-                {editingMaxOccurs ? (
-                    <input
-                        autoFocus
-                        type="number"
-                        value={maxOccursValue}
-                        onChange={e => setMaxOccursValue(e.target.value)}
-                        onBlur={handleMaxOccursSave}
-                        onKeyDown={e => {
-                            if (e.key === 'Enter') handleMaxOccursSave()
-                            if (e.key === 'Escape') setEditingMaxOccurs(false)
+                <EditableNumber
+                    value={elementOverride?.maxOccurs ?? element.maxOccurs}
+                    originalValue={element.maxOccurs}
+                    onSave={val => saveInt('maxOccurs', element.maxOccurs, val)}
+                />
+            </div>
+            {simpleType && (<>
+                <div>
+                    <div>Min Length</div>
+                    <EditableNumber
+                        value={elementOverride?.minLength ?? simpleType.minLength ?? simpleType.length}
+                        originalValue={simpleType.minLength ?? simpleType.length}
+                        onSave={val => saveInt('minLength', simpleType.minLength, val)}
+                    />
+                </div>
+                <div>
+                    <div>Max Length</div>
+                    <EditableNumber
+                        value={elementOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length}
+                        originalValue={simpleType.maxLength ?? simpleType.length}
+                        onSave={val => saveInt('maxLength', simpleType.maxLength, val)}
+                    />
+                </div>
+                <div>
+                    <div>Pattern</div>
+                    <EditableText
+                        value={elementOverride?.pattern ?? simpleType.pattern ?? ''}
+                        isOverridden={elementOverride?.pattern != null}
+                        monospace
+                        onSave={val => {
+                            const original = simpleType.pattern ?? null
+                            saveOverride({pattern: val === (original ?? '') || val === '' ? null : val})
                         }}
                     />
-                ) : (
-                    <span
-                        style={{cursor: 'pointer', ...(elementOverride?.maxOccurs != null ? overriddenStyle : {})}}
-                        onClick={startEditMaxOccurs}
-                    >
-                        {elementOverride?.maxOccurs ?? element.maxOccurs}
-                    </span>
-                )}
-            </div>
+                </div>
+            </>)}
         </div>
     )
 }

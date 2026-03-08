@@ -189,12 +189,10 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                 )}
             </div>
 
-            <div>
+            <p>
                 <input type="checkbox" checked={showXmlTags} onChange={() => setShowXmlTags(show => !show)}/>
                 Show XML tags
-            </div>
-
-            <p>{selectedXmlPath}</p>
+            </p>
 
             {message && (
                 <div style={{display: 'flex', gap: '1em'}}>
