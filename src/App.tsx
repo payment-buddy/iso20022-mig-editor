@@ -1,5 +1,6 @@
 import {FileUploader} from './FileUploader'
 import {useEffect, useState} from "react";
+import {parseRepository} from "./eRepository.js";
 import {BusinessAreaList} from './BusinessAreaList'
 import {MigList} from './MigList.tsx'
 import {MessageDetail} from './MessageDetail.tsx'
@@ -42,6 +43,10 @@ function App() {
 
     function handleBrowse() {
         window.location.hash = 'browse'
+    }
+
+    function handleUpdateERepository(file: File) {
+        void parseRepository(file).then(handleParsed)
     }
 
     function handleMigDownload() {
@@ -136,7 +141,7 @@ function App() {
         return <FileUploader onParsed={handleParsed}/>
     }
     if (hash === '#browse') {
-        return <BusinessAreaList businessAreas={eRepository.businessAreas}/>
+        return <BusinessAreaList businessAreas={eRepository.businessAreas} onUpdateERepository={handleUpdateERepository}/>
     }
     if (hash.startsWith('#mig/')) {
         const id = hash.substring(5)
