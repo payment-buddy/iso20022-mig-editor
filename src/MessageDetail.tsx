@@ -1,4 +1,4 @@
-import type {BusinessArea, DataType, MessageDefinition, MessageImplementationGuide} from "./types.ts";
+import type {BusinessArea, DataType, MessageDefinition, MessageImplementationGuideline} from "./types.ts";
 import {MessageStructure} from "./MessageStructure.tsx";
 import {exportMessageDefinition} from "./messageExport.ts";
 import {useState} from "react";
@@ -9,7 +9,7 @@ function versionLabel(name: string) {
 
 function MigForm({messageIdentifier, onSave, onCancel}: {
     messageIdentifier: string
-    onSave: (mig: MessageImplementationGuide) => void
+    onSave: (mig: MessageImplementationGuideline) => void
     onCancel: () => void
 }) {
     const [name, setName] = useState('')
@@ -18,7 +18,7 @@ function MigForm({messageIdentifier, onSave, onCancel}: {
 
     function handleSubmit(e: { preventDefault(): void }) {
         e.preventDefault()
-        const mig: MessageImplementationGuide = {
+        const mig: MessageImplementationGuideline = {
             id: crypto.randomUUID(),
             name: name.trim(),
             description: description.trim() || null,
@@ -35,7 +35,7 @@ function MigForm({messageIdentifier, onSave, onCancel}: {
 
     return (
         <form onSubmit={handleSubmit} style={{border: '1px solid #ccc', borderRadius: 4, padding: '1rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.8rem', maxWidth: 480}}>
-            <strong>New Message Implementation Guide</strong>
+            <strong>New Message Implementation Guideline</strong>
             <div style={fieldStyle}>
                 <label>Name *</label>
                 <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} required autoFocus/>
@@ -61,7 +61,7 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes, onM
     versions: MessageDefinition[]
     businessArea: BusinessArea
     dataTypes: Map<string, DataType>
-    onMigCreated: (mig: MessageImplementationGuide) => void
+    onMigCreated: (mig: MessageImplementationGuideline) => void
 }) {
     const [showMigForm, setShowMigForm] = useState(false)
 
@@ -70,7 +70,7 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes, onM
         message = versions[versions.length - 1]
     }
 
-    function handleMigSave(mig: MessageImplementationGuide) {
+    function handleMigSave(mig: MessageImplementationGuideline) {
         onMigCreated(mig)
         setShowMigForm(false)
     }

@@ -5,7 +5,7 @@ import {MigList} from './MigList.tsx'
 import {MessageDetail} from './MessageDetail.tsx'
 import {MigDetail} from './MigDetail.tsx'
 import {useHash} from "./useHash.ts";
-import type {ERepository, MessageImplementationGuide} from "./types.ts";
+import type {ERepository, MessageImplementationGuideline} from "./types.ts";
 import {
     deleteDatabase,
     loadAllMigs,
@@ -18,7 +18,7 @@ import {parse, stringify} from "yaml";
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
-    const [migs, setMigs] = useState<MessageImplementationGuide[]>([])
+    const [migs, setMigs] = useState<MessageImplementationGuideline[]>([])
     const [loading, setLoading] = useState(true)
     const [dbError, setDbError] = useState(false)
     const hash = useHash()
@@ -55,7 +55,7 @@ function App() {
         const items: unknown[] = Array.isArray(parsed) ? parsed : [parsed]
         const incoming = items.map((item) => {
             const obj = item as Record<string, unknown>
-            return {...obj, id: typeof obj.id === 'string' ? obj.id : crypto.randomUUID()} as MessageImplementationGuide
+            return {...obj, id: typeof obj.id === 'string' ? obj.id : crypto.randomUUID()} as MessageImplementationGuideline
         })
         void Promise.all(incoming.map(saveMig)).then(() => {
             setMigs(prev => {
@@ -65,7 +65,7 @@ function App() {
         })
     }
 
-    function handleMigCreated(mig: MessageImplementationGuide) {
+    function handleMigCreated(mig: MessageImplementationGuideline) {
         void saveMig(mig).then(() => {
             setMigs(prev => [...prev, mig])
             window.location.hash = 'mig/' + mig.id
