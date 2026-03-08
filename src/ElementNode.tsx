@@ -10,20 +10,29 @@ function Cardinality({element}: { element: MessageElement }) {
     )
 }
 
-export function ElementNode({element, selectedElement, selectedConstraint, dataTypes, showXmlTags, xmlPath, onSelect, onSelectConstraint}: {
+export function ElementNode({
+                                element,
+                                selectedElement,
+                                selectedConstraint,
+                                dataTypes,
+                                showXmlTags,
+                                xmlPath,
+                                onSelect,
+                                onSelectConstraint
+                            }: {
     element: MessageElement
     selectedElement: MessageElement | null
     selectedConstraint: Constraint | null
     dataTypes: Map<string, DataType>
     showXmlTags: boolean
-    xmlPath: string[]
-    onSelect: (elem: MessageElement, xmlPath: string[]) => void
+    xmlPath: string
+    onSelect: (elem: MessageElement, xmlPath: string) => void
     onSelectConstraint: (constraint: Constraint) => void
 }) {
     const [open, setOpen] = useState(false)
     const dataType = dataTypes.get(element.typeId) as ComplexType
     const background = element.id === selectedElement?.id ? '#2b5ce6' : 'transparent'
-    const elementPath = [...xmlPath, element.xmlTag]
+    const elementPath = xmlPath + '/' + element.xmlTag
     const hasChildren = dataType.elements?.length || element.constraints?.length
 
     if (!hasChildren) {

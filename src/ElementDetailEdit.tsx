@@ -3,7 +3,7 @@ import type {DataType, MessageElement} from "./types.ts";
 export function ElementDetailEdit({element, dataType, xmlPath}: {
     element: MessageElement
     dataType: DataType
-    xmlPath: string[]
+    xmlPath: string
 }) {
     return (
         <div>
@@ -25,7 +25,7 @@ export function ElementDetailEdit({element, dataType, xmlPath}: {
             </details>
             <details open={true}>
                 <summary>XML PAth</summary>
-                <div>/{xmlPath.join("/")}</div>
+                <div>{xmlPath}</div>
             </details>
         </div>
     )
