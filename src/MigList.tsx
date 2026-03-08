@@ -1,10 +1,11 @@
 import type {MessageImplementationGuide} from "./types.ts";
 import {useRef} from "react";
 
-export function MigList({migs, onCreateMig, onUpload}: {
+export function MigList({migs, onCreateMig, onUpload, onDownload}: {
     migs: MessageImplementationGuide[]
     onCreateMig: () => void
     onUpload: (text: string) => void
+    onDownload: () => void
 }) {
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -22,6 +23,7 @@ export function MigList({migs, onCreateMig, onUpload}: {
                 <div style={{display: 'flex', gap: '0.5rem'}}>
                     <input ref={fileInputRef} type="file" accept=".yaml,.yml" style={{display: 'none'}}
                            onChange={handleFileChange}/>
+                    <button onClick={onDownload}>Download all</button>
                     <button onClick={() => fileInputRef.current?.click()}>Upload MIG</button>
                     <button onClick={onCreateMig}>Create MIG</button>
                 </div>
