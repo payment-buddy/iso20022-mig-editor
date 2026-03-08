@@ -222,7 +222,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
             {message && (
                 <div style={{display: 'flex', gap: '1em'}}>
                     <div style={{flex: 3}}>
-                        <div>{message.xmlTag}</div>
+                        <div>{showXmlTags ? message.xmlTag : message.name}</div>
                         {message.elements.map(element => (
                             <ElementNode key={element.id}
                                          element={element}
