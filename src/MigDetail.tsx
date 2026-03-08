@@ -5,7 +5,12 @@ import {ConstraintNode} from "./ConstraintNode.tsx";
 import {useState} from "react";
 import {ElementDetailEdit} from "./ElementDetailEdit.tsx";
 
-export function MigDetail({mig, eRepository, onUpdate}: { mig: MessageImplementationGuideline, eRepository: ERepository, onUpdate: (updated: MessageImplementationGuideline) => void }) {
+export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
+    mig: MessageImplementationGuideline,
+    eRepository: ERepository,
+    onUpdate: (updated: MessageImplementationGuideline) => void,
+    onDelete: (id: string) => void
+}) {
     const [showXmlTags, setShowXmlTags] = useState(false)
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
@@ -26,6 +31,14 @@ export function MigDetail({mig, eRepository, onUpdate}: { mig: MessageImplementa
             message = found;
             break
         }
+    }
+
+    function handleDelete() {
+        const download = window.confirm(`Delete "${mig.name}"?\n\nClick OK to delete. If you want to keep a copy, cancel and use the Download button first.`)
+        if (!download) return
+        const wantDownload = window.confirm('Download a copy before deleting?')
+        if (wantDownload) handleDownload()
+        onDelete(mig.id)
     }
 
     function handleDownload() {
@@ -91,9 +104,17 @@ export function MigDetail({mig, eRepository, onUpdate}: { mig: MessageImplementa
                     borderRadius: 3,
                     fontSize: '1em',
                 }}>{mig.messageIdentifier}</code></h3>
-                <button onClick={handleDownload}>Download</button>
+                <div style={{display: 'flex', gap: '0.5em'}}>
+                    <button onClick={handleDownload}>Download</button>
+                    <button onClick={handleDelete}>Delete</button>
+                </div>
             </div>
-            <div style={{display: 'grid', gridTemplateColumns: 'max-content 1fr', alignItems: 'center', gap: '0.25em 0.5em'}}>
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'max-content 1fr',
+                alignItems: 'center',
+                gap: '0.25em 0.5em'
+            }}>
                 <label>Name:</label>
                 {editingName ? (
                     <input
@@ -101,7 +122,10 @@ export function MigDetail({mig, eRepository, onUpdate}: { mig: MessageImplementa
                         value={nameValue}
                         onChange={e => setNameValue(e.target.value)}
                         onBlur={handleNameSave}
-                        onKeyDown={e => { if (e.key === 'Enter') handleNameSave(); if (e.key === 'Escape') setEditingName(false) }}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') handleNameSave();
+                            if (e.key === 'Escape') setEditingName(false)
+                        }}
                     />
                 ) : (
                     <span style={{cursor: 'pointer'}} onClick={startEditName}>{mig.name}</span>
@@ -113,7 +137,10 @@ export function MigDetail({mig, eRepository, onUpdate}: { mig: MessageImplementa
                         value={versionValue}
                         onChange={e => setVersionValue(e.target.value)}
                         onBlur={handleVersionSave}
-                        onKeyDown={e => { if (e.key === 'Enter') handleVersionSave(); if (e.key === 'Escape') setEditingVersion(false) }}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') handleVersionSave();
+                            if (e.key === 'Escape') setEditingVersion(false)
+                        }}
                     />
                 ) : (
                     <span style={{cursor: 'pointer'}} onClick={startEditVersion}>{mig.version}</span>
@@ -125,7 +152,11 @@ export function MigDetail({mig, eRepository, onUpdate}: { mig: MessageImplementa
                         value={descriptionValue}
                         onChange={e => setDescriptionValue(e.target.value)}
                         onBlur={handleDescriptionSave}
-                        onKeyDown={e => { if (e.key === 'Escape') { setEditingDescription(false) } }}
+                        onKeyDown={e => {
+                            if (e.key === 'Escape') {
+                                setEditingDescription(false)
+                            }
+                        }}
                         style={{resize: 'vertical', minHeight: '4em'}}
                     />
                 ) : (
