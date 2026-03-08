@@ -1,4 +1,5 @@
 import type {BusinessArea, MessageDefinition} from "./types.ts";
+import {useRef} from "react";
 
 function baseName(name: string) {
     return name.replace(/V\d+$/, '')
@@ -24,11 +25,25 @@ function groupByBase(messages: MessageDefinition[]) {
     )
 }
 
-export function BusinessAreaList({businessAreas}: { businessAreas: BusinessArea[] }) {
+export function BusinessAreaList({businessAreas, onUpdateERepository}: {
+    businessAreas: BusinessArea[]
+    onUpdateERepository: (file: File) => void
+}) {
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
     return (
         <>
             <p><a href="#">← Back</a></p>
-            <h2>ISO 20022 e-Repository</h2>
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                <h2>ISO 20022 e-Repository</h2>
+                <input ref={fileInputRef} type="file" accept=".iso20022,.zip" style={{display: 'none'}}
+                       onChange={e => {
+                           const f = e.target.files?.[0];
+                           if (f) onUpdateERepository(f);
+                           e.target.value = ''
+                       }}/>
+                <button onClick={() => fileInputRef.current?.click()}>Update e-Repository</button>
+            </div>
             <ul style={{listStyle: 'none', paddingLeft: 0}}>
                 {businessAreas.map((ba) => {
                     const groups = groupByBase(ba.messages)
