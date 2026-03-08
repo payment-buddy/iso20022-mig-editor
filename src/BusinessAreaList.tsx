@@ -26,39 +26,42 @@ function groupByBase(messages: MessageDefinition[]) {
 
 export function BusinessAreaList({businessAreas}: { businessAreas: BusinessArea[] }) {
     return (
-        <ul style={{listStyle: 'none', paddingLeft: 0}}>
-            {businessAreas.map((ba) => {
-                const groups = groupByBase(ba.messages)
-                return (
-                    <li key={ba.code}>
-                        <h4>{ba.name} <code style={{
-                            marginLeft: '0.2rem',
-                            background: '#999', color: '#333',
-                            padding: '0.1em 0.4em', borderRadius: 3, fontSize: '1em',
-                        }}>{ba.code}</code></h4>
-                        <p>{ba.definition}</p>
-                        <details>
-                            <summary style={{cursor: 'pointer'}}>
-                                {groups.length} message definitions
-                            </summary>
-                            <ul style={{listStyle: 'none'}}>
-                                {groups.map((versions) => (
-                                    <li key={versions[0].identifier}>
-                                        <a href={'#' + versions[0].shortCode}>
-                                            <code>{baseName(versions[0].name)}</code>
-                                            <code style={{
-                                                marginLeft: '0.2rem',
-                                                background: '#999', color: '#333',
-                                                padding: '0.1em 0.4em', borderRadius: 3, fontSize: '1em',
-                                            }}>{versions[0].shortCode}</code>
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
-                        </details>
-                    </li>
-                )
-            })}
-        </ul>
+        <>
+            <p><a href="#">← Back</a></p>
+            <ul style={{listStyle: 'none', paddingLeft: 0}}>
+                {businessAreas.map((ba) => {
+                    const groups = groupByBase(ba.messages)
+                    return (
+                        <li key={ba.code}>
+                            <h4>{ba.name} <code style={{
+                                marginLeft: '0.2rem',
+                                background: '#999', color: '#333',
+                                padding: '0.1em 0.4em', borderRadius: 3, fontSize: '1em',
+                            }}>{ba.code}</code></h4>
+                            <p>{ba.definition}</p>
+                            <details>
+                                <summary style={{cursor: 'pointer'}}>
+                                    {groups.length} message definitions
+                                </summary>
+                                <ul style={{listStyle: 'none'}}>
+                                    {groups.map((versions) => (
+                                        <li key={versions[0].identifier}>
+                                            <a href={'#' + versions[0].shortCode}>
+                                                <code>{baseName(versions[0].name)}</code>
+                                                <code style={{
+                                                    marginLeft: '0.2rem',
+                                                    background: '#999', color: '#333',
+                                                    padding: '0.1em 0.4em', borderRadius: 3, fontSize: '1em',
+                                                }}>{versions[0].shortCode}</code>
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </details>
+                        </li>
+                    )
+                })}
+            </ul>
+        </>
     )
 }

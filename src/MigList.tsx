@@ -1,9 +1,9 @@
 import type {MessageImplementationGuide} from "./types.ts";
 import {useRef} from "react";
 
-export function MigList({migs, onCreateMig, onUpload, onDownload}: {
+export function MigList({migs, onBrowse, onUpload, onDownload}: {
     migs: MessageImplementationGuide[]
-    onCreateMig: () => void
+    onBrowse: () => void
     onUpload: (text: string) => void
     onDownload: () => void
 }) {
@@ -25,7 +25,7 @@ export function MigList({migs, onCreateMig, onUpload, onDownload}: {
                            onChange={handleFileChange}/>
                     <button onClick={onDownload}>Download all</button>
                     <button onClick={() => fileInputRef.current?.click()}>Upload MIG</button>
-                    <button onClick={onCreateMig}>Create MIG</button>
+                    <button onClick={onBrowse}>Browse e-Repository</button>
                 </div>
             </div>
             <table style={{width: '100%', borderCollapse: 'collapse'}}>
