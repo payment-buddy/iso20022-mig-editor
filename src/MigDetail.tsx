@@ -9,7 +9,7 @@ export function MigDetail({mig, eRepository}: { mig: MessageImplementationGuidel
     const [showXmlTags, setShowXmlTags] = useState(false)
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
-    const [selectedXmlPath, setSelectedXmlPath] = useState<string[]>([])
+    const [selectedXmlPath, setSelectedXmlPath] = useState<string>('')
     const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
 
 
@@ -30,7 +30,7 @@ export function MigDetail({mig, eRepository}: { mig: MessageImplementationGuidel
         a.click()
     }
 
-    function handleSelectElement(element: MessageElement, xmlPath: string[]) {
+    function handleSelectElement(element: MessageElement, xmlPath: string) {
         setSelectedElement(element)
         setSelectedConstraint(null)
         setSelectedXmlPath(xmlPath)
@@ -67,7 +67,7 @@ export function MigDetail({mig, eRepository}: { mig: MessageImplementationGuidel
                 Show XML tags
             </div>
 
-            <p>{selectedXmlPath.join("/")}</p>
+            <p>{selectedXmlPath}</p>
 
             {message && (
                 <div style={{display: 'flex', gap: '1em'}}>
@@ -80,7 +80,7 @@ export function MigDetail({mig, eRepository}: { mig: MessageImplementationGuidel
                                          selectedConstraint={selectedConstraint}
                                          dataTypes={eRepository.dataTypes}
                                          showXmlTags={showXmlTags}
-                                         xmlPath={[message.xmlTag]}
+                                         xmlPath={'/' + message.xmlTag}
                                          onSelect={handleSelectElement}
                                          onSelectConstraint={handleSelectContraint}/>
                         ))}

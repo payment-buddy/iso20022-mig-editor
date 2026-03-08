@@ -11,11 +11,11 @@ export function MessageStructure({message, dataTypes}: {
 }) {
     const [showXmlTags, setShowXmlTags] = useState(false)
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
-    const [selectedXmlPath, setSelectedXmlPath] = useState<string[]>([])
+    const [selectedXmlPath, setSelectedXmlPath] = useState<string>('')
     const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
 
-    function handleSelectElement(element: MessageElement, xmlPath: string[]) {
+    function handleSelectElement(element: MessageElement, xmlPath: string) {
         setSelectedElement(element)
         setSelectedXmlPath(xmlPath)
         setSelectedDataType(dataTypes.get(element.typeId) ?? null)
@@ -44,7 +44,7 @@ export function MessageStructure({message, dataTypes}: {
                                      selectedConstraint={selectedConstraint}
                                      dataTypes={dataTypes}
                                      showXmlTags={showXmlTags}
-                                     xmlPath={[message.xmlTag]}
+                                     xmlPath={'/' + message.xmlTag}
                                      onSelect={handleSelectElement}
                                      onSelectConstraint={handleSelectContraint}/>
                     ))}
