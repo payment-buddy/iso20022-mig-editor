@@ -50,7 +50,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     }
 
     function handleDownload() {
-        const blob = new Blob([stringify(mig)], {type: 'text/yaml'})
+        const blob = new Blob([stringify(mig, (_key, val) => val === null ? undefined : val)], {type: 'text/yaml'})
         const a = document.createElement('a')
         a.href = URL.createObjectURL(blob)
         a.download = `${mig.name}-${mig.version}.yaml`
