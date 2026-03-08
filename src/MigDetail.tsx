@@ -123,6 +123,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
 
     function handleSelectContraint(constraint: Constraint) {
         setSelectedElement(null)
+        setSelectedXmlPath('')
         setSelectedConstraint(constraint)
         setSelectedDataType(null)
     }
