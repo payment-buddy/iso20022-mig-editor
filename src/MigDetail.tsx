@@ -11,6 +11,7 @@ import {ElementNode} from "./ElementNode.tsx";
 import {ConstraintNode} from "./ConstraintNode.tsx";
 import {useState} from "react";
 import {ElementDetailEdit} from "./ElementDetailEdit.tsx";
+import {ConstraintDetail} from "./ConstraintDetail.tsx";
 
 export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     mig: MessageImplementationGuideline,
@@ -254,6 +255,8 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                                 elementOverride={selectedElementOverride}
                                 onUpdateOverride={handleUpdateElementOverride}/>
                         }
+                        {selectedConstraint &&
+                            <ConstraintDetail constraint={selectedConstraint}/>}
                     </div>
                 </div>
             )}
