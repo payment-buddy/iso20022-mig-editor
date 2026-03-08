@@ -6,6 +6,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build:
@@ -26,10 +28,17 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Prepare artifact
+      - name: Prepare artifacts
         run: |
           mkdir artifact
           cp dist/index.html artifact/iso20022-mig-editor.html
+          mkdir pages
+          cp dist/index.html pages/index.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
 
       - name: Delete existing 'latest' release
         uses: dev-drprasad/delete-tag-and-release@v1.0
@@ -48,3 +57,15 @@ jobs:
           files: artifact/iso20022-mig-editor.html
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
