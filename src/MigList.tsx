@@ -39,8 +39,8 @@ export function MigList({migs, onBrowse, onUpload, onDownload}: {
                 <tbody>
                 {migs.map(mig => (
                     <tr key={mig.id} style={{borderBottom: '1px solid'}}>
-                        <td>{mig.messageIdentifier}</td>
-                        <td>{mig.name}</td>
+                        <td><a href={'#mig/' + mig.id}>{mig.messageIdentifier}</a></td>
+                        <td><a href={'#mig/' + mig.id}>{mig.name}</a></td>
                         <td>{mig.version}</td>
                     </tr>
                 ))}
