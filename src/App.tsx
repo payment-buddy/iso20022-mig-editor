@@ -20,7 +20,6 @@ function App() {
     const [migs, setMigs] = useState<MessageImplementationGuide[]>([])
     const [loading, setLoading] = useState(true)
     const [dbError, setDbError] = useState(false)
-    const [browsingMessages, setBrowsingMessages] = useState(false)
     const hash = useHash()
 
     useEffect(() => {
@@ -68,7 +67,7 @@ function App() {
     function handleMigCreated(mig: MessageImplementationGuide) {
         void saveMig(mig).then(() => {
             setMigs(prev => [...prev, mig])
-            setBrowsingMessages(false)
+            window.location.hash = 'mig/' + mig.id
         })
     }
 
@@ -106,7 +105,13 @@ function App() {
                 </div>
             )
         }
-        if (hash.startsWith('#') && eRepository) {
+        if (!eRepository) {
+            return <FileUploader onParsed={handleParsed}/>
+        }
+        if (hash === '#browse') {
+            return <BusinessAreaList businessAreas={eRepository.businessAreas}/>
+        }
+        if (hash.startsWith('#')) {
             const code = hash.substring(1)
             for (const businessArea of eRepository.businessAreas) {
                 for (const message of businessArea.messages) {
@@ -129,13 +134,7 @@ function App() {
                 }
             }
         }
-        if (migs.length > 0 && !browsingMessages) {
-            return <MigList migs={migs} onCreateMig={() => setBrowsingMessages(true)} onUpload={handleMigUpload} onDownload={handleMigDownload}/>
-        }
-        if (eRepository) {
-            return <BusinessAreaList businessAreas={eRepository.businessAreas}/>
-        }
-        return <FileUploader onParsed={handleParsed}/>
+        return <MigList migs={migs} onBrowse={() => { window.location.hash = 'browse' }} onUpload={handleMigUpload} onDownload={handleMigDownload}/>
     }
 
     return (
