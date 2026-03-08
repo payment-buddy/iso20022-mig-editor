@@ -24,7 +24,7 @@ export function ElementDetailView({element, dataType, xmlPath}: {
                 <div>{element.xmlTag}</div>
             </details>
             <details open={true}>
-                <summary>XML PAth</summary>
+                <summary>XML Path</summary>
                 <div>{xmlPath}</div>
             </details>
         </div>
