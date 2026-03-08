@@ -76,7 +76,6 @@ export interface ElementOverride {
     maxInclusive: number | null
     totalDigits: number | null
     fractionDigits: number | null
-    length: number | null
     minLength: number | null
     maxLength: number | null
     pattern: string | null
