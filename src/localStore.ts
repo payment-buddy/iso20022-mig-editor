@@ -1,4 +1,4 @@
-import type {ERepository, MessageImplementationGuide} from "./types.ts"
+import type {ERepository, MessageImplementationGuideline} from "./types.ts"
 
 const DB_NAME = 'iso20022'
 const DB_VERSION = 1
@@ -36,11 +36,11 @@ export async function loadERepository(): Promise<ERepository | null> {
     return request("eRepository", store => store.get(RECORD_KEY), 'readonly').then(r => r ?? null)
 }
 
-export async function saveMig(mig: MessageImplementationGuide): Promise<void> {
+export async function saveMig(mig: MessageImplementationGuideline): Promise<void> {
     await request("mig", store => store.put(mig, mig.id), 'readwrite')
 }
 
-export async function loadAllMigs(): Promise<MessageImplementationGuide[]> {
+export async function loadAllMigs(): Promise<MessageImplementationGuideline[]> {
     return request("mig", store => store.getAll(), 'readonly')
 }
 
