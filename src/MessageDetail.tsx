@@ -1,6 +1,5 @@
 import type {BusinessArea, DataType, MessageDefinition, MessageImplementationGuideline} from "./types.ts";
 import {MessageStructure} from "./MessageStructure.tsx";
-import {exportMessageDefinition} from "./messageExport.ts";
 import {useState} from "react";
 
 function versionLabel(name: string) {
@@ -84,7 +83,6 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes, onM
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
                     <h3 style={{marginTop: '0.2em'}}>{message.name}</h3>
                     <div style={{display: 'flex', gap: '0.5rem'}}>
-                        <button onClick={() => exportMessageDefinition(message, dataTypes)}>Export</button>
                         <button onClick={() => setShowMigForm(v => !v)}>Create MIG</button>
                     </div>
                 </div>
