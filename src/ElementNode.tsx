@@ -19,6 +19,7 @@ export function ElementNode({
                                 dataTypes,
                                 showXmlTags,
                                 xmlPath,
+                                selectedXmlPath,
                                 elementOverrides = [],
                                 showExcluded = true,
                                 onSelect,
@@ -30,16 +31,18 @@ export function ElementNode({
     dataTypes: Map<string, DataType>
     showXmlTags: boolean
     xmlPath: string
+    selectedXmlPath: string
     elementOverrides?: ElementOverride[]
     showExcluded?: boolean
     onSelect: (elem: MessageElement, xmlPath: string) => void
     onSelectConstraint: (constraint: Constraint) => void
 }) {
     const [open, setOpen] = useState(false)
-    const dataType = dataTypes.get(element.typeId) as ComplexType
-    const background = element.id === selectedElement?.id ? '#2b5ce6' : 'transparent'
-    const color = element.id === selectedElement?.id ? '#fff' : undefined
     const elementPath = xmlPath + '/' + element.xmlTag
+    const isSelected = elementPath === selectedXmlPath;
+    const background = isSelected ? '#2b5ce6' : 'transparent'
+    const color = isSelected ? '#fff' : undefined
+    const dataType = dataTypes.get(element.typeId) as ComplexType
     const hasChildren = dataType.elements?.length || element.constraints?.length
     const override = elementOverrides.find(o => o.xmlPath === elementPath)
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
@@ -76,6 +79,7 @@ export function ElementNode({
                                  dataTypes={dataTypes}
                                  showXmlTags={showXmlTags}
                                  xmlPath={elementPath}
+                                 selectedXmlPath={selectedXmlPath}
                                  elementOverrides={elementOverrides}
                                  showExcluded={showExcluded}
                                  onSelect={onSelect}

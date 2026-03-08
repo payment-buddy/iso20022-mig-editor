@@ -223,6 +223,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                                          dataTypes={eRepository.dataTypes}
                                          showXmlTags={showXmlTags}
                                          xmlPath={'/' + message.xmlTag}
+                                         selectedXmlPath={selectedXmlPath}
                                          elementOverrides={mig.elementOverrides}
                                          showExcluded={showExcluded}
                                          onSelect={handleSelectElement}

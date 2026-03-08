@@ -45,6 +45,7 @@ export function MessageStructure({message, dataTypes}: {
                                      dataTypes={dataTypes}
                                      showXmlTags={showXmlTags}
                                      xmlPath={'/' + message.xmlTag}
+                                     selectedXmlPath={selectedXmlPath}
                                      onSelect={handleSelectElement}
                                      onSelectConstraint={handleSelectContraint}/>
                     ))}
