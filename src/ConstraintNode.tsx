@@ -10,7 +10,7 @@ export function ConstraintNode({constraint, selectedConstraint, onSelect}: {
     return (
         <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
              onClick={() => onSelect(constraint)}>
-            ✔ {constraint.name}
+            <span style={{fontSize: '0.8em'}}>✔</span> {constraint.name}
         </div>
     )
 }
