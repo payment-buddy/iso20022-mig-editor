@@ -160,7 +160,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
     while (true) {
         const {done, value} = await reader.read()
         if (done) break
-        parser.write(decoder.decode(value, {stream: true}))
+        parser.write(decoder.decode(value, {stream: true}).replace(/&#xD;&#xA;/g, '&#xA;'))
     }
     parser.close()
 
