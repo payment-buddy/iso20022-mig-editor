@@ -102,7 +102,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
         <div>
             <p><a href="#">← Back</a></p>
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                <h2>Message Implementation Guildeline <code style={{
+                <h2>Message Implementation Guide <code style={{
                     marginLeft: '0.2rem',
                     padding: '0.1em 0.4em',
                     border: '#999 solid 1px',

@@ -164,5 +164,6 @@ export async function parseRepository(file: File): Promise<ERepository> {
     }
     parser.close()
 
+    businessAreas.forEach(ba => ba.messages.sort((a, b) => a.identifier.localeCompare(b.identifier)))
     return {dataTypes, businessAreas}
 }

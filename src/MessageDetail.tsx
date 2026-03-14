@@ -3,8 +3,8 @@ import {MessageStructure} from "./MessageStructure.tsx";
 import {useState} from "react";
 import {CreateMigForm} from "./CreateMigForm.tsx";
 
-function versionLabel(name: string) {
-    return name.match(/V\d+$/)?.[0] ?? name
+function versionLabel(msg: MessageDefinition) {
+    return 'V' + msg.identifier.substring(msg.identifier.lastIndexOf('.') + 1)
 }
 
 export function MessageDetail({messageId, versions, businessArea, dataTypes, onMigCreated}: {
@@ -33,7 +33,13 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes, onM
             <div>
                 <div style={{color: '#666', fontSize: '1em'}}>{businessArea.name}</div>
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                    <h3 style={{marginTop: '0.2em'}}>{message.name}</h3>
+                    <h3 style={{marginTop: '0.2em'}}>{message.name} <code style={{
+                        marginLeft: '0.2rem',
+                        padding: '0.1em 0.4em',
+                        border: '#999 solid 1px',
+                        borderRadius: 3,
+                        fontSize: '1em',
+                    }}>{message.identifier}</code></h3>
                     <div style={{display: 'flex', gap: '0.5rem'}}>
                         <button onClick={() => setShowMigForm(v => !v)}>Create MIG</button>
                     </div>
@@ -51,7 +57,7 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes, onM
                            color: msg === message ? '#fff' : '#2b5ce6',
                        }}
                     >
-                        {versionLabel(msg.name)}
+                        {versionLabel(msg)}
                     </a>
                 ))}
             </div>
