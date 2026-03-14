@@ -43,7 +43,7 @@ export function ElementNode({
     const background = isSelected ? '#2b5ce6' : 'transparent'
     const color = isSelected ? '#fff' : undefined
     const dataType = dataTypes.get(element.typeId) as ComplexType
-    const hasChildren = dataType.elements?.length || element.constraints?.length
+    const hasChildren = dataType.elements?.length || element.constraints?.length || dataType.constraints?.length
     const override = elementOverrides.find(o => o.xmlPath === elementPath)
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
     const nameStyle = isExcluded ? {textDecoration: 'line-through' as const} : undefined
@@ -52,12 +52,14 @@ export function ElementNode({
 
     if (!hasChildren) {
         return (
-            <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
-                 onClick={() => onSelect(element, elementPath)}>
-                <span style={{marginRight: '0.5em', fontSize: '0.7em'}}>◇</span>
-                <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
-                <Cardinality element={element} override={override}/>
-            </div>
+            <>
+                <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
+                     onClick={() => onSelect(element, elementPath)}>
+                    <span style={{marginRight: '0.5em', fontSize: '0.7em'}}>◇</span>
+                    <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
+                    <Cardinality element={element} override={override}/>
+                </div>
+            </>
         )
     }
 
@@ -65,7 +67,9 @@ export function ElementNode({
         <div style={{marginLeft: '1em'}}>
             <div style={{cursor: 'pointer', background, color}} onClick={() => {
                 onSelect(element, elementPath)
-                setOpen(o => !o)
+                if (elementPath == selectedXmlPath || !open) {
+                    setOpen(o => !o)
+                }
             }}>
                 <span style={{marginLeft: '0', marginRight: '0.4em', fontSize: '0.7em'}}>{open ? '▼' : '▶'}</span>
                 <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
@@ -94,6 +98,12 @@ export function ElementNode({
                                  onSelectConstraint={onSelectConstraint}/>
                 ))}
                 {element.constraints.map((constraint) => (
+                    <ConstraintNode key={constraint.name}
+                                    constraint={constraint}
+                                    selectedConstraint={selectedConstraint}
+                                    onSelect={onSelectConstraint}/>
+                ))}
+                {dataType.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
                                     selectedConstraint={selectedConstraint}
