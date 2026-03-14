@@ -13,7 +13,7 @@ export function ConstraintDetail({constraint}: { constraint: Constraint }) {
                 <div>{constraint.definition}</div>
             </details>
             {constraint.expression && (
-                <details open={true}>
+                <details open={false}>
                     <summary>Expression</summary>
                     <pre style={{
                         overflowX: 'auto',
