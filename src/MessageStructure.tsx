@@ -57,7 +57,7 @@ export function MessageStructure({message, dataTypes}: {
                                         onSelect={handleSelectContraint}/>
                     ))}
                 </div>
-                <div style={{flex: 4}}>
+                <div style={{flex: 4, position: 'sticky', top: 0, alignSelf: 'flex-start', maxHeight: '100vh', overflowY: 'auto'}}>
                     {selectedElement &&
                         <ElementDetailView element={selectedElement}
                                            dataType={selectedDataType!}
