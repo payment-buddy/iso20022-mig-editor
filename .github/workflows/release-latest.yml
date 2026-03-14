@@ -33,7 +33,9 @@ jobs:
           mkdir artifact
           cp dist/index.html artifact/iso20022-mig-editor.html
           mkdir pages
-          cp dist/index.html pages/index.html
+          cp dist/index.html pages/
+          cp dist/manifest.json pages/
+          cp dist/sw.js pages/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
