@@ -79,8 +79,8 @@ export interface ElementOverride {
     minLength: number | null
     maxLength: number | null
     pattern: string | null
-    codes: Code[]
-    additionalConstraints: Constraint[]
+    codes: Code[] | null
+    additionalConstraints: Constraint[] | null
 }
 
 export interface MessageImplementationGuide {
@@ -90,5 +90,5 @@ export interface MessageImplementationGuide {
     version: string
     description: string | null
     elementOverrides: ElementOverride[]
-    additionalConstraints: Constraint[]
+    additionalConstraints: Constraint[] | null
 }
