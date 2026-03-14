@@ -5,7 +5,7 @@ import type {
     ElementOverride,
     ERepository,
     MessageElement,
-    MessageImplementationGuideline
+    MessageImplementationGuide
 } from "./types.ts";
 import {ElementNode} from "./ElementNode.tsx";
 import {ConstraintNode} from "./ConstraintNode.tsx";
@@ -15,9 +15,9 @@ import {ConstraintDetail} from "./ConstraintDetail.tsx";
 import {EditableText} from "./EditableText.tsx";
 
 export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
-    mig: MessageImplementationGuideline,
+    mig: MessageImplementationGuide,
     eRepository: ERepository,
-    onUpdate: (updated: MessageImplementationGuideline) => void,
+    onUpdate: (updated: MessageImplementationGuide) => void,
     onDelete: (id: string) => void
 }) {
     const [showXmlTags, setShowXmlTags] = useState(false)
