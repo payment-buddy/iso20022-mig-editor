@@ -12,7 +12,6 @@ function MigForm({message, onSave, onCancel}: {
     onCancel: () => void
 }) {
     const [name, setName] = useState('MIG-' + message.identifier)
-    const [description, setDescription] = useState(message.definition)
     const [version, setVersion] = useState('1.0-DRAFT')
 
     function handleSubmit(e: { preventDefault(): void }) {
@@ -20,7 +19,7 @@ function MigForm({message, onSave, onCancel}: {
         const mig: MessageImplementationGuideline = {
             id: crypto.randomUUID(),
             name: name.trim(),
-            description: description.trim() || null,
+            description: message.definition,
             version: version.trim(),
             messageIdentifier: message.identifier,
             elementOverrides: [],
@@ -42,10 +41,6 @@ function MigForm({message, onSave, onCancel}: {
             <div style={fieldStyle}>
                 <label>Version *</label>
                 <input style={inputStyle} value={version} onChange={e => setVersion(e.target.value)} required/>
-            </div>
-            <div style={fieldStyle}>
-                <label>Description</label>
-                <textarea style={{...inputStyle, resize: 'vertical'}} rows={3} value={description} onChange={e => setDescription(e.target.value)}/>
             </div>
             <div style={{display: 'flex', gap: '0.5rem'}}>
                 <button type="submit">Save</button>
