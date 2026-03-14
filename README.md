@@ -1,6 +1,6 @@
-# ISO 20022 Message Implementation Guidelines Editor
+# ISO 20022 Message Implementation Guide Editor
 
-A browser-only offline tool for exploring ISO 20022 financial message definitions and authoring Message Implementation Guidelines (MIG).
+A browser-only offline tool for exploring ISO 20022 financial message definitions and authoring Message Implementation Guides (MIG).
 
 ## Features
 

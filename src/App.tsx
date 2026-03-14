@@ -6,7 +6,7 @@ import {MigList} from './MigList.tsx'
 import {MessageDetail} from './MessageDetail.tsx'
 import {MigDetail} from './MigDetail.tsx'
 import {useHash} from "./useHash.ts";
-import type {ERepository, MessageImplementationGuideline} from "./types.ts";
+import type {ERepository, MessageImplementationGuide} from "./types.ts";
 import {
     deleteDatabase,
     deleteMig,
@@ -20,7 +20,7 @@ import {parse, stringify} from "yaml";
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
-    const [migs, setMigs] = useState<MessageImplementationGuideline[]>([])
+    const [migs, setMigs] = useState<MessageImplementationGuide[]>([])
     const [loading, setLoading] = useState(true)
     const [dbError, setDbError] = useState(false)
     const hash = useHash()
@@ -68,7 +68,7 @@ function App() {
             return {
                 ...obj,
                 id: typeof obj.id === 'string' ? obj.id : crypto.randomUUID()
-            } as MessageImplementationGuideline
+            } as MessageImplementationGuide
         })
         void Promise.all(incoming.map(saveMig)).then(() => {
             setMigs(prev => {
@@ -76,13 +76,13 @@ function App() {
                 return [...prev, ...incoming.filter(m => !existingIds.has(m.id))]
             })
             if (!Array.isArray(parsed)) {
-                const mig = parsed as MessageImplementationGuideline;
+                const mig = parsed as MessageImplementationGuide;
                 window.location.hash = 'mig/' + mig.id
             }
         })
     }
 
-    function handleMigUpdated(updated: MessageImplementationGuideline) {
+    function handleMigUpdated(updated: MessageImplementationGuide) {
         void saveMig(updated).then(() => {
             setMigs(prev => prev.map(m => m.id === updated.id ? updated : m))
         })
@@ -95,7 +95,7 @@ function App() {
         })
     }
 
-    function handleMigCreated(mig: MessageImplementationGuideline) {
+    function handleMigCreated(mig: MessageImplementationGuide) {
         void saveMig(mig).then(() => {
             setMigs(prev => [...prev, mig])
             window.location.hash = 'mig/' + mig.id

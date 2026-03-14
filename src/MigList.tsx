@@ -1,8 +1,8 @@
-import type {MessageImplementationGuideline} from "./types.ts";
+import type {MessageImplementationGuide} from "./types.ts";
 import {useRef} from "react";
 
 export function MigList({migs, onBrowse, onUpload, onDownload}: {
-    migs: MessageImplementationGuideline[]
+    migs: MessageImplementationGuide[]
     onBrowse: () => void
     onUpload: (text: string) => void
     onDownload: () => void
@@ -19,7 +19,7 @@ export function MigList({migs, onBrowse, onUpload, onDownload}: {
     return (
         <div>
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                <h2>ISO 20022 Message Implementation Guidelines</h2>
+                <h2>ISO 20022 Message Implementation Guide</h2>
                 <div style={{display: 'flex', gap: '0.5rem'}}>
                     <input ref={fileInputRef} type="file" accept=".yaml,.yml" style={{display: 'none'}}
                            onChange={handleFileChange}/>

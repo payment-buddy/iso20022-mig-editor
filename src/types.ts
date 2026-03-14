@@ -83,7 +83,7 @@ export interface ElementOverride {
     additionalConstraints: Constraint[]
 }
 
-export interface MessageImplementationGuideline {
+export interface MessageImplementationGuide {
     id: string
     messageIdentifier: string
     name: string
