@@ -100,7 +100,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
 
     return (
         <div>
-            <p><a href="#">← Back</a></p>
+            <p><a href="#" className="back-link">← Back</a></p>
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
                 <h2>Message Implementation Guide <code style={{
                     marginLeft: '0.2rem',

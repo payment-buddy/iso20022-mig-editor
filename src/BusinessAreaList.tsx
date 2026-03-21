@@ -33,7 +33,7 @@ export function BusinessAreaList({businessAreas, onUpdateERepository}: {
 
     return (
         <>
-            <p><a href="#">← Back</a></p>
+            <a href="#" className="back-link">← Back</a>
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
                 <h2>ISO 20022 e-Repository</h2>
                 <input ref={fileInputRef} type="file" accept=".iso20022,.zip" style={{display: 'none'}}
