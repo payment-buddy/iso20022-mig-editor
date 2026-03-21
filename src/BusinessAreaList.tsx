@@ -51,13 +51,7 @@ export function BusinessAreaList({businessAreas, onUpdateERepository}: {
                     const groups = groupByBase(ba.messages)
                     return (
                         <li key={ba.code}>
-                            <h4>{ba.name} <code style={{
-                                marginLeft: '0.2rem',
-                                padding: '0.1em 0.4em',
-                                border: '#999 solid 1px',
-                                borderRadius: 3,
-                                fontSize: '1em',
-                            }}>{ba.code}</code></h4>
+                            <h4>{ba.name} <code className="badge">{ba.code}</code></h4>
                             <p>{ba.definition}</p>
                             <details>
                                 <summary style={{cursor: 'pointer'}}>
@@ -68,13 +62,7 @@ export function BusinessAreaList({businessAreas, onUpdateERepository}: {
                                         <li key={versions[0].identifier}>
                                             <a href={'#' + versions[0].shortCode}>
                                                 <code>{baseName(versions[0].name)}</code>
-                                                <code style={{
-                                                    marginLeft: '0.2rem',
-                                                    padding: '0.1em 0.4em',
-                                                    border: '#999 solid 1px',
-                                                    borderRadius: 3,
-                                                    fontSize: '1em',
-                                                }}>{versions[0].shortCode}</code>
+                                                <code className="badge">{versions[0].shortCode}</code>
                                             </a>
                                         </li>
                                     ))}

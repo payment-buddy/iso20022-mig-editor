@@ -102,13 +102,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
         <div>
             <p><a href="#" className="back-link">← Back</a></p>
             <div className="page-header">
-                <h2>Message Implementation Guide <code style={{
-                    marginLeft: '0.2rem',
-                    padding: '0.1em 0.4em',
-                    border: '#999 solid 1px',
-                    borderRadius: 3,
-                    fontSize: '1em',
-                }}>{mig.messageIdentifier}</code></h2>
+                <h2>Message Implementation Guide <code className="badge">{mig.messageIdentifier}</code></h2>
                 <div className="page-actions">
                     <button onClick={handleDownload}>Download</button>
                     <button onClick={handleDelete}>Delete</button>
