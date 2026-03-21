@@ -34,15 +34,17 @@ export function BusinessAreaList({businessAreas, onUpdateERepository}: {
     return (
         <>
             <a href="#" className="back-link">← Back</a>
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+            <div className="page-header">
                 <h2>ISO 20022 e-Repository</h2>
-                <input ref={fileInputRef} type="file" accept=".iso20022,.zip" style={{display: 'none'}}
-                       onChange={e => {
-                           const f = e.target.files?.[0];
-                           if (f) onUpdateERepository(f);
-                           e.target.value = ''
-                       }}/>
-                <button onClick={() => fileInputRef.current?.click()}>Update e-Repository</button>
+                <div className="page-actions">
+                    <input ref={fileInputRef} type="file" accept=".iso20022,.zip" style={{display: 'none'}}
+                           onChange={e => {
+                               const f = e.target.files?.[0];
+                               if (f) onUpdateERepository(f);
+                               e.target.value = ''
+                           }}/>
+                    <button onClick={() => fileInputRef.current?.click()}>Update e-Repository</button>
+                </div>
             </div>
             <ul style={{listStyle: 'none', paddingLeft: 0}}>
                 {businessAreas.map((ba) => {
