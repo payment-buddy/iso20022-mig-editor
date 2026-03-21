@@ -3,18 +3,18 @@ import {formatXml} from "./formatXml.ts";
 
 export function ConstraintDetail({constraint}: { constraint: Constraint }) {
     return (
-        <div>
-            <details open={true}>
-                <summary>Name</summary>
+        <div className="detail-panel">
+            <div>
+                <div className="detail-label">Name</div>
                 <div>{constraint.name}</div>
-            </details>
-            <details open={true}>
-                <summary>Description</summary>
+            </div>
+            <div>
+                <div className="detail-label">Description</div>
                 <div>{constraint.definition}</div>
-            </details>
+            </div>
             {constraint.expression && (
                 <details open={false}>
-                    <summary>Expression</summary>
+                    <summary className="detail-label">Expression</summary>
                     <pre style={{
                         overflowX: 'auto',
                         whiteSpace: 'pre-wrap',

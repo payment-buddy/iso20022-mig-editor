@@ -6,27 +6,27 @@ export function ElementDetailView({element, dataType, xmlPath}: {
     xmlPath: string
 }) {
     return (
-        <div>
-            <details open={true}>
-                <summary>Type</summary>
+        <div className="detail-panel">
+            <div>
+                <div className="detail-label">Type</div>
                 <div>{dataType.name}</div>
-            </details>
-            <details open={true}>
-                <summary>Definition</summary>
+            </div>
+            <div>
+                <div className="detail-label">Definition</div>
                 <div>{element.definition}</div>
-            </details>
-            <details open={true}>
-                <summary>Multiplicity</summary>
+            </div>
+            <div>
+                <div className="detail-label">Multiplicity</div>
                 <div>[{element.minOccurs}..{element.maxOccurs}]</div>
-            </details>
-            <details open={true}>
-                <summary>XML Tag</summary>
+            </div>
+            <div>
+                <div className="detail-label">XML Tag</div>
                 <div>{element.xmlTag}</div>
-            </details>
-            <details open={true}>
-                <summary>XML Path</summary>
+            </div>
+            <div>
+                <div className="detail-label">XML Path</div>
                 <div>{xmlPath}</div>
-            </details>
+            </div>
         </div>
     )
 }
