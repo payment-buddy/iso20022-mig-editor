@@ -74,13 +74,7 @@ export function ElementNode({
                 <span style={{marginLeft: '0', marginRight: '0.4em', fontSize: '0.7em'}}>{open ? '▼' : '▶'}</span>
                 <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
                 <Cardinality element={element} override={override}/>
-                {dataType.isChoice && <span style={{
-                    marginLeft: '0.2rem',
-                    padding: '0.1em 0.4em',
-                    border: '#999 solid 1px',
-                    borderRadius: 3,
-                    fontSize: '0.7em',
-                }}>choice</span>}
+                {dataType.isChoice && <span className="badge">choice</span>}
             </div>
             {open && <>
                 {dataType.elements?.map(child => (

@@ -33,13 +33,8 @@ export function MessageDetail({messageId, versions, businessArea, dataTypes, onM
             <div>
                 <div style={{color: '#666', fontSize: '1em'}}>{businessArea.name}</div>
                 <div className="page-header">
-                    <h2 style={{marginTop: '0.2em'}}>{message.name} <code style={{
-                        marginLeft: '0.2rem',
-                        padding: '0.1em 0.4em',
-                        border: '#999 solid 1px',
-                        borderRadius: 3,
-                        fontSize: '1em',
-                    }}>{message.identifier}</code></h2>
+                    <h2 style={{marginTop: '0.2em'}}>{message.name}
+                        <code className="badge">{message.identifier}</code></h2>
                     <div className="page-actions">
                         <button onClick={() => setShowMigForm(v => !v)}>Create MIG</button>
                     </div>
