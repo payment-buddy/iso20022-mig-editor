@@ -26,19 +26,9 @@ export function FileUploader({onParsed}: {
         <div>
             <h1>ISO 20022 Message Implementation Guide Editor</h1>
 
-            <h2>Get started</h2>
-            <p>
-                To use this tool, load an ISO 20022 <a href="https://www.iso20022.org/iso20022-repository/e-repository"
-                                                       target="_blank"
-                                                       rel="noopener noreferrer">e-Repository</a> file.
-                The e-Repository contains the full catalogue of ISO 20022 message definitions, data types, and
-                constraints. Once loaded, you can browse message structures and create Message Implementation
-                Guides (MIGs) that restrict or annotate elements for your specific use case.
-            </p>
-            <p>
-                The file is stored locally in your browser and persists across sessions — you only need to load it
-                once.
-            </p>
+            <p>Load an <a href="https://www.iso20022.org/iso20022-repository/e-repository" target="_blank"
+                          rel="noopener noreferrer">ISO 20022 e-Repository</a> file to get started.</p>
+            <p>The file is stored locally in your browser and persists across sessions.</p>
             <input
                 ref={inputRef}
                 type="file"
