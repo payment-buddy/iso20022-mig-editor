@@ -18,9 +18,9 @@ export function MigList({migs, onBrowse, onUpload, onDownload}: {
 
     return (
         <div>
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+            <div className="page-header">
                 <h2>ISO 20022 Message Implementation Guide</h2>
-                <div style={{display: 'flex', gap: '0.5rem'}}>
+                <div className="page-actions">
                     <input ref={fileInputRef} type="file" accept=".yaml,.yml" style={{display: 'none'}}
                            onChange={handleFileChange}/>
                     {migs.length > 0 && <button onClick={onDownload}>Download all</button>}

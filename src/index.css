@@ -49,6 +49,17 @@ button:focus-visible {
     outline: 4px auto;
 }
 
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.page-actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
 .back-link {
     display: inline-block;
     margin-bottom: 0.75rem;
