@@ -48,9 +48,9 @@ const MINIMAL_XML = `<?xml version="1.0" encoding="UTF-8"?>
                 simpleType="simple-type-1"/>
         <messageElement
                 xmi:id="message-element-2"
-                name="NumberOfTransactions"
-                xmlTag="NbOfTxs"
-                definition="Number of transactions"
+                name="InstructedAmount"
+                xmlTag="InstdAmt"
+                definition="Instructed Amount"
                 minOccurs="1"
                 maxOccurs="5"
                 simpleType="simple-type-2"/>
@@ -80,12 +80,34 @@ const MINIMAL_XML = `<?xml version="1.0" encoding="UTF-8"?>
             definition="Max 35 chars"
             maxLength="35"/>
     <topLevelDictionaryEntry
-            xsi:type="iso20022:Decimal"
+            xsi:type="iso20022:Amount"
             xmi:id="simple-type-2"
-            name="DecimalNumber"
-            definition="Decimal number"
+            name="ActiveCurrencyAndAmount"
+            definition="A number of monetary units specified in an active currency"
+            minInclusive="0"
             totalDigits="18"
-            fractionDigits="17"/>
+            fractionDigits="5"
+            currencyIdentifierSet="codeset-1">
+        <example>6545.56</example>
+        <constraint
+            xmi:id="_YYB_8dp-Ed-ak6NoX_4Aeg_1337619430"
+            name="CurrencyAmount"
+            definition="The number of fractional digits"/>
+    </topLevelDictionaryEntry>
+    <topLevelDictionaryEntry
+            xsi:type="iso20022:CodeSet"
+            xmi:id="codeset-1"
+            name="ActiveCurrencyCode"
+            definition="A code allocated to a currency"
+            registrationStatus="Registered"
+            pattern="[A-Z]{3,3}">
+        <example>EUR</example>
+        <constraint
+            xmi:id="_bqIp59p-Ed-ak6NoX_4Aeg_-767147633"
+            name="ActiveCurrency"
+            definition="The currency code must be a valid active currency code."
+            registrationStatus="Provisionally Registered"/>
+    </topLevelDictionaryEntry>
 </model>`
 
 function makeFile(content: string, name = 'test.iso20022'): File {
@@ -146,9 +168,9 @@ describe('parseRepository', () => {
                 },
                 {
                     id: 'message-element-2',
-                    name: 'NumberOfTransactions',
-                    xmlTag: 'NbOfTxs',
-                    definition: 'Number of transactions',
+                    name: 'InstructedAmount',
+                    xmlTag: 'InstdAmt',
+                    definition: 'Instructed Amount',
                     minOccurs: 1,
                     maxOccurs: 5,
                     typeId: 'simple-type-2',
@@ -195,25 +217,31 @@ describe('parseRepository', () => {
             baseValue: null,
             codes: [],
             constraints: [],
+            currencyIdentifierSet: null,
         })
     })
 
-    it('parses Decimal simple type', () => {
+    it('parses Amount simple type', () => {
         expect(repo.dataTypes.get('simple-type-2')).toEqual({
-            name: 'DecimalNumber',
-            definition: 'Decimal number',
-            baseType: 'Decimal',
-            minInclusive: null,
+            name: 'ActiveCurrencyAndAmount',
+            definition: 'A number of monetary units specified in an active currency',
+            baseType: 'Amount',
+            minInclusive: 0,
             maxInclusive: null,
             totalDigits: 18,
-            fractionDigits: 17,
+            fractionDigits: 5,
             length: null,
             minLength: null,
             maxLength: null,
             pattern: null,
             baseValue: null,
             codes: [],
-            constraints: [],
+            constraints: [{
+                name: "CurrencyAmount",
+                definition: "The number of fractional digits",
+                expression: null,
+            }],
+            currencyIdentifierSet: null
         })
     })
 
@@ -282,6 +310,7 @@ describe('parseRepository — codes', () => {
                 {codeName: 'NORM', definition: 'Normal priority'},
             ],
             constraints: [],
+            currencyIdentifierSet: null,
         })
     })
 })

@@ -38,6 +38,7 @@ export interface Simpletype extends DataType {
     pattern: string | null
     baseValue: string | null
     codes: Code[]
+    currencyIdentifierSet: string | null
 }
 
 export interface ComplexType extends DataType {

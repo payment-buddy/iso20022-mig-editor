@@ -1,5 +1,5 @@
 import {useState} from "react";
-import type {ComplexType, Constraint, DataType, ElementOverride, MessageElement} from "./types.ts";
+import type {ComplexType, Constraint, DataType, ElementOverride, MessageElement, Simpletype} from "./types.ts";
 import {ConstraintNode} from "./ConstraintNode.tsx";
 
 function Cardinality({element, override}: { element: MessageElement, override: ElementOverride | undefined }) {
@@ -42,8 +42,11 @@ export function ElementNode({
     const isSelected = elementPath === selectedXmlPath;
     const background = isSelected ? '#2b5ce6' : 'transparent'
     const color = isSelected ? '#fff' : undefined
-    const dataType = dataTypes.get(element.typeId) as ComplexType
-    const hasChildren = dataType.elements?.length || element.constraints?.length || dataType.constraints?.length
+    const dataType = dataTypes.get(element.typeId)!
+    const complexType = dataType as ComplexType
+    const simpleType = dataType as Simpletype
+    const currencyIdentifierSet = simpleType.currencyIdentifierSet ? dataTypes.get(simpleType.currencyIdentifierSet) : null
+    const hasChildren = complexType.elements?.length || element.constraints?.length || complexType.constraints?.length
     const override = elementOverrides.find(o => o.xmlPath === elementPath)
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
     const nameStyle = isExcluded ? {textDecoration: 'line-through' as const} : undefined
@@ -74,10 +77,10 @@ export function ElementNode({
                 <span style={{marginLeft: '0', marginRight: '0.4em', fontSize: '0.7em'}}>{open ? '▼' : '▶'}</span>
                 <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
                 <Cardinality element={element} override={override}/>
-                {dataType.isChoice && <span className="badge">choice</span>}
+                {complexType.isChoice && <span className="badge">choice</span>}
             </div>
             {open && <>
-                {dataType.elements?.map(child => (
+                {complexType.elements?.map(child => (
                     <ElementNode key={child.id}
                                  element={child}
                                  selectedElement={selectedElement}
@@ -98,6 +101,12 @@ export function ElementNode({
                                     onSelect={onSelectConstraint}/>
                 ))}
                 {dataType.constraints.map((constraint) => (
+                    <ConstraintNode key={constraint.name}
+                                    constraint={constraint}
+                                    selectedConstraint={selectedConstraint}
+                                    onSelect={onSelectConstraint}/>
+                ))}
+                {currencyIdentifierSet?.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
                                     selectedConstraint={selectedConstraint}
