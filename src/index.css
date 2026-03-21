@@ -1,12 +1,16 @@
 :root {
     --text-color: #1a1d23;
+    --text-label-color: #747b88;
     --background-color: #ffffff;
+    --border-color: #dde1e7;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
         --text-color: #dce3f0;
+        --text-label-color: #7787a5;
         --background-color: #161a22;
+        --border-color: #dde1e7;
     }
 }
 
@@ -89,4 +93,21 @@ input, textarea {
     border: 1px solid #999;
     border-radius: 3px;
     font-size: 0.8em;
+}
+
+.detail-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 0.25rem 0 0.25rem 1.25rem;
+    border-left: 2px solid var(--border-color);
+}
+
+.detail-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-label-color);
+    margin-bottom: 0.2em;
 }

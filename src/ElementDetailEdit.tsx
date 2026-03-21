@@ -47,21 +47,21 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     }
 
     return (
-        <div style={{display: 'flex', flexDirection: 'column', gap: '0.7em'}}>
+        <div className="detail-panel">
             <div>
-                <div>XML Tag</div>
+                <div className="detail-label">XML Tag</div>
                 <div>{element.xmlTag}</div>
             </div>
             <div>
-                <div>XML Path</div>
+                <div className="detail-label">XML Path</div>
                 <div>{xmlPath}</div>
             </div>
             <div>
-                <div>Type</div>
+                <div className="detail-label">Type</div>
                 <div>{dataType.name}</div>
             </div>
             <div>
-                <div>Definition</div>
+                <div className="detail-label">Definition</div>
                 <EditableText
                     value={elementOverride?.definition ?? element.definition}
                     isOverridden={elementOverride?.definition != null}
@@ -70,7 +70,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                 />
             </div>
             <div>
-                <div>Min Occurs</div>
+                <div className="detail-label">Min Occurs</div>
                 <EditableNumber
                     value={elementOverride?.minOccurs ?? element.minOccurs}
                     originalValue={element.minOccurs}
@@ -78,7 +78,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                 />
             </div>
             <div>
-                <div>Max Occurs</div>
+                <div className="detail-label">Max Occurs</div>
                 <EditableNumber
                     value={elementOverride?.maxOccurs ?? element.maxOccurs}
                     originalValue={element.maxOccurs}
@@ -87,7 +87,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             </div>
             {simpleType && (<>
                 <div>
-                    <div>Min Length</div>
+                    <div className="detail-label">Min Length</div>
                     <EditableNumber
                         value={elementOverride?.minLength ?? simpleType.minLength ?? simpleType.length}
                         originalValue={simpleType.minLength ?? simpleType.length}
@@ -95,7 +95,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                     />
                 </div>
                 <div>
-                    <div>Max Length</div>
+                    <div className="detail-label">Max Length</div>
                     <EditableNumber
                         value={elementOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length}
                         originalValue={simpleType.maxLength ?? simpleType.length}
@@ -103,7 +103,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                     />
                 </div>
                 <div>
-                    <div>Pattern</div>
+                    <div className="detail-label">Pattern</div>
                     <EditableText
                         value={elementOverride?.pattern ?? simpleType.pattern ?? ''}
                         isOverridden={elementOverride?.pattern != null}
