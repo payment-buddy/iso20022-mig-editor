@@ -64,6 +64,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     baseValue: attrs['baseValue'] ?? null,
                     codes: [],
                     constraints: [],
+                    currencyIdentifierSet: attrs['currencyIdentifierSet'] ?? null,
                 }
                 dataTypes.set(attrs['xmi:id'], simpleType)
             }
@@ -126,7 +127,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
             const constraint = {
                 name: attrs['name'],
                 definition: attrs['definition'],
-                expression: attrs['expression'],
+                expression: attrs['expression'] ?? null,
             }
             if (messageElement) {
                 messageElement.constraints.push(constraint)
