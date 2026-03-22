@@ -1,15 +1,18 @@
 import type {Constraint} from "./types.ts";
 
-export function ConstraintNode({constraint, selectedConstraint, onSelect}: {
+export function ConstraintNode({constraint, parentPath, selectedPath, onSelect}: {
     constraint: Constraint
-    selectedConstraint: Constraint | null
-    onSelect: (constraint: Constraint) => void
+    parentPath: string
+    selectedPath: string
+    onSelect: (constraint: Constraint, path: string) => void
 }) {
-    const background = constraint.name === selectedConstraint?.name ? '#2b5ce6' : 'transparent'
-    const color =  constraint.name === selectedConstraint?.name ? '#fff' : undefined
+    const contraintPath = parentPath + '/' + constraint.name;
+    const isSelected = contraintPath === selectedPath
+    const background = isSelected ? '#2b5ce6' : 'transparent'
+    const color = isSelected ? '#fff' : undefined
     return (
         <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
-             onClick={() => onSelect(constraint)}>
+             onClick={() => onSelect(constraint, contraintPath)}>
             <span style={{fontSize: '0.8em'}}>✔</span> {constraint.name}
         </div>
     )
