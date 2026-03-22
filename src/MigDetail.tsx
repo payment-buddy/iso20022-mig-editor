@@ -33,6 +33,7 @@ import {ElementDetailEdit} from "./ElementDetailEdit.tsx";
 import {ConstraintDetailView} from "./ConstraintDetailView.tsx";
 import {EditableText} from "./EditableText.tsx";
 import {ConstraintDetailEdit} from "./ConstraintDetailEdit.tsx";
+import {StickyDetailPanel} from "./StickyDetailPanel.tsx";
 
 export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     mig: MessageImplementationGuide,
@@ -249,14 +250,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                                             onSelect={handleSelectContraint}/>
                         ))}
                     </div>
-                    <div style={{
-                        flex: 4,
-                        position: 'sticky',
-                        top: 0,
-                        alignSelf: 'flex-start',
-                        maxHeight: '100vh',
-                        overflowY: 'auto'
-                    }}>
+                    <StickyDetailPanel>
                         {selectedElement &&
                             <ElementDetailEdit
                                 element={selectedElement}
@@ -272,7 +266,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                                                         onDelete={handleDeleteConstraint}/>
                                 : <ConstraintDetailView constraint={selectedConstraint}/>)
                         }
-                    </div>
+                    </StickyDetailPanel>
                 </div>
             )}
         </div>
