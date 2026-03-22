@@ -13,6 +13,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     const simpleType = dataType as Simpletype
     const isTextType = 'baseType' in dataType && simpleType.baseType === 'Text'
     const isCodeSetType = 'baseType' in dataType && simpleType.baseType === 'CodeSet'
+    const baseExamples = element.examples.length > 0 ? element.examples : (simpleType.examples ?? [])
 
     function buildOverride(updates: Partial<ElementOverride>): ElementOverride {
         return {
@@ -28,6 +29,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             maxLength: null,
             pattern: null,
             allowedValues: [],
+            examples: null,
             additionalConstraints: [],
             ...elementOverride,
             ...updates,
@@ -132,6 +134,19 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                     />
                 </div>
             )}
+            <div>
+                <div className="detail-label">Examples</div>
+                <EditableText
+                    value={(elementOverride?.examples ?? baseExamples).join('\n')}
+                    isOverridden={elementOverride?.examples != null && elementOverride.examples.length > 0}
+                    multiline
+                    monospace
+                    onSave={val => {
+                        const values = val.split('\n').map(s => s.trim()).filter(Boolean)
+                        saveOverride({examples: values.length === 0 ? null : values})
+                    }}
+                />
+            </div>
             <div>
                 <button onClick={onAddConstraint}>+ Add constraint</button>
             </div>

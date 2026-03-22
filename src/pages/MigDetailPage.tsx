@@ -23,6 +23,7 @@ function buildEmptyOverride(xmlPath: string): ElementOverride {
         maxLength: null,
         pattern: null,
         allowedValues: null,
+        examples: null,
         additionalConstraints: null,
     }
 }
@@ -117,8 +118,8 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     }
 
     function isOverrideEmpty(override: ElementOverride) {
-        const {xmlPath, allowedValues, additionalConstraints, ...rest} = override
-        return (allowedValues == null || allowedValues.length === 0) && (additionalConstraints == null || additionalConstraints.length === 0) && Object.values(rest).every(v => v === null)
+        const {xmlPath, allowedValues, examples, additionalConstraints, ...rest} = override
+        return (allowedValues == null || allowedValues.length === 0) && (examples == null || examples.length === 0) && (additionalConstraints == null || additionalConstraints.length === 0) && Object.values(rest).every(v => v === null)
     }
 
     function handleUpdateElementOverride(override: ElementOverride) {

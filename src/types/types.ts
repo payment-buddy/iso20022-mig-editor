@@ -84,6 +84,7 @@ export interface ElementOverride {
     maxLength: number | null
     pattern: string | null
     allowedValues: string[] | null
+    examples: string[] | null
     additionalConstraints: Constraint[] | null
 }
 
