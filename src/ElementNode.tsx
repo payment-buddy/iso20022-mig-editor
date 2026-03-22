@@ -14,39 +14,35 @@ function Cardinality({element, override}: { element: MessageElement, override: E
 
 export function ElementNode({
                                 element,
-                                selectedElement,
-                                selectedConstraint,
                                 dataTypes,
                                 showXmlTags,
-                                xmlPath,
-                                selectedXmlPath,
+                                parentPath,
+                                selectedPath,
                                 elementOverrides = [],
                                 showExcluded = true,
-                                onSelect,
+                                onSelectElement,
                                 onSelectConstraint
                             }: {
     element: MessageElement
-    selectedElement: MessageElement | null
-    selectedConstraint: Constraint | null
     dataTypes: Map<string, DataType>
     showXmlTags: boolean
-    xmlPath: string
-    selectedXmlPath: string
+    parentPath: string
+    selectedPath: string
     elementOverrides?: ElementOverride[]
     showExcluded?: boolean
-    onSelect: (elem: MessageElement, xmlPath: string) => void
-    onSelectConstraint: (constraint: Constraint) => void
+    onSelectElement: (elem: MessageElement, path: string) => void
+    onSelectConstraint: (constraint: Constraint, path: string) => void
 }) {
     const [open, setOpen] = useState(false)
-    const elementPath = xmlPath + '/' + element.xmlTag
-    const isSelected = elementPath === selectedXmlPath;
+    const elementPath = parentPath + '/' + element.xmlTag
+    const isSelected = elementPath === selectedPath;
     const background = isSelected ? '#2b5ce6' : 'transparent'
     const color = isSelected ? '#fff' : undefined
     const dataType = dataTypes.get(element.typeId)!
     const complexType = dataType as ComplexType
     const simpleType = dataType as Simpletype
     const currencyIdentifierSet = simpleType.currencyIdentifierSet ? dataTypes.get(simpleType.currencyIdentifierSet) : null
-    const hasChildren = complexType.elements?.length || element.constraints?.length || complexType.constraints?.length
+    const hasChildren = complexType.elements?.length || element.constraints?.length || dataType.constraints?.length
     const override = elementOverrides.find(o => o.xmlPath === elementPath)
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
     const nameStyle = isExcluded ? {textDecoration: 'line-through' as const} : undefined
@@ -57,7 +53,7 @@ export function ElementNode({
         return (
             <>
                 <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
-                     onClick={() => onSelect(element, elementPath)}>
+                     onClick={() => onSelectElement(element, elementPath)}>
                     <span style={{marginRight: '0.5em', fontSize: '0.7em'}}>◇</span>
                     <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
                     <Cardinality element={element} override={override}/>
@@ -69,8 +65,8 @@ export function ElementNode({
     return (
         <div style={{marginLeft: '1em'}}>
             <div style={{cursor: 'pointer', background, color}} onClick={() => {
-                onSelect(element, elementPath)
-                if (elementPath == selectedXmlPath || !open) {
+                onSelectElement(element, elementPath)
+                if (elementPath === selectedPath || !open) {
                     setOpen(o => !o)
                 }
             }}>
@@ -81,35 +77,36 @@ export function ElementNode({
             </div>
             {open && <>
                 {complexType.elements?.map(child => (
-                    <ElementNode key={child.id}
+                    <ElementNode key={child.xmlTag}
                                  element={child}
-                                 selectedElement={selectedElement}
-                                 selectedConstraint={selectedConstraint}
                                  dataTypes={dataTypes}
                                  showXmlTags={showXmlTags}
-                                 xmlPath={elementPath}
-                                 selectedXmlPath={selectedXmlPath}
+                                 parentPath={elementPath}
+                                 selectedPath={selectedPath}
                                  elementOverrides={elementOverrides}
                                  showExcluded={showExcluded}
-                                 onSelect={onSelect}
+                                 onSelectElement={onSelectElement}
                                  onSelectConstraint={onSelectConstraint}/>
                 ))}
                 {element.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
-                                    selectedConstraint={selectedConstraint}
+                                    parentPath={elementPath}
+                                    selectedPath={selectedPath}
                                     onSelect={onSelectConstraint}/>
                 ))}
                 {dataType.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
-                                    selectedConstraint={selectedConstraint}
+                                    parentPath={elementPath}
+                                    selectedPath={selectedPath}
                                     onSelect={onSelectConstraint}/>
                 ))}
                 {currencyIdentifierSet?.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
-                                    selectedConstraint={selectedConstraint}
+                                    parentPath={elementPath}
+                                    selectedPath={selectedPath}
                                     onSelect={onSelectConstraint}/>
                 ))}
             </>}

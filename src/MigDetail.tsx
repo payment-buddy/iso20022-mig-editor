@@ -24,7 +24,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     const [showExcluded, setShowExcluded] = useState(false)
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
-    const [selectedXmlPath, setSelectedXmlPath] = useState<string>('')
+    const [selectedPath, setSelectedPath] = useState<string>('')
     const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
     const [selectedElementOverride, setSelectedElementOverride] = useState<ElementOverride | null>(null)
 
@@ -62,9 +62,16 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     function handleSelectElement(element: MessageElement, xmlPath: string) {
         setSelectedElement(element)
         setSelectedConstraint(null)
-        setSelectedXmlPath(xmlPath)
+        setSelectedPath(xmlPath)
         setSelectedDataType(eRepository.dataTypes.get(element.typeId) ?? null)
         setSelectedElementOverride(mig.elementOverrides.find(override => override.xmlPath === xmlPath) ?? null)
+    }
+
+    function handleSelectContraint(constraint: Constraint, path: string) {
+        setSelectedElement(null)
+        setSelectedPath(path)
+        setSelectedConstraint(constraint)
+        setSelectedDataType(null)
     }
 
     function isOverrideEmpty(override: ElementOverride) {
@@ -77,7 +84,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
         let elementOverrides: ElementOverride[];
         if (isOverrideEmpty(override)) {
             // Remove empty override
-            elementOverrides = mig.elementOverrides.filter(o => o.xmlPath !== selectedXmlPath);
+            elementOverrides = mig.elementOverrides.filter(o => o.xmlPath !== selectedPath);
         } else {
             const exists = mig.elementOverrides.some(o => o.xmlPath === override.xmlPath)
             if (exists) {
@@ -89,13 +96,6 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
             }
         }
         onUpdate({...mig, elementOverrides})
-    }
-
-    function handleSelectContraint(constraint: Constraint) {
-        setSelectedElement(null)
-        setSelectedXmlPath('')
-        setSelectedConstraint(constraint)
-        setSelectedDataType(null)
     }
 
     return (
@@ -159,23 +159,22 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                     <div style={{flex: 3}}>
                         <div>{showXmlTags ? message.xmlTag : message.name}</div>
                         {message.elements.map(element => (
-                            <ElementNode key={element.id}
+                            <ElementNode key={element.xmlTag}
                                          element={element}
-                                         selectedElement={selectedElement}
-                                         selectedConstraint={selectedConstraint}
                                          dataTypes={eRepository.dataTypes}
                                          showXmlTags={showXmlTags}
-                                         xmlPath={'/' + message.xmlTag}
-                                         selectedXmlPath={selectedXmlPath}
+                                         parentPath={'/' + message.xmlTag}
+                                         selectedPath={selectedPath}
                                          elementOverrides={mig.elementOverrides}
                                          showExcluded={showExcluded}
-                                         onSelect={handleSelectElement}
+                                         onSelectElement={handleSelectElement}
                                          onSelectConstraint={handleSelectContraint}/>
                         ))}
                         {message.constraints.map(c => (
                             <ConstraintNode key={c.name}
                                             constraint={c}
-                                            selectedConstraint={selectedConstraint}
+                                            parentPath={'/' + message.xmlTag}
+                                            selectedPath={selectedPath}
                                             onSelect={handleSelectContraint}/>
                         ))}
                     </div>
@@ -184,7 +183,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                             <ElementDetailEdit
                                 element={selectedElement}
                                 dataType={selectedDataType!}
-                                xmlPath={selectedXmlPath}
+                                xmlPath={selectedPath}
                                 elementOverride={selectedElementOverride}
                                 onUpdateOverride={handleUpdateElementOverride}/>
                         }

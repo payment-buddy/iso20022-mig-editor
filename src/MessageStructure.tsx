@@ -22,9 +22,9 @@ export function MessageStructure({message, dataTypes}: {
         setSelectedConstraint(null)
     }
 
-    function handleSelectContraint(constraint: Constraint) {
+    function handleSelectContraint(constraint: Constraint, path: string) {
         setSelectedConstraint(constraint)
-        setSelectedXmlPath('')
+        setSelectedXmlPath(path)
         setSelectedDataType(null)
         setSelectedElement(null)
     }
@@ -39,21 +39,20 @@ export function MessageStructure({message, dataTypes}: {
                 <div style={{flex: 3}}>
                     <div>{showXmlTags ? message.xmlTag : message.name}</div>
                     {message.elements.map((block) => (
-                        <ElementNode key={block.id}
+                        <ElementNode key={block.xmlTag}
                                      element={block}
-                                     selectedElement={selectedElement}
-                                     selectedConstraint={selectedConstraint}
                                      dataTypes={dataTypes}
                                      showXmlTags={showXmlTags}
-                                     xmlPath={'/' + message.xmlTag}
-                                     selectedXmlPath={selectedXmlPath}
-                                     onSelect={handleSelectElement}
+                                     parentPath={'/' + message.xmlTag}
+                                     selectedPath={selectedXmlPath}
+                                     onSelectElement={handleSelectElement}
                                      onSelectConstraint={handleSelectContraint}/>
                     ))}
                     {message.constraints.map((constraint) => (
                         <ConstraintNode key={constraint.name}
                                         constraint={constraint}
-                                        selectedConstraint={selectedConstraint}
+                                        parentPath={'/' + message.xmlTag}
+                                        selectedPath={selectedXmlPath}
                                         onSelect={handleSelectContraint}/>
                     ))}
                 </div>
