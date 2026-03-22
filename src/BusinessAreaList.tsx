@@ -1,5 +1,5 @@
 import type {BusinessArea, MessageDefinition} from "./types.ts";
-import {useRef} from "react";
+import {FileInputButton} from "./FileInputButton.tsx";
 
 function baseName(name: string) {
     return name.replace(/V\d+$/, '')
@@ -29,21 +29,13 @@ export function BusinessAreaList({businessAreas, onUpdateERepository}: {
     businessAreas: BusinessArea[]
     onUpdateERepository: (file: File) => void
 }) {
-    const fileInputRef = useRef<HTMLInputElement>(null)
-
     return (
         <>
             <a href="#" className="back-link">← Back</a>
             <div className="page-header">
                 <h2>ISO 20022 e-Repository</h2>
                 <div className="page-actions">
-                    <input ref={fileInputRef} type="file" accept=".iso20022,.zip" style={{display: 'none'}}
-                           onChange={e => {
-                               const f = e.target.files?.[0];
-                               if (f) onUpdateERepository(f);
-                               e.target.value = ''
-                           }}/>
-                    <button onClick={() => fileInputRef.current?.click()}>Update e-Repository</button>
+                    <FileInputButton label="Update e-Repository" accept=".iso20022,.zip" onFile={onUpdateERepository}/>
                 </div>
             </div>
             <ul style={{listStyle: 'none', paddingLeft: 0}}>
