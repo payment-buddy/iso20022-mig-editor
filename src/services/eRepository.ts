@@ -20,8 +20,14 @@ export async function parseRepository(file: File): Promise<ERepository> {
     let simpleType: Simpletype | null = null
     let messageElement: MessageElement | null = null
     let messageDefinition: MessageDefinition | null = null
+    let exampleText: string | null = null
 
     parser.onopentag = (node: sax.Tag) => {
+        if (node.name === 'example') {
+            exampleText = ''
+            return
+        }
+
         const attrs = node.attributes
         const xsiType = attrs['xsi:type']
 
@@ -66,6 +72,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     baseValue: attrs['baseValue'] ?? null,
                     codes: [],
                     constraints: [],
+                    examples: [],
                     currencyIdentifierSet: attrs['currencyIdentifierSet'] ?? null,
                 }
                 dataTypes.set(attrs['xmi:id'], simpleType)
@@ -83,7 +90,8 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     minOccurs: parseInt(attrs['minOccurs'] ?? '1', 10),
                     maxOccurs: parseInt(attrs['maxOccurs'] ?? '1', 10),
                     typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
-                    constraints: []
+                    constraints: [],
+                    examples: [],
                 };
                 complexType.elements.push(messageElement)
             }
@@ -102,7 +110,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
             }
         } else if (node.name === 'messageBuildingBlock') {
             if (messageDefinition) {
-                messageDefinition.elements.push({
+                messageElement = {
                     id: attrs['xmi:id'],
                     name: attrs['name'],
                     xmlTag: attrs['xmlTag'] ?? '',
@@ -112,7 +120,9 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     maxOccurs: parseInt(attrs['maxOccurs'] ?? '1', 10),
                     typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
                     constraints: [],
-                })
+                    examples: [],
+                }
+                messageDefinition.elements.push(messageElement)
             }
         } else if (node.name === 'messageDefinitionIdentifier') {
             if (messageDefinition) {
@@ -145,13 +155,27 @@ export async function parseRepository(file: File): Promise<ERepository> {
         }
     }
 
+    parser.ontext = (text) => {
+        if (exampleText !== null) exampleText += text
+    }
+
     parser.onclosetag = (name) => {
-        if (name === 'topLevelDictionaryEntry') {
+        if (name === 'example') {
+            const value = exampleText?.trim()
+            if (value) {
+                if (messageElement) {
+                    messageElement.examples.push(value)
+                } else if (simpleType) {
+                    simpleType.examples.push(value)
+                }
+            }
+            exampleText = null
+        } else if (name === 'topLevelDictionaryEntry') {
             complexType = null
             simpleType = null
         } else if (name === 'messageDefinition') {
             messageDefinition = null
-        } else if (name === 'messageElement') {
+        } else if (name === 'messageElement' || name === 'messageBuildingBlock') {
             messageElement = null
         } else if (name === 'topLevelCatalogueEntry' && businessArea) {
             businessAreas.push(businessArea)

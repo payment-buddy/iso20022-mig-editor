@@ -140,10 +140,12 @@ describe('parseRepository', () => {
                 id: 'bb1',
                 name: 'GroupHeader',
                 xmlTag: 'GrpHdr',
+                isAttribute: false,
                 definition: 'Group header',
                 minOccurs: 1,
                 maxOccurs: 1,
                 typeId: 'message-component-1',
+                examples: [],
                 constraints: [],
             }],
         }])
@@ -160,20 +162,24 @@ describe('parseRepository', () => {
                     id: 'message-element-1',
                     name: 'MessageIdentification',
                     xmlTag: 'MsgId',
+                    isAttribute: false,
                     definition: 'Message ID',
                     minOccurs: 1,
                     maxOccurs: 1,
                     typeId: 'simple-type-1',
+                    examples: [],
                     constraints: []
                 },
                 {
                     id: 'message-element-2',
                     name: 'InstructedAmount',
                     xmlTag: 'InstdAmt',
+                    isAttribute: false,
                     definition: 'Instructed Amount',
                     minOccurs: 1,
                     maxOccurs: 5,
                     typeId: 'simple-type-2',
+                    examples: [],
                     constraints: []
                 },
             ],
@@ -191,10 +197,12 @@ describe('parseRepository', () => {
                     id: 'message-element-3',
                     name: 'OptionA',
                     xmlTag: 'OptA',
+                    isAttribute: false,
                     definition: 'Option A',
                     minOccurs: 1,
                     maxOccurs: 1,
                     typeId: 'simple-type-1',
+                    examples: [],
                     constraints: []
                 },
             ],
@@ -216,6 +224,7 @@ describe('parseRepository', () => {
             pattern: null,
             baseValue: null,
             codes: [],
+            examples: [],
             constraints: [],
             currencyIdentifierSet: null,
         })
@@ -241,7 +250,8 @@ describe('parseRepository', () => {
                 definition: "The number of fractional digits",
                 expression: null,
             }],
-            currencyIdentifierSet: null
+            currencyIdentifierSet: 'codeset-1',
+            examples: ['6545.56'],
         })
     })
 
@@ -311,6 +321,7 @@ describe('parseRepository — codes', () => {
             ],
             constraints: [],
             currencyIdentifierSet: null,
+            examples: [],
         })
     })
 })
@@ -351,11 +362,13 @@ describe('parseRepository — constraints on message elements', () => {
             id: 'message-element-1',
             name: 'Amount',
             xmlTag: 'Amt',
+            isAttribute: false,
             definition: 'Amount',
             minOccurs: 0,
             maxOccurs: 1,
             typeId: 'simple-type-1',
             constraints: [{name: 'ElemRule', definition: 'Element rule', expression: 'elem expr'}],
+            examples: [],
         })
     })
 })

@@ -14,6 +14,7 @@ export interface MessageElement {
     maxOccurs: number
     typeId: string
     constraints: Constraint[]
+    examples: string[]
 }
 
 export interface Code {
@@ -40,6 +41,7 @@ export interface Simpletype extends DataType {
     baseValue: string | null
     codes: Code[]
     currencyIdentifierSet: string | null
+    examples: string[]
 }
 
 export interface ComplexType extends DataType {
