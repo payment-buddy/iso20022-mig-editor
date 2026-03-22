@@ -9,8 +9,9 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     elementOverride: ElementOverride | null
     onUpdateOverride: (override: ElementOverride) => void
 }) {
-    const isTextType = 'baseType' in dataType && (dataType as Simpletype).baseType === 'Text'
     const simpleType = dataType as Simpletype
+    const isTextType = 'baseType' in dataType && simpleType.baseType === 'Text'
+    const isCodeSetType = 'baseType' in dataType && simpleType.baseType === 'CodeSet'
 
     function buildOverride(updates: Partial<ElementOverride>): ElementOverride {
         return {
@@ -25,7 +26,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             minLength: null,
             maxLength: null,
             pattern: null,
-            codes: [],
+            allowedValues: [],
             additionalConstraints: [],
             ...elementOverride,
             ...updates,
@@ -115,6 +116,21 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                     />
                 </div>
             </>)}
+            {(isTextType || isCodeSetType) && (
+                <div>
+                    <div className="detail-label">Allowed Values</div>
+                    <EditableText
+                        value={elementOverride?.allowedValues?.join('\n') ?? ''}
+                        isOverridden={elementOverride?.allowedValues != null && elementOverride.allowedValues.length > 0}
+                        multiline
+                        monospace
+                        onSave={val => {
+                            const values = val.split('\n').map(s => s.trim()).filter(Boolean)
+                            saveOverride({allowedValues: values.length === 0 ? null : values})
+                        }}
+                    />
+                </div>
+            )}
         </div>
     )
 }
