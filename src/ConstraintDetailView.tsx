@@ -1,7 +1,7 @@
 import type {Constraint} from "./types.ts";
 import {formatXml} from "./formatXml.ts";
 
-export function ConstraintDetail({constraint}: { constraint: Constraint }) {
+export function ConstraintDetailView({constraint}: { constraint: Constraint }) {
     return (
         <div className="detail-panel">
             <div>
