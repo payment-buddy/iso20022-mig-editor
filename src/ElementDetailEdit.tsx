@@ -63,7 +63,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             <div>
                 <div className="detail-label">Definition</div>
                 <EditableText
-                    value={elementOverride?.definition ?? element.definition}
+                    value={elementOverride?.definition || element.definition || dataType.definition}
                     isOverridden={elementOverride?.definition != null}
                     multiline
                     onSave={val => saveOverride({definition: val === element.definition ? null : val})}
