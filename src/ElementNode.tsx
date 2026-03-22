@@ -46,6 +46,7 @@ export function ElementNode({
             id: element.id + '/Ccy',
             name: 'Currency',
             xmlTag: 'Ccy',
+            isAttribute: true,
             definition: '',
             minOccurs: 1,
             maxOccurs: 1,

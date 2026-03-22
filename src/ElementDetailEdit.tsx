@@ -49,7 +49,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     return (
         <div className="detail-panel">
             <div>
-                <div className="detail-label">XML Tag</div>
+                <div className="detail-label">{element.isAttribute ? 'XML Attribute' : 'XML Tag'}</div>
                 <div>{element.xmlTag}</div>
             </div>
             <div>
