@@ -13,14 +13,14 @@ export function ElementDetailView({element, dataType, xmlPath}: {
             </div>
             <div>
                 <div className="detail-label">Definition</div>
-                <div>{element.definition}</div>
+                <div>{element.definition || dataType.definition}</div>
             </div>
             <div>
                 <div className="detail-label">Multiplicity</div>
                 <div>[{element.minOccurs}..{element.maxOccurs}]</div>
             </div>
             <div>
-                <div className="detail-label">XML Tag</div>
+                <div className="detail-label">{element.isAttribute ? 'XML Attribute' : 'XML Tag'}</div>
                 <div>{element.xmlTag}</div>
             </div>
             <div>

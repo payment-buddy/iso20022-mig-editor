@@ -8,6 +8,7 @@ export interface MessageElement {
     id: string
     name: string
     xmlTag: string
+    isAttribute: boolean
     definition: string
     minOccurs: number
     maxOccurs: number
