@@ -21,7 +21,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     onDelete: (id: string) => void
 }) {
     const [showXmlTags, setShowXmlTags] = useState(false)
-    const [showExcluded, setShowExcluded] = useState(false)
+    const [hideExcluded, setHideExcluded] = useState(true)
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
     const [selectedPath, setSelectedPath] = useState<string>('')
@@ -147,10 +147,13 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                 <label>
                     <input
                         type="checkbox"
-                        checked={showExcluded}
+                        checked={hideExcluded}
                         style={{marginRight: '0.5em'}}
-                        onChange={() => setShowExcluded(show => !show)}/>
-                    Show excluded elements
+                        onChange={() => setHideExcluded(hide => !hide)}/>
+                    {(() => {
+                        const count = mig.elementOverrides.filter(o => o.maxOccurs === 0).length
+                        return `Hide excluded elements (${count})`
+                    })()}
                 </label>
             </p>
 
@@ -166,7 +169,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                                          parentPath={'/' + message.xmlTag}
                                          selectedPath={selectedPath}
                                          elementOverrides={mig.elementOverrides}
-                                         showExcluded={showExcluded}
+                                         hideExcluded={hideExcluded}
                                          onSelectElement={handleSelectElement}
                                          onSelectConstraint={handleSelectContraint}/>
                         ))}

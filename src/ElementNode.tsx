@@ -19,7 +19,7 @@ export function ElementNode({
                                 parentPath,
                                 selectedPath,
                                 elementOverrides = [],
-                                showExcluded = true,
+                                hideExcluded = false,
                                 onSelectElement,
                                 onSelectConstraint
                             }: {
@@ -29,7 +29,7 @@ export function ElementNode({
     parentPath: string
     selectedPath: string
     elementOverrides?: ElementOverride[]
-    showExcluded?: boolean
+    hideExcluded?: boolean
     onSelectElement: (elem: MessageElement, path: string) => void
     onSelectConstraint: (constraint: Constraint, path: string) => void
 }) {
@@ -59,7 +59,7 @@ export function ElementNode({
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
     const nameStyle = isExcluded ? {textDecoration: 'line-through' as const} : undefined
 
-    if (isExcluded && !showExcluded) return null
+    if (isExcluded && hideExcluded) return null
 
     if (!hasChildren) {
         return (
@@ -96,7 +96,7 @@ export function ElementNode({
                                  parentPath={elementPath}
                                  selectedPath={selectedPath}
                                  elementOverrides={elementOverrides}
-                                 showExcluded={showExcluded}
+                                 hideExcluded={hideExcluded}
                                  onSelectElement={onSelectElement}
                                  onSelectConstraint={onSelectConstraint}/>
                 ))}
@@ -108,7 +108,7 @@ export function ElementNode({
                                  parentPath={elementPath}
                                  selectedPath={selectedPath}
                                  elementOverrides={elementOverrides}
-                                 showExcluded={showExcluded}
+                                 hideExcluded={hideExcluded}
                                  onSelectElement={onSelectElement}
                                  onSelectConstraint={onSelectConstraint}/>
                 )}
