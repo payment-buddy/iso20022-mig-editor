@@ -7,7 +7,7 @@ function versionLabel(msg: MessageDefinition) {
     return 'V' + msg.identifier.substring(msg.identifier.lastIndexOf('.') + 1)
 }
 
-export function MessageDetail({messageId, versions, businessArea, dataTypes, onMigCreated}: {
+export function MessageDetailPage({messageId, versions, businessArea, dataTypes, onMigCreated}: {
     messageId: string | null
     versions: MessageDefinition[]
     businessArea: BusinessArea

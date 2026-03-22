@@ -4,7 +4,7 @@ import {useState} from "react";
 import {ElementDetailView} from "./ElementDetailView.tsx";
 import {ConstraintNode} from "./ConstraintNode.tsx";
 import {ConstraintDetailView} from "./ConstraintDetailView.tsx";
-import {StickyDetailPanel} from "./StickyDetailPanel.tsx";
+import {DetailPanel} from "./DetailPanel.tsx";
 
 export function MessageStructure({message, dataTypes}: {
     message: MessageDefinition
@@ -57,14 +57,14 @@ export function MessageStructure({message, dataTypes}: {
                                         onSelect={handleSelectContraint}/>
                     ))}
                 </div>
-                <StickyDetailPanel>
+                <DetailPanel>
                     {selectedElement &&
                         <ElementDetailView element={selectedElement}
                                            dataType={selectedDataType!}
                                            xmlPath={selectedXmlPath}/>}
                     {selectedConstraint &&
                         <ConstraintDetailView constraint={selectedConstraint}/>}
-                </StickyDetailPanel>
+                </DetailPanel>
             </div>
         </>
     )

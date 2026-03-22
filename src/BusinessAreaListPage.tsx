@@ -25,7 +25,7 @@ function groupByBase(messages: MessageDefinition[]) {
     )
 }
 
-export function BusinessAreaList({businessAreas, onUpdateERepository}: {
+export function BusinessAreaListPage({businessAreas, onUpdateERepository}: {
     businessAreas: BusinessArea[]
     onUpdateERepository: (file: File) => void
 }) {

@@ -1,10 +1,10 @@
-import {FileUploader} from './FileUploader'
+import {FileUploaderPage} from './FileUploaderPage'
 import {useEffect, useState} from "react";
 import {parseRepository} from "./eRepository.js";
-import {BusinessAreaList} from './BusinessAreaList'
-import {MigList} from './MigList.tsx'
-import {MessageDetail} from './MessageDetail.tsx'
-import {MigDetail} from './MigDetail.tsx'
+import {BusinessAreaListPage} from './BusinessAreaListPage'
+import {MigListPage} from './MigListPage.tsx'
+import {MessageDetailPage} from './MessageDetailPage.tsx'
+import {MigDetailPage} from './MigDetailPage.tsx'
 import {useHash} from "./useHash.ts";
 import type {ERepository, MessageImplementationGuide} from "./types.ts";
 import {
@@ -138,15 +138,15 @@ function App() {
         )
     }
     if (!eRepository) {
-        return <FileUploader onParsed={handleParsed}/>
+        return <FileUploaderPage onParsed={handleParsed}/>
     }
     if (hash === '#browse') {
-        return <BusinessAreaList businessAreas={eRepository.businessAreas} onUpdateERepository={handleUpdateERepository}/>
+        return <BusinessAreaListPage businessAreas={eRepository.businessAreas} onUpdateERepository={handleUpdateERepository}/>
     }
     if (hash.startsWith('#mig/')) {
         const id = hash.substring(5)
         const mig = migs.find(m => m.id === id)
-        if (mig) return <MigDetail mig={mig} eRepository={eRepository} onUpdate={handleMigUpdated}
+        if (mig) return <MigDetailPage mig={mig} eRepository={eRepository} onUpdate={handleMigUpdated}
                                    onDelete={handleMigDeleted}/>
     }
     if (hash.startsWith('#')) {
@@ -154,7 +154,7 @@ function App() {
         for (const businessArea of eRepository.businessAreas) {
             for (const message of businessArea.messages) {
                 if (message.identifier === code) {
-                    return <MessageDetail messageId={message.identifier}
+                    return <MessageDetailPage messageId={message.identifier}
                                           versions={businessArea.messages.filter(msg => msg.shortCode === message.shortCode)}
                                           businessArea={businessArea}
                                           dataTypes={eRepository.dataTypes}
@@ -163,7 +163,7 @@ function App() {
             }
             for (const message of businessArea.messages) {
                 if (message.shortCode === code) {
-                    return <MessageDetail messageId={null}
+                    return <MessageDetailPage messageId={null}
                                           versions={businessArea.messages.filter(msg => msg.shortCode === code)}
                                           businessArea={businessArea}
                                           dataTypes={eRepository.dataTypes}
@@ -172,7 +172,7 @@ function App() {
             }
         }
     }
-    return <MigList migs={migs} onBrowse={handleBrowse} onUpload={handleMigUpload} onDownload={handleMigDownload}/>
+    return <MigListPage migs={migs} onBrowse={handleBrowse} onUpload={handleMigUpload} onDownload={handleMigDownload}/>
 }
 
 export default App

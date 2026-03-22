@@ -33,9 +33,9 @@ import {ElementDetailEdit} from "./ElementDetailEdit.tsx";
 import {ConstraintDetailView} from "./ConstraintDetailView.tsx";
 import {EditableText} from "./EditableText.tsx";
 import {ConstraintDetailEdit} from "./ConstraintDetailEdit.tsx";
-import {StickyDetailPanel} from "./StickyDetailPanel.tsx";
+import {DetailPanel} from "./DetailPanel.tsx";
 
-export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
+export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     mig: MessageImplementationGuide,
     eRepository: ERepository,
     onUpdate: (updated: MessageImplementationGuide) => void,
@@ -250,7 +250,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                                             onSelect={handleSelectContraint}/>
                         ))}
                     </div>
-                    <StickyDetailPanel>
+                    <DetailPanel>
                         {selectedElement &&
                             <ElementDetailEdit
                                 element={selectedElement}
@@ -266,7 +266,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                                                         onDelete={handleDeleteConstraint}/>
                                 : <ConstraintDetailView constraint={selectedConstraint}/>)
                         }
-                    </StickyDetailPanel>
+                    </DetailPanel>
                 </div>
             )}
         </div>
