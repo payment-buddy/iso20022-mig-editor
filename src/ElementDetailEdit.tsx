@@ -9,8 +9,8 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     elementOverride: ElementOverride | null
     onUpdateOverride: (override: ElementOverride) => void
 }) {
-    const isTextSimpleType = 'baseType' in dataType && (dataType as Simpletype).baseType === 'Text'
-    const simpleType = isTextSimpleType ? dataType as Simpletype : null
+    const isTextType = 'baseType' in dataType && (dataType as Simpletype).baseType === 'Text'
+    const simpleType = dataType as Simpletype
 
     function buildOverride(updates: Partial<ElementOverride>): ElementOverride {
         return {
@@ -58,7 +58,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             </div>
             <div>
                 <div className="detail-label">Type</div>
-                <div>{dataType.name}</div>
+                <div>{dataType.name} {simpleType?.baseType && <span>({simpleType.baseType})</span>}</div>
             </div>
             <div>
                 <div className="detail-label">Definition</div>
@@ -85,7 +85,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                     onSave={val => saveInt('maxOccurs', element.maxOccurs, val)}
                 />
             </div>
-            {simpleType && (<>
+            {isTextType && (<>
                 <div>
                     <div className="detail-label">Min Length</div>
                     <EditableNumber
