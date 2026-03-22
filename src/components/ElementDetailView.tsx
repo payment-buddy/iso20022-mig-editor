@@ -1,10 +1,13 @@
-import type {DataType, MessageElement} from "../types/types.ts";
+import type {DataType, MessageElement, Simpletype} from "../types/types.ts";
 
 export function ElementDetailView({element, dataType, xmlPath}: {
     element: MessageElement
     dataType: DataType
     xmlPath: string
 }) {
+    const typeExamples = (dataType as Simpletype).examples ?? []
+    const examples = element.examples?.length > 0 ? element.examples : typeExamples
+
     return (
         <div className="detail-panel">
             <div>
@@ -27,6 +30,12 @@ export function ElementDetailView({element, dataType, xmlPath}: {
                 <div className="detail-label">XML Path</div>
                 <div>{xmlPath}</div>
             </div>
+            {examples.length > 0 && (
+                <div>
+                    <div className="detail-label">Examples</div>
+                    <div>{examples.join(', ')}</div>
+                </div>
+            )}
         </div>
     )
 }
