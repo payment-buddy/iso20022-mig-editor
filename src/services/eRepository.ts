@@ -1,5 +1,5 @@
 import sax from 'sax'
-import {unzipToStream} from "./unzip.ts";
+import {unzipToStream} from "../utils/unzip.ts";
 import type {
     BusinessArea,
     ComplexType,
@@ -8,7 +8,7 @@ import type {
     MessageDefinition,
     MessageElement,
     Simpletype
-} from "./types.ts";
+} from "../types/types.ts";
 
 export async function parseRepository(file: File): Promise<ERepository> {
     const parser = sax.parser(true) // strict mode — attribute names kept as-is

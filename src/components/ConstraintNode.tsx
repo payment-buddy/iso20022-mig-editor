@@ -1,4 +1,4 @@
-import type {Constraint} from "./types.ts";
+import type {Constraint} from "../types/types.ts";
 
 export function ConstraintNode({constraint, parentPath, selectedPath, onSelect}: {
     constraint: Constraint

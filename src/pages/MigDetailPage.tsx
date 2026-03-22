@@ -7,7 +7,7 @@ import type {
     MessageDefinition,
     MessageElement,
     MessageImplementationGuide
-} from "./types.ts";
+} from "../types/types.ts";
 
 function buildEmptyOverride(xmlPath: string): ElementOverride {
     return {
@@ -26,14 +26,14 @@ function buildEmptyOverride(xmlPath: string): ElementOverride {
         additionalConstraints: null,
     }
 }
-import {ElementNode} from "./ElementNode.tsx";
-import {ConstraintNode} from "./ConstraintNode.tsx";
+import {ElementNode} from "../components/ElementNode.tsx";
+import {ConstraintNode} from "../components/ConstraintNode.tsx";
 import {useState} from "react";
-import {ElementDetailEdit} from "./ElementDetailEdit.tsx";
-import {ConstraintDetailView} from "./ConstraintDetailView.tsx";
-import {EditableText} from "./EditableText.tsx";
-import {ConstraintDetailEdit} from "./ConstraintDetailEdit.tsx";
-import {DetailPanel} from "./DetailPanel.tsx";
+import {ElementDetailEdit} from "../components/ElementDetailEdit.tsx";
+import {ConstraintDetailView} from "../components/ConstraintDetailView.tsx";
+import {EditableText} from "../components/EditableText.tsx";
+import {ConstraintDetailEdit} from "../components/ConstraintDetailEdit.tsx";
+import {DetailPanel} from "../components/DetailPanel.tsx";
 
 export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     mig: MessageImplementationGuide,

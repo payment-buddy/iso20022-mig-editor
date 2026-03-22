@@ -1,5 +1,5 @@
-import type {MessageImplementationGuide} from "./types.ts";
-import {FileInputButton} from "./FileInputButton.tsx";
+import type {MessageImplementationGuide} from "../types/types.ts";
+import {FileInputButton} from "../components/FileInputButton.tsx";
 
 export function MigListPage({migs, onBrowse, onUpload, onDownload}: {
     migs: MessageImplementationGuide[]

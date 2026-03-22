@@ -1,12 +1,12 @@
-import {FileUploaderPage} from './FileUploaderPage'
+import {FileUploaderPage} from './pages/FileUploaderPage'
 import {useEffect, useState} from "react";
-import {parseRepository} from "./eRepository.js";
-import {BusinessAreaListPage} from './BusinessAreaListPage'
-import {MigListPage} from './MigListPage.tsx'
-import {MessageDetailPage} from './MessageDetailPage.tsx'
-import {MigDetailPage} from './MigDetailPage.tsx'
-import {useHash} from "./useHash.ts";
-import type {ERepository, MessageImplementationGuide} from "./types.ts";
+import {parseRepository} from "./services/eRepository.ts";
+import {BusinessAreaListPage} from './pages/BusinessAreaListPage'
+import {MigListPage} from './pages/MigListPage.tsx'
+import {MessageDetailPage} from './pages/MessageDetailPage.tsx'
+import {MigDetailPage} from './pages/MigDetailPage.tsx'
+import {useHash} from "./hooks/useHash.ts";
+import type {ERepository, MessageImplementationGuide} from "./types/types.ts";
 import {
     deleteDatabase,
     deleteMig,
@@ -15,7 +15,7 @@ import {
     loadMigsForBackup,
     saveERepository,
     saveMig
-} from "./localStore.ts";
+} from "./services/localStore.ts";
 import {parse, stringify} from "yaml";
 
 function App() {
