@@ -51,7 +51,8 @@ export function ElementNode({
             minOccurs: 1,
             maxOccurs: 1,
             typeId: simpleType.currencyIdentifierSet,
-            constraints: []
+            constraints: [],
+            examples: [],
         }
         : null
     const override = elementOverrides.find(o => o.xmlPath === elementPath)
