@@ -46,6 +46,8 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     constraints: [],
                 }
                 dataTypes.set(attrs['xmi:id'], complexType)
+            } else if (xsiType === 'iso20022:BusinessComponent') {
+                // skip
             } else {
                 const num = (v: string | undefined) => v != null ? Number(v) : null
                 const int = (v: string | undefined) => v != null ? parseInt(v, 10) : null
