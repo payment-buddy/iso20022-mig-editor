@@ -1,7 +1,7 @@
 import type {MessageImplementationGuide} from "./types.ts";
 import {FileInputButton} from "./FileInputButton.tsx";
 
-export function MigList({migs, onBrowse, onUpload, onDownload}: {
+export function MigListPage({migs, onBrowse, onUpload, onDownload}: {
     migs: MessageImplementationGuide[]
     onBrowse: () => void
     onUpload: (text: string) => void

@@ -4,7 +4,7 @@ import type {ERepository} from "./types.ts";
 
 type Status = 'idle' | 'parsing' | 'error'
 
-export function FileUploader({onParsed}: {
+export function FileUploaderPage({onParsed}: {
     onParsed: (result: ERepository) => void
 }) {
     const [status, setStatus] = useState<Status>('idle')
