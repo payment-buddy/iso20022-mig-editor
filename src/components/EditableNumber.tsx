@@ -9,7 +9,7 @@ export function EditableNumber({value, originalValue, onSave}: {
     const [inputValue, setInputValue] = useState('')
 
     function startEdit() {
-        setInputValue(value ? String(value) : '')
+        setInputValue(value != null ? String(value) : '')
         setEditing(true)
     }
 
