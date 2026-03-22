@@ -3,7 +3,7 @@ import {ElementNode} from "./ElementNode.tsx";
 import {useState} from "react";
 import {ElementDetailView} from "./ElementDetailView.tsx";
 import {ConstraintNode} from "./ConstraintNode.tsx";
-import {ConstraintDetail} from "./ConstraintDetail.tsx";
+import {ConstraintDetailView} from "./ConstraintDetailView.tsx";
 
 export function MessageStructure({message, dataTypes}: {
     message: MessageDefinition
@@ -62,7 +62,7 @@ export function MessageStructure({message, dataTypes}: {
                                            dataType={selectedDataType!}
                                            xmlPath={selectedXmlPath}/>}
                     {selectedConstraint &&
-                        <ConstraintDetail constraint={selectedConstraint}/>}
+                        <ConstraintDetailView constraint={selectedConstraint}/>}
                 </div>
             </div>
         </>
