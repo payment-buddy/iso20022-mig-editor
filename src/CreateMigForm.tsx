@@ -18,7 +18,6 @@ export function CreateMigForm({message, onSave, onCancel}: {
             version: version.trim(),
             messageIdentifier: message.identifier,
             elementOverrides: [],
-            additionalConstraints: [],
         }
         onSave(mig)
     }
