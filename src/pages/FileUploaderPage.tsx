@@ -1,6 +1,6 @@
 import {useCallback, useRef, useState} from 'react'
-import {parseRepository} from "./eRepository.js"
-import type {ERepository} from "./types.ts";
+import {parseRepository} from "../services/eRepository.ts"
+import type {ERepository} from "../types/types.ts";
 
 type Status = 'idle' | 'parsing' | 'error'
 

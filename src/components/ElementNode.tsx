@@ -1,5 +1,5 @@
 import {useState} from "react";
-import type {ComplexType, Constraint, DataType, ElementOverride, MessageElement, Simpletype} from "./types.ts";
+import type {ComplexType, Constraint, DataType, ElementOverride, MessageElement, Simpletype} from "../types/types.ts";
 import {ConstraintNode} from "./ConstraintNode.tsx";
 
 function Cardinality({element, override}: { element: MessageElement, override: ElementOverride | undefined }) {

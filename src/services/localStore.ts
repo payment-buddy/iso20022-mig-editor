@@ -1,4 +1,4 @@
-import type {ERepository, MessageImplementationGuide} from "./types.ts"
+import type {ERepository, MessageImplementationGuide} from "../types/types.ts"
 
 const DB_NAME = 'iso20022'
 const DB_VERSION = 1

@@ -1,4 +1,4 @@
-import type {DataType, ElementOverride, MessageElement, Simpletype} from "./types.ts";
+import type {DataType, ElementOverride, MessageElement, Simpletype} from "../types/types.ts";
 import {EditableText} from "./EditableText.tsx";
 import {EditableNumber} from "./EditableNumber.tsx";
 

@@ -1,7 +1,7 @@
-import type {BusinessArea, DataType, MessageDefinition, MessageImplementationGuide} from "./types.ts";
+import type {BusinessArea, DataType, MessageDefinition, MessageImplementationGuide} from "../types/types.ts";
 import {MessageStructure} from "./MessageStructure.tsx";
 import {useState} from "react";
-import {CreateMigForm} from "./CreateMigForm.tsx";
+import {CreateMigForm} from "../components/CreateMigForm.tsx";
 
 function versionLabel(msg: MessageDefinition) {
     return 'V' + msg.identifier.substring(msg.identifier.lastIndexOf('.') + 1)

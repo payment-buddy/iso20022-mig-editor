@@ -1,5 +1,5 @@
-import type {Constraint} from "./types.ts";
-import {formatXml} from "./formatXml.ts";
+import type {Constraint} from "../types/types.ts";
+import {formatXml} from "../utils/formatXml.ts";
 
 export function ConstraintDetailView({constraint}: { constraint: Constraint }) {
     return (

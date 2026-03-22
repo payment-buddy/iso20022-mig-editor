@@ -1,5 +1,5 @@
-import type {BusinessArea, MessageDefinition} from "./types.ts";
-import {FileInputButton} from "./FileInputButton.tsx";
+import type {BusinessArea, MessageDefinition} from "../types/types.ts";
+import {FileInputButton} from "../components/FileInputButton.tsx";
 
 function baseName(name: string) {
     return name.replace(/V\d+$/, '')

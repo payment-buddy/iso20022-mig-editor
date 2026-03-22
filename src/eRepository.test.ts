@@ -1,6 +1,6 @@
 import {beforeAll, describe, expect, it} from 'vitest'
-import {parseRepository} from './eRepository.ts'
-import type {ComplexType, ERepository} from './types.ts'
+import {parseRepository} from './services/eRepository.ts'
+import type {ComplexType, ERepository} from './types/types.ts'
 
 const MINIMAL_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <model xmlns:xmi="http://www.omg.org/XMI"
