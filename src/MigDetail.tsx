@@ -4,15 +4,35 @@ import type {
     DataType,
     ElementOverride,
     ERepository,
+    MessageDefinition,
     MessageElement,
     MessageImplementationGuide
 } from "./types.ts";
+
+function buildEmptyOverride(xmlPath: string): ElementOverride {
+    return {
+        xmlPath,
+        definition: null,
+        minOccurs: null,
+        maxOccurs: null,
+        minInclusive: null,
+        maxInclusive: null,
+        totalDigits: null,
+        fractionDigits: null,
+        minLength: null,
+        maxLength: null,
+        pattern: null,
+        allowedValues: null,
+        additionalConstraints: null,
+    }
+}
 import {ElementNode} from "./ElementNode.tsx";
 import {ConstraintNode} from "./ConstraintNode.tsx";
 import {useState} from "react";
 import {ElementDetailEdit} from "./ElementDetailEdit.tsx";
 import {ConstraintDetailView} from "./ConstraintDetailView.tsx";
 import {EditableText} from "./EditableText.tsx";
+import {ConstraintDetailEdit} from "./ConstraintDetailEdit.tsx";
 
 export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     mig: MessageImplementationGuide,
@@ -26,10 +46,12 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
     const [selectedPath, setSelectedPath] = useState<string>('')
     const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
-    const [selectedElementOverride, setSelectedElementOverride] = useState<ElementOverride | null>(null)
+    const selectedElementOverride = selectedElement
+        ? (mig.elementOverrides.find(o => o.xmlPath === selectedPath) ?? null)
+        : null
 
 
-    let message = null
+    let message: MessageDefinition | null = null
     for (const ba of eRepository.businessAreas) {
         const found = ba.messages.find(m => m.identifier === mig.messageIdentifier)
         if (found) {
@@ -64,7 +86,12 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
         setSelectedConstraint(null)
         setSelectedPath(xmlPath)
         setSelectedDataType(eRepository.dataTypes.get(element.typeId) ?? null)
-        setSelectedElementOverride(mig.elementOverrides.find(override => override.xmlPath === xmlPath) ?? null)
+    }
+
+    function isElementAdditionalConstraint(path: string) {
+        return mig.elementOverrides.some(override =>
+            override.additionalConstraints?.some(c => `${override.xmlPath}/${c.name}` === path)
+        )
     }
 
     function handleSelectContraint(constraint: Constraint, path: string) {
@@ -74,17 +101,30 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
         setSelectedDataType(null)
     }
 
+    function handleAddElementConstraint(elementPath: string) {
+        const newConstraint: Constraint = {name: 'NewConstraint' + new Date().getTime(), definition: '', expression: ''}
+        const existing = mig.elementOverrides.find(o => o.xmlPath === elementPath)
+        const override: ElementOverride = {
+            ...buildEmptyOverride(elementPath),
+            ...existing,
+            additionalConstraints: [...(existing?.additionalConstraints ?? []), newConstraint],
+        }
+        handleUpdateElementOverride(override)
+        setSelectedConstraint(newConstraint)
+        setSelectedPath(elementPath + '/' + newConstraint.name)
+        setSelectedElement(null)
+    }
+
     function isOverrideEmpty(override: ElementOverride) {
         const {xmlPath, allowedValues, additionalConstraints, ...rest} = override
         return (allowedValues == null || allowedValues.length === 0) && (additionalConstraints == null || additionalConstraints.length === 0) && Object.values(rest).every(v => v === null)
     }
 
     function handleUpdateElementOverride(override: ElementOverride) {
-        setSelectedElementOverride(override)
         let elementOverrides: ElementOverride[];
         if (isOverrideEmpty(override)) {
             // Remove empty override
-            elementOverrides = mig.elementOverrides.filter(o => o.xmlPath !== selectedPath);
+            elementOverrides = mig.elementOverrides.filter(o => o.xmlPath !== override.xmlPath);
         } else {
             const exists = mig.elementOverrides.some(o => o.xmlPath === override.xmlPath)
             if (exists) {
@@ -96,6 +136,26 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
             }
         }
         onUpdate({...mig, elementOverrides})
+    }
+
+    function handleUpdateConstraint(updated: Constraint) {
+        const oldName = selectedConstraint?.name
+        const elementPath = selectedPath.substring(0, selectedPath.lastIndexOf('/'))
+        const override = mig.elementOverrides.find(o => o.xmlPath === elementPath)!
+        const constraints = (override.additionalConstraints ?? []).map(c => c.name === oldName ? updated : c)
+        handleUpdateElementOverride({...override, additionalConstraints: constraints})
+        setSelectedConstraint(updated)
+        setSelectedPath(elementPath + '/' + updated.name)
+    }
+
+    function handleDeleteConstraint() {
+        const oldName = selectedConstraint!.name
+        const elementPath = selectedPath.substring(0, selectedPath.lastIndexOf('/'))
+        const override = mig.elementOverrides.find(o => o.xmlPath === elementPath)!
+        const constraints = (override.additionalConstraints ?? []).filter(c => c.name !== oldName)
+        handleUpdateElementOverride({...override, additionalConstraints: constraints})
+        setSelectedConstraint(null)
+        setSelectedPath('')
     }
 
     return (
@@ -135,7 +195,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                 />
             </div>
 
-            <p style={{display: 'flex', gap: '1em'}}>
+            <p style={{display: 'flex', gap: '1em', alignItems: 'center'}}>
                 <label>
                     <input
                         type="checkbox"
@@ -155,6 +215,7 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                         return `Hide excluded elements (${count})`
                     })()}
                 </label>
+                <button onClick={() => handleAddElementConstraint('/' + message!.xmlTag)}>+ Add constraint</button>
             </p>
 
             {message && (
@@ -180,18 +241,37 @@ export function MigDetail({mig, eRepository, onUpdate, onDelete}: {
                                             selectedPath={selectedPath}
                                             onSelect={handleSelectContraint}/>
                         ))}
+                        {mig.elementOverrides.find(o => o.xmlPath === '/' + message.xmlTag)?.additionalConstraints?.map(c => (
+                            <ConstraintNode key={c.name}
+                                            constraint={c}
+                                            parentPath={'/' + message.xmlTag}
+                                            selectedPath={selectedPath}
+                                            onSelect={handleSelectContraint}/>
+                        ))}
                     </div>
-                    <div style={{flex: 4, position: 'sticky', top: 0, alignSelf: 'flex-start', maxHeight: '100vh', overflowY: 'auto'}}>
+                    <div style={{
+                        flex: 4,
+                        position: 'sticky',
+                        top: 0,
+                        alignSelf: 'flex-start',
+                        maxHeight: '100vh',
+                        overflowY: 'auto'
+                    }}>
                         {selectedElement &&
                             <ElementDetailEdit
                                 element={selectedElement}
                                 dataType={selectedDataType!}
                                 xmlPath={selectedPath}
                                 elementOverride={selectedElementOverride}
-                                onUpdateOverride={handleUpdateElementOverride}/>
+                                onUpdateOverride={handleUpdateElementOverride}
+                                onAddConstraint={() => handleAddElementConstraint(selectedPath)}/>
                         }
-                        {selectedConstraint &&
-                            <ConstraintDetailView constraint={selectedConstraint}/>}
+                        {selectedConstraint && (isElementAdditionalConstraint(selectedPath)
+                                ? <ConstraintDetailEdit constraint={selectedConstraint}
+                                                        onUpdate={handleUpdateConstraint}
+                                                        onDelete={handleDeleteConstraint}/>
+                                : <ConstraintDetailView constraint={selectedConstraint}/>)
+                        }
                     </div>
                 </div>
             )}

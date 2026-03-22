@@ -54,8 +54,8 @@ export function ElementNode({
             constraints: []
         }
         : null
-    const hasChildren = complexType.elements?.length || element.constraints?.length || dataType.constraints?.length
     const override = elementOverrides.find(o => o.xmlPath === elementPath)
+    const hasChildren = complexType.elements?.length || element.constraints?.length || dataType.constraints?.length || override?.additionalConstraints?.length
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
     const nameStyle = isExcluded ? {textDecoration: 'line-through' as const} : undefined
 
@@ -120,6 +120,13 @@ export function ElementNode({
                                     onSelect={onSelectConstraint}/>
                 ))}
                 {dataType.constraints.map((constraint) => (
+                    <ConstraintNode key={constraint.name}
+                                    constraint={constraint}
+                                    parentPath={elementPath}
+                                    selectedPath={selectedPath}
+                                    onSelect={onSelectConstraint}/>
+                ))}
+                {override?.additionalConstraints?.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
                                     parentPath={elementPath}

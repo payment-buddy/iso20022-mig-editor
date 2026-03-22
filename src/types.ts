@@ -92,5 +92,4 @@ export interface MessageImplementationGuide {
     version: string
     description: string | null
     elementOverrides: ElementOverride[]
-    additionalConstraints: Constraint[] | null
 }

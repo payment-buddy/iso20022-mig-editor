@@ -2,12 +2,13 @@ import type {DataType, ElementOverride, MessageElement, Simpletype} from "./type
 import {EditableText} from "./EditableText.tsx";
 import {EditableNumber} from "./EditableNumber.tsx";
 
-export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, onUpdateOverride}: {
+export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, onUpdateOverride, onAddConstraint}: {
     element: MessageElement
     dataType: DataType
     xmlPath: string
     elementOverride: ElementOverride | null
     onUpdateOverride: (override: ElementOverride) => void
+    onAddConstraint: () => void
 }) {
     const simpleType = dataType as Simpletype
     const isTextType = 'baseType' in dataType && simpleType.baseType === 'Text'
@@ -131,6 +132,9 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                     />
                 </div>
             )}
+            <div>
+                <button onClick={onAddConstraint}>+ Add constraint</button>
+            </div>
         </div>
     )
 }
