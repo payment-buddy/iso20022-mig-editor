@@ -1,5 +1,5 @@
 import type {MessageImplementationGuide} from "./types.ts";
-import {useRef} from "react";
+import {FileInputButton} from "./FileInputButton.tsx";
 
 export function MigList({migs, onBrowse, onUpload, onDownload}: {
     migs: MessageImplementationGuide[]
@@ -7,24 +7,13 @@ export function MigList({migs, onBrowse, onUpload, onDownload}: {
     onUpload: (text: string) => void
     onDownload: () => void
 }) {
-    const fileInputRef = useRef<HTMLInputElement>(null)
-
-    function handleFileChange(e: { target: HTMLInputElement }) {
-        const file = e.target.files?.[0]
-        if (!file) return
-        file.text().then(onUpload)
-        e.target.value = ''
-    }
-
     return (
         <div>
             <div className="page-header">
                 <h2>ISO 20022 Message Implementation Guide</h2>
                 <div className="page-actions">
-                    <input ref={fileInputRef} type="file" accept=".yaml,.yml" style={{display: 'none'}}
-                           onChange={handleFileChange}/>
                     {migs.length > 0 && <button onClick={onDownload}>Download all</button>}
-                    <button onClick={() => fileInputRef.current?.click()}>Load MIG</button>
+                    <FileInputButton label="Load MIG" accept=".yaml,.yml" onFile={f => f.text().then(onUpload)}/>
                     <button onClick={onBrowse}>Browse e-Repository</button>
                 </div>
             </div>
