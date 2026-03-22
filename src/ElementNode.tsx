@@ -41,7 +41,18 @@ export function ElementNode({
     const dataType = dataTypes.get(element.typeId)!
     const complexType = dataType as ComplexType
     const simpleType = dataType as Simpletype
-    const currencyIdentifierSet = simpleType.currencyIdentifierSet ? dataTypes.get(simpleType.currencyIdentifierSet) : null
+    const ccyElement: MessageElement | null = simpleType.currencyIdentifierSet
+        ? {
+            id: element.id + '/Ccy',
+            name: 'Currency',
+            xmlTag: 'Ccy',
+            definition: '',
+            minOccurs: 1,
+            maxOccurs: 1,
+            typeId: simpleType.currencyIdentifierSet,
+            constraints: []
+        }
+        : null
     const hasChildren = complexType.elements?.length || element.constraints?.length || dataType.constraints?.length
     const override = elementOverrides.find(o => o.xmlPath === elementPath)
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
@@ -88,6 +99,18 @@ export function ElementNode({
                                  onSelectElement={onSelectElement}
                                  onSelectConstraint={onSelectConstraint}/>
                 ))}
+                {ccyElement && (
+                    <ElementNode key="Ccy"
+                                 element={ccyElement}
+                                 dataTypes={dataTypes}
+                                 showXmlTags={showXmlTags}
+                                 parentPath={elementPath}
+                                 selectedPath={selectedPath}
+                                 elementOverrides={elementOverrides}
+                                 showExcluded={showExcluded}
+                                 onSelectElement={onSelectElement}
+                                 onSelectConstraint={onSelectConstraint}/>
+                )}
                 {element.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
@@ -96,13 +119,6 @@ export function ElementNode({
                                     onSelect={onSelectConstraint}/>
                 ))}
                 {dataType.constraints.map((constraint) => (
-                    <ConstraintNode key={constraint.name}
-                                    constraint={constraint}
-                                    parentPath={elementPath}
-                                    selectedPath={selectedPath}
-                                    onSelect={onSelectConstraint}/>
-                ))}
-                {currencyIdentifierSet?.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
                                     parentPath={elementPath}
