@@ -178,19 +178,16 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
                 <label>Name:</label>
                 <EditableText
                     value={mig.name}
-                    isOverridden={false}
                     onSave={val => { if (val !== mig.name) onUpdate({...mig, name: val}) }}
                 />
                 <label>Version:</label>
                 <EditableText
                     value={mig.version}
-                    isOverridden={false}
                     onSave={val => { if (val !== mig.version) onUpdate({...mig, version: val}) }}
                 />
                 <label style={{alignSelf: 'start', paddingTop: '0.2em'}}>Description:</label>
                 <EditableText
                     value={mig.description ?? ''}
-                    isOverridden={false}
                     multiline
                     onSave={val => { if (val !== (mig.description ?? '')) onUpdate({...mig, description: val || null}) }}
                 />

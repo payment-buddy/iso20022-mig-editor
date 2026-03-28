@@ -1,12 +1,13 @@
 import {useState} from "react";
 
-export function EditableText({value, isOverridden, multiline, monospace, onSave}: {
+export function EditableText({value, originalValue, multiline, monospace, onSave}: {
     value: string
-    isOverridden: boolean
+    originalValue?: string
     multiline?: boolean
     monospace?: boolean
     onSave: (value: string) => void
 }) {
+    const isOverridden = originalValue != undefined && value !== originalValue
     const [editing, setEditing] = useState(false)
     const [inputValue, setInputValue] = useState('')
 
@@ -52,6 +53,7 @@ export function EditableText({value, isOverridden, multiline, monospace, onSave}
 
     return (
         <span
+            title={isOverridden ? `Original: ${originalValue ?? '<none>'}` : undefined}
             style={{
                 cursor: 'pointer',
                 ...(multiline ? {whiteSpace: 'pre-wrap'} : {}),

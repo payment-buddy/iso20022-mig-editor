@@ -38,20 +38,19 @@ export function EditableNumber({value, originalValue, onSave, warnWhen}: {
 
     const showWarning = value !== null && originalValue !== null &&
         (warnWhen === 'lower' ? value < originalValue : warnWhen === 'higher' ? value > originalValue : false)
+    const isOverridden = value !== originalValue
+
     return (
-        <>
-            {value !== originalValue && (
-                <span style={{textDecoration: 'line-through', marginRight: '1em'}}>
-                {originalValue ?? '<none>'}
-            </span>
-            )}
-            <span
-                style={{cursor: 'pointer'}}
-                onClick={startEdit}
-            >
-                {value ?? '<none>'}
-                {showWarning && ' \u26A0'}
-            </span>
-        </>
+        <span
+            title={isOverridden ? `Original: ${originalValue ?? '<none>'}` : undefined}
+            style={{
+                cursor: 'pointer',
+                ...(isOverridden ? {color: '#0066cc'} : {}),
+            }}
+            onClick={startEdit}
+        >
+            {value ?? '<none>'}
+            {showWarning && ' \u26A0'}
+        </span>
     )
 }
