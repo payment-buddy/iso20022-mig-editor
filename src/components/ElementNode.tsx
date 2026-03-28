@@ -36,8 +36,8 @@ export function ElementNode({
     const [open, setOpen] = useState(false)
     const elementPath = parentPath + '/' + element.xmlTag
     const isSelected = elementPath === selectedPath;
-    const background = isSelected ? '#2b5ce6' : 'transparent'
-    const color = isSelected ? '#fff' : undefined
+    const background = isSelected ? 'Highlight' : undefined
+    const color = isSelected ? 'HighlightText' : undefined
     const dataType = dataTypes.get(element.typeId)!
     const complexType = dataType as ComplexType
     const simpleType = dataType as Simpletype

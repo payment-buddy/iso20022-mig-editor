@@ -8,8 +8,8 @@ export function ConstraintNode({constraint, parentPath, selectedPath, onSelect}:
 }) {
     const contraintPath = parentPath + '/' + constraint.name;
     const isSelected = contraintPath === selectedPath
-    const background = isSelected ? '#2b5ce6' : 'transparent'
-    const color = isSelected ? '#fff' : undefined
+    const background = isSelected ? 'Highlight' : 'transparent'
+    const color = isSelected ? 'HighlightText' : undefined
     return (
         <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
              onClick={() => onSelect(constraint, contraintPath)}>
