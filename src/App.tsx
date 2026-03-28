@@ -1,4 +1,4 @@
-import {FileUploaderPage} from './pages/FileUploaderPage'
+import {RepositoryUploadPage} from './pages/RepositoryUploadPage.tsx'
 import {useEffect, useState} from "react"
 import {parseRepository} from "./services/eRepository.ts"
 import {BusinessAreaListPage} from './pages/BusinessAreaListPage'
@@ -138,7 +138,7 @@ function App() {
         )
     }
     if (!eRepository) {
-        return <FileUploaderPage onParsed={handleParsed}/>
+        return <RepositoryUploadPage onParsed={handleParsed}/>
     }
     if (hash === '#browse') {
         return <BusinessAreaListPage businessAreas={eRepository.businessAreas} onUpdateERepository={handleUpdateERepository}/>
