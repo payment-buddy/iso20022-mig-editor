@@ -28,7 +28,7 @@ export interface DataType {
     constraints: Constraint[]
 }
 
-export interface Simpletype extends DataType {
+export interface SimpleType extends DataType {
     baseType: string
     minInclusive: number | null
     maxInclusive: number | null

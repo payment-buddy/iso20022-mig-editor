@@ -1,9 +1,9 @@
-import type {DataType, ElementOverride, MessageElement, Simpletype} from "../types/types.ts"
+import type {DataType, ElementOverride, MessageElement, SimpleType} from "../types/types.ts"
 import {EditableText} from "./EditableText.tsx"
 import {EditableNumber} from "./EditableNumber.tsx"
 import {EditableValueList} from "./EditableValueList.tsx"
 
-function createValueValidator(elementOverride: ElementOverride | null, simpleType: Simpletype): (value: string) => boolean {
+function createValueValidator(elementOverride: ElementOverride | null, simpleType: SimpleType): (value: string) => boolean {
     const pattern = elementOverride?.pattern ?? simpleType.pattern
     const minLength = elementOverride?.minLength ?? simpleType.minLength ?? simpleType.length
     const maxLength = elementOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length
@@ -30,7 +30,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     onUpdateOverride: (override: ElementOverride) => void
     onAddConstraint: () => void
 }) {
-    const simpleType = dataType as Simpletype
+    const simpleType = dataType as SimpleType
     const isTextType = 'baseType' in dataType && simpleType.baseType === 'Text'
     const isCodeSetType = 'baseType' in dataType && simpleType.baseType === 'CodeSet'
     const baseExamples = element.examples.length > 0 ? element.examples : (simpleType.examples ?? [])
