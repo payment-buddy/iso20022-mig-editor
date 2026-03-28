@@ -6,13 +6,12 @@ export function ConstraintNode({constraint, parentPath, selectedPath, onSelect}:
     selectedPath: string
     onSelect: (constraint: Constraint, path: string) => void
 }) {
-    const contraintPath = parentPath + '/' + constraint.name;
-    const isSelected = contraintPath === selectedPath
-    const background = isSelected ? 'Highlight' : 'transparent'
-    const color = isSelected ? 'HighlightText' : undefined
+    const constraintPath = parentPath + '/' + constraint.name;
+    const isSelected = constraintPath === selectedPath
     return (
-        <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
-             onClick={() => onSelect(constraint, contraintPath)}>
+        <div className={'tree-node' + (isSelected ? ' is-selected' : '')}
+             style={{marginLeft: '1em'}}
+             onClick={() => onSelect(constraint, constraintPath)}>
             <span style={{fontSize: '0.8em'}}>✔</span> {constraint.name}
         </div>
     )

@@ -102,6 +102,15 @@ input, textarea {
     margin-bottom: 0.2em;
 }
 
+.tree-node {
+    cursor: pointer;
+}
+
+.tree-node.is-selected {
+    background: Highlight;
+    color: HighlightText;
+}
+
 .error-box {
     border: 1px solid color-mix(in srgb, red 70%, CanvasText);
     padding: 1rem;

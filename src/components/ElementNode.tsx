@@ -36,8 +36,6 @@ export function ElementNode({
     const [open, setOpen] = useState(false)
     const elementPath = parentPath + '/' + element.xmlTag
     const isSelected = elementPath === selectedPath;
-    const background = isSelected ? 'Highlight' : undefined
-    const color = isSelected ? 'HighlightText' : undefined
     const dataType = dataTypes.get(element.typeId)!
     const complexType = dataType as ComplexType
     const simpleType = dataType as Simpletype
@@ -65,7 +63,8 @@ export function ElementNode({
     if (!hasChildren) {
         return (
             <>
-                <div style={{marginLeft: '1em', cursor: 'pointer', background, color}}
+                <div className={'tree-node' + (isSelected ? ' is-selected' : '')}
+                     style={{marginLeft: '1em'}}
                      onClick={() => onSelectElement(element, elementPath)}>
                     <span style={{marginRight: '0.5em', fontSize: '0.7em'}}>◇</span>
                     <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
@@ -77,7 +76,7 @@ export function ElementNode({
 
     return (
         <div style={{marginLeft: '1em'}}>
-            <div style={{cursor: 'pointer', background, color}} onClick={() => {
+            <div className={'tree-node' + (isSelected ? ' is-selected' : '')} onClick={() => {
                 onSelectElement(element, elementPath)
                 if (elementPath === selectedPath || !open) {
                     setOpen(o => !o)
