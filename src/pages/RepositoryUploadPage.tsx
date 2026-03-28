@@ -1,6 +1,7 @@
 import {useCallback, useRef, useState} from 'react'
 import {parseRepository} from "../services/eRepository.ts"
 import type {ERepository} from "../types/types.ts"
+import {LoadingIndicator} from "../components/LoadingIndicator.tsx"
 
 type Status = 'idle' | 'parsing' | 'error'
 
@@ -42,17 +43,7 @@ export function RepositoryUploadPage({onParsed}: {
                     }
                 }}
             />
-            {status === 'parsing' && (
-                <p>
-                    <style>{`@keyframes iso-dot{0%,80%,100%{opacity:0}40%{opacity:1}}`}</style>
-                    Loading
-                    <span>
-                        <span style={{animation: 'iso-dot 1.4s 0.0s infinite'}}>.</span>
-                        <span style={{animation: 'iso-dot 1.4s 0.2s infinite'}}>.</span>
-                        <span style={{animation: 'iso-dot 1.4s 0.4s infinite'}}>.</span>
-                    </span>
-                </p>
-            )}
+            {status === 'parsing' && <p><LoadingIndicator/></p>}
             {status === 'error' && (
                 <p className="error-text">
                     Failed to parse file.
