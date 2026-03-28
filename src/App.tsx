@@ -1,12 +1,12 @@
 import {FileUploaderPage} from './pages/FileUploaderPage'
-import {useEffect, useState} from "react";
-import {parseRepository} from "./services/eRepository.ts";
+import {useEffect, useState} from "react"
+import {parseRepository} from "./services/eRepository.ts"
 import {BusinessAreaListPage} from './pages/BusinessAreaListPage'
 import {MigListPage} from './pages/MigListPage.tsx'
 import {MessageDetailPage} from './pages/MessageDetailPage.tsx'
 import {MigDetailPage} from './pages/MigDetailPage.tsx'
-import {useHash} from "./hooks/useHash.ts";
-import type {ERepository, MessageImplementationGuide} from "./types/types.ts";
+import {useHash} from "./hooks/useHash.ts"
+import type {ERepository, MessageImplementationGuide} from "./types/types.ts"
 import {
     deleteDatabase,
     deleteMig,
@@ -15,8 +15,8 @@ import {
     loadMigsForBackup,
     saveERepository,
     saveMig
-} from "./services/localStore.ts";
-import {parse, stringify} from "yaml";
+} from "./services/localStore.ts"
+import {parse, stringify} from "yaml"
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
@@ -76,7 +76,7 @@ function App() {
                 return [...prev, ...incoming.filter(m => !existingIds.has(m.id))]
             })
             if (!Array.isArray(parsed)) {
-                const mig = parsed as MessageImplementationGuide;
+                const mig = parsed as MessageImplementationGuide
                 window.location.hash = 'mig/' + mig.id
             }
         })

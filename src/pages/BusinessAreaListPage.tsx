@@ -1,5 +1,5 @@
-import type {BusinessArea, MessageDefinition} from "../types/types.ts";
-import {FileInputButton} from "../components/FileInputButton.tsx";
+import type {BusinessArea, MessageDefinition} from "../types/types.ts"
+import {FileInputButton} from "../components/FileInputButton.tsx"
 
 function baseName(name: string) {
     return name.replace(/V\d+$/, '')
@@ -13,7 +13,7 @@ function groupByBase(messages: MessageDefinition[]) {
     const map = new Map<string, MessageDefinition[]>()
     for (const msg of messages) {
         const key = baseName(msg.name)
-        let versions = map.get(key);
+        let versions = map.get(key)
         if (versions === undefined) {
             versions = []
             map.set(key, versions)

@@ -16,7 +16,7 @@ export function unzipToStream(zipFile: File): ReadableStream<Uint8Array> {
         found = true
         entry.ondata = (err, data, final) => {
             if (err) {
-                controller.error(err);
+                controller.error(err)
                 return
             }
             controller.enqueue(data)

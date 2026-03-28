@@ -1,5 +1,5 @@
 import sax from 'sax'
-import {unzipToStream} from "../utils/unzip.ts";
+import {unzipToStream} from "../utils/unzip.ts"
 import type {
     BusinessArea,
     ComplexType,
@@ -8,7 +8,7 @@ import type {
     MessageDefinition,
     MessageElement,
     Simpletype
-} from "../types/types.ts";
+} from "../types/types.ts"
 
 export async function parseRepository(file: File): Promise<ERepository> {
     const parser = sax.parser(true) // strict mode — attribute names kept as-is
@@ -41,7 +41,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                         definition: attrs['definition'] ?? '',
                         code: attrs['code'] ?? ' ',
                         messages: [],
-                    };
+                    }
                 }
             }
         } else if (node.name === 'topLevelDictionaryEntry') {
@@ -92,7 +92,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
                     constraints: [],
                     examples: [],
-                };
+                }
                 complexType.elements.push(messageElement)
             }
         } else if (node.name === 'messageDefinition') {

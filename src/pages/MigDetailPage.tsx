@@ -1,4 +1,4 @@
-import {stringify} from "yaml";
+import {stringify} from "yaml"
 import type {
     Constraint,
     DataType,
@@ -7,14 +7,14 @@ import type {
     MessageDefinition,
     MessageElement,
     MessageImplementationGuide
-} from "../types/types.ts";
-import {useState} from "react";
-import {ElementDetailEdit} from "../components/ElementDetailEdit.tsx";
-import {ConstraintDetailView} from "../components/ConstraintDetailView.tsx";
-import {EditableText} from "../components/EditableText.tsx";
-import {ConstraintDetailEdit} from "../components/ConstraintDetailEdit.tsx";
-import {DetailPanel} from "../components/DetailPanel.tsx";
-import {MessageTreeView} from "../components/MessageTreeView.tsx";
+} from "../types/types.ts"
+import {useState} from "react"
+import {ElementDetailEdit} from "../components/ElementDetailEdit.tsx"
+import {ConstraintDetailView} from "../components/ConstraintDetailView.tsx"
+import {EditableText} from "../components/EditableText.tsx"
+import {ConstraintDetailEdit} from "../components/ConstraintDetailEdit.tsx"
+import {DetailPanel} from "../components/DetailPanel.tsx"
+import {MessageTreeView} from "../components/MessageTreeView.tsx"
 
 function buildEmptyOverride(xmlPath: string): ElementOverride {
     return {
@@ -57,7 +57,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     for (const ba of eRepository.businessAreas) {
         const found = ba.messages.find(m => m.identifier === mig.messageIdentifier)
         if (found) {
-            message = found;
+            message = found
             break
         }
     }
@@ -75,7 +75,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
             if (val === null) return undefined
             if (Array.isArray(val) && val.length === 0) return undefined
             return val
-        });
+        })
         const blob = new Blob([payload], {type: 'text/yaml'})
         const a = document.createElement('a')
         a.href = URL.createObjectURL(blob)
@@ -125,18 +125,18 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     }
 
     function handleUpdateElementOverride(override: ElementOverride) {
-        let elementOverrides: ElementOverride[];
+        let elementOverrides: ElementOverride[]
         if (isOverrideEmpty(override)) {
             // Remove empty override
-            elementOverrides = mig.elementOverrides.filter(o => o.xmlPath !== override.xmlPath);
+            elementOverrides = mig.elementOverrides.filter(o => o.xmlPath !== override.xmlPath)
         } else {
             const exists = mig.elementOverrides.some(o => o.xmlPath === override.xmlPath)
             if (exists) {
                 // Replace existing override
-                elementOverrides = mig.elementOverrides.map(o => o.xmlPath === override.xmlPath ? override : o);
+                elementOverrides = mig.elementOverrides.map(o => o.xmlPath === override.xmlPath ? override : o)
             } else {
                 // Add new override
-                elementOverrides = [...mig.elementOverrides, override];
+                elementOverrides = [...mig.elementOverrides, override]
             }
         }
         onUpdate({...mig, elementOverrides})

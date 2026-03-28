@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useState} from "react"
 
 export function EditableNumber({value, originalValue, onSave, warnWhen}: {
     value: number | null

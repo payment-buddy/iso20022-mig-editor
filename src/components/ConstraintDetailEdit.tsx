@@ -1,5 +1,5 @@
-import type {Constraint} from "../types/types.ts";
-import {EditableText} from "./EditableText.tsx";
+import type {Constraint} from "../types/types.ts"
+import {EditableText} from "./EditableText.tsx"
 
 export function ConstraintDetailEdit({constraint, onUpdate, onDelete, isNew}: {
     constraint: Constraint
