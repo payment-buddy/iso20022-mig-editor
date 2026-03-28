@@ -1,11 +1,9 @@
 import type {BusinessArea, DataType, MessageDefinition, MessageImplementationGuide} from "../types/types.ts"
 import {MessageStructureView} from "../components/MessageStructureView.tsx"
 import {useState} from "react"
+import {MessageVersionSelector} from "../components/MessageVersionSelector.tsx"
 import {MigCreateForm} from "../components/MigCreateForm.tsx"
 
-function versionLabel(msg: MessageDefinition) {
-    return 'V' + msg.identifier.substring(msg.identifier.lastIndexOf('.') + 1)
-}
 
 export function MessageDetailPage({messageId, versions, businessArea, dataTypes, onMigCreated}: {
     messageId: string | null
@@ -41,21 +39,7 @@ export function MessageDetailPage({messageId, versions, businessArea, dataTypes,
                 </div>
             </div>
 
-            <div style={{display: 'flex', gap: '0.4rem', marginBottom: '1rem'}}>
-                {versions.map((msg) => (
-                    <a href={'#' + msg.identifier}
-                       key={msg.identifier}
-                       style={{
-                           padding: '0.2em 0.6em', borderRadius: 4, fontSize: '0.8em',
-                           cursor: 'pointer', border: '1px solid #2b5ce6',
-                           background: msg === message ? '#2b5ce6' : 'transparent',
-                           color: msg === message ? '#fff' : '#2b5ce6',
-                       }}
-                    >
-                        {versionLabel(msg)}
-                    </a>
-                ))}
-            </div>
+            <MessageVersionSelector versions={versions} currentMessage={message}/>
 
             {showMigForm && (
                 <MigCreateForm message={message} onSave={handleMigSave} onCancel={() => setShowMigForm(false)}/>
