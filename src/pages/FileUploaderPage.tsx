@@ -54,7 +54,7 @@ export function FileUploaderPage({onParsed}: {
                 </p>
             )}
             {status === 'error' && (
-                <p style={{color: 'red'}}>
+                <p className="error-text">
                     Failed to parse file.
                 </p>
             )}
