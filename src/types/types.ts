@@ -11,7 +11,7 @@ export interface MessageElement {
     isAttribute: boolean
     definition: string
     minOccurs: number
-    maxOccurs: number
+    maxOccurs: number | null
     typeId: string
     constraints: Constraint[]
     examples: string[]
