@@ -21,6 +21,8 @@ export async function parseRepository(file: File): Promise<ERepository> {
     let messageElement: MessageElement | null = null
     let messageDefinition: MessageDefinition | null = null
     let exampleText: string | null = null
+    const num = (v: string | undefined) => v != null ? Number(v) : null
+    const int = (v: string | undefined) => v != null ? parseInt(v, 10) : null
 
     parser.onopentag = (node: sax.Tag) => {
         if (node.name === 'example') {
@@ -55,8 +57,6 @@ export async function parseRepository(file: File): Promise<ERepository> {
             } else if (xsiType === 'iso20022:BusinessComponent') {
                 // skip
             } else {
-                const num = (v: string | undefined) => v != null ? Number(v) : null
-                const int = (v: string | undefined) => v != null ? parseInt(v, 10) : null
                 simpleType = {
                     name: attrs['name'],
                     definition: attrs['definition'] ?? '',
@@ -87,8 +87,8 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     xmlTag: attrs['xmlTag'],
                     isAttribute: false,
                     definition: attrs['definition'] ?? '',
-                    minOccurs: parseInt(attrs['minOccurs'] ?? '1', 10),
-                    maxOccurs: parseInt(attrs['maxOccurs'] ?? '1', 10),
+                    minOccurs: int(attrs['minOccurs']) ?? 1,
+                    maxOccurs: int(attrs['maxOccurs']),
                     typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
                     constraints: [],
                     examples: [],
@@ -116,8 +116,8 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     xmlTag: attrs['xmlTag'] ?? '',
                     isAttribute: false,
                     definition: attrs['definition'] ?? '',
-                    minOccurs: parseInt(attrs['minOccurs'] ?? '1', 10),
-                    maxOccurs: parseInt(attrs['maxOccurs'] ?? '1', 10),
+                    minOccurs: int(attrs['minOccurs']) ?? 1,
+                    maxOccurs: int(attrs['maxOccurs']),
                     typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
                     constraints: [],
                     examples: [],

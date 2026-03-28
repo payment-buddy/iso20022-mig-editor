@@ -7,7 +7,7 @@ function Cardinality({element, override}: { element: MessageElement, override: E
     const max = override?.maxOccurs ?? element.maxOccurs
     return (
         <span style={{color: '#888', marginLeft: '0.4em'}}>
-            [{min}..{max}]
+            [{min}..{max ?? '*'}]
         </span>
     )
 }

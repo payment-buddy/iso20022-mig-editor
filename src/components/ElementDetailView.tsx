@@ -20,7 +20,7 @@ export function ElementDetailView({element, dataType, xmlPath}: {
             </div>
             <div>
                 <div className="detail-label">Multiplicity</div>
-                <div>[{element.minOccurs}..{element.maxOccurs}]</div>
+                <div>[{element.minOccurs}..{element.maxOccurs ?? 'unbounded'}]</div>
             </div>
             <div>
                 <div className="detail-label">{element.isAttribute ? 'XML Attribute' : 'XML Tag'}</div>
