@@ -58,6 +58,7 @@ button:focus-visible {
 input, textarea {
     background: Field;
     color: FieldText;
+    box-sizing: border-box;
 }
 
 .page-header {
