@@ -1,6 +1,26 @@
 import type {DataType, ElementOverride, MessageElement, Simpletype} from "../types/types.ts";
 import {EditableText} from "./EditableText.tsx";
 import {EditableNumber} from "./EditableNumber.tsx";
+import {EditableValueList} from "./EditableValueList.tsx";
+
+function createValueValidator(elementOverride: ElementOverride | null, simpleType: Simpletype): (value: string) => boolean {
+    const pattern = elementOverride?.pattern ?? simpleType.pattern
+    const minLength = elementOverride?.minLength ?? simpleType.minLength ?? simpleType.length
+    const maxLength = elementOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length
+
+    return (value: string): boolean => {
+        if (minLength != null && value.length < minLength) return false
+        if (maxLength != null && value.length > maxLength) return false
+        if (pattern != null) {
+            try {
+                if (!new RegExp('^' + pattern + '$').test(value)) return false
+            } catch {
+                return false
+            }
+        }
+        return true
+    }
+}
 
 export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, onUpdateOverride, onAddConstraint}: {
     element: MessageElement
@@ -49,6 +69,8 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             if (!isNaN(num)) saveOverride({[field]: num === original ? null : num})
         }
     }
+
+    const validateValue = createValueValidator(elementOverride, simpleType)
 
     return (
         <div className="detail-panel">
@@ -126,29 +148,23 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             {(isTextType || isCodeSetType) && (
                 <div>
                     <div className="detail-label">Allowed Values</div>
-                    <EditableText
-                        value={elementOverride?.allowedValues?.join('\n') ?? ''}
+                    <EditableValueList
+                        values={elementOverride?.allowedValues ?? []}
                         isOverridden={elementOverride?.allowedValues != null && elementOverride.allowedValues.length > 0}
-                        multiline
                         monospace
-                        onSave={val => {
-                            const values = val.split('\n').map(s => s.trim()).filter(Boolean)
-                            saveOverride({allowedValues: values.length === 0 ? null : values})
-                        }}
+                        isValueInvalid={v => !validateValue(v)}
+                        onSave={values => saveOverride({allowedValues: values.length === 0 ? null : values})}
                     />
                 </div>
             )}
             <div>
                 <div className="detail-label">Examples</div>
-                <EditableText
-                    value={(elementOverride?.examples ?? baseExamples).join('\n')}
+                <EditableValueList
+                    values={elementOverride?.examples ?? baseExamples}
                     isOverridden={elementOverride?.examples != null && elementOverride.examples.length > 0}
-                    multiline
                     monospace
-                    onSave={val => {
-                        const values = val.split('\n').map(s => s.trim()).filter(Boolean)
-                        saveOverride({examples: values.length === 0 ? null : values})
-                    }}
+                    isValueInvalid={v => !validateValue(v)}
+                    onSave={values => saveOverride({examples: values.length === 0 ? null : values})}
                 />
             </div>
             <div>
