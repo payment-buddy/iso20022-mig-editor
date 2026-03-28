@@ -127,7 +127,7 @@ function App() {
     }
     if (dbError) {
         return (
-            <div style={{border: '1px solid #c00', padding: '1rem', maxWidth: 480}}>
+            <div className="error-box">
                 <p><strong>Failed to open the local database.</strong> This can happen after an app update that
                     changed the data format.</p>
                 <p>You can delete all stored data and start fresh, or downgrade to an older version of the app that
