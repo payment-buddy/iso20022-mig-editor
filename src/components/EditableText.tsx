@@ -1,15 +1,26 @@
-import {useState} from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import {useState, useRef, useEffect} from "react";
 
-export function EditableText({value, originalValue, multiline, monospace, onSave}: {
+export function EditableText({value, originalValue, multiline, monospace, autoFocus, onSave}: {
     value: string
     originalValue?: string
     multiline?: boolean
     monospace?: boolean
+    autoFocus?: boolean
     onSave: (value: string) => void
 }) {
     const isOverridden = originalValue != undefined && value !== originalValue
     const [editing, setEditing] = useState(false)
     const [inputValue, setInputValue] = useState('')
+    const autoFocusTriggered = useRef(false)
+
+    useEffect(() => {
+        if (autoFocus && !autoFocusTriggered.current) {
+            autoFocusTriggered.current = true
+            setInputValue(value)
+            setEditing(true)
+        }
+    }, [autoFocus, value])
 
     function startEdit() {
         setInputValue(value)

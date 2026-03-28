@@ -1,10 +1,11 @@
 import type {Constraint} from "../types/types.ts";
 import {EditableText} from "./EditableText.tsx";
 
-export function ConstraintDetailEdit({constraint, onUpdate, onDelete}: {
+export function ConstraintDetailEdit({constraint, onUpdate, onDelete, isNew}: {
     constraint: Constraint
     onUpdate: (updated: Constraint) => void
     onDelete: () => void
+    isNew?: boolean
 }) {
     return (
         <div className="detail-panel">
@@ -12,6 +13,7 @@ export function ConstraintDetailEdit({constraint, onUpdate, onDelete}: {
                 <div className="detail-label">Name</div>
                 <EditableText
                     value={constraint.name}
+                    autoFocus={isNew}
                     onSave={val => val && onUpdate({...constraint, name: val})}
                 />
             </div>

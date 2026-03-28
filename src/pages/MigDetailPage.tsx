@@ -47,6 +47,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
     const [selectedPath, setSelectedPath] = useState<string>('')
     const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
+    const [newConstraintId, setNewConstraintId] = useState<string | null>(null)
     const selectedElementOverride = selectedElement
         ? (mig.elementOverrides.find(o => o.xmlPath === selectedPath) ?? null)
         : null
@@ -114,6 +115,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
         setSelectedConstraint(newConstraint)
         setSelectedPath(elementPath + '/' + newConstraint.name)
         setSelectedElement(null)
+        setNewConstraintId(newConstraint.name)
     }
 
     function isOverrideEmpty(override: ElementOverride) {
@@ -147,6 +149,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
         handleUpdateElementOverride({...override, additionalConstraints: constraints})
         setSelectedConstraint(updated)
         setSelectedPath(elementPath + '/' + updated.name)
+        setNewConstraintId(null)
     }
 
     function handleDeleteConstraint() {
@@ -157,6 +160,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
         handleUpdateElementOverride({...override, additionalConstraints: constraints})
         setSelectedConstraint(null)
         setSelectedPath('')
+        setNewConstraintId(null)
     }
 
     return (
@@ -241,7 +245,8 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
                         {selectedConstraint && (isElementAdditionalConstraint(selectedPath)
                                 ? <ConstraintDetailEdit constraint={selectedConstraint}
                                                         onUpdate={handleUpdateConstraint}
-                                                        onDelete={handleDeleteConstraint}/>
+                                                        onDelete={handleDeleteConstraint}
+                                                        isNew={selectedConstraint.name === newConstraintId}/>
                                 : <ConstraintDetailView constraint={selectedConstraint}/>)
                         }
                     </DetailPanel>
