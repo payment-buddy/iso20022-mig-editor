@@ -34,7 +34,7 @@ npm run dev
 |-------------------|-------------------------------------|
 | `npm run dev`     | Start Vite dev server               |
 | `npm run build`   | Type-check and build for production |
-| `npm test`        | Run Vitest tests                    |
+| `npm run test`    | Run Vitest tests                    |
 | `npm run lint`    | Run ESLint                          |
 | `npm run preview` | Preview production build            |
 
