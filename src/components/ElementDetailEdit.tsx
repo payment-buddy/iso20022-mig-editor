@@ -90,7 +90,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                 <div className="detail-label">Definition</div>
                 <EditableText
                     value={elementOverride?.definition || element.definition || dataType.definition}
-                    isOverridden={elementOverride?.definition != null}
+                    originalValue={element.definition || dataType.definition}
                     multiline
                     onSave={val => saveOverride({definition: val === element.definition ? null : val})}
                 />
@@ -136,7 +136,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                     <div className="detail-label">Pattern</div>
                     <EditableText
                         value={elementOverride?.pattern ?? simpleType.pattern ?? ''}
-                        isOverridden={elementOverride?.pattern != null}
+                        originalValue={simpleType.pattern ?? ''}
                         monospace
                         onSave={val => {
                             const original = simpleType.pattern ?? null
@@ -150,7 +150,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                     <div className="detail-label">Allowed Values</div>
                     <EditableValueList
                         values={elementOverride?.allowedValues ?? []}
-                        isOverridden={elementOverride?.allowedValues != null && elementOverride.allowedValues.length > 0}
+                        originalValues={[]}
                         monospace
                         isValueInvalid={v => !validateValue(v)}
                         onSave={values => saveOverride({allowedValues: values.length === 0 ? null : values})}
@@ -161,7 +161,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                 <div className="detail-label">Examples</div>
                 <EditableValueList
                     values={elementOverride?.examples ?? baseExamples}
-                    isOverridden={elementOverride?.examples != null && elementOverride.examples.length > 0}
+                    originalValues={baseExamples}
                     monospace
                     isValueInvalid={v => !validateValue(v)}
                     onSave={values => saveOverride({examples: values.length === 0 ? null : values})}

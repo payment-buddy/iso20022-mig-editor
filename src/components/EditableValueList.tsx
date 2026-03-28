@@ -1,14 +1,15 @@
 import {useState} from "react";
 
-export function EditableValueList({values, isOverridden, monospace, isValueInvalid, onSave}: {
+export function EditableValueList({values, originalValues, monospace, isValueInvalid, onSave}: {
     values: string[]
-    isOverridden: boolean
+    originalValues?: string[]
     monospace?: boolean
     isValueInvalid?: (value: string) => boolean
     onSave: (values: string[]) => void
 }) {
     const [editing, setEditing] = useState(false)
     const [inputValue, setInputValue] = useState('')
+    const isOverridden = JSON.stringify(values) !== JSON.stringify(originalValues)
 
     function startEdit() {
         setInputValue(values.join('\n'))
@@ -43,6 +44,7 @@ export function EditableValueList({values, isOverridden, monospace, isValueInval
 
     return (
         <div
+            title={isOverridden ? 'Values have been modified' : undefined}
             style={{
                 cursor: 'pointer',
                 ...(monospace ? {fontFamily: 'monospace'} : {}),
