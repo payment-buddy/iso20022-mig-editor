@@ -1,10 +1,9 @@
 import type {Constraint, DataType, MessageDefinition, MessageElement} from "../types/types.ts";
-import {ElementNode} from "../components/ElementNode.tsx";
 import {useState} from "react";
 import {ElementDetailView} from "../components/ElementDetailView.tsx";
-import {ConstraintNode} from "../components/ConstraintNode.tsx";
 import {ConstraintDetailView} from "../components/ConstraintDetailView.tsx";
 import {DetailPanel} from "../components/DetailPanel.tsx";
+import {MessageTreeView} from "../components/MessageTreeView.tsx";
 
 export function MessageStructure({message, dataTypes}: {
     message: MessageDefinition
@@ -37,26 +36,14 @@ export function MessageStructure({message, dataTypes}: {
                 Show XML tags
             </div>
             <div style={{display: 'flex', gap: '1em'}}>
-                <div style={{flex: 3}}>
-                    <div>{showXmlTags ? message.xmlTag : message.name}</div>
-                    {message.elements.map((block) => (
-                        <ElementNode key={block.xmlTag}
-                                     element={block}
-                                     dataTypes={dataTypes}
-                                     showXmlTags={showXmlTags}
-                                     parentPath={'/' + message.xmlTag}
-                                     selectedPath={selectedXmlPath}
-                                     onSelectElement={handleSelectElement}
-                                     onSelectConstraint={handleSelectContraint}/>
-                    ))}
-                    {message.constraints.map((constraint) => (
-                        <ConstraintNode key={constraint.name}
-                                        constraint={constraint}
-                                        parentPath={'/' + message.xmlTag}
-                                        selectedPath={selectedXmlPath}
-                                        onSelect={handleSelectContraint}/>
-                    ))}
-                </div>
+                <MessageTreeView
+                    message={message}
+                    dataTypes={dataTypes}
+                    showXmlTags={showXmlTags}
+                    selectedPath={selectedXmlPath}
+                    onSelectElement={handleSelectElement}
+                    onSelectConstraint={handleSelectContraint}
+                />
                 <DetailPanel>
                     {selectedElement &&
                         <ElementDetailView element={selectedElement}

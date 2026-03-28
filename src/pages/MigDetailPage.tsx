@@ -8,6 +8,13 @@ import type {
     MessageElement,
     MessageImplementationGuide
 } from "../types/types.ts";
+import {useState} from "react";
+import {ElementDetailEdit} from "../components/ElementDetailEdit.tsx";
+import {ConstraintDetailView} from "../components/ConstraintDetailView.tsx";
+import {EditableText} from "../components/EditableText.tsx";
+import {ConstraintDetailEdit} from "../components/ConstraintDetailEdit.tsx";
+import {DetailPanel} from "../components/DetailPanel.tsx";
+import {MessageTreeView} from "../components/MessageTreeView.tsx";
 
 function buildEmptyOverride(xmlPath: string): ElementOverride {
     return {
@@ -27,14 +34,6 @@ function buildEmptyOverride(xmlPath: string): ElementOverride {
         additionalConstraints: null,
     }
 }
-import {ElementNode} from "../components/ElementNode.tsx";
-import {ConstraintNode} from "../components/ConstraintNode.tsx";
-import {useState} from "react";
-import {ElementDetailEdit} from "../components/ElementDetailEdit.tsx";
-import {ConstraintDetailView} from "../components/ConstraintDetailView.tsx";
-import {EditableText} from "../components/EditableText.tsx";
-import {ConstraintDetailEdit} from "../components/ConstraintDetailEdit.tsx";
-import {DetailPanel} from "../components/DetailPanel.tsx";
 
 export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     mig: MessageImplementationGuide,
@@ -222,35 +221,16 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
 
             {message && (
                 <div style={{display: 'flex', gap: '1em'}}>
-                    <div style={{flex: 3}}>
-                        <div>{showXmlTags ? message.xmlTag : message.name}</div>
-                        {message.elements.map(element => (
-                            <ElementNode key={element.xmlTag}
-                                         element={element}
-                                         dataTypes={eRepository.dataTypes}
-                                         showXmlTags={showXmlTags}
-                                         parentPath={'/' + message.xmlTag}
-                                         selectedPath={selectedPath}
-                                         elementOverrides={mig.elementOverrides}
-                                         hideExcluded={hideExcluded}
-                                         onSelectElement={handleSelectElement}
-                                         onSelectConstraint={handleSelectContraint}/>
-                        ))}
-                        {message.constraints.map(c => (
-                            <ConstraintNode key={c.name}
-                                            constraint={c}
-                                            parentPath={'/' + message.xmlTag}
-                                            selectedPath={selectedPath}
-                                            onSelect={handleSelectContraint}/>
-                        ))}
-                        {mig.elementOverrides.find(o => o.xmlPath === '/' + message.xmlTag)?.additionalConstraints?.map(c => (
-                            <ConstraintNode key={c.name}
-                                            constraint={c}
-                                            parentPath={'/' + message.xmlTag}
-                                            selectedPath={selectedPath}
-                                            onSelect={handleSelectContraint}/>
-                        ))}
-                    </div>
+                    <MessageTreeView
+                        message={message}
+                        dataTypes={eRepository.dataTypes}
+                        elementOverrides={mig.elementOverrides}
+                        hideExcluded={hideExcluded}
+                        showXmlTags={showXmlTags}
+                        selectedPath={selectedPath}
+                        onSelectElement={handleSelectElement}
+                        onSelectConstraint={handleSelectContraint}
+                    />
                     <DetailPanel>
                         {selectedElement &&
                             <ElementDetailEdit
