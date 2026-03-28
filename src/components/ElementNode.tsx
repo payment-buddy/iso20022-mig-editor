@@ -1,5 +1,6 @@
 import {useState} from "react";
-import type {ComplexType, Constraint, DataType, ElementOverride, MessageElement, Simpletype} from "../types/types.ts";
+import type {ComplexType, ElementOverride, MessageElement, Simpletype} from "../types/types.ts";
+import {useMessageTreeContext} from "../contexts/MessageTreeContext.tsx";
 import {ConstraintNode} from "./ConstraintNode.tsx";
 
 function Cardinality({element, override}: { element: MessageElement, override: ElementOverride | undefined }) {
@@ -12,27 +13,18 @@ function Cardinality({element, override}: { element: MessageElement, override: E
     )
 }
 
-export function ElementNode({
-                                element,
-                                dataTypes,
-                                showXmlTags,
-                                parentPath,
-                                selectedPath,
-                                elementOverrides = [],
-                                hideExcluded = false,
-                                onSelectElement,
-                                onSelectConstraint
-                            }: {
+export function ElementNode({element, parentPath}: {
     element: MessageElement
-    dataTypes: Map<string, DataType>
-    showXmlTags: boolean
     parentPath: string
-    selectedPath: string
-    elementOverrides?: ElementOverride[]
-    hideExcluded?: boolean
-    onSelectElement: (elem: MessageElement, path: string) => void
-    onSelectConstraint: (constraint: Constraint, path: string) => void
 }) {
+    const {
+        dataTypes,
+        overrides,
+        showXmlTags,
+        selectedPath,
+        hideExcluded,
+        onSelectElement
+    } = useMessageTreeContext();
     const [open, setOpen] = useState(false)
     const elementPath = parentPath + '/' + element.xmlTag
     const isSelected = elementPath === selectedPath;
@@ -53,7 +45,7 @@ export function ElementNode({
             examples: [],
         }
         : null
-    const override = elementOverrides.find(o => o.xmlPath === elementPath)
+    const override = overrides.get(elementPath)
     const hasChildren = complexType.elements?.length || element.constraints?.length || dataType.constraints?.length || override?.additionalConstraints?.length
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
     const nameStyle = isExcluded ? {textDecoration: 'line-through' as const} : undefined
@@ -91,47 +83,27 @@ export function ElementNode({
                 {complexType.elements?.map(child => (
                     <ElementNode key={child.xmlTag}
                                  element={child}
-                                 dataTypes={dataTypes}
-                                 showXmlTags={showXmlTags}
-                                 parentPath={elementPath}
-                                 selectedPath={selectedPath}
-                                 elementOverrides={elementOverrides}
-                                 hideExcluded={hideExcluded}
-                                 onSelectElement={onSelectElement}
-                                 onSelectConstraint={onSelectConstraint}/>
+                                 parentPath={elementPath}/>
                 ))}
                 {ccyElement && (
                     <ElementNode key="Ccy"
                                  element={ccyElement}
-                                 dataTypes={dataTypes}
-                                 showXmlTags={showXmlTags}
-                                 parentPath={elementPath}
-                                 selectedPath={selectedPath}
-                                 elementOverrides={elementOverrides}
-                                 hideExcluded={hideExcluded}
-                                 onSelectElement={onSelectElement}
-                                 onSelectConstraint={onSelectConstraint}/>
+                                 parentPath={elementPath}/>
                 )}
                 {element.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
-                                    parentPath={elementPath}
-                                    selectedPath={selectedPath}
-                                    onSelect={onSelectConstraint}/>
+                                    parentPath={elementPath}/>
                 ))}
-                {dataType.constraints.map((constraint) => (
+                {dataType?.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
-                                    parentPath={elementPath}
-                                    selectedPath={selectedPath}
-                                    onSelect={onSelectConstraint}/>
+                                    parentPath={elementPath}/>
                 ))}
                 {override?.additionalConstraints?.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
-                                    parentPath={elementPath}
-                                    selectedPath={selectedPath}
-                                    onSelect={onSelectConstraint}/>
+                                    parentPath={elementPath}/>
                 ))}
             </>}
         </div>
