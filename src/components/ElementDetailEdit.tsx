@@ -78,6 +78,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                 <EditableNumber
                     value={elementOverride?.minOccurs ?? element.minOccurs}
                     originalValue={element.minOccurs}
+                    warnWhen="lower"
                     onSave={val => saveInt('minOccurs', element.minOccurs, val)}
                 />
             </div>
@@ -86,6 +87,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                 <EditableNumber
                     value={elementOverride?.maxOccurs ?? element.maxOccurs}
                     originalValue={element.maxOccurs}
+                    warnWhen="higher"
                     onSave={val => saveInt('maxOccurs', element.maxOccurs, val)}
                 />
             </div>
@@ -95,6 +97,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                     <EditableNumber
                         value={elementOverride?.minLength ?? simpleType.minLength ?? simpleType.length}
                         originalValue={simpleType.minLength ?? simpleType.length}
+                        warnWhen="lower"
                         onSave={val => saveInt('minLength', simpleType.minLength, val)}
                     />
                 </div>
@@ -103,6 +106,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                     <EditableNumber
                         value={elementOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length}
                         originalValue={simpleType.maxLength ?? simpleType.length}
+                        warnWhen="higher"
                         onSave={val => saveInt('maxLength', simpleType.maxLength, val)}
                     />
                 </div>

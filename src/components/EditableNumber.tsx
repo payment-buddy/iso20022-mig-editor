@@ -1,9 +1,10 @@
 import {useState} from "react";
 
-export function EditableNumber({value, originalValue, onSave}: {
+export function EditableNumber({value, originalValue, onSave, warnWhen}: {
     value: number | null
     originalValue: number | null
     onSave: (value: string) => void
+    warnWhen?: 'lower' | 'higher'
 }) {
     const [editing, setEditing] = useState(false)
     const [inputValue, setInputValue] = useState('')
@@ -24,6 +25,7 @@ export function EditableNumber({value, originalValue, onSave}: {
                 autoFocus
                 type="number"
                 value={inputValue}
+                min={0}
                 onChange={e => setInputValue(e.target.value)}
                 onBlur={save}
                 onKeyDown={e => {
@@ -34,6 +36,8 @@ export function EditableNumber({value, originalValue, onSave}: {
         )
     }
 
+    const showWarning = value !== null && originalValue !== null &&
+        (warnWhen === 'lower' ? value < originalValue : warnWhen === 'higher' ? value > originalValue : false)
     return (
         <>
             {value !== originalValue && (
@@ -46,6 +50,7 @@ export function EditableNumber({value, originalValue, onSave}: {
                 onClick={startEdit}
             >
                 {value ?? '<none>'}
+                {showWarning && ' \u26A0'}
             </span>
         </>
     )
