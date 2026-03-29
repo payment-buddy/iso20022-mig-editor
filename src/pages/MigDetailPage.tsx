@@ -1,7 +1,6 @@
 import {stringify} from "yaml"
 import type {
-    Constraint,
-    DataType,
+    Constraint, DataType,
     ElementOverride,
     ERepository,
     MessageDefinition,
@@ -48,9 +47,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     const [selectedPath, setSelectedPath] = useState<string>('')
     const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
     const [newConstraintId, setNewConstraintId] = useState<string | null>(null)
-    const selectedElementOverride = selectedElement
-        ? (mig.elementOverrides.find(o => o.xmlPath === selectedPath) ?? null)
-        : null
+    const selectedElementOverride = mig.elementOverrides[selectedPath] ?? null
 
 
     let message: MessageDefinition | null = null
@@ -91,7 +88,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     }
 
     function isElementAdditionalConstraint(path: string) {
-        return mig.elementOverrides.some(override =>
+        return Object.values(mig.elementOverrides).some(override =>
             override.additionalConstraints?.some(c => `${override.xmlPath}/${c.name}` === path)
         )
     }
@@ -105,7 +102,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
 
     function handleAddElementConstraint(elementPath: string) {
         const newConstraint: Constraint = {name: 'NewConstraint' + new Date().getTime(), definition: '', expression: ''}
-        const existing = mig.elementOverrides.find(o => o.xmlPath === elementPath)
+        const existing = mig.elementOverrides[elementPath]
         const override: ElementOverride = {
             ...buildEmptyOverride(elementPath),
             ...existing,
@@ -125,19 +122,11 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     }
 
     function handleUpdateElementOverride(override: ElementOverride) {
-        let elementOverrides: ElementOverride[]
+        const elementOverrides = {...mig.elementOverrides}
         if (isOverrideEmpty(override)) {
-            // Remove empty override
-            elementOverrides = mig.elementOverrides.filter(o => o.xmlPath !== override.xmlPath)
+            delete elementOverrides[override.xmlPath]
         } else {
-            const exists = mig.elementOverrides.some(o => o.xmlPath === override.xmlPath)
-            if (exists) {
-                // Replace existing override
-                elementOverrides = mig.elementOverrides.map(o => o.xmlPath === override.xmlPath ? override : o)
-            } else {
-                // Add new override
-                elementOverrides = [...mig.elementOverrides, override]
-            }
+            elementOverrides[override.xmlPath] = override
         }
         onUpdate({...mig, elementOverrides})
     }
@@ -145,7 +134,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     function handleUpdateConstraint(updated: Constraint) {
         const oldName = selectedConstraint?.name
         const elementPath = selectedPath.substring(0, selectedPath.lastIndexOf('/'))
-        const override = mig.elementOverrides.find(o => o.xmlPath === elementPath)!
+        const override = mig.elementOverrides[elementPath]!
         const constraints = (override.additionalConstraints ?? []).map(c => c.name === oldName ? updated : c)
         handleUpdateElementOverride({...override, additionalConstraints: constraints})
         setSelectedConstraint(updated)
@@ -156,7 +145,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     function handleDeleteConstraint() {
         const oldName = selectedConstraint!.name
         const elementPath = selectedPath.substring(0, selectedPath.lastIndexOf('/'))
-        const override = mig.elementOverrides.find(o => o.xmlPath === elementPath)!
+        const override = mig.elementOverrides[elementPath]!
         const constraints = (override.additionalConstraints ?? []).filter(c => c.name !== oldName)
         handleUpdateElementOverride({...override, additionalConstraints: constraints})
         setSelectedConstraint(null)
@@ -214,7 +203,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
                         style={{marginRight: '0.5em'}}
                         onChange={() => setHideExcluded(hide => !hide)}/>
                     {(() => {
-                        const count = mig.elementOverrides.filter(o => o.maxOccurs === 0).length
+                        const count = Object.values(mig.elementOverrides).filter(o => o.maxOccurs === 0).length
                         return `Hide excluded elements (${count})`
                     })()}
                 </label>
