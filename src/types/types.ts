@@ -66,8 +66,12 @@ export interface BusinessArea {
     messages: MessageDefinition[]
 }
 
+export interface DataTypes {
+    [id: string]: DataType
+}
+
 export interface ERepository {
-    dataTypes: Map<string, DataType>
+    dataTypes: DataTypes
     businessAreas: BusinessArea[]
 }
 

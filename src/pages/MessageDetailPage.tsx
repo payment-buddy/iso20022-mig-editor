@@ -1,4 +1,4 @@
-import type {BusinessArea, DataType, MessageDefinition, MessageImplementationGuide} from "../types/types.ts"
+import type {BusinessArea, DataTypes, MessageDefinition, MessageImplementationGuide} from "../types/types.ts"
 import {MessageStructureView} from "../components/MessageStructureView.tsx"
 import {useState} from "react"
 import {MessageVersionSelector} from "../components/MessageVersionSelector.tsx"
@@ -9,7 +9,7 @@ export function MessageDetailPage({messageId, versions, businessArea, dataTypes,
     messageId: string | null
     versions: MessageDefinition[]
     businessArea: BusinessArea
-    dataTypes: Map<string, DataType>
+    dataTypes: DataTypes
     onMigCreated: (mig: MessageImplementationGuide) => void
 }) {
     const [showMigForm, setShowMigForm] = useState(false)

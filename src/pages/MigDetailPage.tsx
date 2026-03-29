@@ -28,7 +28,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     const [selectedPath, setSelectedPath] = useState<string>('')
     const [newConstraintId, setNewConstraintId] = useState<string | null>(null)
     const selectedElementOverride = mig.elementOverrides[selectedPath] ?? null
-    const selectedDataType = selectedElement ? eRepository.dataTypes.get(selectedElement.typeId) ?? null : null
+    const selectedDataType = selectedElement ? eRepository.dataTypes[selectedElement.typeId] ?? null : null
 
 
     let message: MessageDefinition | null = null

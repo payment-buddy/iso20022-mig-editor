@@ -1,4 +1,4 @@
-import type {Constraint, DataType, ElementOverrides, MessageDefinition, MessageElement} from "../types/types.ts"
+import type {Constraint, DataTypes, ElementOverrides, MessageDefinition, MessageElement} from "../types/types.ts"
 import {MessageTreeContext} from "../contexts/MessageTreeContext.tsx"
 import {ElementNode} from "./ElementNode.tsx"
 import {ConstraintNode} from "./ConstraintNode.tsx"
@@ -14,7 +14,7 @@ export function MessageTreeView({
                                     onSelectConstraint,
                                 }: {
     message: MessageDefinition;
-    dataTypes: Map<string, DataType>;
+    dataTypes: DataTypes;
     elementOverrides?: ElementOverrides;
     hideExcluded?: boolean;
     showXmlTags: boolean;
