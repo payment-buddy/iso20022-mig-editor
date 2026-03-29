@@ -76,7 +76,6 @@ export interface ElementOverrides {
 }
 
 export interface ElementOverride {
-    xmlPath: string
     definition: string | null
     minOccurs: number | null
     maxOccurs: number | null
