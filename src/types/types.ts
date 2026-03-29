@@ -97,8 +97,8 @@ export interface ElementOverride {
 
 export interface MessageImplementationGuide {
     id: string
-    messageIdentifier: string
     name: string
+    messageIdentifier: string
     version: string
     description: string | null
     elementOverrides: ElementOverrides
