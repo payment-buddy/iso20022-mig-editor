@@ -1,6 +1,6 @@
 import {stringify} from "yaml"
 import type {
-    Constraint, DataType,
+    Constraint,
     ElementOverride,
     ERepository,
     MessageDefinition,
@@ -26,9 +26,9 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
     const [selectedPath, setSelectedPath] = useState<string>('')
-    const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
     const [newConstraintId, setNewConstraintId] = useState<string | null>(null)
     const selectedElementOverride = mig.elementOverrides[selectedPath] ?? null
+    const selectedDataType = selectedElement ? eRepository.dataTypes.get(selectedElement.typeId) ?? null : null
 
 
     let message: MessageDefinition | null = null
@@ -65,7 +65,6 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
         setSelectedElement(element)
         setSelectedConstraint(null)
         setSelectedPath(xmlPath)
-        setSelectedDataType(eRepository.dataTypes.get(element.typeId) ?? null)
     }
 
     function isElementAdditionalConstraint(path: string) {
@@ -78,7 +77,6 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
         setSelectedElement(null)
         setSelectedPath(path)
         setSelectedConstraint(constraint)
-        setSelectedDataType(null)
     }
 
     function handleAddElementConstraint(elementPath: string) {
