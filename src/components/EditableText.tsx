@@ -12,7 +12,9 @@ export function EditableText({value, originalValue, multiline, monospace, autoFo
     const isOverridden = originalValue != undefined && value !== originalValue
     const [editing, setEditing] = useState(false)
     const [inputValue, setInputValue] = useState('')
+    const [initialHeight, setInitialHeight] = useState<number | null>(null)
     const autoFocusTriggered = useRef(false)
+    const spanRef = useRef<HTMLSpanElement>(null)
 
     useEffect(() => {
         if (autoFocus && !autoFocusTriggered.current) {
@@ -23,6 +25,9 @@ export function EditableText({value, originalValue, multiline, monospace, autoFo
     }, [autoFocus, value])
 
     function startEdit() {
+        if (spanRef.current) {
+            setInitialHeight(spanRef.current.offsetHeight)
+        }
         setInputValue(value ?? '')
         setEditing(true)
     }
@@ -43,7 +48,14 @@ export function EditableText({value, originalValue, multiline, monospace, autoFo
                     onKeyDown={e => {
                         if (e.key === 'Escape') setEditing(false)
                     }}
-                    style={{resize: 'vertical', minHeight: '4em', width: '100%'}}
+                    style={{
+                        resize: 'vertical',
+                        minHeight: initialHeight ? `${initialHeight}px` : '4em',
+                        width: '100%',
+                        fontFamily: monospace ? 'monospace' : 'inherit',
+                        fontSize: 'inherit',
+                        lineHeight: 'inherit'
+                    }}
                 />
             )
         }
@@ -57,18 +69,26 @@ export function EditableText({value, originalValue, multiline, monospace, autoFo
                     if (e.key === 'Enter') save()
                     if (e.key === 'Escape') setEditing(false)
                 }}
-                style={{width: '100%', ...(monospace ? {fontFamily: 'monospace'} : {})}}
+                style={{
+                    width: '100%',
+                    fontFamily: monospace ? 'monospace' : 'inherit',
+                    fontSize: 'inherit',
+                    lineHeight: 'inherit'
+                }}
             />
         )
     }
 
     return (
         <span
+            ref={spanRef}
             title={isOverridden ? `Original: ${originalValue ?? '<none>'}` : undefined}
             style={{
                 cursor: 'pointer',
                 ...(multiline ? {whiteSpace: 'pre-wrap'} : {}),
-                ...(monospace ? {fontFamily: 'monospace'} : {}),
+                fontFamily: monospace ? 'monospace' : 'inherit',
+                fontSize: 'inherit',
+                lineHeight: 'inherit',
                 ...(isOverridden ? {color: '#0066cc'} : {}),
             }}
             onClick={startEdit}
