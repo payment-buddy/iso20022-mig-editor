@@ -21,8 +21,10 @@ export function MessageTreeView({
     onSelectElement: (element: MessageElement, xmlPath: string) => void;
     onSelectConstraint: (constraint: Constraint, path: string) => void;
 }) {
-    const elementOverride = elementOverrides.find(o => o.xmlPath === '/' + message.xmlTag);
-    const additionalConstraints = elementOverride?.additionalConstraints ?? [];
+    const rootPath = '/' + message.xmlTag
+    const rootOverride = elementOverrides.find(o => o.xmlPath === rootPath)
+    const additionalConstraints = rootOverride?.additionalConstraints ?? []
+    const constraints = [...message.constraints, ...additionalConstraints]
 
     return (
         <div style={{flex: 3}}>
@@ -32,24 +34,17 @@ export function MessageTreeView({
                              element={element}
                              dataTypes={dataTypes}
                              showXmlTags={showXmlTags}
-                             parentPath={'/' + message.xmlTag}
+                             parentPath={rootPath}
                              selectedPath={selectedPath}
                              elementOverrides={elementOverrides}
                              hideExcluded={hideExcluded}
                              onSelectElement={onSelectElement}
                              onSelectConstraint={onSelectConstraint}/>
             ))}
-            {message.constraints.map(c => (
+            {constraints.map(c => (
                 <ConstraintNode key={c.name}
                                 constraint={c}
-                                parentPath={'/' + message.xmlTag}
-                                selectedPath={selectedPath}
-                                onSelect={onSelectConstraint}/>
-            ))}
-            {additionalConstraints.map(c => (
-                <ConstraintNode key={c.name}
-                                constraint={c}
-                                parentPath={'/' + message.xmlTag}
+                                parentPath={rootPath}
                                 selectedPath={selectedPath}
                                 onSelect={onSelectConstraint}/>
             ))}
