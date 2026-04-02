@@ -1,9 +1,9 @@
 import type {Constraint, DataType, MessageDefinition, MessageElement} from "../types/types.ts"
 import {useState} from "react"
-import {ElementDetailView} from "../components/ElementDetailView.tsx"
-import {ConstraintDetailView} from "../components/ConstraintDetailView.tsx"
-import {DetailPanel} from "../components/DetailPanel.tsx"
-import {MessageTreeView} from "../components/MessageTreeView.tsx"
+import {ElementDetailView} from "./ElementDetailView.tsx"
+import {ConstraintDetailView} from "./ConstraintDetailView.tsx"
+import {DetailPanel} from "./DetailPanel.tsx"
+import {MessageTreeView} from "./MessageTreeView.tsx"
 
 export function MessageStructure({message, dataTypes}: {
     message: MessageDefinition

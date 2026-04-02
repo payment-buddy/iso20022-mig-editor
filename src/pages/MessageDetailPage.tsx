@@ -1,5 +1,5 @@
 import type {BusinessArea, DataType, MessageDefinition, MessageImplementationGuide} from "../types/types.ts"
-import {MessageStructure} from "./MessageStructure.tsx"
+import {MessageStructure} from "../components/MessageStructure.tsx"
 import {useState} from "react"
 import {CreateMigForm} from "../components/CreateMigForm.tsx"
 
