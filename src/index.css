@@ -114,6 +114,14 @@ input, textarea {
     color: HighlightText;
 }
 
+.has-override {
+    color: dodgerblue;
+}
+
+.is-excluded {
+    color: #999999;
+}
+
 .error-box {
     border: 1px solid color-mix(in srgb, red 70%, CanvasText);
     padding: 1rem;
