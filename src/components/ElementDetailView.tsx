@@ -1,11 +1,11 @@
-import type {DataType, MessageElement, Simpletype} from "../types/types.ts"
+import type {DataType, MessageElement, SimpleType} from "../types/types.ts"
 
 export function ElementDetailView({element, dataType, xmlPath}: {
     element: MessageElement
     dataType: DataType
     xmlPath: string
 }) {
-    const typeExamples = (dataType as Simpletype).examples ?? []
+    const typeExamples = (dataType as SimpleType).examples ?? []
     const examples = element.examples?.length > 0 ? element.examples : typeExamples
 
     return (

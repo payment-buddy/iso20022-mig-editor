@@ -7,7 +7,7 @@ import type {
     ERepository,
     MessageDefinition,
     MessageElement,
-    Simpletype
+    SimpleType
 } from "../types/types.ts"
 
 export async function parseRepository(file: File): Promise<ERepository> {
@@ -17,7 +17,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
     const businessAreas: BusinessArea[] = []
     let businessArea: BusinessArea | null = null
     let complexType: ComplexType | null = null
-    let simpleType: Simpletype | null = null
+    let simpleType: SimpleType | null = null
     let messageElement: MessageElement | null = null
     let messageDefinition: MessageDefinition | null = null
     let exampleText: string | null = null

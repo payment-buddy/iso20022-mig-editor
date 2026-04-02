@@ -1,5 +1,5 @@
 import {useState} from "react"
-import type {ComplexType, ElementOverride, MessageElement, Simpletype} from "../types/types.ts"
+import type {ComplexType, ElementOverride, MessageElement, SimpleType} from "../types/types.ts"
 import {useMessageTreeContext} from "../contexts/MessageTreeContext.tsx"
 import {ConstraintNode} from "./ConstraintNode.tsx"
 
@@ -30,7 +30,7 @@ export function ElementNode({element, parentPath}: {
     const isSelected = elementPath === selectedPath
     const dataType = dataTypes.get(element.typeId)!
     const complexType = dataType as ComplexType
-    const simpleType = dataType as Simpletype
+    const simpleType = dataType as SimpleType
     const ccyElement: MessageElement | null = simpleType.currencyIdentifierSet
         ? {
             id: element.id + '/Ccy',
