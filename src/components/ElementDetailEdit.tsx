@@ -1,7 +1,7 @@
-import type {DataType, ElementOverride, MessageElement, Simpletype} from "../types/types.ts";
-import {EditableText} from "./EditableText.tsx";
-import {EditableNumber} from "./EditableNumber.tsx";
-import {EditableValueList} from "./EditableValueList.tsx";
+import type {DataType, ElementOverride, MessageElement, Simpletype} from "../types/types.ts"
+import {EditableText} from "./EditableText.tsx"
+import {EditableNumber} from "./EditableNumber.tsx"
+import {EditableValueList} from "./EditableValueList.tsx"
 
 function createValueValidator(elementOverride: ElementOverride | null, simpleType: Simpletype): (value: string) => boolean {
     const pattern = elementOverride?.pattern ?? simpleType.pattern

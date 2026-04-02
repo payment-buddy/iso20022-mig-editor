@@ -1,4 +1,4 @@
-import type {DataType, MessageElement, Simpletype} from "../types/types.ts";
+import type {DataType, MessageElement, Simpletype} from "../types/types.ts"
 
 export function ElementDetailView({element, dataType, xmlPath}: {
     element: MessageElement

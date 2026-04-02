@@ -1,7 +1,7 @@
-import {useState} from "react";
-import type {ComplexType, ElementOverride, MessageElement, Simpletype} from "../types/types.ts";
-import {useMessageTreeContext} from "../contexts/MessageTreeContext.tsx";
-import {ConstraintNode} from "./ConstraintNode.tsx";
+import {useState} from "react"
+import type {ComplexType, ElementOverride, MessageElement, Simpletype} from "../types/types.ts"
+import {useMessageTreeContext} from "../contexts/MessageTreeContext.tsx"
+import {ConstraintNode} from "./ConstraintNode.tsx"
 
 function Cardinality({element, override}: { element: MessageElement, override: ElementOverride | undefined }) {
     const min = override?.minOccurs ?? element.minOccurs
@@ -24,10 +24,10 @@ export function ElementNode({element, parentPath}: {
         selectedPath,
         hideExcluded,
         onSelectElement
-    } = useMessageTreeContext();
+    } = useMessageTreeContext()
     const [open, setOpen] = useState(false)
     const elementPath = parentPath + '/' + element.xmlTag
-    const isSelected = elementPath === selectedPath;
+    const isSelected = elementPath === selectedPath
     const dataType = dataTypes.get(element.typeId)!
     const complexType = dataType as ComplexType
     const simpleType = dataType as Simpletype

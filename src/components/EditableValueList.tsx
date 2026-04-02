@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useState} from "react"
 
 export function EditableValueList({values, originalValues, monospace, isValueInvalid, onSave}: {
     values: string[]

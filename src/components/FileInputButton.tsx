@@ -1,4 +1,4 @@
-import {useRef} from "react";
+import {useRef} from "react"
 
 export function FileInputButton({label, accept, onFile}: {
     label: string

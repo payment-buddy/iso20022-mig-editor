@@ -1,7 +1,7 @@
-import type {Constraint, DataType, ElementOverride, MessageDefinition, MessageElement} from "../types/types.ts";
-import {MessageTreeContext} from "../contexts/MessageTreeContext.tsx";
-import {ElementNode} from "./ElementNode.tsx";
-import {ConstraintNode} from "./ConstraintNode.tsx";
+import type {Constraint, DataType, ElementOverride, MessageDefinition, MessageElement} from "../types/types.ts"
+import {MessageTreeContext} from "../contexts/MessageTreeContext.tsx"
+import {ElementNode} from "./ElementNode.tsx"
+import {ConstraintNode} from "./ConstraintNode.tsx"
 
 function indexOverrides(overrides: ElementOverride[]): Map<string, ElementOverride> {
     return new Map(overrides.map(o => [o.xmlPath, o]))

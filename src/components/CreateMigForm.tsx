@@ -1,5 +1,5 @@
-import type {MessageDefinition, MessageImplementationGuide} from "../types/types.ts";
-import {useState} from "react";
+import type {MessageDefinition, MessageImplementationGuide} from "../types/types.ts"
+import {useState} from "react"
 
 export function CreateMigForm({message, onSave, onCancel}: {
     message: MessageDefinition

@@ -1,6 +1,6 @@
 import {useCallback, useRef, useState} from 'react'
 import {parseRepository} from "../services/eRepository.ts"
-import type {ERepository} from "../types/types.ts";
+import type {ERepository} from "../types/types.ts"
 
 type Status = 'idle' | 'parsing' | 'error'
 
@@ -36,7 +36,7 @@ export function FileUploaderPage({onParsed}: {
                 disabled={status === 'parsing'}
                 style={{width: '500px'}}
                 onChange={(e) => {
-                    const f = e.target.files?.[0];
+                    const f = e.target.files?.[0]
                     if (f) {
                         handleFile(f)
                     }
