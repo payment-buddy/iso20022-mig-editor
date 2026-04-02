@@ -1,7 +1,7 @@
 import type {BusinessArea, DataType, MessageDefinition, MessageImplementationGuide} from "../types/types.ts"
-import {MessageStructure} from "../components/MessageStructure.tsx"
+import {MessageStructureView} from "../components/MessageStructureView.tsx"
 import {useState} from "react"
-import {CreateMigForm} from "../components/CreateMigForm.tsx"
+import {MigCreateForm} from "../components/MigCreateForm.tsx"
 
 function versionLabel(msg: MessageDefinition) {
     return 'V' + msg.identifier.substring(msg.identifier.lastIndexOf('.') + 1)
@@ -58,12 +58,12 @@ export function MessageDetailPage({messageId, versions, businessArea, dataTypes,
             </div>
 
             {showMigForm && (
-                <CreateMigForm message={message} onSave={handleMigSave} onCancel={() => setShowMigForm(false)}/>
+                <MigCreateForm message={message} onSave={handleMigSave} onCancel={() => setShowMigForm(false)}/>
             )}
 
             <p style={{whiteSpace: 'pre-wrap'}}>{message.definition}</p>
 
-            <MessageStructure message={message} dataTypes={dataTypes}/>
+            <MessageStructureView message={message} dataTypes={dataTypes}/>
         </div>
     )
 }
