@@ -5,7 +5,7 @@ import {ConstraintDetailView} from "./ConstraintDetailView.tsx"
 import {DetailPanel} from "./DetailPanel.tsx"
 import {MessageTreeView} from "./MessageTreeView.tsx"
 
-export function MessageStructure({message, dataTypes}: {
+export function MessageStructureView({message, dataTypes}: {
     message: MessageDefinition
     dataTypes: Map<string, DataType>
 }) {
