@@ -48,7 +48,6 @@ export function ElementNode({element, parentPath}: {
     const override = overrides.get(elementPath)
     const hasChildren = complexType.elements?.length || element.constraints?.length || dataType.constraints?.length || override?.additionalConstraints?.length
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
-    const nameStyle = isExcluded ? {textDecoration: 'line-through' as const} : undefined
 
     if (isExcluded && hideExcluded) return null
 
@@ -59,7 +58,7 @@ export function ElementNode({element, parentPath}: {
                      style={{marginLeft: '1em'}}
                      onClick={() => onSelectElement(element, elementPath)}>
                     <span style={{marginRight: '0.5em', fontSize: '0.7em'}}>◇</span>
-                    <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
+                    <span className={(override ? 'has-override' : '') + (isExcluded ? ' is-excluded' : '')}>{showXmlTags ? element.xmlTag : element.name}</span>
                     <Cardinality element={element} override={override}/>
                 </div>
             </>
@@ -75,7 +74,7 @@ export function ElementNode({element, parentPath}: {
                 }
             }}>
                 <span style={{marginLeft: '0', marginRight: '0.4em', fontSize: '0.7em'}}>{open ? '▼' : '▶'}</span>
-                <span style={nameStyle}>{showXmlTags ? element.xmlTag : element.name}</span>
+                <span className={(override ? 'has-override' : '') + (isExcluded ? ' is-excluded' : '')}>{showXmlTags ? element.xmlTag : element.name}</span>
                 <Cardinality element={element} override={override}/>
                 {complexType.isChoice && <span className="badge">choice</span>}
             </div>
@@ -103,7 +102,8 @@ export function ElementNode({element, parentPath}: {
                 {override?.additionalConstraints?.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
-                                    parentPath={elementPath}/>
+                                    parentPath={elementPath}
+                                    isAdditional={true}/>
                 ))}
             </>}
         </div>
