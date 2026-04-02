@@ -1,7 +1,7 @@
 export interface Constraint {
     name: string
     definition: string
-    expression: string
+    expression: string | null
 }
 
 export interface MessageElement {

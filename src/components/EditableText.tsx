@@ -2,7 +2,7 @@
 import {useState, useRef, useEffect} from "react"
 
 export function EditableText({value, originalValue, multiline, monospace, autoFocus, onSave}: {
-    value: string
+    value: string | null
     originalValue?: string
     multiline?: boolean
     monospace?: boolean
@@ -17,13 +17,13 @@ export function EditableText({value, originalValue, multiline, monospace, autoFo
     useEffect(() => {
         if (autoFocus && !autoFocusTriggered.current) {
             autoFocusTriggered.current = true
-            setInputValue(value)
+            setInputValue(value ?? '')
             setEditing(true)
         }
     }, [autoFocus, value])
 
     function startEdit() {
-        setInputValue(value)
+        setInputValue(value ?? '')
         setEditing(true)
     }
 
