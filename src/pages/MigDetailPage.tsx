@@ -120,6 +120,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
 
     function isOverrideEmpty(override: ElementOverride) {
         const {xmlPath, allowedValues, examples, additionalConstraints, ...rest} = override
+        void xmlPath
         return (allowedValues == null || allowedValues.length === 0) && (examples == null || examples.length === 0) && (additionalConstraints == null || additionalConstraints.length === 0) && Object.values(rest).every(v => v === null)
     }
 
