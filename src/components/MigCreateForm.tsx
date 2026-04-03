@@ -14,9 +14,9 @@ export function MigCreateForm({message, onSave, onCancel}: {
         const mig: MessageImplementationGuide = {
             id: crypto.randomUUID(),
             name: name.trim(),
-            description: message.definition,
-            version: version.trim(),
             messageIdentifier: message.identifier,
+            version: version.trim(),
+            description: message.definition,
             elementOverrides: {},
         }
         onSave(mig)
