@@ -15,25 +15,6 @@ import {ConstraintDetailEdit} from "../components/ConstraintDetailEdit.tsx"
 import {DetailPanel} from "../components/DetailPanel.tsx"
 import {MessageTreeView} from "../components/MessageTreeView.tsx"
 
-function buildEmptyOverride(xmlPath: string): ElementOverride {
-    return {
-        xmlPath,
-        definition: null,
-        minOccurs: null,
-        maxOccurs: null,
-        minInclusive: null,
-        maxInclusive: null,
-        totalDigits: null,
-        fractionDigits: null,
-        minLength: null,
-        maxLength: null,
-        pattern: null,
-        allowedValues: null,
-        examples: null,
-        additionalConstraints: null,
-    }
-}
-
 export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     mig: MessageImplementationGuide,
     eRepository: ERepository,
@@ -88,8 +69,8 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     }
 
     function isElementAdditionalConstraint(path: string) {
-        return Object.values(mig.elementOverrides).some(override =>
-            override.additionalConstraints?.some(c => `${override.xmlPath}/${c.name}` === path)
+        return Object.entries(mig.elementOverrides).some(([xmlPath, override]) =>
+            override.additionalConstraints?.some(c => `${xmlPath}/${c.name}` === path)
         )
     }
 
@@ -104,11 +85,10 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
         const newConstraint: Constraint = {name: 'NewConstraint' + new Date().getTime(), definition: '', expression: ''}
         const existing = mig.elementOverrides[elementPath]
         const override: ElementOverride = {
-            ...buildEmptyOverride(elementPath),
             ...existing,
             additionalConstraints: [...(existing?.additionalConstraints ?? []), newConstraint],
         }
-        handleUpdateElementOverride(override)
+        handleUpdateElementOverride(elementPath, override)
         setSelectedConstraint(newConstraint)
         setSelectedPath(elementPath + '/' + newConstraint.name)
         setSelectedElement(null)
@@ -116,17 +96,16 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     }
 
     function isOverrideEmpty(override: ElementOverride) {
-        const {xmlPath, allowedValues, examples, additionalConstraints, ...rest} = override
-        void xmlPath
+        const {allowedValues, examples, additionalConstraints, ...rest} = override
         return (allowedValues == null || allowedValues.length === 0) && (examples == null || examples.length === 0) && (additionalConstraints == null || additionalConstraints.length === 0) && Object.values(rest).every(v => v === null)
     }
 
-    function handleUpdateElementOverride(override: ElementOverride) {
+    function handleUpdateElementOverride(xmlPath: string, override: ElementOverride) {
         const elementOverrides = {...mig.elementOverrides}
         if (isOverrideEmpty(override)) {
-            delete elementOverrides[override.xmlPath]
+            delete elementOverrides[xmlPath]
         } else {
-            elementOverrides[override.xmlPath] = override
+            elementOverrides[xmlPath] = override
         }
         onUpdate({...mig, elementOverrides})
     }
@@ -136,7 +115,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
         const elementPath = selectedPath.substring(0, selectedPath.lastIndexOf('/'))
         const override = mig.elementOverrides[elementPath]!
         const constraints = (override.additionalConstraints ?? []).map(c => c.name === oldName ? updated : c)
-        handleUpdateElementOverride({...override, additionalConstraints: constraints})
+        handleUpdateElementOverride(elementPath, {...override, additionalConstraints: constraints})
         setSelectedConstraint(updated)
         setSelectedPath(elementPath + '/' + updated.name)
         setNewConstraintId(null)
@@ -147,7 +126,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
         const elementPath = selectedPath.substring(0, selectedPath.lastIndexOf('/'))
         const override = mig.elementOverrides[elementPath]!
         const constraints = (override.additionalConstraints ?? []).filter(c => c.name !== oldName)
-        handleUpdateElementOverride({...override, additionalConstraints: constraints})
+        handleUpdateElementOverride(elementPath, {...override, additionalConstraints: constraints})
         setSelectedConstraint(null)
         setSelectedPath('')
         setNewConstraintId(null)
