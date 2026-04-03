@@ -1,16 +1,12 @@
-import type {Constraint, DataType, ElementOverride, MessageDefinition, MessageElement} from "../types/types.ts"
+import type {Constraint, DataType, ElementOverrides, MessageDefinition, MessageElement} from "../types/types.ts"
 import {MessageTreeContext} from "../contexts/MessageTreeContext.tsx"
 import {ElementNode} from "./ElementNode.tsx"
 import {ConstraintNode} from "./ConstraintNode.tsx"
 
-function indexOverrides(overrides: ElementOverride[]): Map<string, ElementOverride> {
-    return new Map(overrides.map(o => [o.xmlPath, o]))
-}
-
 export function MessageTreeView({
                                     message,
                                     dataTypes,
-                                    elementOverrides = [],
+                                    elementOverrides = {},
                                     hideExcluded = false,
                                     showXmlTags,
                                     selectedPath,
@@ -19,7 +15,7 @@ export function MessageTreeView({
                                 }: {
     message: MessageDefinition;
     dataTypes: Map<string, DataType>;
-    elementOverrides?: ElementOverride[];
+    elementOverrides?: ElementOverrides;
     hideExcluded?: boolean;
     showXmlTags: boolean;
     selectedPath: string;
@@ -27,14 +23,13 @@ export function MessageTreeView({
     onSelectConstraint: (constraint: Constraint, path: string) => void;
 }) {
     const rootPath = '/' + message.xmlTag
-    const overrides = indexOverrides(elementOverrides)
-    const rootOverride = overrides.get(rootPath)
+    const rootOverride = elementOverrides[rootPath]
     const additionalConstraints = rootOverride?.additionalConstraints ?? []
     const constraints = [...message.constraints, ...additionalConstraints]
 
     const contextValue = {
         dataTypes,
-        overrides,
+        overrides: elementOverrides,
         showXmlTags,
         selectedPath,
         hideExcluded,

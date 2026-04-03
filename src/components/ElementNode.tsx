@@ -45,7 +45,7 @@ export function ElementNode({element, parentPath}: {
             examples: [],
         }
         : null
-    const override = overrides.get(elementPath)
+    const override = overrides[elementPath]
     const hasChildren = complexType.elements?.length || element.constraints?.length || dataType.constraints?.length || override?.additionalConstraints?.length
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
 

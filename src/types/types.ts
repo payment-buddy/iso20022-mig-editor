@@ -71,6 +71,10 @@ export interface ERepository {
     businessAreas: BusinessArea[]
 }
 
+export interface ElementOverrides {
+    [xmlPath: string]: ElementOverride
+}
+
 export interface ElementOverride {
     xmlPath: string
     definition: string | null
@@ -94,5 +98,5 @@ export interface MessageImplementationGuide {
     name: string
     version: string
     description: string | null
-    elementOverrides: ElementOverride[]
+    elementOverrides: ElementOverrides
 }
