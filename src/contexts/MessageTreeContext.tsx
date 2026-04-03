@@ -1,8 +1,8 @@
 import {createContext, useContext} from "react"
-import type {Constraint, DataType, ElementOverrides, MessageElement} from "../types/types.ts"
+import type {Constraint, DataTypes, ElementOverrides, MessageElement} from "../types/types.ts"
 
 export interface MessageTreeContextValue {
-    dataTypes: Map<string, DataType>
+    dataTypes: DataTypes
     overrides: ElementOverrides
     showXmlTags: boolean
     selectedPath: string

@@ -1,4 +1,4 @@
-import type {Constraint, DataType, MessageDefinition, MessageElement} from "../types/types.ts"
+import type {Constraint, DataType, DataTypes, MessageDefinition, MessageElement} from "../types/types.ts"
 import {useState} from "react"
 import {ElementDetailView} from "./ElementDetailView.tsx"
 import {ConstraintDetailView} from "./ConstraintDetailView.tsx"
@@ -7,7 +7,7 @@ import {MessageTreeView} from "./MessageTreeView.tsx"
 
 export function MessageStructureView({message, dataTypes}: {
     message: MessageDefinition
-    dataTypes: Map<string, DataType>
+    dataTypes: DataTypes
 }) {
     const [showXmlTags, setShowXmlTags] = useState(false)
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
@@ -18,7 +18,7 @@ export function MessageStructureView({message, dataTypes}: {
     function handleSelectElement(element: MessageElement, xmlPath: string) {
         setSelectedElement(element)
         setSelectedXmlPath(xmlPath)
-        setSelectedDataType(dataTypes.get(element.typeId) ?? null)
+        setSelectedDataType(dataTypes[element.typeId] ?? null)
         setSelectedConstraint(null)
     }
 
