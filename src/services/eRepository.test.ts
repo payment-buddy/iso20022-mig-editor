@@ -152,7 +152,7 @@ describe('parseRepository', () => {
     })
 
     it('parses MessageComponent complex type', () => {
-        expect(repo.dataTypes.get('message-component-1')).toEqual({
+        expect(repo.dataTypes['message-component-1']).toEqual({
             name: 'GroupHeader93',
             definition: 'Group header component',
             isChoice: false,
@@ -187,7 +187,7 @@ describe('parseRepository', () => {
     })
 
     it('parses ChoiceComponent complex type', () => {
-        expect(repo.dataTypes.get('choice-component-1')).toEqual({
+        expect(repo.dataTypes['choice-component-1']).toEqual({
             name: 'SomeChoice',
             definition: 'A choice type',
             isChoice: true,
@@ -210,7 +210,7 @@ describe('parseRepository', () => {
     })
 
     it('parses Text simple type', () => {
-        expect(repo.dataTypes.get('simple-type-1')).toEqual({
+        expect(repo.dataTypes['simple-type-1']).toEqual({
             name: 'Max35Text',
             definition: 'Max 35 chars',
             baseType: 'Text',
@@ -231,7 +231,7 @@ describe('parseRepository', () => {
     })
 
     it('parses Amount simple type', () => {
-        expect(repo.dataTypes.get('simple-type-2')).toEqual({
+        expect(repo.dataTypes['simple-type-2']).toEqual({
             name: 'ActiveCurrencyAndAmount',
             definition: 'A number of monetary units specified in an active currency',
             baseType: 'Amount',
@@ -302,7 +302,7 @@ describe('parseRepository — codes', () => {
 
     it('parses CodeSet simple type', async () => {
         const repo = await parseRepository(makeFile(xmlWithCodes))
-        expect(repo.dataTypes.get('cs1')).toEqual({
+        expect(repo.dataTypes['cs1']).toEqual({
             name: 'Priority2Code',
             definition: 'Priority code',
             baseType: 'CodeSet',
@@ -354,7 +354,7 @@ describe('parseRepository — constraints on message elements', () => {
 
     it('attaches constraints to the element, not the parent type', async () => {
         const repo = await parseRepository(makeFile(xmlWithElementConstraints))
-        const ct = repo.dataTypes.get('message-component-1') as ComplexType
+        const ct = repo.dataTypes['message-component-1'] as ComplexType
         expect(ct.constraints).toEqual([
             {name: 'CompRule', definition: 'Component rule', expression: 'comp expr'},
         ])

@@ -3,7 +3,7 @@ import {unzipToStream} from "../utils/unzip.ts"
 import type {
     BusinessArea,
     ComplexType,
-    DataType,
+    DataTypes,
     ERepository,
     MessageDefinition,
     MessageElement,
@@ -13,7 +13,7 @@ import type {
 export async function parseRepository(file: File): Promise<ERepository> {
     const parser = sax.parser(true) // strict mode — attribute names kept as-is
 
-    const dataTypes = new Map<string, DataType>() // xmi:id → DataType
+    const dataTypes: DataTypes = {} // xmi:id → DataType
     const businessAreas: BusinessArea[] = []
     let businessArea: BusinessArea | null = null
     let complexType: ComplexType | null = null
@@ -53,7 +53,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     elements: [],
                     constraints: [],
                 }
-                dataTypes.set(attrs['xmi:id'], complexType)
+                dataTypes[attrs['xmi:id']] = complexType
             } else if (xsiType === 'iso20022:BusinessComponent') {
                 // skip
             } else {
@@ -75,7 +75,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     examples: [],
                     currencyIdentifierSet: attrs['currencyIdentifierSet'] ?? null,
                 }
-                dataTypes.set(attrs['xmi:id'], simpleType)
+                dataTypes[attrs['xmi:id']] = simpleType
             }
         }
 

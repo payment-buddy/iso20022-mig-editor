@@ -28,7 +28,7 @@ export function ElementNode({element, parentPath}: {
     const [open, setOpen] = useState(false)
     const elementPath = parentPath + '/' + element.xmlTag
     const isSelected = elementPath === selectedPath
-    const dataType = dataTypes.get(element.typeId)!
+    const dataType = dataTypes[element.typeId]!
     const complexType = dataType as ComplexType
     const simpleType = dataType as SimpleType
     const ccyElement: MessageElement | null = simpleType.currencyIdentifierSet
