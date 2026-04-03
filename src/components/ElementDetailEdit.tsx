@@ -27,7 +27,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     dataType: DataType
     xmlPath: string
     elementOverride: ElementOverride | null
-    onUpdateOverride: (override: ElementOverride) => void
+    onUpdateOverride: (xmlPath: string, override: ElementOverride) => void
     onAddConstraint: () => void
 }) {
     const simpleType = dataType as SimpleType
@@ -37,7 +37,6 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
 
     function buildOverride(updates: Partial<ElementOverride>): ElementOverride {
         return {
-            xmlPath,
             definition: null,
             minOccurs: null,
             maxOccurs: null,
@@ -48,9 +47,9 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             minLength: null,
             maxLength: null,
             pattern: null,
-            allowedValues: [],
+            allowedValues: null,
             examples: null,
-            additionalConstraints: [],
+            additionalConstraints: null,
             ...elementOverride,
             ...updates,
         }
@@ -58,7 +57,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
 
     function saveOverride(updates: Partial<ElementOverride>) {
         const updated = buildOverride(updates)
-        onUpdateOverride(updated)
+        onUpdateOverride(xmlPath, updated)
     }
 
     function saveInt(field: string, original: number | null, val: string) {
