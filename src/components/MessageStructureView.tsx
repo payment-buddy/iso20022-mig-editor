@@ -22,7 +22,7 @@ export function MessageStructureView({message, dataTypes}: {
         setSelectedConstraint(null)
     }
 
-    function handleSelectContraint(constraint: Constraint, path: string) {
+    function handleSelectConstraint(constraint: Constraint, path: string) {
         setSelectedConstraint(constraint)
         setSelectedXmlPath(path)
         setSelectedDataType(null)
@@ -42,7 +42,7 @@ export function MessageStructureView({message, dataTypes}: {
                     showXmlTags={showXmlTags}
                     selectedPath={selectedXmlPath}
                     onSelectElement={handleSelectElement}
-                    onSelectConstraint={handleSelectContraint}
+                    onSelectConstraint={handleSelectConstraint}
                 />
                 <DetailPanel>
                     {selectedElement &&
