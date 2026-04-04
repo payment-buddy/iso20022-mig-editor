@@ -25,7 +25,6 @@ export function MessageTreeView({
     const rootPath = '/' + message.xmlTag
     const rootOverride = elementOverrides[rootPath]
     const additionalConstraints = rootOverride?.additionalConstraints ?? []
-    const constraints = [...message.constraints, ...additionalConstraints]
 
     const contextValue = {
         dataTypes,
@@ -46,10 +45,16 @@ export function MessageTreeView({
                                  element={element}
                                  parentPath={rootPath}/>
                 ))}
-                {constraints.map(c => (
+                {message.constraints.map(c => (
                     <ConstraintNode key={c.name}
                                     constraint={c}
                                     parentPath={rootPath}/>
+                ))}
+                {additionalConstraints.map(c => (
+                    <ConstraintNode key={c.name}
+                                    constraint={c}
+                                    parentPath={rootPath}
+                                    isAdditional={true}/>
                 ))}
             </div>
         </MessageTreeContext.Provider>
