@@ -74,7 +74,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
         )
     }
 
-    function handleSelectContraint(constraint: Constraint, path: string) {
+    function handleSelectConstraint(constraint: Constraint, path: string) {
         setSelectedElement(null)
         setSelectedPath(path)
         setSelectedConstraint(constraint)
@@ -195,7 +195,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
                         showXmlTags={showXmlTags}
                         selectedPath={selectedPath}
                         onSelectElement={handleSelectElement}
-                        onSelectConstraint={handleSelectContraint}
+                        onSelectConstraint={handleSelectConstraint}
                     />
                     <DetailPanel>
                         {selectedElement &&
