@@ -1,4 +1,4 @@
-import {stringify} from "yaml"
+import {downloadYaml} from "../utils/downloadYaml"
 import type {
     Constraint,
     ElementOverride,
@@ -50,16 +50,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     }
 
     function handleDownload() {
-        const payload = stringify(mig, (_key, val) => {
-            if (val === null) return undefined
-            if (Array.isArray(val) && val.length === 0) return undefined
-            return val
-        })
-        const blob = new Blob([payload], {type: 'text/yaml'})
-        const a = document.createElement('a')
-        a.href = URL.createObjectURL(blob)
-        a.download = `${mig.name}-${mig.version}.yaml`
-        a.click()
+        downloadYaml(mig, `${mig.name}-${mig.version}.yaml`)
     }
 
     function handleSelectElement(element: MessageElement, xmlPath: string) {
