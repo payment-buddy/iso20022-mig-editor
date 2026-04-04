@@ -29,6 +29,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     const [newConstraintId, setNewConstraintId] = useState<string | null>(null)
     const selectedElementOverride = mig.elementOverrides[selectedPath] ?? null
     const selectedDataType = selectedElement ? eRepository.dataTypes[selectedElement.typeId] ?? null : null
+    const excludedCount = Object.values(mig.elementOverrides).filter(o => o.maxOccurs === 0).length
 
 
     let message: MessageDefinition | null = null
@@ -179,10 +180,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
                         checked={hideExcluded}
                         style={{marginRight: '0.5em'}}
                         onChange={() => setHideExcluded(hide => !hide)}/>
-                    {(() => {
-                        const count = Object.values(mig.elementOverrides).filter(o => o.maxOccurs === 0).length
-                        return `Hide excluded elements (${count})`
-                    })()}
+                    Hide excluded elements ({excludedCount})
                 </label>
                 <button onClick={() => handleAddElementConstraint('/' + message!.xmlTag)}>+ Add constraint</button>
             </p>
