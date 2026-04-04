@@ -16,7 +16,8 @@ import {
     saveERepository,
     saveMig
 } from "./services/localStore.ts"
-import {parse, stringify} from "yaml"
+import {parse} from "yaml"
+import {downloadYaml} from "./utils/downloadYaml"
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
@@ -50,14 +51,7 @@ function App() {
     }
 
     function handleMigDownload() {
-        const yaml = stringify(migs, (_key, val) => val === null ? undefined : val)
-        const blob = new Blob([yaml], {type: 'text/yaml'})
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'migs.yaml'
-        a.click()
-        URL.revokeObjectURL(url)
+        downloadYaml(migs, 'migs.yaml')
     }
 
     function handleMigUpload(text: string) {
@@ -104,14 +98,7 @@ function App() {
 
     async function handleDownloadMigBackup() {
         const migs = await loadMigsForBackup()
-        const yaml = stringify(migs, (_key, val) => val === null ? undefined : val)
-        const blob = new Blob([yaml], {type: 'text/yaml'})
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'mig-backup.yaml'
-        a.click()
-        URL.revokeObjectURL(url)
+        downloadYaml(migs, 'mig-backup.yaml')
     }
 
     function handleDeleteDatabase() {
