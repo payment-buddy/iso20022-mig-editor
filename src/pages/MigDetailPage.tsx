@@ -72,11 +72,12 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     }
 
     function handleAddElementConstraint(elementPath: string) {
-        const newConstraint: Constraint = {name: 'NewConstraint' + new Date().getTime(), definition: '', expression: ''}
-        const existing = mig.elementOverrides[elementPath]
+        const constraintName = (selectedElement?.name ?? message?.xmlTag ?? 'New') + 'Rule'
+        const newConstraint: Constraint = {name: constraintName, definition: '', expression: ''}
+        const existingOverride = mig.elementOverrides[elementPath]
         const override: ElementOverride = {
-            ...existing,
-            additionalConstraints: [...(existing?.additionalConstraints ?? []), newConstraint],
+            ...existingOverride,
+            additionalConstraints: [...(existingOverride?.additionalConstraints ?? []), newConstraint],
         }
         handleUpdateElementOverride(elementPath, override)
         setSelectedConstraint(newConstraint)
