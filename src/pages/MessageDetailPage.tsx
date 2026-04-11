@@ -45,7 +45,7 @@ export function MessageDetailPage({messageId, versions, businessArea, dataTypes,
                 <MigCreateForm message={message} onSave={handleMigSave} onCancel={() => setShowMigForm(false)}/>
             )}
 
-            <p style={{whiteSpace: 'pre-wrap'}}>{message.definition}</p>
+            <p style={{whiteSpace: 'pre-wrap'}}>{message.rootElement.definition}</p>
 
             <MessageStructureView message={message} dataTypes={dataTypes}/>
         </div>

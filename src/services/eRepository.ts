@@ -97,19 +97,36 @@ export async function parseRepository(file: File): Promise<ERepository> {
             }
         } else if (node.name === 'messageDefinition') {
             if (businessArea && attrs['registrationStatus'] !== 'Obsolete') {
-                messageDefinition = {
+                complexType = {
                     name: attrs['name'],
-                    xmlTag: attrs['xmlTag'],
-                    definition: attrs['definition'] ?? '',
-                    identifier: '',
-                    shortCode: '',
+                    definition: '',
+                    isChoice: false,
                     elements: [],
                     constraints: [],
+                }
+                dataTypes[attrs['xmi:id']] = complexType
+                messageElement = {
+                    id: attrs['xmi:id'],
+                    name: attrs['name'],
+                    xmlTag: attrs['xmlTag'],
+                    isAttribute: false,
+                    definition: attrs['definition'] ?? '',
+                    minOccurs: 1,
+                    maxOccurs: 1,
+                    typeId: attrs['xmi:id'],
+                    constraints: [],
+                    examples: [],
+                }
+                messageDefinition = {
+                    name: attrs['name'],
+                    identifier: '',
+                    shortCode: '',
+                    rootElement: messageElement,
                 }
                 businessArea.messages.push(messageDefinition)
             }
         } else if (node.name === 'messageBuildingBlock') {
-            if (messageDefinition) {
+            if (complexType) {
                 messageElement = {
                     id: attrs['xmi:id'],
                     name: attrs['name'],
@@ -122,7 +139,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     constraints: [],
                     examples: [],
                 }
-                messageDefinition.elements.push(messageElement)
+                complexType.elements.push(messageElement)
             }
         } else if (node.name === 'messageDefinitionIdentifier') {
             if (messageDefinition) {
@@ -149,8 +166,6 @@ export async function parseRepository(file: File): Promise<ERepository> {
                 simpleType.constraints.push(constraint)
             } else if (complexType) {
                 complexType.constraints.push(constraint)
-            } else if (messageDefinition) {
-                messageDefinition.constraints.push(constraint)
             }
         }
     }

@@ -133,21 +133,18 @@ describe('parseRepository', () => {
             name: 'FIToFICustomerCreditTransfer',
             identifier: 'pacs.008.001.13',
             shortCode: 'pacs.008',
-            definition: 'FI to FI credit transfer',
-            xmlTag: 'FIToFICstmrCdtTrf',
-            constraints: [],
-            elements: [{
-                id: 'bb1',
-                name: 'GroupHeader',
-                xmlTag: 'GrpHdr',
+            rootElement: {
+                id: 'message-definition-1',
+                name: 'FIToFICustomerCreditTransfer',
+                xmlTag: 'FIToFICstmrCdtTrf',
                 isAttribute: false,
-                definition: 'Group header',
+                definition: 'FI to FI credit transfer',
                 minOccurs: 1,
                 maxOccurs: 1,
-                typeId: 'message-component-1',
+                typeId: 'message-definition-1',
                 examples: [],
                 constraints: [],
-            }],
+            },
         }])
     })
 
@@ -279,7 +276,7 @@ describe('parseRepository', () => {
             'definition="FI to FI&#xD;&#xA;credit transfer"'
         )
         const repo = await parseRepository(makeFile(xml))
-        expect(repo.businessAreas[0].messages[0].definition).toBe('FI to FI\ncredit transfer')
+        expect(repo.businessAreas[0].messages[0].rootElement.definition).toBe('FI to FI\ncredit transfer')
     })
 })
 
