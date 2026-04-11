@@ -1,7 +1,6 @@
 import type {Constraint, DataTypes, ElementOverrides, MessageDefinition, MessageElement} from "../types/types.ts"
 import {MessageTreeContext} from "../contexts/MessageTreeContext.tsx"
 import {ElementNode} from "./ElementNode.tsx"
-import {ConstraintNode} from "./ConstraintNode.tsx"
 
 export function MessageTreeView({
                                     message,
@@ -22,10 +21,6 @@ export function MessageTreeView({
     onSelectElement: (element: MessageElement, xmlPath: string) => void;
     onSelectConstraint: (constraint: Constraint, path: string) => void;
 }) {
-    const rootPath = '/' + message.xmlTag
-    const rootOverride = elementOverrides[rootPath]
-    const additionalConstraints = rootOverride?.additionalConstraints ?? []
-
     const contextValue = {
         dataTypes,
         overrides: elementOverrides,
@@ -39,23 +34,7 @@ export function MessageTreeView({
     return (
         <MessageTreeContext.Provider value={contextValue}>
             <div style={{flex: 3}}>
-                <div>{showXmlTags ? message.xmlTag : message.name}</div>
-                {message.elements.map(element => (
-                    <ElementNode key={element.xmlTag}
-                                 element={element}
-                                 parentPath={rootPath}/>
-                ))}
-                {message.constraints.map(c => (
-                    <ConstraintNode key={c.name}
-                                    constraint={c}
-                                    parentPath={rootPath}/>
-                ))}
-                {additionalConstraints.map(c => (
-                    <ConstraintNode key={c.name}
-                                    constraint={c}
-                                    parentPath={rootPath}
-                                    isAdditional={true}/>
-                ))}
+                <ElementNode element={message.rootElement} parentPath=""/>
             </div>
         </MessageTreeContext.Provider>
     )

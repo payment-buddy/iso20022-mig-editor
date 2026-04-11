@@ -25,7 +25,7 @@ export function ElementNode({element, parentPath}: {
         hideExcluded,
         onSelectElement
     } = useMessageTreeContext()
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(!parentPath)
     const elementPath = parentPath + '/' + element.xmlTag
     const isSelected = elementPath === selectedPath
     const dataType = dataTypes[element.typeId]!

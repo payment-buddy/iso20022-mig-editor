@@ -53,10 +53,7 @@ export interface MessageDefinition {
     name: string
     identifier: string
     shortCode: string
-    definition: string
-    xmlTag: string
-    elements: MessageElement[]
-    constraints: Constraint[]
+    rootElement: MessageElement
 }
 
 export interface BusinessArea {

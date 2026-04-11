@@ -72,7 +72,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     }
 
     function handleAddElementConstraint(elementPath: string) {
-        const constraintName = (selectedElement?.name ?? message?.xmlTag ?? 'New') + 'Rule'
+        const constraintName = (selectedElement?.name ?? 'New') + 'Rule'
         const newConstraint: Constraint = {name: constraintName, definition: '', expression: ''}
         const existingOverride = mig.elementOverrides[elementPath]
         const override: ElementOverride = {
@@ -174,7 +174,6 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
                         onChange={() => setHideExcluded(hide => !hide)}/>
                     Hide excluded elements ({excludedCount})
                 </label>
-                <button onClick={() => handleAddElementConstraint('/' + message!.xmlTag)}>+ Add constraint</button>
             </p>
 
             {message && (
