@@ -31,6 +31,7 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     onAddConstraint: () => void
 }) {
     const simpleType = dataType as SimpleType
+    const isSimpleType = !('elements' in dataType)
     const isTextType = 'baseType' in dataType && simpleType.baseType === 'Text'
     const isCodeSetType = 'baseType' in dataType && simpleType.baseType === 'CodeSet'
     const baseExamples = element.examples.length > 0 ? element.examples : (simpleType.examples ?? [])
@@ -156,16 +157,18 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                     />
                 </div>
             )}
-            <div>
-                <div className="detail-label">Examples</div>
-                <EditableValueList
-                    values={elementOverride?.examples ?? baseExamples}
-                    originalValues={baseExamples}
-                    monospace
-                    isValueInvalid={v => !validateValue(v)}
-                    onSave={values => saveOverride({examples: values.length === 0 ? null : values})}
-                />
-            </div>
+            {isSimpleType && (
+                <div>
+                    <div className="detail-label">Examples</div>
+                    <EditableValueList
+                        values={elementOverride?.examples ?? baseExamples}
+                        originalValues={baseExamples}
+                        monospace
+                        isValueInvalid={v => !validateValue(v)}
+                        onSave={values => saveOverride({examples: values.length === 0 ? null : values})}
+                    />
+                </div>
+            )}
             <div>
                 <button onClick={onAddConstraint}>+ Add constraint</button>
             </div>
