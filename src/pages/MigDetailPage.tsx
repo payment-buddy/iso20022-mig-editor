@@ -127,7 +127,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
         <div>
             <p><a href="#" className="back-link">← Back</a></p>
             <div className="page-header">
-                <h2>Message Implementation Guide <code className="badge">{mig.messageIdentifier}</code></h2>
+                <h2>Message Implementation Guide <code className="badge"><a href={'#' + mig.messageIdentifier}>{mig.messageIdentifier}</a></code></h2>
                 <div className="page-actions">
                     <button onClick={handleDownload}>Download</button>
                     <button onClick={handleDelete}>Delete</button>

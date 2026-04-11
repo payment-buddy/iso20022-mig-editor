@@ -20,7 +20,6 @@ export function MigListPage({migs, onBrowse, onUpload, onDownload}: {
             <table style={{width: '100%', borderCollapse: 'collapse'}}>
                 <thead>
                 <tr style={{textAlign: 'left', borderBottom: '2px solid'}}>
-                    <th>Message</th>
                     <th>Name</th>
                     <th>Version</th>
                 </tr>
@@ -28,7 +27,6 @@ export function MigListPage({migs, onBrowse, onUpload, onDownload}: {
                 <tbody>
                 {migs.map(mig => (
                     <tr key={mig.id} style={{borderBottom: '1px solid'}}>
-                        <td><a href={'#mig/' + mig.id}>{mig.messageIdentifier}</a></td>
                         <td><a href={'#mig/' + mig.id}>{mig.name}</a></td>
                         <td>{mig.version}</td>
                     </tr>
