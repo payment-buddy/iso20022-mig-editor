@@ -10,6 +10,7 @@ export function MessageStructureView({message, dataTypes}: {
     dataTypes: DataTypes
 }) {
     const [showXmlTags, setShowXmlTags] = useState(false)
+    const [filter, setFilter] = useState('')
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
     const [selectedXmlPath, setSelectedXmlPath] = useState<string>('')
     const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
@@ -34,12 +35,14 @@ export function MessageStructureView({message, dataTypes}: {
             <div>
                 <input type="checkbox" checked={showXmlTags} onChange={() => setShowXmlTags(show => !show)}/>
                 Show XML tags
+                <input type="text" value={filter} onChange={e => setFilter(e.target.value)} style={{marginLeft: '1em'}}/>
             </div>
             <div style={{display: 'flex', gap: '1em'}}>
                 <MessageTreeView
                     message={message}
                     dataTypes={dataTypes}
                     showXmlTags={showXmlTags}
+                    filter={filter}
                     selectedPath={selectedXmlPath}
                     onSelectElement={handleSelectElement}
                     onSelectConstraint={handleSelectConstraint}

@@ -23,6 +23,7 @@ export function ElementNode({element, parentPath}: {
         showXmlTags,
         selectedPath,
         hideExcluded,
+        visiblePaths,
         onSelectElement
     } = useMessageTreeContext()
     const [open, setOpen] = useState(!parentPath)
@@ -50,6 +51,8 @@ export function ElementNode({element, parentPath}: {
     const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
 
     if (isExcluded && hideExcluded) return null
+
+    if (visiblePaths.size > 0 && !visiblePaths.has(elementPath)) return null
 
     if (!hasChildren) {
         return (

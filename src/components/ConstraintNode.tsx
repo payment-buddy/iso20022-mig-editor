@@ -6,9 +6,10 @@ export function ConstraintNode({constraint, parentPath, isAdditional}: {
     parentPath: string
     isAdditional?: boolean
 }) {
-    const {selectedPath, onSelectConstraint} = useMessageTreeContext()
+    const {selectedPath, visiblePaths, onSelectConstraint} = useMessageTreeContext()
     const constraintPath = parentPath + '/' + constraint.name
     const isSelected = constraintPath === selectedPath
+    if (visiblePaths.size > 0 && !visiblePaths.has(constraintPath)) return null
     return (
         <div className={'tree-node' + (isSelected ? ' is-selected' : '')}
              style={{marginLeft: '1em'}}
