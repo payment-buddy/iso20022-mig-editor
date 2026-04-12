@@ -26,6 +26,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
 }) {
     const [showXmlTags, setShowXmlTags] = useState(false)
     const [hideExcluded, setHideExcluded] = useState(true)
+    const [filter, setFilter] = useState('')
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
     const [selectedPath, setSelectedPath] = useState<string>('')
@@ -196,6 +197,15 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                         onChange={() => setHideExcluded(hide => !hide)}/>
                     Hide excluded elements ({excludedCount})
                 </label>
+                <label>
+                    Filter:
+                    <input
+                        type="text"
+                        value={filter}
+                        onChange={e => setFilter(e.target.value)}
+                        style={{marginLeft: '0.5em'}}
+                    />
+                </label>
             </p>
 
             {message && (
@@ -206,6 +216,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                         elementOverrides={combinedOverrides}
                         hideExcluded={hideExcluded}
                         showXmlTags={showXmlTags}
+                        filter={filter}
                         selectedPath={selectedPath}
                         onSelectElement={handleSelectElement}
                         onSelectConstraint={handleSelectConstraint}
