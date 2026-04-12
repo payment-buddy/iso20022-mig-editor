@@ -1,4 +1,5 @@
 import {downloadYaml} from "../utils/downloadYaml"
+import {getCombinedOverrides} from "../utils/migUtils.ts"
 import type {
     Constraint,
     ElementOverride,
@@ -11,12 +12,14 @@ import {useState} from "react"
 import {ElementDetailEdit} from "../components/ElementDetailEdit.tsx"
 import {ConstraintDetailView} from "../components/ConstraintDetailView.tsx"
 import {EditableText} from "../components/EditableText.tsx"
+import {EditableSelect} from "../components/EditableSelect.tsx"
 import {ConstraintDetailEdit} from "../components/ConstraintDetailEdit.tsx"
 import {DetailPanel} from "../components/DetailPanel.tsx"
 import {MessageTreeView} from "../components/MessageTreeView.tsx"
 
-export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
+export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     mig: MessageImplementationGuide,
+    migs: MessageImplementationGuide[],
     eRepository: ERepository,
     onUpdate: (updated: MessageImplementationGuide) => void,
     onDelete: (id: string) => void
@@ -27,10 +30,15 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
     const [selectedPath, setSelectedPath] = useState<string>('')
     const [newConstraintId, setNewConstraintId] = useState<string | null>(null)
+    const combinedOverrides = getCombinedOverrides(mig, migs)
+    const inheritedOverrides = mig.parentMIG ? getCombinedOverrides(migs.find(m => m.id === mig.parentMIG)!, migs) : {}
     const selectedElementOverride = mig.elementOverrides[selectedPath] ?? null
+    const selectedInheritedOverride = inheritedOverrides[selectedPath] ?? null
     const selectedDataType = selectedElement ? eRepository.dataTypes[selectedElement.typeId] ?? null : null
-    const excludedCount = Object.values(mig.elementOverrides).filter(o => o.maxOccurs === 0).length
+    const excludedCount = Object.values(combinedOverrides).filter(o => o.maxOccurs === 0).length
 
+    const parentOptions = migs.filter(m => m.messageIdentifier === mig.messageIdentifier && m.id !== mig.id)
+    const isParentMissing = mig.parentMIG && !migs.some(m => m.id === mig.parentMIG)
 
     let message: MessageDefinition | null = null
     for (const ba of eRepository.businessAreas) {
@@ -60,7 +68,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
     }
 
     function isElementAdditionalConstraint(path: string) {
-        return Object.entries(mig.elementOverrides).some(([xmlPath, override]) =>
+        return Object.entries(combinedOverrides).some(([xmlPath, override]) =>
             override.additionalConstraints?.some(c => `${xmlPath}/${c.name}` === path)
         )
     }
@@ -149,6 +157,20 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
                     value={mig.version}
                     onSave={val => { if (val !== mig.version) onUpdate({...mig, version: val}) }}
                 />
+                <label>Parent MIG:</label>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '0.5em'}}>
+                    <EditableSelect
+                        value={mig.parentMIG}
+                        options={parentOptions}
+                        onSave={val => onUpdate({...mig, parentMIG: val})}
+                        missingValue={mig.parentMIG}
+                    />
+                    {isParentMissing && (
+                        <div style={{color: 'red', fontSize: '0.9em'}}>
+                            The selected parent MIG is missing. Please upload it.
+                        </div>
+                    )}
+                </div>
                 <label style={{alignSelf: 'start', paddingTop: '0.2em'}}>Description:</label>
                 <EditableText
                     value={mig.description ?? ''}
@@ -181,7 +203,7 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
                     <MessageTreeView
                         message={message}
                         dataTypes={eRepository.dataTypes}
-                        elementOverrides={mig.elementOverrides}
+                        elementOverrides={combinedOverrides}
                         hideExcluded={hideExcluded}
                         showXmlTags={showXmlTags}
                         selectedPath={selectedPath}
@@ -195,15 +217,16 @@ export function MigDetailPage({mig, eRepository, onUpdate, onDelete}: {
                                 dataType={selectedDataType!}
                                 xmlPath={selectedPath}
                                 elementOverride={selectedElementOverride}
+                                inheritedOverride={selectedInheritedOverride}
                                 onUpdateOverride={handleUpdateElementOverride}
                                 onAddConstraint={() => handleAddElementConstraint(selectedPath)}/>
                         }
                         {selectedConstraint && (isElementAdditionalConstraint(selectedPath)
-                                ? <ConstraintDetailEdit constraint={selectedConstraint}
-                                                        onUpdate={handleUpdateConstraint}
-                                                        onDelete={handleDeleteConstraint}
-                                                        isNew={selectedConstraint.name === newConstraintId}/>
-                                : <ConstraintDetailView constraint={selectedConstraint}/>)
+                            ? <ConstraintDetailEdit constraint={selectedConstraint}
+                                                    onUpdate={handleUpdateConstraint}
+                                                    onDelete={handleDeleteConstraint}
+                                                    isNew={selectedConstraint.name === newConstraintId}/>
+                            : <ConstraintDetailView constraint={selectedConstraint}/>)
                         }
                     </DetailPanel>
                 </div>

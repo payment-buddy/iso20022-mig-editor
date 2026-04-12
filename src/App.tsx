@@ -130,8 +130,11 @@ function App() {
     if (hash.startsWith('#mig/')) {
         const id = hash.substring(5)
         const mig = migs.find(m => m.id === id)
-        if (mig) return <MigDetailPage mig={mig} eRepository={eRepository} onUpdate={handleMigUpdated}
-                                   onDelete={handleMigDeleted}/>
+        if (mig) return <MigDetailPage mig={mig}
+                                       migs={migs}
+                                       eRepository={eRepository}
+                                       onUpdate={handleMigUpdated}
+                                       onDelete={handleMigDeleted}/>
     }
     if (hash.startsWith('#')) {
         const code = hash.substring(1)
