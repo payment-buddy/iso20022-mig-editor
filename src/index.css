@@ -70,6 +70,7 @@ input, textarea {
 .page-actions {
     display: flex;
     gap: 0.4rem;
+    align-items: center;
 }
 
 .back-link {

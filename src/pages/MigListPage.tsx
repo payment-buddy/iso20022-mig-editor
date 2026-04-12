@@ -1,6 +1,7 @@
 import {useCallback, useState} from "react"
 import type {MessageImplementationGuide} from "../types/types.ts"
 import {FileInputButton} from "../components/FileInputButton.tsx"
+import {GithubLink} from "../components/GithubLink.tsx"
 
 import {downloadYaml} from "../utils/downloadYaml.ts"
 
@@ -48,6 +49,7 @@ export function MigListPage({migs, onBrowse, onUpload}: {
                             disabled={selectedIds.size === 0}>Download {selectedIds.size > 1 && <>({selectedIds.size})</>}</button>
                     <FileInputButton label="Load MIG" accept=".yaml,.yml" onFile={f => f.text().then(onUpload)}/>
                     <button onClick={onBrowse}>Browse e-Repository</button>
+                    <GithubLink/>
                 </div>
             </div>
             <table style={{width: '100%', borderCollapse: 'collapse'}}>
