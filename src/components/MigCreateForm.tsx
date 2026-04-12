@@ -15,6 +15,7 @@ export function MigCreateForm({message, onSave, onCancel}: {
             id: crypto.randomUUID(),
             name: name.trim(),
             messageIdentifier: message.identifier,
+            parentMIG: null,
             version: version.trim(),
             description: '',
             elementOverrides: {},

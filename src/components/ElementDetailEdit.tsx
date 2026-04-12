@@ -22,11 +22,12 @@ function createValueValidator(elementOverride: ElementOverride | null, simpleTyp
     }
 }
 
-export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, onUpdateOverride, onAddConstraint}: {
+export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, inheritedOverride, onUpdateOverride, onAddConstraint}: {
     element: MessageElement
     dataType: DataType
     xmlPath: string
     elementOverride: ElementOverride | null
+    inheritedOverride: ElementOverride | null
     onUpdateOverride: (xmlPath: string, override: ElementOverride) => void
     onAddConstraint: () => void
 }) {
@@ -35,6 +36,15 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     const isTextType = 'baseType' in dataType && simpleType.baseType === 'Text'
     const isCodeSetType = 'baseType' in dataType && simpleType.baseType === 'CodeSet'
     const baseExamples = element.examples.length > 0 ? element.examples : (simpleType.examples ?? [])
+    
+    const baseDefinition = inheritedOverride?.definition || element.definition || dataType.definition
+    const baseMinOccurs = inheritedOverride?.minOccurs ?? element.minOccurs
+    const baseMaxOccurs = inheritedOverride?.maxOccurs ?? element.maxOccurs
+    const baseMinLength = inheritedOverride?.minLength ?? simpleType.minLength ?? simpleType.length
+    const baseMaxLength = inheritedOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length
+    const basePattern = inheritedOverride?.pattern ?? simpleType.pattern ?? ''
+    const baseAllowedValues = inheritedOverride?.allowedValues ?? []
+    const effectiveExamples = inheritedOverride?.examples ?? baseExamples
 
     function buildOverride(updates: Partial<ElementOverride>): ElementOverride {
         return {
@@ -89,58 +99,57 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             <div>
                 <div className="detail-label">Definition</div>
                 <EditableText
-                    value={elementOverride?.definition || element.definition || dataType.definition}
-                    originalValue={element.definition || dataType.definition}
+                    value={elementOverride?.definition || baseDefinition}
+                    originalValue={baseDefinition}
                     multiline
-                    onSave={val => saveOverride({definition: val === element.definition ? null : val})}
+                    onSave={val => saveOverride({definition: val === baseDefinition ? null : val})}
                 />
             </div>
             <div>
                 <div className="detail-label">Min Occurs</div>
                 <EditableNumber
-                    value={elementOverride?.minOccurs ?? element.minOccurs}
-                    originalValue={element.minOccurs}
+                    value={elementOverride?.minOccurs ?? baseMinOccurs}
+                    originalValue={baseMinOccurs}
                     warnWhen="lower"
-                    onSave={val => saveInt('minOccurs', element.minOccurs, val)}
+                    onSave={val => saveInt('minOccurs', baseMinOccurs, val)}
                 />
             </div>
             <div>
                 <div className="detail-label">Max Occurs</div>
                 <EditableNumber
-                    value={elementOverride?.maxOccurs ?? element.maxOccurs}
-                    originalValue={element.maxOccurs}
+                    value={elementOverride?.maxOccurs ?? baseMaxOccurs}
+                    originalValue={baseMaxOccurs}
                     warnWhen="higher"
-                    onSave={val => saveInt('maxOccurs', element.maxOccurs, val)}
+                    onSave={val => saveInt('maxOccurs', baseMaxOccurs, val)}
                 />
             </div>
             {isTextType && (<>
                 <div>
                     <div className="detail-label">Min Length</div>
                     <EditableNumber
-                        value={elementOverride?.minLength ?? simpleType.minLength ?? simpleType.length}
-                        originalValue={simpleType.minLength ?? simpleType.length}
+                        value={elementOverride?.minLength ?? baseMinLength}
+                        originalValue={baseMinLength}
                         warnWhen="lower"
-                        onSave={val => saveInt('minLength', simpleType.minLength, val)}
+                        onSave={val => saveInt('minLength', baseMinLength, val)}
                     />
                 </div>
                 <div>
                     <div className="detail-label">Max Length</div>
                     <EditableNumber
-                        value={elementOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length}
-                        originalValue={simpleType.maxLength ?? simpleType.length}
+                        value={elementOverride?.maxLength ?? baseMaxLength}
+                        originalValue={baseMaxLength}
                         warnWhen="higher"
-                        onSave={val => saveInt('maxLength', simpleType.maxLength, val)}
+                        onSave={val => saveInt('maxLength', baseMaxLength, val)}
                     />
                 </div>
                 <div>
                     <div className="detail-label">Pattern</div>
                     <EditableText
-                        value={elementOverride?.pattern ?? simpleType.pattern ?? ''}
-                        originalValue={simpleType.pattern ?? ''}
+                        value={elementOverride?.pattern ?? basePattern}
+                        originalValue={basePattern}
                         monospace
                         onSave={val => {
-                            const original = simpleType.pattern ?? null
-                            saveOverride({pattern: val === (original ?? '') || val === '' ? null : val})
+                            saveOverride({pattern: val === (basePattern ?? '') || val === '' ? null : val})
                         }}
                     />
                 </div>
@@ -149,8 +158,8 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                 <div>
                     <div className="detail-label">Allowed Values</div>
                     <EditableValueList
-                        values={elementOverride?.allowedValues ?? []}
-                        originalValues={[]}
+                        values={elementOverride?.allowedValues ?? baseAllowedValues}
+                        originalValues={baseAllowedValues}
                         monospace
                         isValueInvalid={v => !validateValue(v)}
                         onSave={values => saveOverride({allowedValues: values.length === 0 ? null : values})}
@@ -161,8 +170,8 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                 <div>
                     <div className="detail-label">Examples</div>
                     <EditableValueList
-                        values={elementOverride?.examples ?? baseExamples}
-                        originalValues={baseExamples}
+                        values={elementOverride?.examples ?? effectiveExamples}
+                        originalValues={effectiveExamples}
                         monospace
                         isValueInvalid={v => !validateValue(v)}
                         onSave={values => saveOverride({examples: values.length === 0 ? null : values})}

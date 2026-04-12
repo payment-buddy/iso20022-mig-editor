@@ -44,7 +44,8 @@ export function MigListPage({migs, onBrowse, onUpload}: {
             <div className="page-header">
                 <h2>ISO 20022 Message Implementation Guide</h2>
                 <div className="page-actions">
-                    <button onClick={handleDownloadSelected} disabled={selectedIds.size === 0}>Download ({selectedIds.size})</button>
+                    <button onClick={handleDownloadSelected}
+                            disabled={selectedIds.size === 0}>Download {selectedIds.size > 1 && <>({selectedIds.size})</>}</button>
                     <FileInputButton label="Load MIG" accept=".yaml,.yml" onFile={f => f.text().then(onUpload)}/>
                     <button onClick={onBrowse}>Browse e-Repository</button>
                 </div>

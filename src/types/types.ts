@@ -96,6 +96,7 @@ export interface MessageImplementationGuide {
     id: string
     name: string
     messageIdentifier: string
+    parentMIG: string | null
     version: string
     description: string | null
     elementOverrides: ElementOverrides
