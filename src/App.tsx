@@ -50,9 +50,6 @@ function App() {
         void parseRepository(file).then(handleParsed)
     }
 
-    function handleMigDownload() {
-        downloadYaml(migs, 'migs.yaml')
-    }
 
     function handleMigUpload(text: string) {
         const parsed: unknown = parse(text)
@@ -159,7 +156,7 @@ function App() {
             }
         }
     }
-    return <MigListPage migs={migs} onBrowse={handleBrowse} onUpload={handleMigUpload} onDownload={handleMigDownload}/>
+    return <MigListPage migs={migs} onBrowse={handleBrowse} onUpload={handleMigUpload}/>
 }
 
 export default App
