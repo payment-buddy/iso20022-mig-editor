@@ -19,14 +19,23 @@ Open [https://payment-buddy.github.io/iso20022-mig-editor/](https://payment-budd
 
 Download the latest self-contained HTML file from the [Releases page](https://github.com/payment-buddy/iso20022-mig-editor/releases) and open it in your browser. No server or internet connection required.
 
+### Creating a new MIG
+
+1. Click **Browse e-Repository** and select a message definition.
+2. Click the **Create MIG** button to start authoring a Message Implementation Guide for that message.
+3. Edit element cardinality, validation constraints, etc.
+4. Download the MIG as YAML when finished.
+
+
 ## Development
 
 ### Build from source
 
 ```bash
 npm install
-npm run dev
+npm run build
 ```
+The build output is a single self-contained HTML file (via `vite-plugin-singlefile`).
 
 ### Commands
 
@@ -37,8 +46,6 @@ npm run dev
 | `npm run test`    | Run Vitest tests                    |
 | `npm run lint`    | Run ESLint                          |
 | `npm run preview` | Preview production build            |
-
-The build output is a single self-contained HTML file (via `vite-plugin-singlefile`).
 
 ## License
 
