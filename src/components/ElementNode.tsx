@@ -13,9 +13,10 @@ function Cardinality({element, override}: { element: MessageElement, override: E
     )
 }
 
-export function ElementNode({element, parentPath}: {
+export function ElementNode({element, parentPath, parentExcluded}: {
     element: MessageElement
     parentPath: string
+    parentExcluded?: boolean
 }) {
     const {
         dataTypes,
@@ -55,7 +56,7 @@ export function ElementNode({element, parentPath}: {
         : null
     const override = overrides[elementPath]
     const hasChildren = complexType.elements?.length || element.constraints?.length || dataType.constraints?.length || override?.additionalConstraints?.length
-    const isExcluded = (override?.maxOccurs ?? element.maxOccurs) === 0
+    const isExcluded = parentExcluded || (override?.maxOccurs ?? element.maxOccurs) === 0
 
     if (isExcluded && hideExcluded) return null
 
@@ -92,27 +93,32 @@ export function ElementNode({element, parentPath}: {
                 {complexType.elements?.map(child => (
                     <ElementNode key={child.xmlTag}
                                  element={child}
-                                 parentPath={elementPath}/>
+                                 parentPath={elementPath}
+                                 parentExcluded={isExcluded}/>
                 ))}
                 {ccyElement && (
                     <ElementNode key="Ccy"
                                  element={ccyElement}
-                                 parentPath={elementPath}/>
+                                 parentPath={elementPath}
+                                 parentExcluded={isExcluded}/>
                 )}
                 {element.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
-                                    parentPath={elementPath}/>
+                                    parentPath={elementPath}
+                                    parentExcluded={isExcluded}/>
                 ))}
                 {dataType?.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
-                                    parentPath={elementPath}/>
+                                    parentPath={elementPath}
+                                    parentExcluded={isExcluded}/>
                 ))}
                 {override?.additionalConstraints?.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
                                     parentPath={elementPath}
+                                    parentExcluded={isExcluded}
                                     isAdditional={true}/>
                 ))}
             </div>}
