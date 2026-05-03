@@ -1,5 +1,26 @@
 import type {ElementOverride, ElementOverrides, MessageImplementationGuide} from "../types/types.ts"
 
+export function getParentOptions(
+    mig: MessageImplementationGuide,
+    migs: MessageImplementationGuide[]
+): { value: string, name: string }[] {
+    return migs
+        .filter(m => {
+            if (m.messageIdentifier !== mig.messageIdentifier || m.id === mig.id) return false
+            // Check for cycles
+            let current = migs.find(p => p.id === m.id)
+            const visited = new Set<string>()
+            while (current) {
+                if (current.id === mig.id) return false
+                if (visited.has(current.id)) return false
+                visited.add(current.id)
+                current = current.parentMIG ? migs.find(p => p.id === current!.parentMIG) : undefined
+            }
+            return true
+        })
+        .map(m => ({ value: m.id, name: m.name }))
+}
+
 export function getCombinedOverrides(
     mig: MessageImplementationGuide,
     migs: MessageImplementationGuide[]
