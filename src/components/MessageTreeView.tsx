@@ -108,7 +108,7 @@ export function MessageTreeView({
         <MessageTreeContext.Provider value={contextValue}>
             <div style={{flex: 3}}>
                 {noMatches ? (
-                    <div style={{padding: '1em', color: '#888', fontStyle: 'italic'}}>
+                    <div style={{color: '#888'}}>
                         No elements or constraints matching "{filter}"
                     </div>
                 ) : (

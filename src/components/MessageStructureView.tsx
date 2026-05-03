@@ -32,11 +32,24 @@ export function MessageStructureView({message, dataTypes}: {
 
     return (
         <>
-            <div>
-                <input type="checkbox" checked={showXmlTags} onChange={() => setShowXmlTags(show => !show)}/>
-                Show XML tags
-                <input type="text" value={filter} onChange={e => setFilter(e.target.value)} style={{marginLeft: '1em'}}/>
-            </div>
+            <p style={{display: 'flex', gap: '1em', alignItems: 'center'}}>
+                <label>
+                    Filter:
+                    <input
+                        type="text"
+                        value={filter}
+                        onChange={e => setFilter(e.target.value)}
+                        style={{marginLeft: '0.5em'}}
+                    />
+                </label>
+                <label>
+                    <input type="checkbox"
+                           checked={showXmlTags}
+                           style={{marginRight: '0.5em'}}
+                           onChange={() => setShowXmlTags(show => !show)}/>
+                    Show XML tags
+                </label>
+            </p>
             <div style={{display: 'flex', gap: '1em'}}>
                 <MessageTreeView
                     message={message}

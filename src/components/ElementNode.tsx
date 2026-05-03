@@ -65,7 +65,6 @@ export function ElementNode({element, parentPath}: {
         return (
             <>
                 <div className={'tree-node' + (isSelected ? ' is-selected' : '')}
-                     style={{marginLeft: '1em'}}
                      onClick={() => onSelectElement(element, elementPath)}>
                     <span style={{marginRight: '0.5em', fontSize: '0.7em'}}>◇</span>
                     <span className={(override ? 'has-override' : '') + (isExcluded ? ' is-excluded' : '')}>{showXmlTags ? element.xmlTag : element.name}</span>
@@ -76,7 +75,7 @@ export function ElementNode({element, parentPath}: {
     }
 
     return (
-        <div style={{marginLeft: '1em'}}>
+        <div>
             <div className={'tree-node' + (isSelected ? ' is-selected' : '')} onClick={() => {
                 onSelectElement(element, elementPath)
                 if (elementPath === selectedPath || !open) {
@@ -88,7 +87,7 @@ export function ElementNode({element, parentPath}: {
                 <Cardinality element={element} override={override}/>
                 {complexType.isChoice && <span className="badge">choice</span>}
             </div>
-            {open && <>
+            {open && <div style={{marginLeft: '1em'}}>
                 {complexType.elements?.map(child => (
                     <ElementNode key={child.xmlTag}
                                  element={child}
@@ -115,7 +114,7 @@ export function ElementNode({element, parentPath}: {
                                     parentPath={elementPath}
                                     isAdditional={true}/>
                 ))}
-            </>}
+            </div>}
         </div>
     )
 }
