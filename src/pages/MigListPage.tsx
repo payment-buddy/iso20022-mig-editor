@@ -31,12 +31,12 @@ export function MigListPage({migs, onBrowse, onUpload}: {
         })
     }, [migs])
 
-    const handleDownloadSelected = useCallback(() => {
+    const handleDownloadSelected = useCallback(async () => {
         const items = migs.filter(m => selectedIds.has(m.id))
         if (items.length === 1) {
-            downloadYaml(items[0], `${items[0].name}.yaml`)
+            await downloadYaml(items[0], `${items[0].name}.yaml`)
         } else {
-            downloadYaml(items, 'MessageImplementationGuides.yaml')
+            await downloadYaml(items, 'MessageImplementationGuides.yaml')
         }
     }, [migs, selectedIds])
 
