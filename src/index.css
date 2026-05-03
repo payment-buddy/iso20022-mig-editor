@@ -119,8 +119,8 @@ input, textarea {
     color: HighlightText;
 }
 
-.has-override {
-    color: dodgerblue;
+.is-overridden {
+    color: #0066cc;
 }
 
 .is-excluded {

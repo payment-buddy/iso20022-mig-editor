@@ -83,13 +83,13 @@ export function EditableText({value, originalValue, multiline, monospace, autoFo
         <span
             ref={spanRef}
             title={isOverridden ? `Original: ${originalValue ?? '<none>'}` : undefined}
+            className={isOverridden ? 'is-overridden' : undefined}
             style={{
                 cursor: 'pointer',
                 ...(multiline ? {whiteSpace: 'pre-wrap'} : {}),
                 fontFamily: monospace ? 'monospace' : 'inherit',
                 fontSize: 'inherit',
                 lineHeight: 'inherit',
-                ...(isOverridden ? {color: '#0066cc'} : {}),
             }}
             onClick={startEdit}
         >

@@ -16,7 +16,7 @@ export function ConstraintNode({constraint, parentPath, isAdditional, parentExcl
              onClick={() => onSelectConstraint(constraint, constraintPath)}>
             <span style={{fontSize: '0.8em'}}>✔</span>&nbsp;
             <span
-                className={(isAdditional ? ' has-override' : '') + (parentExcluded ? ' is-excluded' : '')}>{constraint.name}</span>
+                className={(isAdditional ? ' is-overridden' : '') + (parentExcluded ? ' is-excluded' : '')}>{constraint.name}</span>
         </div>
     )
 }

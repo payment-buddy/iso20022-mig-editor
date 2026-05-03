@@ -44,10 +44,8 @@ export function EditableNumber({value, originalValue, onSave, warnWhen}: {
     return (
         <span
             title={isOverridden ? `Original: ${originalValue ?? '<none>'}` : undefined}
-            style={{
-                cursor: 'pointer',
-                ...(isOverridden ? {color: '#0066cc'} : {}),
-            }}
+            className={isOverridden ? 'is-overridden' : undefined}
+            style={{cursor: 'pointer'}}
             onClick={startEdit}
         >
             {value ?? '<none>'}
