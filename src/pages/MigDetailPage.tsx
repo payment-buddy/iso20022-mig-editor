@@ -16,6 +16,7 @@ import {EditableSelect} from "../components/EditableSelect.tsx"
 import {ConstraintDetailEdit} from "../components/ConstraintDetailEdit.tsx"
 import {DetailPanel} from "../components/DetailPanel.tsx"
 import {MessageTreeView} from "../components/MessageTreeView.tsx"
+import {Modal} from "../components/Modal.tsx"
 
 export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     mig: MessageImplementationGuide,
@@ -31,6 +32,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
     const [selectedPath, setSelectedPath] = useState<string>('')
     const [newConstraintId, setNewConstraintId] = useState<string | null>(null)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
     const combinedOverrides = getCombinedOverrides(mig, migs)
     const inheritedOverrides = mig.parentMIG ? getCombinedOverrides(migs.find(m => m.id === mig.parentMIG)!, migs) : {}
     const selectedElementOverride = mig.elementOverrides[selectedPath] ?? null
@@ -51,10 +53,11 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     }
 
     function handleDelete() {
-        const download = window.confirm(`Delete "${mig.name}"?\n\nClick OK to delete. If you want to keep a copy, cancel and use the Download button first.`)
-        if (!download) return
-        const wantDownload = window.confirm('Download a copy before deleting?')
-        if (wantDownload) handleDownload()
+        setShowDeleteModal(true)
+    }
+
+    function confirmDelete() {
+        setShowDeleteModal(false)
         onDelete(mig.id)
     }
 
@@ -300,6 +303,23 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                         }
                     </DetailPanel>
                 </div>
+            )}
+            {showDeleteModal && (
+                <Modal
+                    onClose={() => setShowDeleteModal(false)}
+                    footer={
+                        <>
+                            <button type="button" onClick={() => confirmDelete()}>Delete</button>
+                            <button type="button" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+                        </>
+                    }
+                >
+                    <p>Delete <code>{mig.name}</code>?</p>
+                    <p>You may want to <a href="#" onClick={async (e) => {
+                        e.preventDefault()
+                        await handleDownload()
+                    }}>download</a> a reserve copy first.</p>
+                </Modal>
             )}
         </div>
     )
