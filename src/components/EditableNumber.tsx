@@ -26,7 +26,6 @@ export function EditableNumber({value, originalValue, onSave, warnWhen}: {
                 autoFocus
                 type="number"
                 value={inputValue}
-                min={0}
                 onChange={e => setInputValue(e.target.value)}
                 onBlur={save}
                 onKeyDown={e => {
