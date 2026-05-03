@@ -7,6 +7,7 @@ export interface MessageTreeContextValue {
     showXmlTags: boolean
     selectedPath: string
     hideExcluded: boolean
+    filterActive: boolean
     visiblePaths: Set<string>
     onSelectElement: (element: MessageElement, xmlPath: string) => void
     onSelectConstraint: (constraint: Constraint, xmlPath: string) => void
