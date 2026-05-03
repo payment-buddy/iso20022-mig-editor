@@ -18,6 +18,7 @@ import {
 } from "./services/localStore.ts"
 import {parse} from "yaml"
 import {downloadYaml} from "./utils/downloadYaml"
+import {prepareForDownload} from "./utils/migUtils"
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
@@ -116,7 +117,7 @@ function App() {
 
     async function handleDownloadMigBackup() {
         const migs = await loadMigsForBackup()
-        await downloadYaml(migs, 'mig-backup.yaml')
+        await downloadYaml(prepareForDownload(migs), 'mig-backup.yaml')
     }
 
     function handleDeleteDatabase() {

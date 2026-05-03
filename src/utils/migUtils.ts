@@ -1,4 +1,5 @@
 import type {Constraint, ElementOverride, ElementOverrides, MessageImplementationGuide} from "../types/types.ts"
+import {CONSTRAINT_PROPERTY_ORDER, ELEMENT_OVERRIDE_PROPERTY_ORDER, MIG_PROPERTY_ORDER} from "../types/types.ts"
 
 export function getParentOptions(
     mig: MessageImplementationGuide,
@@ -80,8 +81,8 @@ function mergeConstraints(parent: Constraint[] | null | undefined, current: Cons
     if (!parent && !current) return null
     if (!parent) return current ?? null
     if (!current) return parent ?? null
-    
-    // Combine both, but keep unique by name? 
+
+    // Combine both, but keep unique by name?
     // Usually implementation guides add more constraints.
     // If name matches, current wins.
     const result = [...parent]
@@ -94,4 +95,119 @@ function mergeConstraints(parent: Constraint[] | null | undefined, current: Cons
         }
     }
     return result
+}
+
+function orderCustomProperties(
+    customProperties: Record<string, string> | null | undefined,
+    propertyNamesStr: string | undefined
+): Record<string, string> | null {
+    if (!customProperties || Object.keys(customProperties).length === 0) return null
+
+    const orderedNames = (propertyNamesStr ?? '')
+        .split(',')
+        .map(n => n.trim())
+        .filter(n => n.length > 0)
+
+    const result: Record<string, string> = {}
+    const remaining = {...customProperties}
+
+    for (const name of orderedNames) {
+        if (name in remaining) {
+            result[name] = remaining[name]
+            delete remaining[name]
+        }
+    }
+
+    const sortedRemaining = Object.keys(remaining).sort()
+    for (const name of sortedRemaining) {
+        result[name] = remaining[name]
+    }
+
+    return Object.keys(result).length > 0 ? result : null
+}
+
+function normalizeConstraint(
+    constraint: Constraint,
+    customConstraintPropertyNames: string | undefined
+): Constraint {
+    const ordered: Record<string, unknown> = {}
+
+    for (const prop of CONSTRAINT_PROPERTY_ORDER) {
+        if (prop === 'customProperties') {
+            ordered[prop] = orderCustomProperties(constraint.customProperties, customConstraintPropertyNames)
+        } else if (prop in constraint) {
+            ordered[prop] = constraint[prop as keyof Constraint]
+        }
+    }
+
+    return ordered as unknown as Constraint
+}
+
+function normalizeElementOverride(
+    override: ElementOverride,
+    customElementPropertyNames: string | undefined,
+    customConstraintPropertyNames: string | undefined
+): ElementOverride {
+    const ordered: Record<string, unknown> = {}
+
+    for (const prop of ELEMENT_OVERRIDE_PROPERTY_ORDER) {
+        if (prop === 'customProperties') {
+            ordered[prop] = orderCustomProperties(override.customProperties, customElementPropertyNames)
+        } else if (prop === 'additionalConstraints' && override.additionalConstraints) {
+            const sorted = [...override.additionalConstraints]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(c => normalizeConstraint(c, customConstraintPropertyNames))
+            ordered[prop] = sorted.length > 0 ? sorted : null
+        } else if (prop in override) {
+            ordered[prop] = override[prop as keyof ElementOverride]
+        }
+    }
+
+    return ordered as unknown as ElementOverride
+}
+
+export function normalizeMigForExport(mig: MessageImplementationGuide): MessageImplementationGuide {
+    const ordered: Record<string, unknown> = {}
+
+    for (const prop of MIG_PROPERTY_ORDER) {
+        if (prop === 'elementOverrides') {
+            const sortedPaths = Object.keys(mig.elementOverrides).sort()
+            const normalizedOverrides: ElementOverrides = {}
+            for (const path of sortedPaths) {
+                normalizedOverrides[path] = normalizeElementOverride(
+                    mig.elementOverrides[path],
+                    mig.customElementPropertyNames,
+                    mig.customConstraintPropertyNames
+                )
+            }
+            ordered[prop] = normalizedOverrides
+        } else if (prop in mig) {
+            ordered[prop] = mig[prop as keyof MessageImplementationGuide]
+        }
+    }
+
+    return ordered as unknown as MessageImplementationGuide
+}
+
+export function prepareForDownload(obj: unknown): unknown {
+    if (Array.isArray(obj)) {
+        return obj.map(item => {
+            if (isMessageImplementationGuide(item)) {
+                return normalizeMigForExport(item)
+            }
+            return item
+        })
+    }
+    if (isMessageImplementationGuide(obj)) {
+        return normalizeMigForExport(obj)
+    }
+    return obj
+}
+
+function isMessageImplementationGuide(obj: unknown): obj is MessageImplementationGuide {
+    return obj !== null &&
+        typeof obj === 'object' &&
+        'elementOverrides' in obj &&
+        'id' in obj &&
+        'name' in obj
 }

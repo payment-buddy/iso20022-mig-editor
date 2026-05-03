@@ -1,5 +1,5 @@
 import {downloadYaml} from "../utils/downloadYaml"
-import {getCombinedOverrides, getParentOptions} from "../utils/migUtils.ts"
+import {getCombinedOverrides, getParentOptions, prepareForDownload} from "../utils/migUtils.ts"
 import type {
     Constraint,
     ElementOverride,
@@ -62,7 +62,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     }
 
     async function handleDownload() {
-        await downloadYaml(mig, `${mig.name}-${mig.version}.yaml`)
+        await downloadYaml(prepareForDownload(mig), `${mig.name}-${mig.version}.yaml`)
     }
 
     function handleSelectElement(element: MessageElement, xmlPath: string) {

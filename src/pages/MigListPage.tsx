@@ -4,6 +4,7 @@ import {FileInputButton} from "../components/FileInputButton.tsx"
 import {GithubLink} from "../components/GithubLink.tsx"
 
 import {downloadYaml} from "../utils/downloadYaml.ts"
+import {prepareForDownload} from "../utils/migUtils.ts"
 
 export function MigListPage({migs, onBrowse, onUpload}: {
     migs: MessageImplementationGuide[]
@@ -34,9 +35,9 @@ export function MigListPage({migs, onBrowse, onUpload}: {
     const handleDownloadSelected = useCallback(async () => {
         const items = migs.filter(m => selectedIds.has(m.id))
         if (items.length === 1) {
-            await downloadYaml(items[0], `${items[0].name}.yaml`)
+            await downloadYaml(prepareForDownload(items[0]), `${items[0].name}.yaml`)
         } else {
-            await downloadYaml(items, 'MessageImplementationGuides.yaml')
+            await downloadYaml(prepareForDownload(items), 'MessageImplementationGuides.yaml')
         }
     }, [migs, selectedIds])
 
