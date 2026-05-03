@@ -158,7 +158,6 @@ export async function parseRepository(file: File): Promise<ERepository> {
             const constraint = {
                 name: attrs['name'],
                 definition: attrs['definition'],
-                expression: attrs['expression'] ?? null,
             }
             if (messageElement) {
                 messageElement.constraints.push(constraint)

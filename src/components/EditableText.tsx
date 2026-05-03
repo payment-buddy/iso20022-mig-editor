@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import {useState, useRef, useEffect} from "react"
+import {useEffect, useRef, useState} from "react"
 
 export function EditableText({value, originalValue, multiline, monospace, autoFocus, onSave}: {
     value: string | null
