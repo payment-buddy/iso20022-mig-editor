@@ -76,14 +76,15 @@ export function ElementNode({element, parentPath}: {
 
     return (
         <div>
-            <div className={'tree-node' + (isSelected ? ' is-selected' : '')} onClick={() => {
-                onSelectElement(element, elementPath)
-                if (elementPath === selectedPath || !open) {
-                    setOpen(o => !o)
-                }
-            }}>
-                <span style={{marginLeft: '0', marginRight: '0.4em', fontSize: '0.7em'}}>{open ? '▼' : '▶'}</span>
-                <span className={(override ? 'has-override' : '') + (isExcluded ? ' is-excluded' : '')}>{showXmlTags ? element.xmlTag : element.name}</span>
+            <div className={'tree-node' + (isSelected ? ' is-selected' : '')}>
+                <span style={{marginLeft: '0', marginRight: '0.4em', fontSize: '0.7em'}}
+                      onClick={() => setOpen(o => !o)}>{open ? '▼' : '▶'}</span>
+                <span className={(override ? 'has-override' : '') + (isExcluded ? ' is-excluded' : '')} onClick={() => {
+                    onSelectElement(element, elementPath)
+                    if (elementPath === selectedPath || !open) {
+                        setOpen(o => !o)
+                    }
+                }}>{showXmlTags ? element.xmlTag : element.name}</span>
                 <Cardinality element={element} override={override}/>
                 {complexType.isChoice && <span className="badge">choice</span>}
             </div>
