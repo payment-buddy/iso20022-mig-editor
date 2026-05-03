@@ -43,15 +43,6 @@ export function ConstraintDetailEdit({constraint, onUpdate, onDelete, isNew, cus
                     onSave={val => onUpdate({...constraint, definition: val})}
                 />
             </div>
-            <div>
-                <div className="detail-label">Expression</div>
-                <EditableText
-                    value={constraint.expression}
-                    multiline
-                    monospace
-                    onSave={val => onUpdate({...constraint, expression: val})}
-                />
-            </div>
             {customPropNames.length > 0 && (
                 <>
                     {customPropNames.map(name => {

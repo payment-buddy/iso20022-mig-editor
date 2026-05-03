@@ -1,4 +1,4 @@
-import type {ElementOverride, ElementOverrides, MessageImplementationGuide} from "../types/types.ts"
+import type {Constraint, ElementOverride, ElementOverrides, MessageImplementationGuide} from "../types/types.ts"
 
 export function getParentOptions(
     mig: MessageImplementationGuide,
@@ -76,7 +76,7 @@ function mergeOverrides(parent: ElementOverride | undefined, current: ElementOve
     }
 }
 
-function mergeConstraints(parent: any[] | null | undefined, current: any[] | null | undefined): any[] | null {
+function mergeConstraints(parent: Constraint[] | null | undefined, current: Constraint[] | null | undefined): Constraint[] | null {
     if (!parent && !current) return null
     if (!parent) return current ?? null
     if (!current) return parent ?? null

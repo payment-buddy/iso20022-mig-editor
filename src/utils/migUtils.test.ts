@@ -1,6 +1,6 @@
-import {describe, it, expect} from 'vitest'
+import {describe, expect, it} from 'vitest'
 import {getCombinedOverrides} from './migUtils.ts'
-import type {MessageImplementationGuide, ElementOverride} from '../types/types.ts'
+import type {ElementOverride, MessageImplementationGuide} from '../types/types.ts'
 
 describe('migUtils', () => {
     const mig1: MessageImplementationGuide = {
@@ -24,7 +24,7 @@ describe('migUtils', () => {
                 pattern: null,
                 allowedValues: null,
                 examples: ['ex1'],
-                additionalConstraints: [{name: 'C1', definition: 'D1', expression: 'E1'}],
+                additionalConstraints: [{name: 'C1', definition: 'D1'}],
                 customProperties: {foo: 'parent-foo', bar: 'parent-bar'}
             } as ElementOverride
         }
@@ -51,7 +51,7 @@ describe('migUtils', () => {
                 pattern: null,
                 allowedValues: ['V1'],
                 examples: null,
-                additionalConstraints: [{name: 'C2', definition: 'D2', expression: 'E2'}],
+                additionalConstraints: [{name: 'C2', definition: 'D2'}],
                 customProperties: {bar: 'child-bar'}
             } as ElementOverride,
             'root/elem2': {

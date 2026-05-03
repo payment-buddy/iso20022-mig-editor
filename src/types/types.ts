@@ -1,7 +1,6 @@
 export interface Constraint {
     name: string
     definition: string
-    expression: string | null
     customProperties?: Record<string, string>
 }
 

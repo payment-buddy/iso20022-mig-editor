@@ -56,8 +56,7 @@ const MINIMAL_XML = `<?xml version="1.0" encoding="UTF-8"?>
                 simpleType="simple-type-2"/>
         <constraint
                 name="Rule1"
-                definition="Some rule"
-                expression="some expression"/>
+                definition="Some rule"/>
     </topLevelDictionaryEntry>
     <topLevelDictionaryEntry
             xsi:type="iso20022:ChoiceComponent"
@@ -153,7 +152,7 @@ describe('parseRepository', () => {
             name: 'GroupHeader93',
             definition: 'Group header component',
             isChoice: false,
-            constraints: [{name: 'Rule1', definition: 'Some rule', expression: 'some expression'}],
+            constraints: [{name: 'Rule1', definition: 'Some rule'}],
             elements: [
                 {
                     id: 'message-element-1',
@@ -245,7 +244,6 @@ describe('parseRepository', () => {
             constraints: [{
                 name: "CurrencyAmount",
                 definition: "The number of fractional digits",
-                expression: null,
             }],
             currencyIdentifierSet: 'codeset-1',
             examples: ['6545.56'],
@@ -342,9 +340,9 @@ describe('parseRepository — constraints on message elements', () => {
         minOccurs="0"
         maxOccurs="1"
         simpleType="simple-type-1">
-      <constraint name="ElemRule" definition="Element rule" expression="elem expr"/>
+      <constraint name="ElemRule" definition="Element rule"/>
     </messageElement>
-    <constraint name="CompRule" definition="Component rule" expression="comp expr"/>
+    <constraint name="CompRule" definition="Component rule"/>
   </topLevelDictionaryEntry>
   <topLevelDictionaryEntry xsi:type="iso20022:Text" xmi:id="simple-type-1" name="Max35Text" definition="text"/>
 </model>`
@@ -353,7 +351,7 @@ describe('parseRepository — constraints on message elements', () => {
         const repo = await parseRepository(makeFile(xmlWithElementConstraints))
         const ct = repo.dataTypes['message-component-1'] as ComplexType
         expect(ct.constraints).toEqual([
-            {name: 'CompRule', definition: 'Component rule', expression: 'comp expr'},
+            {name: 'CompRule', definition: 'Component rule'},
         ])
         expect(ct.elements[0]).toEqual({
             id: 'message-element-1',
@@ -364,7 +362,7 @@ describe('parseRepository — constraints on message elements', () => {
             minOccurs: 0,
             maxOccurs: 1,
             typeId: 'simple-type-1',
-            constraints: [{name: 'ElemRule', definition: 'Element rule', expression: 'elem expr'}],
+            constraints: [{name: 'ElemRule', definition: 'Element rule'}],
             examples: [],
         })
     })
