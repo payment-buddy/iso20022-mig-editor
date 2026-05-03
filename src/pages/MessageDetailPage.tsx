@@ -19,7 +19,7 @@ export function MessageDetailPage({messageId, versions, businessArea, dataTypes,
         message = versions[versions.length - 1]
     }
 
-    function handleMigSave(mig: MessageImplementationGuide) {
+    function handleCreateMig(mig: MessageImplementationGuide) {
         onMigCreated(mig)
         setShowMigForm(false)
     }
@@ -42,7 +42,7 @@ export function MessageDetailPage({messageId, versions, businessArea, dataTypes,
             <MessageVersionSelector versions={versions} currentMessage={message}/>
 
             {showMigForm && (
-                <MigCreateForm message={message} onSave={handleMigSave} onCancel={() => setShowMigForm(false)}/>
+                <MigCreateForm message={message} onCreateMig={handleCreateMig} onCancel={() => setShowMigForm(false)}/>
             )}
 
             <p style={{whiteSpace: 'pre-wrap'}}>{message.rootElement.definition}</p>

@@ -1,9 +1,10 @@
 import type {MessageDefinition, MessageImplementationGuide} from "../types/types.ts"
 import {useState} from "react"
+import {Modal} from "./Modal.tsx"
 
-export function MigCreateForm({message, onSave, onCancel}: {
+export function MigCreateForm({message, onCreateMig, onCancel}: {
     message: MessageDefinition
-    onSave: (mig: MessageImplementationGuide) => void
+    onCreateMig: (mig: MessageImplementationGuide) => void
     onCancel: () => void
 }) {
     const [name, setName] = useState('MIG-' + message.identifier)
@@ -20,36 +21,33 @@ export function MigCreateForm({message, onSave, onCancel}: {
             description: '',
             elementOverrides: {},
         }
-        onSave(mig)
+        onCreateMig(mig)
     }
 
     const fieldStyle = {display: 'flex', flexDirection: 'column' as const, gap: '0.2rem'}
     const inputStyle = {padding: '0.3em 0.5em', fontSize: '1em', width: '100%', boxSizing: 'border-box' as const}
 
     return (
-        <form onSubmit={handleSubmit} style={{
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.8rem',
-            maxWidth: 480
-        }}>
-            <strong>New Message Implementation Guide</strong>
-            <div style={fieldStyle}>
-                <label>Name *</label>
-                <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} required autoFocus/>
-            </div>
-            <div style={fieldStyle}>
-                <label>Version *</label>
-                <input style={inputStyle} value={version} onChange={e => setVersion(e.target.value)} required/>
-            </div>
-            <div style={{display: 'flex', gap: '0.5rem'}}>
-                <button type="submit">Save</button>
-                <button type="button" onClick={onCancel}>Cancel</button>
-            </div>
-        </form>
+        <Modal
+            onClose={onCancel}
+            title="New Message Implementation Guide"
+            footer={
+                <>
+                    <button type="button" onClick={onCancel}>Cancel</button>
+                    <button type="submit" form="mig-create-form">Save</button>
+                </>
+            }
+        >
+            <form id="mig-create-form" onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '0.8rem'}}>
+                <div style={fieldStyle}>
+                    <label>Name *</label>
+                    <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} required autoFocus/>
+                </div>
+                <div style={fieldStyle}>
+                    <label>Version *</label>
+                    <input style={inputStyle} value={version} onChange={e => setVersion(e.target.value)} required/>
+                </div>
+            </form>
+        </Modal>
     )
 }
