@@ -61,16 +61,37 @@ function App() {
                 id: typeof obj.id === 'string' ? obj.id : crypto.randomUUID()
             } as MessageImplementationGuide
         })
-        void Promise.all(incoming.map(saveMig)).then(() => {
-            setMigs(prev => {
-                const existingIds = new Set(prev.map(m => m.id))
-                return [...prev, ...incoming.filter(m => !existingIds.has(m.id))]
+
+        const existingIds = new Set(migs.map(m => m.id))
+        const duplicates = incoming.filter(m => existingIds.has(m.id))
+
+        const saveAndUpdate = (migList: MessageImplementationGuide[]) => {
+            void Promise.all(migList.map(saveMig)).then(() => {
+                setMigs(prev => {
+                    const savedIds = new Set(migList.map(m => m.id))
+                    return [...prev.filter(m => !savedIds.has(m.id)), ...migList]
+                })
+                if (migList.length === 1) {
+                    window.location.hash = 'mig/' + migList[0].id
+                }
             })
-            if (!Array.isArray(parsed)) {
-                const mig = parsed as MessageImplementationGuide
-                window.location.hash = 'mig/' + mig.id
+        }
+
+        if (duplicates.length > 0) {
+            const names = duplicates.map(m => `"${m.name}"`).join(', ')
+            const message = duplicates.length === 1
+                ? `MIG ${names} already exists. Do you want to overwrite it?`
+                : `The following MIGs already exist: ${names}.\n\nDo you want to overwrite them?`
+
+            const confirmed = window.confirm(message)
+            if (!confirmed) {
+                const newOnes = incoming.filter(m => !existingIds.has(m.id))
+                saveAndUpdate(newOnes)
+                return
             }
-        })
+        }
+
+        saveAndUpdate(incoming)
     }
 
     function handleMigUpdated(updated: MessageImplementationGuide) {
