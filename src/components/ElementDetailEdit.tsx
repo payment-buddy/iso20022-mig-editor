@@ -2,6 +2,7 @@ import type {DataType, ElementOverride, MessageElement, SimpleType} from "../typ
 import {EditableText} from "./EditableText.tsx"
 import {EditableNumber} from "./EditableNumber.tsx"
 import {EditableValueList} from "./EditableValueList.tsx"
+import {splitCamelCase} from "../utils/stringUtils.ts"
 
 function createValueValidator(elementOverride: ElementOverride | null, simpleType: SimpleType): (value: string) => boolean {
     const pattern = elementOverride?.pattern ?? simpleType.pattern
@@ -266,7 +267,7 @@ export function ElementDetailEdit({
 
                 return (
                     <div key={name}>
-                        <div className="detail-label">{name}</div>
+                        <div className="detail-label">{splitCamelCase(name)}</div>
                         <EditableText
                             value={currentValue || displayValue}
                             originalValue={inheritedValue}

@@ -1,7 +1,15 @@
 import type {Constraint} from "../types/types.ts"
 import {EditableText} from "./EditableText.tsx"
+import {splitCamelCase} from "../utils/stringUtils.ts"
 
-export function ConstraintDetailEdit({constraint, onUpdate, onDelete, isNew, customConstraintPropertyNames, isInherited}: {
+export function ConstraintDetailEdit({
+                                         constraint,
+                                         onUpdate,
+                                         onDelete,
+                                         isNew,
+                                         customConstraintPropertyNames,
+                                         isInherited
+                                     }: {
     constraint: Constraint
     onUpdate: (updated: Constraint) => void
     onDelete: () => void
@@ -43,25 +51,21 @@ export function ConstraintDetailEdit({constraint, onUpdate, onDelete, isNew, cus
                     onSave={val => onUpdate({...constraint, definition: val})}
                 />
             </div>
-            {customPropNames.length > 0 && (
-                <>
-                    {customPropNames.map(name => {
-                        const currentValue = constraint.customProperties?.[name] ?? ''
-                        return (
-                            <div key={name}>
-                                <div className="detail-label">{name}</div>
-                                {isInherited
-                                    ? <div>{currentValue}</div>
-                                    : <EditableText
-                                        value={currentValue}
-                                        onSave={val => saveCustomProperty(name, val)}
-                                    />
-                                }
-                            </div>
-                        )
-                    })}
-                </>
-            )}
+            {customPropNames.map(name => {
+                const currentValue = constraint.customProperties?.[name] ?? ''
+                return (
+                    <div key={name}>
+                        <div className="detail-label">{splitCamelCase(name)}</div>
+                        {isInherited
+                            ? <div>{currentValue}</div>
+                            : <EditableText
+                                value={currentValue}
+                                onSave={val => saveCustomProperty(name, val)}
+                            />
+                        }
+                    </div>
+                )
+            })}
             <div>
                 <button onClick={onDelete}>Delete</button>
             </div>

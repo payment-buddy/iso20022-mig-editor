@@ -1,4 +1,5 @@
 import type {Constraint} from "../types/types.ts"
+import {splitCamelCase} from "../utils/stringUtils.ts"
 
 export function ConstraintDetailView({constraint, customConstraintPropertyNames}: {
     constraint: Constraint,
@@ -24,7 +25,7 @@ export function ConstraintDetailView({constraint, customConstraintPropertyNames}
                 if (!value) return null
                 return (
                     <div key={name}>
-                        <div className="detail-label">{name}</div>
+                        <div className="detail-label">{splitCamelCase(name)}</div>
                         <div>{value}</div>
                     </div>
                 )
