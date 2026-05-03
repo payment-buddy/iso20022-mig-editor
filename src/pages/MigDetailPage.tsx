@@ -58,8 +58,8 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
         onDelete(mig.id)
     }
 
-    function handleDownload() {
-        downloadYaml(mig, `${mig.name}-${mig.version}.yaml`)
+    async function handleDownload() {
+        await downloadYaml(mig, `${mig.name}-${mig.version}.yaml`)
     }
 
     function handleSelectElement(element: MessageElement, xmlPath: string) {
@@ -140,6 +140,12 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
         setNewConstraintId(null)
     }
 
+    function onDescriptionUpdate(val: string) {
+        if (val !== (mig.description ?? '')) {
+            onUpdate({...mig, description: val || null})
+        }
+    }
+
     return (
         <div>
             <a href="#" className="back-link">← Back</a>
@@ -181,11 +187,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                     )}
                 </div>
                 <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Description:</label>
-                <EditableText
-                    value={mig.description ?? ''}
-                    multiline
-                    onSave={val => { if (val !== (mig.description ?? '')) onUpdate({...mig, description: val || null}) }}
-                />
+                <EditableText value={mig.description} multiline onSave={onDescriptionUpdate}/>
                 <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Custom Element Properties:</label>
                 <EditableText
                     value={mig.customElementPropertyNames ?? ''}

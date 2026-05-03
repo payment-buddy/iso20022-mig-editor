@@ -95,7 +95,7 @@ function App() {
 
     async function handleDownloadMigBackup() {
         const migs = await loadMigsForBackup()
-        downloadYaml(migs, 'mig-backup.yaml')
+        await downloadYaml(migs, 'mig-backup.yaml')
     }
 
     function handleDeleteDatabase() {
