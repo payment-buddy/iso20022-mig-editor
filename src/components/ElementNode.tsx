@@ -1,4 +1,4 @@
-import {useState} from "react"
+import {useEffect, useState} from "react"
 import type {ComplexType, ElementOverride, MessageElement, SimpleType} from "../types/types.ts"
 import {useMessageTreeContext} from "../contexts/MessageTreeContext.tsx"
 import {ConstraintNode} from "./ConstraintNode.tsx"
@@ -28,6 +28,12 @@ export function ElementNode({element, parentPath}: {
     } = useMessageTreeContext()
     const [open, setOpen] = useState(!parentPath)
     const elementPath = parentPath + '/' + element.xmlTag
+
+    useEffect(() => {
+        if (visiblePaths.size > 0 && visiblePaths.has(elementPath)) {
+            setOpen(true)
+        }
+    }, [visiblePaths, elementPath])
     const isSelected = elementPath === selectedPath
     const dataType = dataTypes[element.typeId]!
     const complexType = dataType as ComplexType
