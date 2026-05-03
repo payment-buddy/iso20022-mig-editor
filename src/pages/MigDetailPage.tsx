@@ -140,7 +140,33 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
         setNewConstraintId(null)
     }
 
-    function onDescriptionUpdate(val: string) {
+    function handleCustomElementPropertyNamesUpdate(val: string) {
+        const trimmed = val.trim()
+        const updated = {...mig}
+        if (!trimmed) {
+            delete updated.customElementPropertyNames
+        } else {
+            updated.customElementPropertyNames = trimmed
+        }
+        if (JSON.stringify(updated) !== JSON.stringify(mig)) {
+            onUpdate(updated)
+        }
+    }
+
+    function handleCustomConstraintPropertyNamesUpdate(val: string) {
+        const trimmed = val.trim()
+        const updated = {...mig}
+        if (!trimmed) {
+            delete updated.customConstraintPropertyNames
+        } else {
+            updated.customConstraintPropertyNames = trimmed
+        }
+        if (JSON.stringify(updated) !== JSON.stringify(mig)) {
+            onUpdate(updated)
+        }
+    }
+
+    function handleDescriptionUpdate(val: string) {
         if (val !== (mig.description ?? '')) {
             onUpdate({...mig, description: val || null})
         }
@@ -150,7 +176,8 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
         <div>
             <a href="#" className="back-link">← Back</a>
             <div className="page-header">
-                <h2>Message Implementation Guide <code className="badge"><a href={'#' + mig.messageIdentifier}>{mig.messageIdentifier}</a></code></h2>
+                <h2>Message Implementation Guide <code className="badge"><a
+                    href={'#' + mig.messageIdentifier}>{mig.messageIdentifier}</a></code></h2>
                 <div className="page-actions">
                     <button onClick={handleDownload}>Download</button>
                     <button onClick={handleDelete}>Delete</button>
@@ -165,12 +192,16 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                 <label className="detail-label">Name:</label>
                 <EditableText
                     value={mig.name}
-                    onSave={val => { if (val !== mig.name) onUpdate({...mig, name: val}) }}
+                    onSave={val => {
+                        if (val !== mig.name) onUpdate({...mig, name: val})
+                    }}
                 />
                 <label className="detail-label">Version:</label>
                 <EditableText
                     value={mig.version}
-                    onSave={val => { if (val !== mig.version) onUpdate({...mig, version: val}) }}
+                    onSave={val => {
+                        if (val !== mig.version) onUpdate({...mig, version: val})
+                    }}
                 />
                 <label className="detail-label">Parent MIG:</label>
                 <div style={{display: 'flex', flexDirection: 'column', gap: '0.5em'}}>
@@ -187,40 +218,33 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                     )}
                 </div>
                 <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Description:</label>
-                <EditableText value={mig.description} multiline onSave={onDescriptionUpdate}/>
-                <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Custom Element Properties:</label>
+                <EditableText value={mig.description} multiline onSave={handleDescriptionUpdate}/>
+                <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Custom Element
+                    Properties:</label>
                 <EditableText
                     value={mig.customElementPropertyNames ?? ''}
                     multiline
-                    onSave={val => {
-                        const trimmed = val.trim()
-                        const updated = {...mig}
-                        if (!trimmed) {
-                            delete updated.customElementPropertyNames
-                        } else {
-                            updated.customElementPropertyNames = trimmed
-                        }
-                        if (JSON.stringify(updated) !== JSON.stringify(mig)) onUpdate(updated)
-                    }}
+                    onSave={handleCustomElementPropertyNamesUpdate}
                 />
-                <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Custom Constraint Properties:</label>
+                <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Custom Constraint
+                    Properties:</label>
                 <EditableText
                     value={mig.customConstraintPropertyNames ?? ''}
                     multiline
-                    onSave={val => {
-                        const trimmed = val.trim()
-                        const updated = {...mig}
-                        if (!trimmed) {
-                            delete updated.customConstraintPropertyNames
-                        } else {
-                            updated.customConstraintPropertyNames = trimmed
-                        }
-                        if (JSON.stringify(updated) !== JSON.stringify(mig)) onUpdate(updated)
-                    }}
+                    onSave={handleCustomConstraintPropertyNamesUpdate}
                 />
             </div>
 
             <p style={{display: 'flex', gap: '1em', alignItems: 'center'}}>
+                <label>
+                    Filter:
+                    <input
+                        type="text"
+                        value={filter}
+                        onChange={e => setFilter(e.target.value)}
+                        style={{marginLeft: '0.5em'}}
+                    />
+                </label>
                 <label>
                     <input
                         type="checkbox"
@@ -236,15 +260,6 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                         style={{marginRight: '0.5em'}}
                         onChange={() => setHideExcluded(hide => !hide)}/>
                     Hide excluded elements ({excludedCount})
-                </label>
-                <label>
-                    Filter:
-                    <input
-                        type="text"
-                        value={filter}
-                        onChange={e => setFilter(e.target.value)}
-                        style={{marginLeft: '0.5em'}}
-                    />
                 </label>
             </p>
 
