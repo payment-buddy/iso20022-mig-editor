@@ -1,4 +1,5 @@
 import {useState} from "react"
+import {WarningIcon} from "./WarningIcon"
 
 export function EditableNumber({value, originalValue, onSave, warnWhen}: {
     value: number | null
@@ -50,7 +51,7 @@ export function EditableNumber({value, originalValue, onSave, warnWhen}: {
             onClick={startEdit}
         >
             {value ?? '<none>'}
-            {showWarning && ' \u26A0'}
+            {showWarning && (<WarningIcon style={{marginLeft: '1em'}} />)}
         </span>
     )
 }

@@ -1,4 +1,5 @@
 import {useState} from "react"
+import {WarningIcon} from "./WarningIcon"
 
 export function EditableValueList({values, originalValues, monospace, isValueInvalid, onSave}: {
     values: string[]
@@ -58,7 +59,9 @@ export function EditableValueList({values, originalValues, monospace, isValueInv
                 values.map((value, i) => (
                     <div key={i}>
                         {value || '<empty>'}
-                        {isValueInvalid?.(value) && ' \u26A0'}
+                        {isValueInvalid?.(value) && (
+                            <WarningIcon style={{marginLeft: '1em'}}/>
+                        )}
                     </div>
                 ))
             )}
