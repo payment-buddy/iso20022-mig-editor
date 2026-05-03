@@ -34,7 +34,7 @@ describe('migUtils', () => {
         id: 'mig2',
         name: 'MIG 2',
         messageIdentifier: 'pain.001.001.03',
-        parentMIG: 'mig1',
+        parentMIG: 'MIG 1:1.0',
         version: '1.0',
         description: '',
         elementOverrides: {

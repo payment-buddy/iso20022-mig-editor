@@ -1,5 +1,5 @@
 import {downloadYaml} from "../utils/downloadYaml"
-import {getCombinedOverrides, getParentOptions, prepareForDownload} from "../utils/migUtils.ts"
+import {findMigByKey, getCombinedOverrides, getParentOptions, prepareForDownload} from "../utils/migUtils.ts"
 import type {
     Constraint,
     ElementOverride,
@@ -34,14 +34,15 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     const [newConstraintId, setNewConstraintId] = useState<string | null>(null)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const combinedOverrides = getCombinedOverrides(mig, migs)
-    const inheritedOverrides = mig.parentMIG ? getCombinedOverrides(migs.find(m => m.id === mig.parentMIG)!, migs) : {}
+    const parentMig = mig.parentMIG ? findMigByKey(migs, mig.parentMIG) : undefined
+    const inheritedOverrides = parentMig ? getCombinedOverrides(parentMig, migs) : {}
     const selectedElementOverride = mig.elementOverrides[selectedPath] ?? null
     const selectedInheritedOverride = inheritedOverrides[selectedPath] ?? null
     const selectedDataType = selectedElement ? eRepository.dataTypes[selectedElement.typeId] ?? null : null
     const excludedCount = Object.values(combinedOverrides).filter(o => o.maxOccurs === 0).length
 
     const parentOptions = getParentOptions(mig, migs)
-    const isParentMissing = mig.parentMIG && !migs.some(m => m.id === mig.parentMIG)
+    const isParentMissing = mig.parentMIG && !findMigByKey(migs, mig.parentMIG)
 
     let message: MessageDefinition | null = null
     for (const ba of eRepository.businessAreas) {
