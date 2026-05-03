@@ -134,7 +134,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
 
     return (
         <div>
-            <p><a href="#" className="back-link">← Back</a></p>
+            <a href="#" className="back-link">← Back</a>
             <div className="page-header">
                 <h2>Message Implementation Guide <code className="badge"><a href={'#' + mig.messageIdentifier}>{mig.messageIdentifier}</a></code></h2>
                 <div className="page-actions">
@@ -148,17 +148,17 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                 alignItems: 'center',
                 gap: '0.25em 0.5em'
             }}>
-                <label>Name:</label>
+                <label className="detail-label">Name:</label>
                 <EditableText
                     value={mig.name}
                     onSave={val => { if (val !== mig.name) onUpdate({...mig, name: val}) }}
                 />
-                <label>Version:</label>
+                <label className="detail-label">Version:</label>
                 <EditableText
                     value={mig.version}
                     onSave={val => { if (val !== mig.version) onUpdate({...mig, version: val}) }}
                 />
-                <label>Parent MIG:</label>
+                <label className="detail-label">Parent MIG:</label>
                 <div style={{display: 'flex', flexDirection: 'column', gap: '0.5em'}}>
                     <EditableSelect
                         value={mig.parentMIG}
@@ -172,7 +172,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                         </div>
                     )}
                 </div>
-                <label style={{alignSelf: 'start', paddingTop: '0.2em'}}>Description:</label>
+                <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Description:</label>
                 <EditableText
                     value={mig.description ?? ''}
                     multiline

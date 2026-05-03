@@ -26,7 +26,7 @@ export function MessageDetailPage({messageId, versions, businessArea, dataTypes,
 
     return (
         <div>
-            <p><a href="#browse" className="back-link">← Back</a></p>
+            <a href="#browse" className="back-link">← Back</a>
 
             <div>
                 <div style={{color: '#666', fontSize: '1em'}}>{businessArea.name}</div>

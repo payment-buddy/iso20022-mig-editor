@@ -18,7 +18,7 @@
 body {
     max-width: 1600px;
     margin: 0 auto;
-    padding: 2em;
+    padding: 1em;
 }
 
 a {
@@ -112,6 +112,7 @@ input, textarea {
 
 .tree-node {
     cursor: pointer;
+    padding-left: 0.2em;
 }
 
 .tree-node.is-selected {

@@ -12,9 +12,8 @@ export function ConstraintNode({constraint, parentPath, isAdditional}: {
     if (filterActive && !visiblePaths.has(constraintPath)) return null
     return (
         <div className={'tree-node' + (isSelected ? ' is-selected' : '')}
-             style={{marginLeft: '1em'}}
              onClick={() => onSelectConstraint(constraint, constraintPath)}>
-            <span style={{fontSize: '0.8em'}}>✔ </span>
+            <span style={{fontSize: '0.8em'}}>✔</span>&nbsp;
             <span className={isAdditional ? ' has-override' : ''}>{constraint.name}</span>
         </div>
     )

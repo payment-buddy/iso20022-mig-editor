@@ -86,11 +86,11 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
         <div className="detail-panel">
             <div>
                 <div className="detail-label">{element.isAttribute ? 'XML Attribute' : 'XML Tag'}</div>
-                <div>{element.xmlTag}</div>
+                <div style={{fontFamily: 'monospace'}}>{element.xmlTag}</div>
             </div>
             <div>
                 <div className="detail-label">XML Path</div>
-                <div>{xmlPath}</div>
+                <div style={{fontFamily: 'monospace'}}>{xmlPath}</div>
             </div>
             <div>
                 <div className="detail-label">Type</div>

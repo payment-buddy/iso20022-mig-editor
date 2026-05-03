@@ -47,7 +47,7 @@ export function MigListPage({migs, onBrowse, onUpload}: {
                 <div className="page-actions">
                     <button onClick={handleDownloadSelected}
                             disabled={selectedIds.size === 0}>Download {selectedIds.size > 1 && <>({selectedIds.size})</>}</button>
-                    <FileInputButton label="Load MIG" accept=".yaml,.yml" onFile={f => f.text().then(onUpload)}/>
+                    <FileInputButton label="Upload MIG" accept=".yaml,.yml" onFile={f => f.text().then(onUpload)}/>
                     <button onClick={onBrowse}>Browse e-Repository</button>
                     <GithubLink/>
                 </div>
