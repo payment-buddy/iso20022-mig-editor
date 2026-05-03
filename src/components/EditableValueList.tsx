@@ -46,10 +46,10 @@ export function EditableValueList({values, originalValues, monospace, isValueInv
     return (
         <div
             title={isOverridden ? 'Values have been modified' : undefined}
+            className={isOverridden ? 'is-overridden' : undefined}
             style={{
                 cursor: 'pointer',
                 ...(monospace ? {fontFamily: 'monospace'} : {}),
-                ...(isOverridden ? {color: '#0066cc'} : {}),
             }}
             onClick={startEdit}
         >

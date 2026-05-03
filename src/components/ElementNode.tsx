@@ -68,7 +68,7 @@ export function ElementNode({element, parentPath, parentExcluded}: {
                 <div className={'tree-node' + (isSelected ? ' is-selected' : '')}
                      onClick={() => onSelectElement(element, elementPath)}>
                     <span style={{marginRight: '0.5em', fontSize: '0.7em'}}>◇</span>
-                    <span className={(override ? 'has-override' : '') + (isExcluded ? ' is-excluded' : '')}>{showXmlTags ? element.xmlTag : element.name}</span>
+                    <span className={(override ? 'is-overridden' : '') + (isExcluded ? ' is-excluded' : '')}>{showXmlTags ? element.xmlTag : element.name}</span>
                     <Cardinality element={element} override={override}/>
                 </div>
             </>
@@ -80,7 +80,7 @@ export function ElementNode({element, parentPath, parentExcluded}: {
             <div className={'tree-node' + (isSelected ? ' is-selected' : '')}>
                 <span style={{marginLeft: '0', marginRight: '0.4em', fontSize: '0.7em'}}
                       onClick={() => setOpen(o => !o)}>{open ? '▼' : '▶'}</span>
-                <span className={(override ? 'has-override' : '') + (isExcluded ? ' is-excluded' : '')} onClick={() => {
+                <span className={(override ? 'is-overridden' : '') + (isExcluded ? ' is-excluded' : '')} onClick={() => {
                     onSelectElement(element, elementPath)
                     if (elementPath === selectedPath || !open) {
                         setOpen(o => !o)
