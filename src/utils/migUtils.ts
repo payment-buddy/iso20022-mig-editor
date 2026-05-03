@@ -1,25 +1,37 @@
 import type {Constraint, ElementOverride, ElementOverrides, MessageImplementationGuide} from "../types/types.ts"
 import {CONSTRAINT_PROPERTY_ORDER, ELEMENT_OVERRIDE_PROPERTY_ORDER, MIG_PROPERTY_ORDER} from "../types/types.ts"
 
+export function getMigKey(mig: MessageImplementationGuide): string {
+    return `${mig.name}:${mig.version}`
+}
+
+export function findMigByKey(migs: MessageImplementationGuide[], key: string): MessageImplementationGuide | undefined {
+    return migs.find(m => getMigKey(m) === key)
+}
+
 export function getParentOptions(
     mig: MessageImplementationGuide,
     migs: MessageImplementationGuide[]
 ): { value: string, name: string }[] {
+    const migKey = getMigKey(mig)
     return migs
         .filter(m => {
-            if (m.messageIdentifier !== mig.messageIdentifier || m.id === mig.id) return false
+            if (m.messageIdentifier !== mig.messageIdentifier) return false
+            const mKey = getMigKey(m)
+            if (mKey === migKey) return false
             // Check for cycles
-            let current = migs.find(p => p.id === m.id)
+            let current = migs.find(p => getMigKey(p) === mKey)
             const visited = new Set<string>()
             while (current) {
-                if (current.id === mig.id) return false
-                if (visited.has(current.id)) return false
-                visited.add(current.id)
-                current = current.parentMIG ? migs.find(p => p.id === current!.parentMIG) : undefined
+                const currentKey = getMigKey(current)
+                if (currentKey === migKey) return false
+                if (visited.has(currentKey)) return false
+                visited.add(currentKey)
+                current = current.parentMIG ? findMigByKey(migs, current.parentMIG) : undefined
             }
             return true
         })
-        .map(m => ({ value: m.id, name: m.name }))
+        .map(m => ({ value: getMigKey(m), name: m.name }))
 }
 
 export function getCombinedOverrides(
@@ -30,11 +42,11 @@ export function getCombinedOverrides(
     let current: MessageImplementationGuide | undefined = mig
     const seen = new Set<string>()
 
-    while (current && !seen.has(current.id)) {
+    while (current && !seen.has(getMigKey(current))) {
         chain.unshift(current) // parent first
-        seen.add(current.id)
-        const parentId: string | null = current.parentMIG
-        current = parentId ? migs.find(m => m.id === parentId) : undefined
+        seen.add(getMigKey(current))
+        const parentKey: string | null = current.parentMIG
+        current = parentKey ? findMigByKey(migs, parentKey) : undefined
     }
 
     const combined: ElementOverrides = {}
