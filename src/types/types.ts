@@ -1,3 +1,39 @@
+
+export const MIG_PROPERTY_ORDER = [
+    'id',
+    'name',
+    'messageIdentifier',
+    'parentMIG',
+    'version',
+    'description',
+    'customElementPropertyNames',
+    'customConstraintPropertyNames',
+    'elementOverrides',
+] as const
+
+export const ELEMENT_OVERRIDE_PROPERTY_ORDER = [
+    'definition',
+    'minOccurs',
+    'maxOccurs',
+    'minInclusive',
+    'maxInclusive',
+    'totalDigits',
+    'fractionDigits',
+    'minLength',
+    'maxLength',
+    'pattern',
+    'allowedValues',
+    'examples',
+    'customProperties',
+    'additionalConstraints',
+] as const
+
+export const CONSTRAINT_PROPERTY_ORDER = [
+    'name',
+    'definition',
+    'customProperties'
+] as const
+
 export interface Constraint {
     name: string
     definition: string
@@ -89,8 +125,8 @@ export interface ElementOverride {
     pattern: string | null
     allowedValues: string[] | null
     examples: string[] | null
-    additionalConstraints: Constraint[] | null
     customProperties: Record<string, string> | null
+    additionalConstraints: Constraint[] | null
 }
 
 export interface MessageImplementationGuide {
@@ -100,7 +136,7 @@ export interface MessageImplementationGuide {
     parentMIG: string | null
     version: string
     description: string | null
-    elementOverrides: ElementOverrides
     customElementPropertyNames?: string
     customConstraintPropertyNames?: string
+    elementOverrides: ElementOverrides
 }
