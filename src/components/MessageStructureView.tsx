@@ -66,7 +66,7 @@ export function MessageStructureView({message, dataTypes}: {
                                            dataType={selectedDataType!}
                                            xmlPath={selectedXmlPath}/>}
                     {selectedConstraint &&
-                        <ConstraintDetailView constraint={selectedConstraint}/>}
+                        <ConstraintDetailView constraint={selectedConstraint} customConstraintPropertyNames=""/>}
                 </DetailPanel>
             </div>
         </>

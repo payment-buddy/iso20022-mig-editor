@@ -74,6 +74,13 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
         )
     }
 
+    function isCurrentMigConstraint(path: string) {
+        const elementPath = path.substring(0, path.lastIndexOf('/'))
+        const constraintName = path.substring(path.lastIndexOf('/') + 1)
+        const override = mig.elementOverrides[elementPath]
+        return override?.additionalConstraints?.some(c => c.name === constraintName) ?? false
+    }
+
     function handleSelectConstraint(constraint: Constraint, path: string) {
         setSelectedElement(null)
         setSelectedPath(path)
@@ -96,8 +103,9 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     }
 
     function isOverrideEmpty(override: ElementOverride) {
-        const {allowedValues, examples, additionalConstraints, ...rest} = override
-        return (allowedValues == null || allowedValues.length === 0) && (examples == null || examples.length === 0) && (additionalConstraints == null || additionalConstraints.length === 0) && Object.values(rest).every(v => v === null)
+        const {allowedValues, examples, additionalConstraints, customProperties, ...rest} = override
+        const customPropsEmpty = customProperties == null || Object.keys(customProperties).length === 0
+        return (allowedValues == null || allowedValues.length === 0) && (examples == null || examples.length === 0) && (additionalConstraints == null || additionalConstraints.length === 0) && customPropsEmpty && Object.values(rest).every(v => v === null)
     }
 
     function handleUpdateElementOverride(xmlPath: string, override: ElementOverride) {
@@ -178,6 +186,36 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                     multiline
                     onSave={val => { if (val !== (mig.description ?? '')) onUpdate({...mig, description: val || null}) }}
                 />
+                <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Custom Element Properties:</label>
+                <EditableText
+                    value={mig.customElementPropertyNames ?? ''}
+                    multiline
+                    onSave={val => {
+                        const trimmed = val.trim()
+                        const updated = {...mig}
+                        if (!trimmed) {
+                            delete updated.customElementPropertyNames
+                        } else {
+                            updated.customElementPropertyNames = trimmed
+                        }
+                        if (JSON.stringify(updated) !== JSON.stringify(mig)) onUpdate(updated)
+                    }}
+                />
+                <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Custom Constraint Properties:</label>
+                <EditableText
+                    value={mig.customConstraintPropertyNames ?? ''}
+                    multiline
+                    onSave={val => {
+                        const trimmed = val.trim()
+                        const updated = {...mig}
+                        if (!trimmed) {
+                            delete updated.customConstraintPropertyNames
+                        } else {
+                            updated.customConstraintPropertyNames = trimmed
+                        }
+                        if (JSON.stringify(updated) !== JSON.stringify(mig)) onUpdate(updated)
+                    }}
+                />
             </div>
 
             <p style={{display: 'flex', gap: '1em', alignItems: 'center'}}>
@@ -230,14 +268,18 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                                 elementOverride={selectedElementOverride}
                                 inheritedOverride={selectedInheritedOverride}
                                 onUpdateOverride={handleUpdateElementOverride}
-                                onAddConstraint={() => handleAddElementConstraint(selectedPath)}/>
+                                onAddConstraint={() => handleAddElementConstraint(selectedPath)}
+                                customElementPropertyNames={mig.customElementPropertyNames ?? ''}/>
                         }
                         {selectedConstraint && (isElementAdditionalConstraint(selectedPath)
                             ? <ConstraintDetailEdit constraint={selectedConstraint}
                                                     onUpdate={handleUpdateConstraint}
                                                     onDelete={handleDeleteConstraint}
-                                                    isNew={selectedConstraint.name === newConstraintId}/>
-                            : <ConstraintDetailView constraint={selectedConstraint}/>)
+                                                    isNew={selectedConstraint.name === newConstraintId}
+                                                    customConstraintPropertyNames={mig.customConstraintPropertyNames ?? ''}
+                                                    isInherited={!isCurrentMigConstraint(selectedPath)}/>
+                            : <ConstraintDetailView constraint={selectedConstraint}
+                                                    customConstraintPropertyNames={mig.customConstraintPropertyNames ?? ''}/>)
                         }
                     </DetailPanel>
                 </div>
