@@ -24,6 +24,8 @@ export function MessageTreeView({
     onSelectElement: (element: MessageElement, xmlPath: string) => void;
     onSelectConstraint: (constraint: Constraint, path: string) => void;
 }) {
+    const filterActive = useMemo(() => !!filter, [filter])
+    
     const visiblePaths = useMemo(() => {
         if (!filter) return new Set<string>()
         const paths = new Set<string>()
@@ -94,15 +96,24 @@ export function MessageTreeView({
         showXmlTags,
         selectedPath,
         hideExcluded,
+        filterActive,
         visiblePaths,
         onSelectElement,
         onSelectConstraint,
     }
 
+    const noMatches = filterActive && visiblePaths.size === 0
+
     return (
         <MessageTreeContext.Provider value={contextValue}>
             <div style={{flex: 3}}>
-                <ElementNode element={message.rootElement} parentPath=""/>
+                {noMatches ? (
+                    <div style={{padding: '1em', color: '#888', fontStyle: 'italic'}}>
+                        No elements or constraints matching "{filter}"
+                    </div>
+                ) : (
+                    <ElementNode element={message.rootElement} parentPath=""/>
+                )}
             </div>
         </MessageTreeContext.Provider>
     )

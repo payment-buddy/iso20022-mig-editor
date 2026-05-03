@@ -23,6 +23,7 @@ export function ElementNode({element, parentPath}: {
         showXmlTags,
         selectedPath,
         hideExcluded,
+        filterActive,
         visiblePaths,
         onSelectElement
     } = useMessageTreeContext()
@@ -58,7 +59,7 @@ export function ElementNode({element, parentPath}: {
 
     if (isExcluded && hideExcluded) return null
 
-    if (visiblePaths.size > 0 && !visiblePaths.has(elementPath)) return null
+    if (filterActive && !visiblePaths.has(elementPath)) return null
 
     if (!hasChildren) {
         return (
