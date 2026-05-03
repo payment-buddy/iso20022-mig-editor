@@ -2,7 +2,7 @@ import {useState} from 'react'
 
 export function EditableSelect({value, options, onSave, placeholder = '<none>', missingValue}: {
     value: string | null
-    options: { id: string, name: string }[]
+    options: { value: string, name: string }[]
     onSave: (value: string | null) => void
     placeholder?: string
     missingValue?: string | null
@@ -33,9 +33,9 @@ export function EditableSelect({value, options, onSave, placeholder = '<none>', 
                 >
                     <option value="">{placeholder}</option>
                     {options.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
+                        <option key={p.value} value={p.value}>{p.name}</option>
                     ))}
-                    {missingValue && !options.some(o => o.id === missingValue) && (
+                    {missingValue && !options.some(o => o.value === missingValue) && (
                         <option value={missingValue}>{missingValue} (Missing)</option>
                     )}
                 </select>
@@ -43,7 +43,7 @@ export function EditableSelect({value, options, onSave, placeholder = '<none>', 
         )
     }
 
-    const selectedOption = options.find(o => o.id === value)
+    const selectedOption = options.find(o => o.value === value)
     let displayValue = placeholder
     let isMissing = false
 

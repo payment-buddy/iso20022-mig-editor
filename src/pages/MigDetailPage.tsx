@@ -1,5 +1,5 @@
 import {downloadYaml} from "../utils/downloadYaml"
-import {getCombinedOverrides} from "../utils/migUtils.ts"
+import {getCombinedOverrides, getParentOptions} from "../utils/migUtils.ts"
 import type {
     Constraint,
     ElementOverride,
@@ -38,7 +38,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     const selectedDataType = selectedElement ? eRepository.dataTypes[selectedElement.typeId] ?? null : null
     const excludedCount = Object.values(combinedOverrides).filter(o => o.maxOccurs === 0).length
 
-    const parentOptions = migs.filter(m => m.messageIdentifier === mig.messageIdentifier && m.id !== mig.id)
+    const parentOptions = getParentOptions(mig, migs)
     const isParentMissing = mig.parentMIG && !migs.some(m => m.id === mig.parentMIG)
 
     let message: MessageDefinition | null = null
