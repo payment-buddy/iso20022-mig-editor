@@ -47,6 +47,14 @@ export function getCombinedOverrides(
     return combined
 }
 
+function mergeCustomProperties(
+    parent: Record<string, string> | null | undefined,
+    current: Record<string, string> | null | undefined
+): Record<string, string> | null {
+    const merged = { ...(parent ?? {}), ...(current ?? {}) }
+    return Object.keys(merged).length > 0 ? merged : null
+}
+
 function mergeOverrides(parent: ElementOverride | undefined, current: ElementOverride): ElementOverride {
     if (!parent) return current
 
@@ -63,7 +71,8 @@ function mergeOverrides(parent: ElementOverride | undefined, current: ElementOve
         pattern: current.pattern ?? parent.pattern,
         allowedValues: current.allowedValues ?? parent.allowedValues,
         examples: current.examples ?? parent.examples,
-        additionalConstraints: mergeConstraints(parent.additionalConstraints, current.additionalConstraints)
+        additionalConstraints: mergeConstraints(parent.additionalConstraints, current.additionalConstraints),
+        customProperties: mergeCustomProperties(parent.customProperties, current.customProperties)
     }
 }
 

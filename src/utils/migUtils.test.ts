@@ -24,7 +24,8 @@ describe('migUtils', () => {
                 pattern: null,
                 allowedValues: null,
                 examples: ['ex1'],
-                additionalConstraints: [{name: 'C1', definition: 'D1', expression: 'E1'}]
+                additionalConstraints: [{name: 'C1', definition: 'D1', expression: 'E1'}],
+                customProperties: {foo: 'parent-foo', bar: 'parent-bar'}
             } as ElementOverride
         }
     }
@@ -50,7 +51,8 @@ describe('migUtils', () => {
                 pattern: null,
                 allowedValues: ['V1'],
                 examples: null,
-                additionalConstraints: [{name: 'C2', definition: 'D2', expression: 'E2'}]
+                additionalConstraints: [{name: 'C2', definition: 'D2', expression: 'E2'}],
+                customProperties: {bar: 'child-bar'}
             } as ElementOverride,
             'root/elem2': {
                 definition: 'MIG2 definition 2',
@@ -65,7 +67,8 @@ describe('migUtils', () => {
                 pattern: null,
                 allowedValues: null,
                 examples: null,
-                additionalConstraints: null
+                additionalConstraints: null,
+                customProperties: null
             } as ElementOverride
         }
     }
@@ -76,6 +79,7 @@ describe('migUtils', () => {
         const combined = getCombinedOverrides(mig1, migs)
         expect(combined['root/elem1'].definition).toBe('MIG1 definition')
         expect(combined['root/elem1'].examples).toEqual(['ex1'])
+        expect(combined['root/elem1'].customProperties).toEqual({foo: 'parent-foo', bar: 'parent-bar'})
     })
 
     it('merges overrides from parent', () => {
@@ -91,6 +95,18 @@ describe('migUtils', () => {
         // Added in mig2
         expect(combined['root/elem1'].allowedValues).toEqual(['V1'])
         expect(combined['root/elem2'].maxOccurs).toBe(0)
+    })
+
+    it('merges customProperties from parent', () => {
+        const combined = getCombinedOverrides(mig2, migs)
+        const customProps = combined['root/elem1'].customProperties
+        
+        // Parent property preserved
+        expect(customProps?.['foo']).toBe('parent-foo')
+        // Child overrides parent property
+        expect(customProps?.['bar']).toBe('child-bar')
+        // Both properties present
+        expect(Object.keys(customProps ?? {})).toHaveLength(2)
     })
 
     it('merges constraints', () => {

@@ -1,7 +1,15 @@
 import type {Constraint} from "../types/types.ts"
 import {formatXml} from "../utils/formatXml.ts"
 
-export function ConstraintDetailView({constraint}: { constraint: Constraint }) {
+export function ConstraintDetailView({constraint, customConstraintPropertyNames}: {
+    constraint: Constraint,
+    customConstraintPropertyNames?: string
+}) {
+    const customPropNames = (customConstraintPropertyNames ?? '')
+        .split(',')
+        .map(n => n.trim())
+        .filter(n => n.length > 0)
+
     return (
         <div className="detail-panel">
             <div>
@@ -21,6 +29,20 @@ export function ConstraintDetailView({constraint}: { constraint: Constraint }) {
                         wordBreak: 'break-word',
                     }}>{formatXml(constraint.expression)}</pre>
                 </details>
+            )}
+            {customPropNames.length > 0 && (
+                <>
+                    {customPropNames.map(name => {
+                        const value = constraint.customProperties?.[name]
+                        if (!value) return null
+                        return (
+                            <div key={name}>
+                                <div className="detail-label">{name}</div>
+                                <div>{value}</div>
+                            </div>
+                        )
+                    })}
+                </>
             )}
         </div>
     )

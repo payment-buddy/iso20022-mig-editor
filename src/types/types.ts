@@ -2,6 +2,7 @@ export interface Constraint {
     name: string
     definition: string
     expression: string | null
+    customProperties?: Record<string, string>
 }
 
 export interface MessageElement {
@@ -90,6 +91,7 @@ export interface ElementOverride {
     allowedValues: string[] | null
     examples: string[] | null
     additionalConstraints: Constraint[] | null
+    customProperties: Record<string, string> | null
 }
 
 export interface MessageImplementationGuide {
@@ -100,4 +102,6 @@ export interface MessageImplementationGuide {
     version: string
     description: string | null
     elementOverrides: ElementOverrides
+    customElementPropertyNames?: string
+    customConstraintPropertyNames?: string
 }

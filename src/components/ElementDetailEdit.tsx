@@ -22,7 +22,7 @@ function createValueValidator(elementOverride: ElementOverride | null, simpleTyp
     }
 }
 
-export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, inheritedOverride, onUpdateOverride, onAddConstraint}: {
+export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, inheritedOverride, onUpdateOverride, onAddConstraint, customElementPropertyNames}: {
     element: MessageElement
     dataType: DataType
     xmlPath: string
@@ -30,13 +30,14 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
     inheritedOverride: ElementOverride | null
     onUpdateOverride: (xmlPath: string, override: ElementOverride) => void
     onAddConstraint: () => void
+    customElementPropertyNames?: string
 }) {
     const simpleType = dataType as SimpleType
     const isSimpleType = !('elements' in dataType)
     const isTextType = 'baseType' in dataType && simpleType.baseType === 'Text'
     const isCodeSetType = 'baseType' in dataType && simpleType.baseType === 'CodeSet'
     const baseExamples = element.examples.length > 0 ? element.examples : (simpleType.examples ?? [])
-    
+
     const baseDefinition = inheritedOverride?.definition || element.definition || dataType.definition
     const baseMinOccurs = inheritedOverride?.minOccurs ?? element.minOccurs
     const baseMaxOccurs = inheritedOverride?.maxOccurs ?? element.maxOccurs
@@ -61,9 +62,10 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             allowedValues: null,
             examples: null,
             additionalConstraints: null,
+            customProperties: null,
             ...elementOverride,
             ...updates,
-        }
+        } as ElementOverride
     }
 
     function saveOverride(updates: Partial<ElementOverride>) {
@@ -78,6 +80,22 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
             const num = parseInt(val, 10)
             if (!isNaN(num)) saveOverride({[field]: num === original ? null : num})
         }
+    }
+
+    const customPropNames = (customElementPropertyNames ?? '')
+        .split(',')
+        .map(n => n.trim())
+        .filter(n => n.length > 0)
+
+    function saveCustomProperty(name: string, val: string) {
+        const newProps = {...(elementOverride?.customProperties ?? {})}
+        if (!val.trim()) {
+            delete newProps[name]
+        } else {
+            newProps[name] = val.trim()
+        }
+        const customProperties = Object.keys(newProps).length > 0 ? newProps : null
+        saveOverride({customProperties})
     }
 
     const validateValue = createValueValidator(elementOverride, simpleType)
@@ -177,6 +195,26 @@ export function ElementDetailEdit({element, dataType, xmlPath, elementOverride, 
                         onSave={values => saveOverride({examples: values.length === 0 ? null : values})}
                     />
                 </div>
+            )}
+            {customPropNames.length > 0 && (
+                <>
+                    {customPropNames.map(name => {
+                        const currentValue = elementOverride?.customProperties?.[name] ?? ''
+                        const inheritedValue = inheritedOverride?.customProperties?.[name] ?? ''
+                        const displayValue = currentValue || inheritedValue
+
+                        return (
+                            <div key={name}>
+                                <div className="detail-label">{name}</div>
+                                <EditableText
+                                    value={currentValue || displayValue}
+                                    originalValue={inheritedValue}
+                                    onSave={val => saveCustomProperty(name, val)}
+                                />
+                            </div>
+                        )
+                    })}
+                </>
             )}
             <div>
                 <button onClick={onAddConstraint}>+ Add constraint</button>
