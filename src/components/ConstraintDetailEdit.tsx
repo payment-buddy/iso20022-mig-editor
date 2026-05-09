@@ -1,6 +1,8 @@
+import {useState} from "react"
 import type {Constraint} from "../types/types.ts"
 import {splitCamelCase} from "../utils/stringUtils.ts"
 import {EditableField} from "./EditableField.tsx"
+import {Modal} from "./Modal.tsx"
 
 export function ConstraintDetailEdit({
                                          constraint,
@@ -15,6 +17,7 @@ export function ConstraintDetailEdit({
     customConstraintPropertyNames?: string
     isInherited?: boolean
 }) {
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
     const customPropNames = (customConstraintPropertyNames ?? '')
         .split(',')
         .map(n => n.trim())
@@ -67,8 +70,21 @@ export function ConstraintDetailEdit({
                 )
             })}
             <div>
-                <button onClick={onDelete}>Delete</button>
+                <button onClick={() => setShowDeleteModal(true)}>Delete</button>
             </div>
+            {showDeleteModal && (
+                <Modal
+                    onClose={() => setShowDeleteModal(false)}
+                    footer={
+                        <>
+                            <button type="button" onClick={() => { onDelete(); setShowDeleteModal(false) }}>Delete</button>
+                            <button type="button" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+                        </>
+                    }
+                >
+                    <p>Delete constraint <code>{constraint.name}</code>?</p>
+                </Modal>
+            )}
         </div>
     )
 }
