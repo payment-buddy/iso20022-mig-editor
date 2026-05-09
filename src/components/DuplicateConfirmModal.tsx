@@ -1,5 +1,6 @@
 import {Modal} from "./Modal"
 import type {MessageImplementationGuide} from "../types/types.ts"
+import {getMigKey} from "../utils/migUtils.ts"
 
 export function DuplicateConfirmModal({duplicates, onSkip, onOverwrite}: {
     duplicates: MessageImplementationGuide[]
@@ -24,7 +25,7 @@ export function DuplicateConfirmModal({duplicates, onSkip, onOverwrite}: {
                     <p>The following MIGs already exist:</p>
                     <ul>
                         {duplicates.map(m => (
-                            <li key={m.id}>"{m.name}"</li>
+                            <li key={getMigKey(m)}>"{m.name}"</li>
                         ))}
                     </ul>
                     <p>Do you want to overwrite them?</p>

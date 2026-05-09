@@ -220,6 +220,6 @@ function isMessageImplementationGuide(obj: unknown): obj is MessageImplementatio
     return obj !== null &&
         typeof obj === 'object' &&
         'elementOverrides' in obj &&
-        'id' in obj &&
-        'name' in obj
+        'name' in obj &&
+        'version' in obj
 }

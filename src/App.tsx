@@ -18,7 +18,7 @@ import {
 } from "./services/localStore.ts"
 import {parse} from "yaml"
 import {downloadYaml} from "./utils/downloadYaml"
-import {prepareForDownload} from "./utils/migUtils"
+import {getMigKey, prepareForDownload} from "./utils/migUtils"
 import {DuplicateConfirmModal} from "./components/DuplicateConfirmModal"
 
 function App() {
@@ -60,16 +60,10 @@ function App() {
     function handleMigUpload(text: string) {
         const parsed: unknown = parse(text)
         const items: unknown[] = Array.isArray(parsed) ? parsed : [parsed]
-        const incoming = items.map((item) => {
-            const obj = item as Record<string, unknown>
-            return {
-                ...obj,
-                id: typeof obj.id === 'string' ? obj.id : crypto.randomUUID()
-            } as MessageImplementationGuide
-        })
+        const incoming = items.map((item) => item as MessageImplementationGuide)
 
-        const existingIds = new Set(migs.map(m => m.id))
-        const duplicates = incoming.filter(m => existingIds.has(m.id))
+        const existingKeys = new Set(migs.map(getMigKey))
+        const duplicates = incoming.filter(m => existingKeys.has(getMigKey(m)))
 
         if (duplicates.length > 0) {
             setDuplicateConfirm({incoming, duplicates})
@@ -82,11 +76,11 @@ function App() {
     function saveAndUpdate(migList: MessageImplementationGuide[]) {
         void Promise.all(migList.map(saveMig)).then(() => {
             setMigs(prev => {
-                const savedIds = new Set(migList.map(m => m.id))
-                return [...prev.filter(m => !savedIds.has(m.id)), ...migList]
+                const savedKeys = new Set(migList.map(getMigKey))
+                return [...prev.filter(m => !savedKeys.has(getMigKey(m))), ...migList]
             })
             if (migList.length === 1) {
-                window.location.hash = 'mig/' + migList[0].id
+                window.location.hash = 'mig/' + encodeURIComponent(getMigKey(migList[0]))
             }
         })
     }
@@ -101,21 +95,37 @@ function App() {
     function handleDuplicateSkip() {
         if (!duplicateConfirm) return
         const {incoming, duplicates} = duplicateConfirm
-        const duplicateIds = new Set(duplicates.map(m => m.id))
-        const newOnes = incoming.filter(m => !duplicateIds.has(m.id))
+        const duplicateKeys = new Set(duplicates.map(getMigKey))
+        const newOnes = incoming.filter(m => !duplicateKeys.has(getMigKey(m)))
         setDuplicateConfirm(null)
         saveAndUpdate(newOnes)
     }
 
-    function handleMigUpdated(updated: MessageImplementationGuide) {
-        void saveMig(updated).then(() => {
-            setMigs(prev => prev.map(m => m.id === updated.id ? updated : m))
+    function handleMigUpdated(oldKey: string, updated: MessageImplementationGuide) {
+        const newKey = getMigKey(updated)
+        const keyChanged = oldKey !== newKey
+        const work = keyChanged ? deleteMig(oldKey).then(() => saveMig(updated)) : saveMig(updated)
+        void work.then(() => {
+            setMigs(prev => {
+                const next = prev.map(m => getMigKey(m) === oldKey ? updated : m)
+                if (keyChanged) {
+                    // Update parentMIG references that pointed to the old key
+                    return next.map(m => m.parentMIG === oldKey ? {...m, parentMIG: newKey} : m)
+                }
+                return next
+            })
+            if (keyChanged) {
+                window.location.hash = 'mig/' + encodeURIComponent(newKey)
+                // Persist updated parentMIG references in other MIGs
+                const affected = migs.filter(m => m.parentMIG === oldKey && getMigKey(m) !== oldKey)
+                affected.forEach(m => void saveMig({...m, parentMIG: newKey}))
+            }
         })
     }
 
-    function handleMigDeleted(id: string) {
-        void deleteMig(id).then(() => {
-            setMigs(prev => prev.filter(m => m.id !== id))
+    function handleMigDeleted(key: string) {
+        void deleteMig(key).then(() => {
+            setMigs(prev => prev.filter(m => getMigKey(m) !== key))
             window.location.hash = ''
         })
     }
@@ -123,7 +133,7 @@ function App() {
     function handleMigCreated(mig: MessageImplementationGuide) {
         void saveMig(mig).then(() => {
             setMigs(prev => [...prev, mig])
-            window.location.hash = 'mig/' + mig.id
+            window.location.hash = 'mig/' + encodeURIComponent(getMigKey(mig))
         })
     }
 
@@ -159,15 +169,16 @@ function App() {
         return <RepositoryUploadPage onParsed={handleParsed}/>
     }
     if (hash === '#browse') {
-        return <BusinessAreaListPage businessAreas={eRepository.businessAreas} onUpdateERepository={handleUpdateERepository}/>
+        return <BusinessAreaListPage businessAreas={eRepository.businessAreas}
+                                     onUpdateERepository={handleUpdateERepository}/>
     }
     if (hash.startsWith('#mig/')) {
-        const id = hash.substring(5)
-        const mig = migs.find(m => m.id === id)
+        const key = decodeURIComponent(hash.substring(5))
+        const mig = migs.find(m => getMigKey(m) === key)
         if (mig) return <MigDetailPage mig={mig}
                                        migs={migs}
                                        eRepository={eRepository}
-                                       onUpdate={handleMigUpdated}
+                                       onUpdate={(updated) => handleMigUpdated(key, updated)}
                                        onDelete={handleMigDeleted}/>
     }
     if (hash.startsWith('#')) {
@@ -176,19 +187,19 @@ function App() {
             for (const message of businessArea.messages) {
                 if (message.identifier === code) {
                     return <MessageDetailPage messageId={message.identifier}
-                                          versions={businessArea.messages.filter(msg => msg.shortCode === message.shortCode)}
-                                          businessArea={businessArea}
-                                          dataTypes={eRepository.dataTypes}
-                                          onMigCreated={handleMigCreated}/>
+                                              versions={businessArea.messages.filter(msg => msg.shortCode === message.shortCode)}
+                                              businessArea={businessArea}
+                                              dataTypes={eRepository.dataTypes}
+                                              onMigCreated={handleMigCreated}/>
                 }
             }
             for (const message of businessArea.messages) {
                 if (message.shortCode === code) {
                     return <MessageDetailPage messageId={null}
-                                          versions={businessArea.messages.filter(msg => msg.shortCode === code)}
-                                          businessArea={businessArea}
-                                          dataTypes={eRepository.dataTypes}
-                                          onMigCreated={handleMigCreated}/>
+                                              versions={businessArea.messages.filter(msg => msg.shortCode === code)}
+                                              businessArea={businessArea}
+                                              dataTypes={eRepository.dataTypes}
+                                              onMigCreated={handleMigCreated}/>
                 }
             }
         }

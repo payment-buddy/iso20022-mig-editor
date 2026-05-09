@@ -1,6 +1,5 @@
 
 export const MIG_PROPERTY_ORDER = [
-    'id',
     'name',
     'messageIdentifier',
     'parentMIG',
@@ -130,7 +129,6 @@ export interface ElementOverride {
 }
 
 export interface MessageImplementationGuide {
-    id: string
     name: string
     messageIdentifier: string
     parentMIG: string | null

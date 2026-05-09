@@ -1,5 +1,5 @@
 import {downloadYaml} from "../utils/downloadYaml"
-import {findMigByKey, getCombinedOverrides, getParentOptions, prepareForDownload} from "../utils/migUtils.ts"
+import {findMigByKey, getCombinedOverrides, getMigKey, getParentOptions, prepareForDownload} from "../utils/migUtils.ts"
 import type {
     Constraint,
     ElementOverride,
@@ -24,7 +24,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     migs: MessageImplementationGuide[],
     eRepository: ERepository,
     onUpdate: (updated: MessageImplementationGuide) => void,
-    onDelete: (id: string) => void
+    onDelete: (key: string) => void
 }) {
     const [showXmlTags, setShowXmlTags] = useState(false)
     const [hideExcluded, setHideExcluded] = useState(true)
@@ -59,7 +59,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
 
     function confirmDelete() {
         setShowDeleteModal(false)
-        onDelete(mig.id)
+        onDelete(getMigKey(mig))
     }
 
     async function handleDownload() {

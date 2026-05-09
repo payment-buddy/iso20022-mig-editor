@@ -13,7 +13,6 @@ export function MigCreateForm({message, onCreateMig, onCancel}: {
     function handleSubmit(e: { preventDefault(): void }) {
         e.preventDefault()
         const mig: MessageImplementationGuide = {
-            id: crypto.randomUUID(),
             name: name.trim(),
             messageIdentifier: message.identifier,
             parentMIG: null,

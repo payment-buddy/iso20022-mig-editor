@@ -1,4 +1,5 @@
 import type {ERepository, MessageImplementationGuide} from "../types/types.ts"
+import {getMigKey} from "../utils/migUtils.ts"
 
 const DB_NAME = 'iso20022'
 const DB_VERSION = 1
@@ -37,15 +38,15 @@ export async function loadERepository(): Promise<ERepository | null> {
 }
 
 export async function saveMig(mig: MessageImplementationGuide): Promise<void> {
-    await request("mig", store => store.put(mig, mig.id), 'readwrite')
+    await request("mig", store => store.put(mig, getMigKey(mig)), 'readwrite')
 }
 
 export async function loadAllMigs(): Promise<MessageImplementationGuide[]> {
     return request("mig", store => store.getAll(), 'readonly')
 }
 
-export async function deleteMig(id: string): Promise<void> {
-    await request("mig", store => store.delete(id), 'readwrite')
+export async function deleteMig(key: string): Promise<void> {
+    await request("mig", store => store.delete(key), 'readwrite')
 }
 
 export function loadMigsForBackup(): Promise<unknown[]> {

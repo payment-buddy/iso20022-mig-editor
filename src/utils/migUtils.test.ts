@@ -4,7 +4,6 @@ import type {ElementOverride, MessageImplementationGuide} from '../types/types.t
 
 describe('migUtils', () => {
     const mig1: MessageImplementationGuide = {
-        id: 'mig1',
         name: 'MIG 1',
         messageIdentifier: 'pain.001.001.03',
         parentMIG: null,
@@ -31,7 +30,6 @@ describe('migUtils', () => {
     }
 
     const mig2: MessageImplementationGuide = {
-        id: 'mig2',
         name: 'MIG 2',
         messageIdentifier: 'pain.001.001.03',
         parentMIG: 'MIG 1:1.0',
@@ -118,8 +116,8 @@ describe('migUtils', () => {
     })
     
     it('handles circular references gracefully', () => {
-        const migA: MessageImplementationGuide = { ...mig1, id: 'A', parentMIG: 'B' }
-        const migB: MessageImplementationGuide = { ...mig1, id: 'B', parentMIG: 'A' }
+        const migA: MessageImplementationGuide = { ...mig1, name: 'A', parentMIG: 'B:1.0' }
+        const migB: MessageImplementationGuide = { ...mig1, name: 'B', parentMIG: 'A:1.0' }
         const combined = getCombinedOverrides(migA, [migA, migB])
         expect(combined).toBeDefined()
     })
