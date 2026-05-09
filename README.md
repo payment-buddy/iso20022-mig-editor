@@ -9,15 +9,21 @@ A browser-only offline tool for exploring ISO 20022 financial message definition
 - Create and edit MIGs: override element cardinality, validation constraints, and allowed codes per XML path.
 - Download individual MIGs or a full backup as YAML; import MIGs from YAML.
 
-## Usage
+## Data Storage Warning
 
-### Use online
+Your data (MIGs, e-Repository content) is stored **only in your browser**, not online.
+It stays on this device and browser, and will be lost if you clear your browser data.
+
+**Export important MIGs as YAML regularly** to avoid losing your work.
+
+## Usage
 
 Open [https://payment-buddy.github.io/iso20022-mig-editor/](https://payment-buddy.github.io/iso20022-mig-editor/) directly in your browser — no installation needed.
 
-### Download for offline use
+or
 
-Download the latest self-contained HTML file from the [Releases page](https://github.com/payment-buddy/iso20022-mig-editor/releases) and open it in your browser. No server or internet connection required.
+Download the latest self-contained HTML file from the [Releases page](https://github.com/payment-buddy/iso20022-mig-editor/releases) and open it in your browser. 
+No server or internet connection required. 
 
 ### Creating a new MIG
 
