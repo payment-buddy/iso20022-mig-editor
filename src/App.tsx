@@ -101,6 +101,21 @@ function App() {
         saveAndUpdate(newOnes)
     }
 
+    function handleDuplicateVersionBump() {
+        if (!duplicateConfirm) return
+        const {incoming, duplicates} = duplicateConfirm
+        const duplicateKeys = new Set(duplicates.map(getMigKey))
+        const timestamp = Date.now()
+        const renamed = incoming.map(m => {
+            if (duplicateKeys.has(getMigKey(m))) {
+                return {...m, version: m.version + '-' + timestamp}
+            }
+            return m
+        })
+        setDuplicateConfirm(null)
+        saveAndUpdate(renamed)
+    }
+
     function handleMigUpdated(oldKey: string, updated: MessageImplementationGuide) {
         const newKey = getMigKey(updated)
         const keyChanged = oldKey !== newKey
@@ -212,6 +227,7 @@ function App() {
                     duplicates={duplicateConfirm.duplicates}
                     onSkip={handleDuplicateSkip}
                     onOverwrite={handleDuplicateOverwrite}
+                    onVersionBump={handleDuplicateVersionBump}
                 />
             )}
         </>
