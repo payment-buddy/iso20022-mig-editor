@@ -1,25 +1,26 @@
 import type {DataType, ElementOverride, MessageElement, SimpleType} from "../types/types.ts"
-import {EditableText} from "./EditableText.tsx"
-import {EditableNumber} from "./EditableNumber.tsx"
-import {EditableValueList} from "./EditableValueList.tsx"
 import {splitCamelCase} from "../utils/stringUtils.ts"
+import {isValidXsdPattern} from "../utils/regexUtils.ts"
+import {EditableField} from "./EditableField.tsx"
+import {EditableList} from "./EditableList.tsx"
 
-function createValueValidator(elementOverride: ElementOverride | null, simpleType: SimpleType): (value: string) => boolean {
+function createValueValidator(elementOverride: ElementOverride | null, simpleType: SimpleType): (value: string) => string | null{
     const pattern = elementOverride?.pattern ?? simpleType.pattern
     const minLength = elementOverride?.minLength ?? simpleType.minLength ?? simpleType.length
     const maxLength = elementOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length
 
-    return (value: string): boolean => {
-        if (minLength != null && value.length < minLength) return false
-        if (maxLength != null && value.length > maxLength) return false
+    return (value: string): string | null => {
+        if (minLength != null && value.length < minLength) return "Shorter than minLength"
+        if (maxLength != null && value.length > maxLength) return "Longer than maxLength"
         if (pattern != null) {
             try {
-                if (!new RegExp('^' + pattern + '$').test(value)) return false
+                const regexp = new RegExp('^' + pattern + '$', 'u')
+                return regexp.test(value) ? null : 'Does not match pattern ' + pattern
             } catch {
-                return false
+                return null // Cannot validate - bad pattern
             }
         }
-        return true
+        return null
     }
 }
 
@@ -56,9 +57,28 @@ export function ElementDetailEdit({
     const baseMaxInclusive = inheritedOverride?.maxInclusive ?? simpleType.maxInclusive
     const baseTotalDigits = inheritedOverride?.totalDigits ?? simpleType.totalDigits
     const baseFractionDigits = inheritedOverride?.fractionDigits ?? simpleType.fractionDigits
-    const basePattern = inheritedOverride?.pattern ?? simpleType.pattern ?? ''
+    const basePattern = inheritedOverride?.pattern ?? simpleType.pattern
     const baseAllowedValues = inheritedOverride?.allowedValues ?? []
+
     const effectiveExamples = inheritedOverride?.examples ?? baseExamples
+    const effectiveMinOccurs = elementOverride?.minOccurs ?? baseMinOccurs
+    const effectiveMaxOccurs = elementOverride?.maxOccurs ?? baseMaxOccurs
+    const effectiveMinLength = elementOverride?.minLength ?? baseMinLength
+    const effectiveMaxLength = elementOverride?.maxLength ?? baseMaxLength
+    const effectiveMinInclusive = elementOverride?.minInclusive ?? baseMinInclusive
+    const effectiveMaxInclusive = elementOverride?.maxInclusive ?? baseMaxInclusive
+    const effectiveTotalDigits = elementOverride?.totalDigits ?? baseTotalDigits
+    const effectiveFractionDigits = elementOverride?.fractionDigits ?? baseFractionDigits
+
+    const minOccursWarning = baseMinOccurs != null && effectiveMinOccurs != null && effectiveMinOccurs < baseMinOccurs ? 'Lower than original' : undefined
+    const maxOccursWarning = effectiveMinOccurs != null && effectiveMaxOccurs != null && effectiveMinOccurs > effectiveMaxOccurs ? 'Lower than minOccurs' : baseMaxOccurs != null && effectiveMaxOccurs != null && effectiveMaxOccurs > baseMaxOccurs ? 'Higher than original' : undefined
+    const patternWarning = !isValidXsdPattern(elementOverride?.pattern ?? basePattern ?? '') ? 'Invalid XSD pattern' : undefined
+    const minLengthWarning = baseMinLength != null && effectiveMinLength != null && effectiveMinLength < baseMinLength ? 'Lower than original' : undefined
+    const maxLengthWarning = effectiveMinLength != null && effectiveMaxLength != null && effectiveMinLength > effectiveMaxLength ? 'Lower than minLength' : baseMaxLength != null && effectiveMaxLength != null && effectiveMaxLength > baseMaxLength ? 'Higher than original' : undefined
+    const minInclusiveWarning = baseMinInclusive != null && effectiveMinInclusive != null && effectiveMinInclusive < baseMinInclusive ? 'Lower than original' : undefined
+    const maxInclusiveWarning = effectiveMinInclusive != null && effectiveMaxInclusive != null && effectiveMinInclusive > effectiveMaxInclusive ? 'Lower than minInclusive' : baseMaxInclusive != null && effectiveMaxInclusive != null && effectiveMaxInclusive > baseMaxInclusive ? 'Higher than original' : undefined
+    const totalDigitsWarning = baseTotalDigits != null && effectiveTotalDigits != null && effectiveTotalDigits < baseTotalDigits ? 'Lower than original' : undefined
+    const fractionDigitsWarning = baseFractionDigits != null && effectiveFractionDigits != null && effectiveFractionDigits > baseFractionDigits ? 'Higher than original' : undefined
 
     function buildOverride(updates: Partial<ElementOverride>): ElementOverride {
         return {
@@ -138,47 +158,51 @@ export function ElementDetailEdit({
             </div>
             <div>
                 <div className="detail-label">Definition</div>
-                <EditableText
+                <EditableField
                     value={elementOverride?.definition || baseDefinition}
                     originalValue={baseDefinition}
-                    multiline
+                    inputType="textarea"
                     onSave={val => saveOverride({definition: val === baseDefinition ? null : val})}
                 />
             </div>
             <div>
                 <div className="detail-label">Min Occurs</div>
-                <EditableNumber
-                    value={elementOverride?.minOccurs ?? baseMinOccurs}
-                    originalValue={baseMinOccurs}
-                    warnWhen="lower"
+                <EditableField
+                    value={effectiveMinOccurs?.toString()}
+                    originalValue={baseMinOccurs?.toString()}
+                    inputType="number"
+                    warning={minOccursWarning}
                     onSave={val => saveInt('minOccurs', baseMinOccurs, val)}
                 />
             </div>
             <div>
                 <div className="detail-label">Max Occurs</div>
-                <EditableNumber
-                    value={elementOverride?.maxOccurs ?? baseMaxOccurs}
-                    originalValue={baseMaxOccurs}
-                    warnWhen="higher"
+                <EditableField
+                    value={effectiveMaxOccurs?.toString()}
+                    originalValue={baseMaxOccurs?.toString()}
+                    inputType="number"
+                    warning={maxOccursWarning}
                     onSave={val => saveInt('maxOccurs', baseMaxOccurs, val)}
                 />
             </div>
             {(baseType === 'Text' || baseType === 'CodeSet' || baseType === 'IdentifierSet' || baseType === 'Binary') && (<>
                 <div>
                     <div className="detail-label">Min Length</div>
-                    <EditableNumber
-                        value={elementOverride?.minLength ?? baseMinLength}
-                        originalValue={baseMinLength}
-                        warnWhen="lower"
+                    <EditableField
+                        value={effectiveMinLength?.toString()}
+                        originalValue={baseMinLength?.toString()}
+                        inputType="number"
+                        warning={minLengthWarning}
                         onSave={val => saveInt('minLength', baseMinLength, val)}
                     />
                 </div>
                 <div>
                     <div className="detail-label">Max Length</div>
-                    <EditableNumber
-                        value={elementOverride?.maxLength ?? baseMaxLength}
-                        originalValue={baseMaxLength}
-                        warnWhen="higher"
+                    <EditableField
+                        value={effectiveMaxLength?.toString()}
+                        originalValue={baseMaxLength?.toString()}
+                        inputType="number"
+                        warning={maxLengthWarning}
                         onSave={val => saveInt('maxLength', baseMaxLength, val)}
                     />
                 </div>
@@ -186,19 +210,21 @@ export function ElementDetailEdit({
             {(baseType === 'Year' || baseType === 'Amount' || baseType === 'Quantity' || baseType === 'Rate') && (<>
                 <div>
                     <div className="detail-label">Min Inclusive</div>
-                    <EditableNumber
-                        value={elementOverride?.minInclusive ?? baseMinInclusive}
-                        originalValue={baseMinInclusive}
-                        warnWhen="lower"
+                    <EditableField
+                        value={effectiveMinInclusive?.toString()}
+                        originalValue={baseMinInclusive?.toString()}
+                        inputType="number"
+                        warning={minInclusiveWarning}
                         onSave={val => saveNumber('minInclusive', baseMinInclusive, val)}
                     />
                 </div>
                 <div>
                     <div className="detail-label">Max Inclusive</div>
-                    <EditableNumber
-                        value={elementOverride?.maxInclusive ?? baseMaxInclusive}
-                        originalValue={baseMaxInclusive}
-                        warnWhen="higher"
+                    <EditableField
+                        value={effectiveMaxInclusive?.toString()}
+                        originalValue={baseMaxInclusive?.toString()}
+                        inputType="number"
+                        warning={maxInclusiveWarning}
                         onSave={val => saveNumber('maxInclusive', baseMaxInclusive, val)}
                     />
                 </div>
@@ -206,19 +232,21 @@ export function ElementDetailEdit({
             {(baseType === 'Amount' || baseType === 'Quantity' || baseType === 'Rate') && (<>
                 <div>
                     <div className="detail-label">Total Digits</div>
-                    <EditableNumber
-                        value={elementOverride?.totalDigits ?? baseTotalDigits}
-                        originalValue={baseTotalDigits}
-                        warnWhen="lower"
+                    <EditableField
+                        value={effectiveTotalDigits?.toString()}
+                        originalValue={baseTotalDigits?.toString()}
+                        inputType="number"
+                        warning={totalDigitsWarning}
                         onSave={val => saveInt('totalDigits', baseTotalDigits, val)}
                     />
                 </div>
                 <div>
                     <div className="detail-label">Fraction Digits</div>
-                    <EditableNumber
-                        value={elementOverride?.fractionDigits ?? baseFractionDigits}
-                        originalValue={baseFractionDigits}
-                        warnWhen="higher"
+                    <EditableField
+                        value={effectiveFractionDigits?.toString()}
+                        originalValue={baseFractionDigits?.toString()}
+                        inputType="number"
+                        warning={fractionDigitsWarning}
                         onSave={val => saveInt('fractionDigits', baseFractionDigits, val)}
                     />
                 </div>
@@ -226,10 +254,10 @@ export function ElementDetailEdit({
             {(baseType === 'Text' || baseType === 'CodeSet' || baseType === 'IdentifierSet' || baseType === 'DateTime' || baseType === 'Quantity') && (
                 <div>
                     <div className="detail-label">Pattern</div>
-                    <EditableText
+                    <EditableField
                         value={elementOverride?.pattern ?? basePattern}
                         originalValue={basePattern}
-                        monospace
+                        warning={patternWarning}
                         onSave={val => {
                             saveOverride({pattern: val === (basePattern ?? '') || val === '' ? null : val})
                         }}
@@ -239,11 +267,10 @@ export function ElementDetailEdit({
             {(baseType === 'Text' || baseType === 'CodeSet') && (
                 <div>
                     <div className="detail-label">Allowed Values</div>
-                    <EditableValueList
+                    <EditableList
                         values={elementOverride?.allowedValues ?? baseAllowedValues}
                         originalValues={baseAllowedValues}
-                        monospace
-                        isValueInvalid={v => !validateValue(v)}
+                        validateValue={v => validateValue(v)}
                         onSave={values => saveOverride({allowedValues: values.length === 0 ? null : values})}
                     />
                 </div>
@@ -251,24 +278,23 @@ export function ElementDetailEdit({
             {isSimpleType && (
                 <div>
                     <div className="detail-label">Examples</div>
-                    <EditableValueList
+                    <EditableList
                         values={elementOverride?.examples ?? effectiveExamples}
                         originalValues={effectiveExamples}
-                        monospace
-                        isValueInvalid={v => !validateValue(v)}
+                        validateValue={v => validateValue(v)}
                         onSave={values => saveOverride({examples: values.length === 0 ? null : values})}
                     />
                 </div>
             )}
             {customPropNames.map(name => {
-                const currentValue = elementOverride?.customProperties?.[name] ?? ''
-                const inheritedValue = inheritedOverride?.customProperties?.[name] ?? ''
+                const currentValue = elementOverride?.customProperties?.[name]
+                const inheritedValue = inheritedOverride?.customProperties?.[name]
                 const displayValue = currentValue || inheritedValue
 
                 return (
                     <div key={name}>
                         <div className="detail-label">{splitCamelCase(name)}</div>
-                        <EditableText
+                        <EditableField
                             value={currentValue || displayValue}
                             originalValue={inheritedValue}
                             onSave={val => saveCustomProperty(name, val)}

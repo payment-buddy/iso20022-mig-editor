@@ -11,12 +11,13 @@ import type {
 import {useState} from "react"
 import {ElementDetailEdit} from "../components/ElementDetailEdit.tsx"
 import {ConstraintDetailView} from "../components/ConstraintDetailView.tsx"
-import {EditableText} from "../components/EditableText.tsx"
 import {EditableSelect} from "../components/EditableSelect.tsx"
 import {ConstraintDetailEdit} from "../components/ConstraintDetailEdit.tsx"
 import {DetailPanel} from "../components/DetailPanel.tsx"
 import {MessageTreeView} from "../components/MessageTreeView.tsx"
 import {Modal} from "../components/Modal.tsx"
+import {EditableField} from "../components/EditableField.tsx"
+import {EditableList} from "../components/EditableList.tsx"
 
 export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     mig: MessageImplementationGuide,
@@ -31,7 +32,6 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     const [selectedElement, setSelectedElement] = useState<MessageElement | null>(null)
     const [selectedConstraint, setSelectedConstraint] = useState<Constraint | null>(null)
     const [selectedPath, setSelectedPath] = useState<string>('')
-    const [newConstraintId, setNewConstraintId] = useState<string | null>(null)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const combinedOverrides = getCombinedOverrides(mig, migs)
     const parentMig = mig.parentMIG ? findMigByKey(migs, mig.parentMIG) : undefined
@@ -103,7 +103,6 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
         setSelectedConstraint(newConstraint)
         setSelectedPath(elementPath + '/' + newConstraint.name)
         setSelectedElement(null)
-        setNewConstraintId(newConstraint.name)
     }
 
     function isOverrideEmpty(override: ElementOverride) {
@@ -130,7 +129,6 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
         handleUpdateElementOverride(elementPath, {...override, additionalConstraints: constraints})
         setSelectedConstraint(updated)
         setSelectedPath(elementPath + '/' + updated.name)
-        setNewConstraintId(null)
     }
 
     function handleDeleteConstraint() {
@@ -141,11 +139,10 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
         handleUpdateElementOverride(elementPath, {...override, additionalConstraints: constraints})
         setSelectedConstraint(null)
         setSelectedPath('')
-        setNewConstraintId(null)
     }
 
-    function handleCustomElementPropertyNamesUpdate(val: string) {
-        const trimmed = val.trim()
+    function handleCustomElementPropertyNamesUpdate(vals: string[]) {
+        const trimmed = vals.map( v => v.trim()).join('\n')
         const updated = {...mig}
         if (!trimmed) {
             delete updated.customElementPropertyNames
@@ -157,8 +154,8 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
         }
     }
 
-    function handleCustomConstraintPropertyNamesUpdate(val: string) {
-        const trimmed = val.trim()
+    function handleCustomConstraintPropertyNamesUpdate(vals: string[]) {
+        const trimmed = vals.map(v => v.trim()).join('\n')
         const updated = {...mig}
         if (!trimmed) {
             delete updated.customConstraintPropertyNames
@@ -194,15 +191,17 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                 gap: '0.25em 0.5em'
             }}>
                 <label className="detail-label">Name:</label>
-                <EditableText
+                <EditableField
                     value={mig.name}
+                    originalValue={mig.name}
                     onSave={val => {
                         if (val !== mig.name) onUpdate({...mig, name: val})
                     }}
                 />
                 <label className="detail-label">Version:</label>
-                <EditableText
+                <EditableField
                     value={mig.version}
+                    originalValue={mig.version}
                     onSave={val => {
                         if (val !== mig.version) onUpdate({...mig, version: val})
                     }}
@@ -211,9 +210,9 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                 <div style={{display: 'flex', flexDirection: 'column', gap: '0.5em'}}>
                     <EditableSelect
                         value={mig.parentMIG}
+                        originalValue={mig.parentMIG}
                         options={parentOptions}
                         onSave={val => onUpdate({...mig, parentMIG: val})}
-                        missingValue={mig.parentMIG}
                     />
                     {isParentMissing && (
                         <div style={{color: 'red', fontSize: '0.9em'}}>
@@ -222,19 +221,22 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                     )}
                 </div>
                 <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Description:</label>
-                <EditableText value={mig.description} multiline onSave={handleDescriptionUpdate}/>
+                <EditableField value={mig.description}
+                               originalValue={mig.description}
+                               inputType="textarea"
+                               onSave={handleDescriptionUpdate}/>
                 <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Custom Element
                     Properties:</label>
-                <EditableText
-                    value={mig.customElementPropertyNames ?? ''}
-                    multiline
+                <EditableList
+                    values={mig.customElementPropertyNames?.split('\n') ?? []}
+                    originalValues={mig.customElementPropertyNames?.split('\n') ?? []}
                     onSave={handleCustomElementPropertyNamesUpdate}
                 />
                 <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Custom Constraint
                     Properties:</label>
-                <EditableText
-                    value={mig.customConstraintPropertyNames ?? ''}
-                    multiline
+                <EditableList
+                    values={mig.customConstraintPropertyNames?.split('\n') ?? []}
+                    originalValues={mig.customConstraintPropertyNames?.split('\n') ?? []}
                     onSave={handleCustomConstraintPropertyNamesUpdate}
                 />
             </div>
@@ -296,7 +298,6 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                             ? <ConstraintDetailEdit constraint={selectedConstraint}
                                                     onUpdate={handleUpdateConstraint}
                                                     onDelete={handleDeleteConstraint}
-                                                    isNew={selectedConstraint.name === newConstraintId}
                                                     customConstraintPropertyNames={mig.customConstraintPropertyNames ?? ''}
                                                     isInherited={!isCurrentMigConstraint(selectedPath)}/>
                             : <ConstraintDetailView constraint={selectedConstraint}
