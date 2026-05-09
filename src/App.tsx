@@ -19,12 +19,17 @@ import {
 import {parse} from "yaml"
 import {downloadYaml} from "./utils/downloadYaml"
 import {prepareForDownload} from "./utils/migUtils"
+import {DuplicateConfirmModal} from "./components/DuplicateConfirmModal"
 
 function App() {
     const [eRepository, setERepository] = useState<ERepository | null>(null)
     const [migs, setMigs] = useState<MessageImplementationGuide[]>([])
     const [loading, setLoading] = useState(true)
     const [dbError, setDbError] = useState(false)
+    const [duplicateConfirm, setDuplicateConfirm] = useState<{
+        incoming: MessageImplementationGuide[]
+        duplicates: MessageImplementationGuide[]
+    } | null>(null)
     const hash = useHash()
 
     useEffect(() => {
@@ -66,33 +71,40 @@ function App() {
         const existingIds = new Set(migs.map(m => m.id))
         const duplicates = incoming.filter(m => existingIds.has(m.id))
 
-        const saveAndUpdate = (migList: MessageImplementationGuide[]) => {
-            void Promise.all(migList.map(saveMig)).then(() => {
-                setMigs(prev => {
-                    const savedIds = new Set(migList.map(m => m.id))
-                    return [...prev.filter(m => !savedIds.has(m.id)), ...migList]
-                })
-                if (migList.length === 1) {
-                    window.location.hash = 'mig/' + migList[0].id
-                }
-            })
-        }
-
         if (duplicates.length > 0) {
-            const names = duplicates.map(m => `"${m.name}"`).join(', ')
-            const message = duplicates.length === 1
-                ? `MIG ${names} already exists. Do you want to overwrite it?`
-                : `The following MIGs already exist: ${names}.\n\nDo you want to overwrite them?`
-
-            const confirmed = window.confirm(message)
-            if (!confirmed) {
-                const newOnes = incoming.filter(m => !existingIds.has(m.id))
-                saveAndUpdate(newOnes)
-                return
-            }
+            setDuplicateConfirm({incoming, duplicates})
+            return
         }
 
         saveAndUpdate(incoming)
+    }
+
+    function saveAndUpdate(migList: MessageImplementationGuide[]) {
+        void Promise.all(migList.map(saveMig)).then(() => {
+            setMigs(prev => {
+                const savedIds = new Set(migList.map(m => m.id))
+                return [...prev.filter(m => !savedIds.has(m.id)), ...migList]
+            })
+            if (migList.length === 1) {
+                window.location.hash = 'mig/' + migList[0].id
+            }
+        })
+    }
+
+    function handleDuplicateOverwrite() {
+        if (!duplicateConfirm) return
+        const {incoming} = duplicateConfirm
+        setDuplicateConfirm(null)
+        saveAndUpdate(incoming)
+    }
+
+    function handleDuplicateSkip() {
+        if (!duplicateConfirm) return
+        const {incoming, duplicates} = duplicateConfirm
+        const duplicateIds = new Set(duplicates.map(m => m.id))
+        const newOnes = incoming.filter(m => !duplicateIds.has(m.id))
+        setDuplicateConfirm(null)
+        saveAndUpdate(newOnes)
     }
 
     function handleMigUpdated(updated: MessageImplementationGuide) {
@@ -181,7 +193,18 @@ function App() {
             }
         }
     }
-    return <MigListPage migs={migs} onBrowse={handleBrowse} onUpload={handleMigUpload}/>
+    return (
+        <>
+            <MigListPage migs={migs} onBrowse={handleBrowse} onUpload={handleMigUpload}/>
+            {duplicateConfirm && (
+                <DuplicateConfirmModal
+                    duplicates={duplicateConfirm.duplicates}
+                    onSkip={handleDuplicateSkip}
+                    onOverwrite={handleDuplicateOverwrite}
+                />
+            )}
+        </>
+    )
 }
 
 export default App
