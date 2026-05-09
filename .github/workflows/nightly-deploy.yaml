@@ -1,8 +1,9 @@
-name: Build and Publish Latest Release
+name: Nightly Build and Publish Latest Release
 
 on:
-  push:
-    branches: [ "master" ]
+  schedule:
+    - cron: '15 1 * * *'
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -12,15 +13,17 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: master
 
-      - name: Set up Node
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
 
       - name: Install dependencies
         run: npm install
@@ -66,7 +69,6 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
