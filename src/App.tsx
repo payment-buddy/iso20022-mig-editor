@@ -2,6 +2,7 @@ import {RepositoryUploadPage} from './pages/RepositoryUploadPage.tsx'
 import {useEffect, useState} from "react"
 import {parseRepository} from "./services/eRepository.ts"
 import {BusinessAreaListPage} from './pages/BusinessAreaListPage'
+import {ComparePage} from './pages/ComparePage.tsx'
 import {MigListPage} from './pages/MigListPage.tsx'
 import {MessageDetailPage} from './pages/MessageDetailPage.tsx'
 import {MigDetailPage} from './pages/MigDetailPage.tsx'
@@ -195,6 +196,14 @@ function App() {
                                        eRepository={eRepository}
                                        onUpdate={(updated) => handleMigUpdated(key, updated)}
                                        onDelete={handleMigDeleted}/>
+    }
+    if (hash.startsWith('#compare/')) {
+        const parts = hash.substring(9).split('/').map(decodeURIComponent)
+        if (parts.length === 2) {
+            const migA = migs.find(m => getMigKey(m) === parts[0])
+            const migB = migs.find(m => getMigKey(m) === parts[1])
+            if (migA && migB) return <ComparePage migA={migA} migB={migB}/>
+        }
     }
     if (hash.startsWith('#')) {
         const code = hash.substring(1)

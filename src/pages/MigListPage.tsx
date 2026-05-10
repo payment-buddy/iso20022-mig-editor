@@ -48,6 +48,10 @@ export function MigListPage({migs, onBrowse, onUpload}: {
                 <div className="page-actions">
                     <button onClick={handleDownloadSelected}
                             disabled={selectedKeys.size === 0}>Download {selectedKeys.size > 1 && <>({selectedKeys.size})</>}</button>
+                    <button onClick={() => {
+                        const keys = [...selectedKeys]
+                        if (keys.length === 2) window.location.hash = 'compare/' + keys.map(encodeURIComponent).join('/')
+                    }} disabled={selectedKeys.size !== 2}>Compare</button>
                     <FileInputButton label="Upload MIG" accept=".yaml,.yml" onFile={f => f.text().then(onUpload)}/>
                     <button onClick={onBrowse}>Browse e-Repository</button>
                     <GithubLink/>
