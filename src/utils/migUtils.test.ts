@@ -6,9 +6,7 @@ describe('migUtils', () => {
     const mig1: MessageImplementationGuide = {
         name: 'MIG 1',
         messageIdentifier: 'pain.001.001.03',
-        parentMIG: null,
         version: '1.0',
-        description: '',
         elementOverrides: {
             'root/elem1': {
                 definition: 'MIG1 definition',
@@ -34,7 +32,6 @@ describe('migUtils', () => {
         messageIdentifier: 'pain.001.001.03',
         parentMIG: 'MIG 1:1.0',
         version: '1.0',
-        description: '',
         elementOverrides: {
             'root/elem1': {
                 definition: 'MIG2 definition',

@@ -4,7 +4,7 @@ import {isValidXsdPattern} from "../utils/regexUtils.ts"
 import {EditableField} from "./EditableField.tsx"
 import {EditableList} from "./EditableList.tsx"
 
-function createValueValidator(elementOverride: ElementOverride | null, simpleType: SimpleType): (value: string) => string | null{
+function createValueValidator(elementOverride: ElementOverride | null, simpleType: SimpleType): (value: string) => string | null {
     const pattern = elementOverride?.pattern ?? simpleType.pattern
     const minLength = elementOverride?.minLength ?? simpleType.minLength ?? simpleType.length
     const maxLength = elementOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length

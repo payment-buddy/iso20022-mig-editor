@@ -15,9 +15,7 @@ export function MigCreateForm({message, onCreateMig, onCancel}: {
         const mig: MessageImplementationGuide = {
             name: name.trim(),
             messageIdentifier: message.identifier,
-            parentMIG: null,
             version: version.trim(),
-            description: '',
             elementOverrides: {},
         }
         onCreateMig(mig)

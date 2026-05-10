@@ -131,9 +131,9 @@ export interface ElementOverride {
 export interface MessageImplementationGuide {
     name: string
     messageIdentifier: string
-    parentMIG: string | null
+    parentMIG?: string
     version: string
-    description: string | null
+    description?: string
     customElementPropertyNames?: string[]
     customConstraintPropertyNames?: string[]
     elementOverrides: ElementOverrides

@@ -169,7 +169,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
 
     function handleDescriptionUpdate(val: string) {
         if (val !== (mig.description ?? '')) {
-            onUpdate({...mig, description: val || null})
+            onUpdate({...mig, description: val ?? undefined})
         }
     }
 
@@ -209,10 +209,10 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                 <label className="detail-label">Parent MIG:</label>
                 <div style={{display: 'flex', flexDirection: 'column', gap: '0.5em'}}>
                     <EditableSelect
-                        value={mig.parentMIG}
+                        value={mig.parentMIG ?? null}
                         originalValue={mig.parentMIG}
                         options={parentOptions}
-                        onSave={val => onUpdate({...mig, parentMIG: val})}
+                        onSave={val => onUpdate({...mig, parentMIG: val ?? undefined})}
                     />
                     {isParentMissing && (
                         <div style={{color: 'red', fontSize: '0.9em'}}>

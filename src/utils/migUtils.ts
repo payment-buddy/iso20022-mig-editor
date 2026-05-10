@@ -31,7 +31,7 @@ export function getParentOptions(
             }
             return true
         })
-        .map(m => ({ value: getMigKey(m), name: m.name }))
+        .map(m => ({ value: getMigKey(m), name: getMigKey(m) }))
 }
 
 export function getCombinedOverrides(
@@ -45,7 +45,7 @@ export function getCombinedOverrides(
     while (current && !seen.has(getMigKey(current))) {
         chain.unshift(current) // parent first
         seen.add(getMigKey(current))
-        const parentKey: string | null = current.parentMIG
+        const parentKey: string | undefined = current.parentMIG
         current = parentKey ? findMigByKey(migs, parentKey) : undefined
     }
 
