@@ -3,12 +3,9 @@ import {splitCamelCase} from "../utils/stringUtils.ts"
 
 export function ConstraintDetailView({constraint, customConstraintPropertyNames}: {
     constraint: Constraint,
-    customConstraintPropertyNames?: string
+    customConstraintPropertyNames?: string[]
 }) {
-    const customPropNames = (customConstraintPropertyNames ?? '')
-        .split(',')
-        .map(n => n.trim())
-        .filter(n => n.length > 0)
+    const customPropNames = customConstraintPropertyNames ?? []
 
     return (
         <div className="detail-panel">

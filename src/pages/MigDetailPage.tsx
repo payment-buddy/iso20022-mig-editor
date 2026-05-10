@@ -142,9 +142,9 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     }
 
     function handleCustomElementPropertyNamesUpdate(vals: string[]) {
-        const trimmed = vals.map( v => v.trim()).join('\n')
+        const trimmed = vals.map(v => v.trim()).filter(v => v)
         const updated = {...mig}
-        if (!trimmed) {
+        if (trimmed.length === 0) {
             delete updated.customElementPropertyNames
         } else {
             updated.customElementPropertyNames = trimmed
@@ -155,9 +155,9 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     }
 
     function handleCustomConstraintPropertyNamesUpdate(vals: string[]) {
-        const trimmed = vals.map(v => v.trim()).join('\n')
+        const trimmed = vals.map(v => v.trim()).filter(v => v)
         const updated = {...mig}
-        if (!trimmed) {
+        if (trimmed.length === 0) {
             delete updated.customConstraintPropertyNames
         } else {
             updated.customConstraintPropertyNames = trimmed
@@ -228,15 +228,15 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                 <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Custom Element
                     Properties:</label>
                 <EditableList
-                    values={mig.customElementPropertyNames?.split('\n') ?? []}
-                    originalValues={mig.customElementPropertyNames?.split('\n') ?? []}
+                    values={mig.customElementPropertyNames ?? []}
+                    originalValues={mig.customElementPropertyNames ?? []}
                     onSave={handleCustomElementPropertyNamesUpdate}
                 />
                 <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Custom Constraint
                     Properties:</label>
                 <EditableList
-                    values={mig.customConstraintPropertyNames?.split('\n') ?? []}
-                    originalValues={mig.customConstraintPropertyNames?.split('\n') ?? []}
+                    values={mig.customConstraintPropertyNames ?? []}
+                    originalValues={mig.customConstraintPropertyNames ?? []}
                     onSave={handleCustomConstraintPropertyNamesUpdate}
                 />
             </div>
@@ -292,16 +292,16 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                                 inheritedOverride={selectedInheritedOverride}
                                 onUpdateOverride={handleUpdateElementOverride}
                                 onAddConstraint={() => handleAddElementConstraint(selectedPath)}
-                                customElementPropertyNames={mig.customElementPropertyNames ?? ''}/>
+                                customElementPropertyNames={mig.customElementPropertyNames}/>
                         }
                         {selectedConstraint && (isElementAdditionalConstraint(selectedPath)
                             ? <ConstraintDetailEdit constraint={selectedConstraint}
                                                     onUpdate={handleUpdateConstraint}
                                                     onDelete={handleDeleteConstraint}
-                                                    customConstraintPropertyNames={mig.customConstraintPropertyNames ?? ''}
+                                                    customConstraintPropertyNames={mig.customConstraintPropertyNames}
                                                     isInherited={!isCurrentMigConstraint(selectedPath)}/>
                             : <ConstraintDetailView constraint={selectedConstraint}
-                                                    customConstraintPropertyNames={mig.customConstraintPropertyNames ?? ''}/>)
+                                                    customConstraintPropertyNames={mig.customConstraintPropertyNames}/>)
                         }
                     </DetailPanel>
                 </div>

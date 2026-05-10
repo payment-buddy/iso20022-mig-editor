@@ -14,14 +14,11 @@ export function ConstraintDetailEdit({
     constraint: Constraint
     onUpdate: (updated: Constraint) => void
     onDelete: () => void
-    customConstraintPropertyNames?: string
+    customConstraintPropertyNames?: string[]
     isInherited?: boolean
 }) {
     const [showDeleteModal, setShowDeleteModal] = useState(false)
-    const customPropNames = (customConstraintPropertyNames ?? '')
-        .split(',')
-        .map(n => n.trim())
-        .filter(n => n.length > 0)
+    const customPropNames = customConstraintPropertyNames ?? []
 
     function saveCustomProperty(name: string, val: string) {
         const newProps = {...(constraint.customProperties ?? {})}

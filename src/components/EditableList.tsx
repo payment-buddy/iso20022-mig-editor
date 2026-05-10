@@ -111,7 +111,9 @@ export function EditableList({values, originalValues, validateValue, onSave}: {
             </div>
             <button title="Edit" onClick={startEdit}
                     style={{
-                        visibility: hovered ? 'visible' : 'hidden', maxHeight: '2em', marginLeft: '4px'
+                        visibility: hovered ? 'visible' : 'hidden',
+                        maxHeight: '2em',
+                        marginLeft: '4px'
                     }}>&#9998;</button>
         </div>
     )

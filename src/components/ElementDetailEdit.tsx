@@ -41,7 +41,7 @@ export function ElementDetailEdit({
     inheritedOverride: ElementOverride | null
     onUpdateOverride: (xmlPath: string, override: ElementOverride) => void
     onAddConstraint: () => void
-    customElementPropertyNames?: string
+    customElementPropertyNames?: string[]
 }) {
     const simpleType = dataType as SimpleType
     const baseType = simpleType.baseType
@@ -124,10 +124,7 @@ export function ElementDetailEdit({
         }
     }
 
-    const customPropNames = (customElementPropertyNames ?? '')
-        .split(',')
-        .map(n => n.trim())
-        .filter(n => n.length > 0)
+    const customPropNames = (customElementPropertyNames ?? []).filter(n => n.length > 0)
 
     function saveCustomProperty(name: string, val: string) {
         const newProps = {...(elementOverride?.customProperties ?? {})}

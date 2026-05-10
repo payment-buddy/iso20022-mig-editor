@@ -111,14 +111,11 @@ function mergeConstraints(parent: Constraint[] | null | undefined, current: Cons
 
 function orderCustomProperties(
     customProperties: Record<string, string> | null | undefined,
-    propertyNamesStr: string | undefined
+    propertyNames: string[] | undefined
 ): Record<string, string> | null {
     if (!customProperties || Object.keys(customProperties).length === 0) return null
 
-    const orderedNames = (propertyNamesStr ?? '')
-        .split(',')
-        .map(n => n.trim())
-        .filter(n => n.length > 0)
+    const orderedNames = propertyNames ?? []
 
     const result: Record<string, string> = {}
     const remaining = {...customProperties}
@@ -140,7 +137,7 @@ function orderCustomProperties(
 
 function normalizeConstraint(
     constraint: Constraint,
-    customConstraintPropertyNames: string | undefined
+    customConstraintPropertyNames: string[] | undefined
 ): Constraint {
     const ordered: Record<string, unknown> = {}
 
@@ -157,8 +154,8 @@ function normalizeConstraint(
 
 function normalizeElementOverride(
     override: ElementOverride,
-    customElementPropertyNames: string | undefined,
-    customConstraintPropertyNames: string | undefined
+    customElementPropertyNames: string[] | undefined,
+    customConstraintPropertyNames: string[] | undefined
 ): ElementOverride {
     const ordered: Record<string, unknown> = {}
 

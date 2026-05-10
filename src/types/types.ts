@@ -134,7 +134,7 @@ export interface MessageImplementationGuide {
     parentMIG: string | null
     version: string
     description: string | null
-    customElementPropertyNames?: string
-    customConstraintPropertyNames?: string
+    customElementPropertyNames?: string[]
+    customConstraintPropertyNames?: string[]
     elementOverrides: ElementOverrides
 }
