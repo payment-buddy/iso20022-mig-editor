@@ -230,7 +230,7 @@ function App() {
     }
     return (
         <>
-            <MigListPage migs={migs} onBrowse={handleBrowse} onUpload={handleMigUpload}/>
+            <MigListPage migs={migs} onBrowse={handleBrowse} onUpload={handleMigUpload} onDelete={handleMigDeleted}/>
             {duplicateConfirm && (
                 <DuplicateConfirmModal
                     duplicates={duplicateConfirm.duplicates}

@@ -5,13 +5,16 @@ import {GithubLink} from "../components/GithubLink.tsx"
 
 import {downloadYaml} from "../utils/downloadYaml.ts"
 import {getMigKey, prepareForDownload} from "../utils/migUtils.ts"
+import {ConfirmDeleteModal} from "../components/ConfirmDeleteModal.tsx"
 
-export function MigListPage({migs, onBrowse, onUpload}: {
+export function MigListPage({migs, onBrowse, onUpload, onDelete}: {
     migs: MessageImplementationGuide[]
     onBrowse: () => void
     onUpload: (text: string) => void
+    onDelete: (key: string) => void
 }) {
     const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
 
     const handleToggle = useCallback((key: string) => {
         setSelectedKeys(prev => {
@@ -41,6 +44,18 @@ export function MigListPage({migs, onBrowse, onUpload}: {
         }
     }, [migs, selectedKeys])
 
+    const handleDeleteSelected = useCallback(() => {
+        setShowDeleteModal(true)
+    }, [])
+
+    const confirmDeleteSelected = useCallback(() => {
+        for (const key of selectedKeys) {
+            onDelete(key)
+        }
+        setSelectedKeys(new Set())
+        setShowDeleteModal(false)
+    }, [selectedKeys, onDelete])
+
     return (
         <div>
             <div className="page-header">
@@ -54,6 +69,8 @@ export function MigListPage({migs, onBrowse, onUpload}: {
             <div className="page-actions">
                 <button onClick={handleDownloadSelected}
                         disabled={selectedKeys.size === 0}>Download {selectedKeys.size > 1 && <>({selectedKeys.size})</>}</button>
+                <button onClick={handleDeleteSelected}
+                        disabled={selectedKeys.size === 0}>Delete {selectedKeys.size > 1 && <>({selectedKeys.size})</>}</button>
                 <button onClick={() => {
                     const keys = [...selectedKeys]
                     if (keys.length === 2) window.location.hash = 'compare/' + keys.map(encodeURIComponent).join('/')
@@ -93,6 +110,18 @@ export function MigListPage({migs, onBrowse, onUpload}: {
                 })}
                 </tbody>
             </table>
+            {showDeleteModal && (() => {
+                const items = migs.filter(m => selectedKeys.has(getMigKey(m)))
+                const itemName = items.length === 1 ? items[0].name : `${items.length} selected MIGs`
+                return (
+                    <ConfirmDeleteModal
+                        onClose={() => setShowDeleteModal(false)}
+                        onConfirm={() => confirmDeleteSelected()}
+                        onDownloadBackup={() => handleDownloadSelected()}
+                        itemName={itemName}
+                    />
+                )
+            })()}
         </div>
     )
 }

@@ -15,7 +15,7 @@ import {EditableSelect} from "../components/EditableSelect.tsx"
 import {ConstraintDetailEdit} from "../components/ConstraintDetailEdit.tsx"
 import {DetailPanel} from "../components/DetailPanel.tsx"
 import {MessageTreeView} from "../components/MessageTreeView.tsx"
-import {Modal} from "../components/Modal.tsx"
+import {ConfirmDeleteModal} from "../components/ConfirmDeleteModal.tsx"
 import {EditableField} from "../components/EditableField.tsx"
 import {EditableList} from "../components/EditableList.tsx"
 
@@ -307,21 +307,12 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                 </div>
             )}
             {showDeleteModal && (
-                <Modal
+                <ConfirmDeleteModal
                     onClose={() => setShowDeleteModal(false)}
-                    footer={
-                        <>
-                            <button type="button" onClick={() => confirmDelete()}>Delete</button>
-                            <button type="button" onClick={() => setShowDeleteModal(false)}>Cancel</button>
-                        </>
-                    }
-                >
-                    <p>Delete <code>{mig.name}</code>?</p>
-                    <p>You may want to <a href="#" onClick={async (e) => {
-                        e.preventDefault()
-                        await handleDownload()
-                    }}>download</a> a reserve copy first.</p>
-                </Modal>
+                    onConfirm={() => confirmDelete()}
+                    itemName={mig.name}
+                    onDownloadBackup={handleDownload}
+                />
             )}
         </div>
     )
