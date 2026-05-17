@@ -95,7 +95,7 @@ export function EditableField({value, originalValue, onSave, warning, inputType 
                 )}
                 <button title="Save" onClick={save}>&#x2713;</button>
                 <button title="Cancel" onClick={cancel}>&#x2715;</button>
-                {draft !== originalValue && <button title="Revert" onClick={revert}>&#x21BA;</button>}
+                {draft !== (originalValue ?? '') && <button title="Revert" onClick={revert}>&#x21BA;</button>}
             </div>
         )
     }
