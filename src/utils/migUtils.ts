@@ -9,29 +9,25 @@ export function findMigByKey(migs: MessageImplementationGuide[], key: string): M
     return migs.find(m => getMigKey(m) === key)
 }
 
-export function getParentOptions(
+export function getParentMigCandidates(
     mig: MessageImplementationGuide,
     migs: MessageImplementationGuide[]
-): { value: string, name: string }[] {
+): MessageImplementationGuide[] {
     const migKey = getMigKey(mig)
-    return migs
-        .filter(m => {
-            if (m.messageIdentifier !== mig.messageIdentifier) return false
-            const mKey = getMigKey(m)
-            if (mKey === migKey) return false
-            // Check for cycles
-            let current = migs.find(p => getMigKey(p) === mKey)
-            const visited = new Set<string>()
-            while (current) {
-                const currentKey = getMigKey(current)
-                if (currentKey === migKey) return false
-                if (visited.has(currentKey)) return false
-                visited.add(currentKey)
-                current = current.parentMIG ? findMigByKey(migs, current.parentMIG) : undefined
-            }
-            return true
-        })
-        .map(m => ({ value: getMigKey(m), name: getMigKey(m) }))
+    return migs.filter(m => {
+        if (m.messageIdentifier !== mig.messageIdentifier) return false
+        if (getMigKey(m) === migKey) return false
+        let current: MessageImplementationGuide | undefined = m
+        const visited = new Set<string>()
+        while (current) {
+            const currentKey = getMigKey(current)
+            if (currentKey === migKey) return false
+            if (visited.has(currentKey)) return false
+            visited.add(currentKey)
+            current = current.parentMIG ? findMigByKey(migs, current.parentMIG) : undefined
+        }
+        return true
+    })
 }
 
 export function getCombinedOverrides(

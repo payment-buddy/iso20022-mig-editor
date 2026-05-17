@@ -1,5 +1,11 @@
 import {downloadYaml} from "../utils/downloadYaml"
-import {findMigByKey, getCombinedOverrides, getMigKey, getParentOptions, prepareForDownload} from "../utils/migUtils.ts"
+import {
+    findMigByKey,
+    getCombinedOverrides,
+    getMigKey,
+    getParentMigCandidates,
+    prepareForDownload
+} from "../utils/migUtils.ts"
 import type {
     Constraint,
     ElementOverride,
@@ -11,7 +17,7 @@ import type {
 import {useState} from "react"
 import {ElementDetailEdit} from "../components/ElementDetailEdit.tsx"
 import {ConstraintDetailView} from "../components/ConstraintDetailView.tsx"
-import {EditableSelect} from "../components/EditableSelect.tsx"
+import {MigParentSelect} from "../components/MigParentSelect.tsx"
 import {ConstraintDetailEdit} from "../components/ConstraintDetailEdit.tsx"
 import {DetailPanel} from "../components/DetailPanel.tsx"
 import {MessageTreeView} from "../components/MessageTreeView.tsx"
@@ -41,8 +47,7 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
     const selectedDataType = selectedElement ? eRepository.dataTypes[selectedElement.typeId] ?? null : null
     const excludedCount = Object.values(combinedOverrides).filter(o => o.maxOccurs === 0).length
 
-    const parentOptions = getParentOptions(mig, migs)
-    const isParentMissing = mig.parentMIG && !findMigByKey(migs, mig.parentMIG)
+    const parentMigs = getParentMigCandidates(mig, migs)
 
     let message: MessageDefinition | null = null
     for (const ba of eRepository.businessAreas) {
@@ -208,17 +213,12 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
                 />
                 <label className="detail-label">Parent MIG:</label>
                 <div style={{display: 'flex', flexDirection: 'column', gap: '0.5em'}}>
-                    <EditableSelect
-                        value={mig.parentMIG ?? null}
+                    <MigParentSelect
+                        value={mig.parentMIG}
                         originalValue={mig.parentMIG}
-                        options={parentOptions}
-                        onSave={val => onUpdate({...mig, parentMIG: val ?? undefined})}
+                        migs={parentMigs}
+                        onSave={val => onUpdate({...mig, parentMIG: val})}
                     />
-                    {isParentMissing && (
-                        <div style={{color: 'red', fontSize: '0.9em'}}>
-                            The selected parent MIG is missing. Please upload it.
-                        </div>
-                    )}
                 </div>
                 <label className="detail-label" style={{alignSelf: 'start', paddingTop: '0.1em'}}>Description:</label>
                 <EditableField value={mig.description}

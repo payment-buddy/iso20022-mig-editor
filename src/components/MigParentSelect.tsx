@@ -1,31 +1,27 @@
 import {useEffect, useRef, useState} from 'react'
 import {WarningIcon} from "./WarningIcon.tsx"
+import {getMigKey} from "../utils/migUtils.ts"
+import type {MessageImplementationGuide} from "../types/types.ts"
 
-export function EditableSelect({
+export function MigParentSelect({
     value,
-    options,
+    migs,
     onSave,
-    placeholder = '<none>',
     originalValue,
-    warning
 }: {
-    value: string | null
-    options: { value: string, name: string }[]
-    onSave: (value: string | null) => void
-    placeholder?: string
-    originalValue?: string | null
-    warning?: string
+    value: string | undefined
+    migs: MessageImplementationGuide[]
+    onSave: (value: string | undefined) => void
+    originalValue?: string
 }) {
     const [editing, setEditing] = useState(false)
     const [draft, setDraft] = useState<string | null>(null)
     const [hovered, setHovered] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
     const selectRef = useRef<HTMLSelectElement>(null)
-    const spanRef = useRef<HTMLSpanElement>(null)
 
-    const selectedOption = options.find(o => o.value === value)
-    const displayValue = value ? (selectedOption?.name ?? `${value} (Missing)`) : placeholder
-    const isMissing = !!value && !selectedOption
+    const selectedOption = value ? migs.find(m => getMigKey(m) === value) : undefined
+    const isMissing = value !== undefined && !selectedOption
     const isOverridden = originalValue !== undefined && value !== originalValue
 
     function handleDraftChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -34,19 +30,19 @@ export function EditableSelect({
     }
 
     function startEdit() {
-        setDraft(value)
+        setDraft(value ?? null)
         setHovered(false)
         setEditing(true)
     }
 
     function save() {
-        onSave(draft)
+        onSave(draft ?? undefined)
         setEditing(false)
         setHovered(true)
     }
 
     function cancel() {
-        setDraft(value)
+        setDraft(value ?? null)
         setEditing(false)
         setHovered(true)
     }
@@ -67,7 +63,7 @@ export function EditableSelect({
         if (!editing) return
         const handler = (e: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-                setDraft(value)
+                setDraft(value ?? null)
                 setEditing(false)
             }
         }
@@ -91,12 +87,13 @@ export function EditableSelect({
                         fontSize: 'inherit',
                     }}
                 >
-                    <option value="">{placeholder}</option>
-                    {options.map(p => (
-                        <option key={p.value} value={p.value}>{p.name}</option>
-                    ))}
-                    {originalValue && !options.some(o => o.value === originalValue) && (
-                        <option value={originalValue}>{originalValue} (Missing)</option>
+                    <option value="">&lt;none&gt;</option>
+                    {migs.map(m => {
+                        const key = getMigKey(m)
+                        return <option key={key} value={key}>{key}</option>
+                    })}
+                    {value && !migs.some(m => getMigKey(m) === value) && (
+                        <option value={value}>{value} (Missing)</option>
                     )}
                 </select>
                 <button title="Save" onClick={save}>&#x2713;</button>
@@ -107,27 +104,42 @@ export function EditableSelect({
     }
 
     return (
-        <div 
-            style={{display: 'flex', alignItems: 'flex-start'}} 
+        <div
+            style={{display: 'flex', alignItems: 'flex-start'}}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
-            <span ref={spanRef}>
-                <span 
-                    title={isOverridden ? `was: ${originalValue ?? '<none>'}` : undefined}
-                    className={isOverridden ? 'is-overridden' : undefined}
-                    style={{
-                        padding: '4px 4px 0 4px',
-                        minWidth: '1em',
-                        color: isMissing ? 'red' : 'inherit'
-                    }}
-                >
-                    {displayValue}
-                </span>
-                {warning && <WarningIcon title={warning} style={{marginLeft: '4px'}}/>}
+            <span>
+                {value && selectedOption ? (
+                    <a
+                        href={'#mig/' + encodeURIComponent(value)}
+                        title={isOverridden ? `was: ${originalValue ?? '<none>'}` : undefined}
+                        className={isOverridden ? 'is-overridden' : undefined}
+                        style={{padding: '4px 4px 0 4px', display: 'inline-block'}}
+                    >
+                        {value}
+                    </a>
+                ) : (
+                    <span
+                        title={isOverridden ? `was: ${originalValue ?? '<none>'}` : undefined}
+                        className={isOverridden ? 'is-overridden' : undefined}
+                        style={{
+                            padding: '4px 4px 0 4px',
+                            minWidth: '1em',
+                            color: isMissing ? 'red' : 'inherit'
+                        }}
+                    >
+                        {isMissing ? (
+                            <>{value} (missing)</>
+                        ) : (
+                            <span style={{color: '#888'}}>&lt;none&gt;</span>
+                        )}
+                    </span>
+                )}
+                {isMissing && <WarningIcon title="The selected parent MIG was not found. Please upload it." style={{marginLeft: '4px'}}/>}
             </span>
-            <button 
-                title="Edit" 
+            <button
+                title="Edit"
                 onClick={startEdit}
                 style={{
                     visibility: hovered ? 'visible' : 'hidden',
