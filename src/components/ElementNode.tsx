@@ -50,12 +50,13 @@ export function ElementNode({element, parentPath, parentExcluded}: {
             minOccurs: 1,
             maxOccurs: 1,
             typeId: simpleType.currencyIdentifierSet,
+            type: dataTypes[simpleType.currencyIdentifierSet]?.name,
             constraints: [],
             examples: [],
         }
         : null
     const override = overrides[elementPath]
-    const hasChildren = complexType.elements?.length || element.constraints?.length || dataType.constraints?.length || override?.additionalConstraints?.length
+    const hasChildren = complexType.elements?.length || element.constraints?.length || override?.additionalConstraints?.length
     const isExcluded = parentExcluded || (override?.maxOccurs ?? element.maxOccurs) === 0
 
     if (isExcluded && hideExcluded) return null
@@ -103,12 +104,6 @@ export function ElementNode({element, parentPath, parentExcluded}: {
                                  parentExcluded={isExcluded}/>
                 )}
                 {element.constraints.map((constraint) => (
-                    <ConstraintNode key={constraint.name}
-                                    constraint={constraint}
-                                    parentPath={elementPath}
-                                    parentExcluded={isExcluded}/>
-                ))}
-                {dataType?.constraints.map((constraint) => (
                     <ConstraintNode key={constraint.name}
                                     constraint={constraint}
                                     parentPath={elementPath}

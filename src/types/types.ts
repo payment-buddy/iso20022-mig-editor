@@ -48,6 +48,7 @@ export interface MessageElement {
     minOccurs: number
     maxOccurs: number | null
     typeId: string
+    type: string
     constraints: Constraint[]
     examples: string[]
 }

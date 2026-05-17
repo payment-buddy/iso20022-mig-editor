@@ -46,7 +46,7 @@ export function ElementDetailEdit({
     const simpleType = dataType as SimpleType
     const baseType = simpleType.baseType
     const isSimpleType = !('elements' in dataType)
-    const baseExamples = element.examples.length > 0 ? element.examples : (simpleType.examples ?? [])
+    const baseExamples = element.examples
 
     const baseDefinition = inheritedOverride?.definition ?? element.definition ?? dataType.definition
     const baseMinOccurs = inheritedOverride?.minOccurs ?? element.minOccurs ?? undefined
@@ -138,7 +138,7 @@ export function ElementDetailEdit({
             </div>
             <div>
                 <div className="detail-label">Type</div>
-                <div>{dataType.name} {baseType && <span>({baseType})</span>}</div>
+                <div>{element.type} {baseType && <span>({baseType})</span>}</div>
             </div>
             <div>
                 <div className="detail-label">Definition</div>

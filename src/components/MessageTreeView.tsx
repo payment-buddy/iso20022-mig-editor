@@ -54,12 +54,6 @@ export function MessageTreeView({
                         paths.add(elementPath + '/' + constraint.name)
                     }
                 }
-                for (const constraint of dataType.constraints) {
-                    if (constraint.name.toLowerCase().includes(lowerFilter)) {
-                        addAncestors(elementPath)
-                        paths.add(elementPath + '/' + constraint.name)
-                    }
-                }
             }
 
             const complexType = dataType as { elements?: MessageElement[] }

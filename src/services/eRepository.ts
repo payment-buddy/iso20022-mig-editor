@@ -15,6 +15,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
 
     const dataTypes: DataTypes = {} // xmi:id → DataType
     const businessAreas: BusinessArea[] = []
+    const messageElementTypes: { messageElement: MessageElement, typeId: string }[] = []
     let businessArea: BusinessArea | null = null
     let complexType: ComplexType | null = null
     let simpleType: SimpleType | null = null
@@ -81,6 +82,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
 
         if (node.name === 'messageElement') {
             if (complexType) {
+                const typeId = attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType']
                 messageElement = {
                     id: attrs['xmi:id'],
                     name: attrs['name'],
@@ -89,10 +91,12 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     definition: attrs['definition'] ?? '',
                     minOccurs: int(attrs['minOccurs']) ?? 1,
                     maxOccurs: int(attrs['maxOccurs']),
-                    typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
+                    typeId: typeId,
+                    type: '',
                     constraints: [],
                     examples: [],
                 }
+                messageElementTypes.push({messageElement, typeId})
                 complexType.elements.push(messageElement)
             }
         } else if (node.name === 'messageDefinition') {
@@ -114,6 +118,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     minOccurs: 1,
                     maxOccurs: 1,
                     typeId: attrs['xmi:id'],
+                    type: '',
                     constraints: [],
                     examples: [],
                 }
@@ -127,6 +132,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
             }
         } else if (node.name === 'messageBuildingBlock') {
             if (complexType) {
+                const typeId = attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType']
                 messageElement = {
                     id: attrs['xmi:id'],
                     name: attrs['name'],
@@ -135,10 +141,12 @@ export async function parseRepository(file: File): Promise<ERepository> {
                     definition: attrs['definition'] ?? '',
                     minOccurs: int(attrs['minOccurs']) ?? 1,
                     maxOccurs: int(attrs['maxOccurs']),
-                    typeId: attrs['complexType'] ?? attrs['type'] ?? attrs['simpleType'],
+                    typeId: typeId,
+                    type: '',
                     constraints: [],
                     examples: [],
                 }
+                messageElementTypes.push({messageElement, typeId})
                 complexType.elements.push(messageElement)
             }
         } else if (node.name === 'messageDefinitionIdentifier') {
@@ -207,6 +215,20 @@ export async function parseRepository(file: File): Promise<ERepository> {
     }
     parser.close()
 
-    businessAreas.forEach(ba => ba.messages.sort((a, b) => a.identifier.localeCompare(b.identifier)))
+    for (const ba of businessAreas) {
+        ba.messages.sort((a, b) => a.identifier.localeCompare(b.identifier))
+    }
+    for (const {messageElement, typeId} of messageElementTypes) {
+        const type = dataTypes[typeId]
+        const simpleType = type as SimpleType
+        messageElement.type = type.name
+        if (type.constraints) {
+            messageElement.constraints.push(...type.constraints)
+        }
+        if (simpleType.examples) {
+            messageElement.examples.push(...simpleType.examples)
+        }
+    }
+
     return {dataTypes, businessAreas}
 }

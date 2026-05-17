@@ -5,9 +5,8 @@ export function ElementDetailView({element, dataType, xmlPath}: {
     dataType: DataType
     xmlPath: string
 }) {
-    const typeExamples = (dataType as SimpleType).examples ?? []
-    const examples = element.examples?.length > 0 ? element.examples : typeExamples
-
+    const simpleType = dataType as SimpleType
+    const baseType = simpleType.baseType
     return (
         <div className="detail-panel">
             <div>
@@ -20,7 +19,7 @@ export function ElementDetailView({element, dataType, xmlPath}: {
             </div>
             <div>
                 <div className="detail-label">Type</div>
-                <div>{dataType.name}</div>
+                <div>{element.type} {baseType && <span>({baseType})</span>}</div>
             </div>
             <div>
                 <div className="detail-label">Definition</div>
@@ -30,10 +29,10 @@ export function ElementDetailView({element, dataType, xmlPath}: {
                 <div className="detail-label">Multiplicity</div>
                 <div>[{element.minOccurs}..{element.maxOccurs ?? 'unbounded'}]</div>
             </div>
-            {examples.length > 0 && (
+            {element.examples.length > 0 && (
                 <div>
                     <div className="detail-label">Examples</div>
-                    <div>{examples.join(', ')}</div>
+                    <div>{element.examples.join(', ')}</div>
                 </div>
             )}
         </div>
