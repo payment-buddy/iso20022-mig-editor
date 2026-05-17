@@ -89,7 +89,6 @@ export function EditableSelect({
                     style={{
                         fontFamily: 'inherit',
                         fontSize: 'inherit',
-                        width: '100%',
                     }}
                 >
                     <option value="">{placeholder}</option>
