@@ -107,8 +107,8 @@ export function MigDetailPage({mig, migs, eRepository, onUpdate, onDelete}: {
 
     function isOverrideEmpty(override: ElementOverride) {
         const {allowedValues, examples, additionalConstraints, customProperties, ...rest} = override
-        const customPropsEmpty = customProperties == null || Object.keys(customProperties).length === 0
-        return (allowedValues == null || allowedValues.length === 0) && (examples == null || examples.length === 0) && (additionalConstraints == null || additionalConstraints.length === 0) && customPropsEmpty && Object.values(rest).every(v => v === null)
+        const customPropsEmpty = customProperties == undefined || Object.keys(customProperties).length === 0
+        return (allowedValues == undefined || allowedValues.length === 0) && (examples === undefined || examples?.length === 0) && (additionalConstraints == undefined || additionalConstraints.length === 0) && customPropsEmpty && Object.values(rest).every(v => v === null)
     }
 
     function handleUpdateElementOverride(xmlPath: string, override: ElementOverride) {

@@ -112,20 +112,20 @@ export interface ElementOverrides {
 }
 
 export interface ElementOverride {
-    definition: string | null
-    minOccurs: number | null
-    maxOccurs: number | null
-    minInclusive: number | null
-    maxInclusive: number | null
-    totalDigits: number | null
-    fractionDigits: number | null
-    minLength: number | null
-    maxLength: number | null
-    pattern: string | null
-    allowedValues: string[] | null
-    examples: string[] | null
-    customProperties: Record<string, string> | null
-    additionalConstraints: Constraint[] | null
+    definition?: string
+    minOccurs?: number
+    maxOccurs?: number
+    minInclusive?: number
+    maxInclusive?: number
+    totalDigits?: number
+    fractionDigits?: number
+    minLength?: number
+    maxLength?: number
+    pattern?: string
+    allowedValues?: string[]
+    examples?: string[]
+    customProperties?: Record<string, string>
+    additionalConstraints?: Constraint[]
 }
 
 export interface MessageImplementationGuide {

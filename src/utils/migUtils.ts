@@ -61,11 +61,11 @@ export function getCombinedOverrides(
 }
 
 function mergeCustomProperties(
-    parent: Record<string, string> | null | undefined,
-    current: Record<string, string> | null | undefined
-): Record<string, string> | null {
+    parent: Record<string, string> | undefined,
+    current: Record<string, string> | undefined
+): Record<string, string> | undefined {
     const merged = { ...(parent ?? {}), ...(current ?? {}) }
-    return Object.keys(merged).length > 0 ? merged : null
+    return Object.keys(merged).length > 0 ? merged : undefined
 }
 
 function mergeOverrides(parent: ElementOverride | undefined, current: ElementOverride): ElementOverride {
@@ -89,10 +89,10 @@ function mergeOverrides(parent: ElementOverride | undefined, current: ElementOve
     }
 }
 
-function mergeConstraints(parent: Constraint[] | null | undefined, current: Constraint[] | null | undefined): Constraint[] | null {
-    if (!parent && !current) return null
-    if (!parent) return current ?? null
-    if (!current) return parent ?? null
+function mergeConstraints(parent: Constraint[] | undefined, current: Constraint[] | undefined): Constraint[] | undefined {
+    if (!parent && !current) return undefined
+    if (!parent) return current ?? undefined
+    if (!current) return parent ?? undefined
 
     // Combine both, but keep unique by name?
     // Usually implementation guides add more constraints.
@@ -110,10 +110,10 @@ function mergeConstraints(parent: Constraint[] | null | undefined, current: Cons
 }
 
 function orderCustomProperties(
-    customProperties: Record<string, string> | null | undefined,
+    customProperties: Record<string, string> | undefined,
     propertyNames: string[] | undefined
-): Record<string, string> | null {
-    if (!customProperties || Object.keys(customProperties).length === 0) return null
+): Record<string, string> | undefined {
+    if (!customProperties || Object.keys(customProperties).length === 0) return undefined
 
     const orderedNames = propertyNames ?? []
 
@@ -132,7 +132,7 @@ function orderCustomProperties(
         result[name] = remaining[name]
     }
 
-    return Object.keys(result).length > 0 ? result : null
+    return Object.keys(result).length > 0 ? result : undefined
 }
 
 function normalizeConstraint(

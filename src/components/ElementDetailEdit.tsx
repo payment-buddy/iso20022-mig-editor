@@ -5,14 +5,14 @@ import {EditableField} from "./EditableField.tsx"
 import {EditableList} from "./EditableList.tsx"
 
 function createValueValidator(elementOverride: ElementOverride | null, simpleType: SimpleType): (value: string) => string | null {
-    const pattern = elementOverride?.pattern ?? simpleType.pattern
+    const pattern = elementOverride?.pattern ?? simpleType.pattern ?? undefined
     const minLength = elementOverride?.minLength ?? simpleType.minLength ?? simpleType.length
     const maxLength = elementOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length
 
     return (value: string): string | null => {
         if (minLength != null && value.length < minLength) return "Shorter than minLength"
         if (maxLength != null && value.length > maxLength) return "Longer than maxLength"
-        if (pattern != null) {
+        if (pattern != undefined) {
             try {
                 const regexp = new RegExp('^' + pattern + '$', 'u')
                 return regexp.test(value) ? null : 'Does not match pattern ' + pattern
@@ -48,54 +48,41 @@ export function ElementDetailEdit({
     const isSimpleType = !('elements' in dataType)
     const baseExamples = element.examples.length > 0 ? element.examples : (simpleType.examples ?? [])
 
-    const baseDefinition = inheritedOverride?.definition || element.definition || dataType.definition
-    const baseMinOccurs = inheritedOverride?.minOccurs ?? element.minOccurs
-    const baseMaxOccurs = inheritedOverride?.maxOccurs ?? element.maxOccurs
-    const baseMinLength = inheritedOverride?.minLength ?? simpleType.minLength ?? simpleType.length
-    const baseMaxLength = inheritedOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length
-    const baseMinInclusive = inheritedOverride?.minInclusive ?? simpleType.minInclusive
-    const baseMaxInclusive = inheritedOverride?.maxInclusive ?? simpleType.maxInclusive
-    const baseTotalDigits = inheritedOverride?.totalDigits ?? simpleType.totalDigits
-    const baseFractionDigits = inheritedOverride?.fractionDigits ?? simpleType.fractionDigits
-    const basePattern = inheritedOverride?.pattern ?? simpleType.pattern
+    const baseDefinition = inheritedOverride?.definition ?? element.definition ?? dataType.definition
+    const baseMinOccurs = inheritedOverride?.minOccurs ?? element.minOccurs ?? undefined
+    const baseMaxOccurs = inheritedOverride?.maxOccurs ?? element.maxOccurs ?? undefined
+    const baseMinInclusive = inheritedOverride?.minInclusive ?? simpleType.minInclusive ?? undefined
+    const baseMaxInclusive = inheritedOverride?.maxInclusive ?? simpleType.maxInclusive ?? undefined
+    const baseTotalDigits = inheritedOverride?.totalDigits ?? simpleType.totalDigits ?? undefined
+    const baseFractionDigits = inheritedOverride?.fractionDigits ?? simpleType.fractionDigits ?? undefined
+    const baseMinLength = inheritedOverride?.minLength ?? simpleType.minLength ?? simpleType.length ?? undefined
+    const baseMaxLength = inheritedOverride?.maxLength ?? simpleType.maxLength ?? simpleType.length ?? undefined
+    const basePattern = inheritedOverride?.pattern ?? simpleType.pattern ?? undefined
     const baseAllowedValues = inheritedOverride?.allowedValues ?? []
 
     const effectiveExamples = inheritedOverride?.examples ?? baseExamples
     const effectiveMinOccurs = elementOverride?.minOccurs ?? baseMinOccurs
     const effectiveMaxOccurs = elementOverride?.maxOccurs ?? baseMaxOccurs
-    const effectiveMinLength = elementOverride?.minLength ?? baseMinLength
-    const effectiveMaxLength = elementOverride?.maxLength ?? baseMaxLength
     const effectiveMinInclusive = elementOverride?.minInclusive ?? baseMinInclusive
     const effectiveMaxInclusive = elementOverride?.maxInclusive ?? baseMaxInclusive
     const effectiveTotalDigits = elementOverride?.totalDigits ?? baseTotalDigits
     const effectiveFractionDigits = elementOverride?.fractionDigits ?? baseFractionDigits
+    const effectiveMinLength = elementOverride?.minLength ?? baseMinLength
+    const effectiveMaxLength = elementOverride?.maxLength ?? baseMaxLength
 
-    const minOccursWarning = baseMinOccurs != null && effectiveMinOccurs != null && effectiveMinOccurs < baseMinOccurs ? 'Lower than original' : undefined
-    const maxOccursWarning = effectiveMinOccurs != null && effectiveMaxOccurs != null && effectiveMinOccurs > effectiveMaxOccurs ? 'Lower than minOccurs' : baseMaxOccurs != null && effectiveMaxOccurs != null && effectiveMaxOccurs > baseMaxOccurs ? 'Higher than original' : undefined
+
+    const minOccursWarning = baseMinOccurs != undefined && effectiveMinOccurs != undefined && effectiveMinOccurs < baseMinOccurs ? 'Lower than original' : undefined
+    const maxOccursWarning = effectiveMinOccurs != undefined && effectiveMaxOccurs != undefined && effectiveMinOccurs > effectiveMaxOccurs ? 'Lower than minOccurs' : baseMaxOccurs != undefined && effectiveMaxOccurs != undefined && effectiveMaxOccurs > baseMaxOccurs ? 'Higher than original' : undefined
     const patternWarning = !isValidXsdPattern(elementOverride?.pattern ?? basePattern ?? '') ? 'Invalid XSD pattern' : undefined
-    const minLengthWarning = baseMinLength != null && effectiveMinLength != null && effectiveMinLength < baseMinLength ? 'Lower than original' : undefined
-    const maxLengthWarning = effectiveMinLength != null && effectiveMaxLength != null && effectiveMinLength > effectiveMaxLength ? 'Lower than minLength' : baseMaxLength != null && effectiveMaxLength != null && effectiveMaxLength > baseMaxLength ? 'Higher than original' : undefined
-    const minInclusiveWarning = baseMinInclusive != null && effectiveMinInclusive != null && effectiveMinInclusive < baseMinInclusive ? 'Lower than original' : undefined
-    const maxInclusiveWarning = effectiveMinInclusive != null && effectiveMaxInclusive != null && effectiveMinInclusive > effectiveMaxInclusive ? 'Lower than minInclusive' : baseMaxInclusive != null && effectiveMaxInclusive != null && effectiveMaxInclusive > baseMaxInclusive ? 'Higher than original' : undefined
-    const totalDigitsWarning = baseTotalDigits != null && effectiveTotalDigits != null && effectiveTotalDigits < baseTotalDigits ? 'Lower than original' : undefined
-    const fractionDigitsWarning = baseFractionDigits != null && effectiveFractionDigits != null && effectiveFractionDigits > baseFractionDigits ? 'Higher than original' : undefined
+    const minLengthWarning = baseMinLength != undefined && effectiveMinLength != undefined && effectiveMinLength < baseMinLength ? 'Lower than original' : undefined
+    const maxLengthWarning = effectiveMinLength != undefined && effectiveMaxLength != undefined && effectiveMinLength > effectiveMaxLength ? 'Lower than minLength' : baseMaxLength != undefined && effectiveMaxLength != undefined && effectiveMaxLength > baseMaxLength ? 'Higher than original' : undefined
+    const minInclusiveWarning = baseMinInclusive != undefined && effectiveMinInclusive != undefined && effectiveMinInclusive < baseMinInclusive ? 'Lower than original' : undefined
+    const maxInclusiveWarning = effectiveMinInclusive != undefined && effectiveMaxInclusive != undefined && effectiveMinInclusive > effectiveMaxInclusive ? 'Lower than minInclusive' : baseMaxInclusive != undefined && effectiveMaxInclusive != undefined && effectiveMaxInclusive > baseMaxInclusive ? 'Higher than original' : undefined
+    const totalDigitsWarning = baseTotalDigits != undefined && effectiveTotalDigits != undefined && effectiveTotalDigits < baseTotalDigits ? 'Lower than original' : undefined
+    const fractionDigitsWarning = baseFractionDigits != undefined && effectiveFractionDigits != undefined && effectiveFractionDigits > baseFractionDigits ? 'Higher than original' : undefined
 
     function buildOverride(updates: Partial<ElementOverride>): ElementOverride {
         return {
-            definition: null,
-            minOccurs: null,
-            maxOccurs: null,
-            minInclusive: null,
-            maxInclusive: null,
-            totalDigits: null,
-            fractionDigits: null,
-            minLength: null,
-            maxLength: null,
-            pattern: null,
-            allowedValues: null,
-            examples: null,
-            additionalConstraints: null,
-            customProperties: null,
             ...elementOverride,
             ...updates,
         } as ElementOverride
@@ -106,21 +93,21 @@ export function ElementDetailEdit({
         onUpdateOverride(xmlPath, updated)
     }
 
-    function saveInt(field: string, original: number | null, val: string) {
+    function saveInt(field: string, original: number | undefined, val: string) {
         if (val === '') {
-            saveOverride({[field]: null})
+            saveOverride({[field]: undefined})
         } else {
             const num = parseInt(val, 10)
-            if (!isNaN(num)) saveOverride({[field]: num === original ? null : num})
+            if (!isNaN(num)) saveOverride({[field]: num === original ? undefined : num})
         }
     }
 
-    function saveNumber(field: string, original: number | null, val: string) {
+    function saveNumber(field: string, original: number | undefined, val: string) {
         if (val === '') {
-            saveOverride({[field]: null})
+            saveOverride({[field]: undefined})
         } else {
             const num = Number(val)
-            if (!isNaN(num)) saveOverride({[field]: num === original ? null : num})
+            if (!isNaN(num)) saveOverride({[field]: num === original ? undefined : num})
         }
     }
 
@@ -133,7 +120,7 @@ export function ElementDetailEdit({
         } else {
             newProps[name] = val.trim()
         }
-        const customProperties = Object.keys(newProps).length > 0 ? newProps : null
+        const customProperties = Object.keys(newProps).length > 0 ? newProps : undefined
         saveOverride({customProperties})
     }
 
@@ -156,10 +143,10 @@ export function ElementDetailEdit({
             <div>
                 <div className="detail-label">Definition</div>
                 <EditableField
-                    value={elementOverride?.definition || baseDefinition}
+                    value={elementOverride?.definition ?? baseDefinition}
                     originalValue={baseDefinition}
                     inputType="textarea"
-                    onSave={val => saveOverride({definition: val === baseDefinition ? null : val})}
+                    onSave={val => saveOverride({definition: val === (baseDefinition ?? '') ? undefined : val})}
                 />
             </div>
             <div>
@@ -256,7 +243,7 @@ export function ElementDetailEdit({
                         originalValue={basePattern}
                         warning={patternWarning}
                         onSave={val => {
-                            saveOverride({pattern: val === (basePattern ?? '') || val === '' ? null : val})
+                            saveOverride({pattern: val === (basePattern ?? '') ? undefined : val})
                         }}
                     />
                 </div>
@@ -268,7 +255,7 @@ export function ElementDetailEdit({
                         values={elementOverride?.allowedValues ?? baseAllowedValues}
                         originalValues={baseAllowedValues}
                         validateValue={v => validateValue(v)}
-                        onSave={values => saveOverride({allowedValues: values.length === 0 ? null : values})}
+                        onSave={values => saveOverride({allowedValues: values.length === 0 ? undefined : values})}
                     />
                 </div>
             )}
@@ -279,7 +266,7 @@ export function ElementDetailEdit({
                         values={elementOverride?.examples ?? effectiveExamples}
                         originalValues={effectiveExamples}
                         validateValue={v => validateValue(v)}
-                        onSave={values => saveOverride({examples: values.length === 0 ? null : values})}
+                        onSave={values => saveOverride({examples: values.length === 0 ? undefined : values})}
                     />
                 </div>
             )}

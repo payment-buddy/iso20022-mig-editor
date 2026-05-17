@@ -12,14 +12,6 @@ describe('migUtils', () => {
                 definition: 'MIG1 definition',
                 minOccurs: 1,
                 maxOccurs: 1,
-                minInclusive: null,
-                maxInclusive: null,
-                totalDigits: null,
-                fractionDigits: null,
-                minLength: null,
-                maxLength: null,
-                pattern: null,
-                allowedValues: null,
                 examples: ['ex1'],
                 additionalConstraints: [{name: 'C1', definition: 'D1'}],
                 customProperties: {foo: 'parent-foo', bar: 'parent-bar'}
@@ -35,17 +27,7 @@ describe('migUtils', () => {
         elementOverrides: {
             'root/elem1': {
                 definition: 'MIG2 definition',
-                minOccurs: null,
-                maxOccurs: null,
-                minInclusive: null,
-                maxInclusive: null,
-                totalDigits: null,
-                fractionDigits: null,
-                minLength: null,
-                maxLength: null,
-                pattern: null,
                 allowedValues: ['V1'],
-                examples: null,
                 additionalConstraints: [{name: 'C2', definition: 'D2'}],
                 customProperties: {bar: 'child-bar'}
             } as ElementOverride,
@@ -53,17 +35,6 @@ describe('migUtils', () => {
                 definition: 'MIG2 definition 2',
                 minOccurs: 0,
                 maxOccurs: 0,
-                minInclusive: null,
-                maxInclusive: null,
-                totalDigits: null,
-                fractionDigits: null,
-                minLength: null,
-                maxLength: null,
-                pattern: null,
-                allowedValues: null,
-                examples: null,
-                additionalConstraints: null,
-                customProperties: null
             } as ElementOverride
         }
     }

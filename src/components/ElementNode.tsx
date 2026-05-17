@@ -4,11 +4,11 @@ import {useMessageTreeContext} from "../contexts/MessageTreeContext.tsx"
 import {ConstraintNode} from "./ConstraintNode.tsx"
 
 function Cardinality({element, override}: { element: MessageElement, override: ElementOverride | undefined }) {
-    const min = override?.minOccurs ?? element.minOccurs
-    const max = override?.maxOccurs ?? element.maxOccurs
+    const min = override?.minOccurs ?? element.minOccurs ?? '1'
+    const max = override?.maxOccurs ?? element.maxOccurs ?? '*'
     return (
         <span style={{color: '#888', marginLeft: '0.4em'}}>
-            [{min}..{max ?? '*'}]
+            [{min}..{max}]
         </span>
     )
 }
