@@ -22,6 +22,7 @@ import type {
 import { rootPath } from "@/core/erepository/elementPath"
 import { cn } from "@/lib/utils"
 import { ProvenanceMarker } from "@/components/ProvenanceMarker"
+import { treeFilterMatch } from "./treeFilterMatch"
 
 /** Number of rows ↕ a PageUp/PageDown jumps. */
 const PAGE = 10
@@ -230,17 +231,14 @@ function countExcluded(
  */
 type TreeFilter = { keep: Set<string>; expand: Set<string> }
 
-function matchesQuery(text: string, q: string): boolean {
-  return text.toLowerCase().includes(q)
-}
-
 /**
  * Compute the kept/expanded paths for the active filters: a text query and/or
  * "changes only" (elements/constraints the MIG overrides — own or inherited). A
  * node "matches" when it satisfies every active filter; an element is kept when
  * it or any descendant matches, and ancestors of a match are kept and
  * auto-expanded so the match — and the structure leading to it — stays visible.
- * `q` must already be lower-cased (empty = no text filter).
+ * `q` is the raw, trimmed filter text (empty = no text filter); `treeFilterMatch`
+ * handles case folding and CamelHumps matching.
  */
 function buildFilter(
   root: MessageElement,
@@ -253,7 +251,9 @@ function buildFilter(
   const expand = new Set<string>()
   const visit = (el: MessageElement, path: string): boolean => {
     const textMatch =
-      q === "" || matchesQuery(el.name, q) || matchesQuery(el.xmlTag, q)
+      q === "" ||
+      treeFilterMatch(el.name, q) ||
+      treeFilterMatch(el.xmlTag, q)
     const changeMatch =
       !changesOnly ||
       elementOverrideOrigin(path, ownOverrides, effectiveOverrides) !== null
@@ -269,7 +269,7 @@ function buildFilter(
       effectiveOverrides
     )) {
       const conMatch =
-        (q === "" || matchesQuery(constraint.name, q)) &&
+        (q === "" || treeFilterMatch(constraint.name, q)) &&
         (!changesOnly || colour !== null)
       if (conMatch) {
         keep.add(`${path}/${constraint.name}`)
@@ -460,7 +460,9 @@ export function ElementTree({
   const hasOverrides = !!effective && Object.keys(effective).length > 0
   // Ignore a lingering "changes only" toggle once there's nothing to filter on.
   const changesActive = changesOnly && hasOverrides
-  const q = filter.trim().toLowerCase()
+  // Raw (trimmed, original-case) — an uppercase letter opts into CamelHumps
+  // matching, so the query can't be pre-lowercased here.
+  const q = filter.trim()
   const treeFilter = useMemo(
     () =>
       q || changesActive
