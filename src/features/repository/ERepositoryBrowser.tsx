@@ -13,6 +13,7 @@ import {
 } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import {
+  baseName,
   groupMessages,
   type MessageGroup,
 } from "@/core/erepository/messageGroups"
@@ -431,6 +432,16 @@ function MessageSetsView({
   migIds: Set<string>
 }) {
   const sets = useMemo(() => repo.messageSets ?? [], [repo.messageSets])
+
+  // Resolve member identifiers to their message names for display/filtering.
+  const messageNames = useMemo(() => {
+    const names = new Map<string, string>()
+    for (const area of repo.businessAreas)
+      for (const msg of area.messages)
+        names.set(msg.identifier, baseName(msg.name))
+    return names
+  }, [repo.businessAreas])
+
   const [filter, setFilter] = useState("")
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
   const filterRef = useRef<HTMLInputElement>(null)
@@ -448,10 +459,13 @@ function MessageSetsView({
         (s) =>
           matches(s.name, q) ||
           matches(s.definition, q) ||
-          s.messageIdentifiers.some((id) => matches(id, q))
+          s.messageIdentifiers.some(
+            (id) =>
+              matches(id, q) || matches(messageNames.get(id) ?? "", q)
+          )
       )
       .map((set) => ({ set, open: true }))
-  }, [sets, filtering, q, expanded])
+  }, [sets, filtering, q, expanded, messageNames])
 
   const toggle = (name: string) =>
     setExpanded((prev) => {
@@ -540,7 +554,10 @@ function MessageSetsView({
                             href={hashFor({ name: "message", code: id })}
                             className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm no-underline outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30"
                           >
-                            <span className="font-mono text-xs">{id}</span>
+                            <span className="font-mono text-xs">
+                              {messageNames.get(id) ?? id}
+                            </span>
+                            <Badge>{id}</Badge>
                             {migIds.has(id) && <MigBadge />}
                           </a>
                         </li>
