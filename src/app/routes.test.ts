@@ -16,6 +16,10 @@ describe("parseHash", () => {
     expect(parseHash("#trash")).toEqual({ name: "trash" })
   })
 
+  it("parses the secret reset route", () => {
+    expect(parseHash("#reset")).toEqual({ name: "reset" })
+  })
+
   it("parses a mig key, decoding the colon-version", () => {
     expect(parseHash("#mig/EPC-SCTInst%3A2023")).toEqual({
       name: "mig",
@@ -87,6 +91,7 @@ describe("hashFor", () => {
     expect(hashFor({ name: "home" })).toBe("#")
     expect(hashFor({ name: "browse" })).toBe("#browse")
     expect(hashFor({ name: "trash" })).toBe("#trash")
+    expect(hashFor({ name: "reset" })).toBe("#reset")
     expect(hashFor({ name: "message", code: "pacs.008.001.08" })).toBe(
       "#pacs.008.001.08"
     )
@@ -121,6 +126,7 @@ describe("round-trip", () => {
     { name: "home" },
     { name: "browse" },
     { name: "trash" },
+    { name: "reset" },
     { name: "message", code: "pacs.008.001.08" },
     { name: "mig", key: "EPC-SCTInst:2023" },
     { name: "compare", a: "EPC:1.0", b: "CSM:2.0" },

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { SpinnerGapIcon } from "@phosphor-icons/react"
 import { AppShell } from "@/app/AppShell"
 import { RecoveryScreen } from "@/app/RecoveryScreen"
+import { ResetScreen } from "@/app/ResetScreen"
 import { RouteView } from "@/app/RouteView"
 import { useRoute } from "@/app/useRoute"
 import { GlobalSearch } from "@/features/search/GlobalSearch"
@@ -38,6 +39,13 @@ export function App() {
       active = false
     }
   }, [])
+
+  // "Secret" maintenance page — handled before the repo gate so it works even
+  // while loading, or when the database can't be opened at all. Reachable only
+  // by typing the `#reset` URL; never linked from the UI.
+  if (route.name === "reset") {
+    return <ResetScreen />
+  }
 
   if (gate.phase === "loading") {
     return (

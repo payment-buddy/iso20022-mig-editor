@@ -12,6 +12,9 @@ export type Route =
   | { name: "compare"; a: string; b: string } // compare two MIGs
   | { name: "merge"; key: string } // merge an uploaded MIG into this one (#merge/<name:version>)
   | { name: "trash" } // soft-deleted MIGs (#trash)
+  // "Secret" maintenance page to wipe local storage (#reset). Intentionally not
+  // linked anywhere in the UI — reachable only by typing the URL.
+  | { name: "reset" }
 
 const MIG_PREFIX = "mig/"
 const HISTORY_PREFIX = "history/"
@@ -42,6 +45,7 @@ export function parseHash(hash: string): Route {
   if (raw === "" || raw === "/") return { name: "home" }
   if (raw === "browse") return { name: "browse" }
   if (raw === "trash") return { name: "trash" }
+  if (raw === "reset") return { name: "reset" }
 
   if (raw.startsWith(MIG_PREFIX)) {
     const { base, path } = splitSelectPath(raw.slice(MIG_PREFIX.length))
@@ -88,6 +92,8 @@ export function hashFor(route: Route): string {
       return "#browse"
     case "trash":
       return "#trash"
+    case "reset":
+      return "#reset"
     case "message":
       return "#" + encodeURIComponent(route.code) + selectSuffix(route.path)
     case "mig":

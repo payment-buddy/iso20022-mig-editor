@@ -55,5 +55,8 @@ export function RouteView({
       return <MigMerge key={route.key} targetKey={route.key} repo={repo} />
     case "trash":
       return <MigTrash />
+    case "reset":
+      // Intercepted in App before the repo gate; never rendered here.
+      return null
   }
 }
