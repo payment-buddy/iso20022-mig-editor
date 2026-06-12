@@ -1,5 +1,5 @@
 import type {
-  Constraint,
+  AdditionalConstraint,
   ConstraintOverride,
   ElementOverride,
   MessageImplementationGuide,
@@ -67,23 +67,27 @@ export function nextConstraintName(existing: Iterable<string>): string {
 }
 
 /**
- * Append a MIG-specific (additional) constraint to `path`, returning a new MIG.
- * No-op if a constraint of the same name is already in the override's
+ * Add a MIG-specific (additional) constraint under `name` at `path`, returning a
+ * new MIG. No-op if a constraint of the same name is already in the override's
  * `additionalConstraints` (names must be unique within an element).
  */
 export function addConstraint(
   mig: MessageImplementationGuide,
   path: string,
-  constraint: Constraint
+  name: string,
+  constraint: AdditionalConstraint
 ): MessageImplementationGuide {
   const prev = mig.elementOverrides[path] ?? {}
-  const existing = prev.additionalConstraints ?? []
-  if (existing.some((c) => c.name === constraint.name)) return mig
+  const existing = prev.additionalConstraints ?? {}
+  if (name in existing) return mig
   return {
     ...mig,
     elementOverrides: {
       ...mig.elementOverrides,
-      [path]: { ...prev, additionalConstraints: [...existing, constraint] },
+      [path]: {
+        ...prev,
+        additionalConstraints: { ...existing, [name]: constraint },
+      },
     },
   }
 }
@@ -101,28 +105,27 @@ export function updateConstraint(
   mig: MessageImplementationGuide,
   path: string,
   name: string,
-  changes: Partial<
-    Pick<Constraint, "name" | "definition" | "expression" | "annotations">
-  >
+  changes: Partial<{ name: string } & AdditionalConstraint>
 ): MessageImplementationGuide {
   const prev = mig.elementOverrides[path]
-  const list = prev?.additionalConstraints
-  if (!list) return mig
-  const idx = list.findIndex((c) => c.name === name)
-  if (idx < 0) return mig
+  const map = prev?.additionalConstraints
+  if (!map || !(name in map)) return mig
 
-  const nextName = changes.name ?? list[idx].name
-  if (
-    nextName !== name &&
-    list.some((c, i) => i !== idx && c.name === nextName)
-  )
-    return mig
+  const { name: renamed, ...fields } = changes
+  const nextName = renamed ?? name
+  // Rename onto another existing constraint would collide — names are unique.
+  if (nextName !== name && nextName in map) return mig
 
-  const merged: Constraint = { ...list[idx], ...changes }
+  const merged: AdditionalConstraint = { ...map[name], ...fields }
   if (merged.expression === "") delete merged.expression
   if (merged.annotations && Object.keys(merged.annotations).length === 0)
     delete merged.annotations
-  const additionalConstraints = list.map((c, i) => (i === idx ? merged : c))
+
+  // Rebuild in order, swapping the entry in place (renaming its key if needed).
+  const additionalConstraints: Record<string, AdditionalConstraint> = {}
+  for (const [key, value] of Object.entries(map))
+    additionalConstraints[key === name ? nextName : key] =
+      key === name ? merged : value
   return {
     ...mig,
     elementOverrides: {
@@ -145,12 +148,14 @@ export function removeConstraint(
   name: string
 ): MessageImplementationGuide {
   const prev = mig.elementOverrides[path]
-  const list = prev?.additionalConstraints
-  if (!list || !list.some((c) => c.name === name)) return mig
+  const map = prev?.additionalConstraints
+  if (!map || !(name in map)) return mig
 
-  const remaining = list.filter((c) => c.name !== name)
+  const remaining = { ...map }
+  delete remaining[name]
   const nextOverride = { ...prev }
-  if (remaining.length === 0) delete nextOverride.additionalConstraints
+  if (Object.keys(remaining).length === 0)
+    delete nextOverride.additionalConstraints
   else nextOverride.additionalConstraints = remaining
 
   // An added constraint owns its name, so any overlay entry under it (e.g. the

@@ -76,17 +76,24 @@ export function removeConstraintAnnotation(
 
   const elementOverrides: ElementOverrides = {}
   for (const [path, override] of Object.entries(mig.elementOverrides)) {
-    const list = override.additionalConstraints
-    if (list?.some((c) => c.annotations && name in c.annotations)) {
-      const additionalConstraints = list.map((c) => {
-        if (!c.annotations || !(name in c.annotations)) return c
+    const map = override.additionalConstraints
+    if (
+      map &&
+      Object.values(map).some((c) => c.annotations && name in c.annotations)
+    ) {
+      const additionalConstraints: typeof map = {}
+      for (const [cname, c] of Object.entries(map)) {
+        if (!c.annotations || !(name in c.annotations)) {
+          additionalConstraints[cname] = c
+          continue
+        }
         const annotations = { ...c.annotations }
         delete annotations[name]
         const next = { ...c }
         if (Object.keys(annotations).length === 0) delete next.annotations
         else next.annotations = annotations
-        return next
-      })
+        additionalConstraints[cname] = next
+      }
       elementOverrides[path] = { ...override, additionalConstraints }
     } else {
       elementOverrides[path] = override

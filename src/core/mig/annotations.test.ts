@@ -94,28 +94,26 @@ describe("removeConstraintAnnotation", () => {
       constraintAnnotationNames: ["Severity", "Owner"],
       elementOverrides: {
         "/Doc/Amt": {
-          additionalConstraints: [
-            {
-              name: "Rule A",
+          additionalConstraints: {
+            "Rule A": {
               definition: "",
               annotations: { Severity: "high", Owner: "x" },
             },
-            {
-              name: "Rule B",
+            "Rule B": {
               definition: "",
               annotations: { Severity: "low" },
             },
-          ],
+          },
         },
       },
     })
     const next = removeConstraintAnnotation(base, "Severity")
 
     expect(next.constraintAnnotationNames).toEqual(["Owner"])
-    const list = next.elementOverrides["/Doc/Amt"].additionalConstraints
-    expect(list?.[0].annotations).toEqual({ Owner: "x" })
+    const map = next.elementOverrides["/Doc/Amt"].additionalConstraints
+    expect(map?.["Rule A"].annotations).toEqual({ Owner: "x" })
     // Rule B's annotations become empty → pruned, the constraint stays.
-    expect(list?.[1]).toEqual({ name: "Rule B", definition: "" })
+    expect(map?.["Rule B"]).toEqual({ definition: "" })
   })
 
   it("drops the names list when it empties, leaving constraints in place", () => {
@@ -123,17 +121,17 @@ describe("removeConstraintAnnotation", () => {
       constraintAnnotationNames: ["Severity"],
       elementOverrides: {
         "/Doc/Amt": {
-          additionalConstraints: [
-            { name: "Rule A", definition: "", annotations: { Severity: "x" } },
-          ],
+          additionalConstraints: {
+            "Rule A": { definition: "", annotations: { Severity: "x" } },
+          },
         },
       },
     })
     const next = removeConstraintAnnotation(base, "Severity")
     expect("constraintAnnotationNames" in next).toBe(false)
-    expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "Rule A", definition: "" },
-    ])
+    expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      "Rule A": { definition: "" },
+    })
   })
 
   it("does not mutate the input", () => {
@@ -141,15 +139,16 @@ describe("removeConstraintAnnotation", () => {
       constraintAnnotationNames: ["Severity"],
       elementOverrides: {
         "/Doc/Amt": {
-          additionalConstraints: [
-            { name: "Rule A", definition: "", annotations: { Severity: "x" } },
-          ],
+          additionalConstraints: {
+            "Rule A": { definition: "", annotations: { Severity: "x" } },
+          },
         },
       },
     })
     removeConstraintAnnotation(base, "Severity")
     expect(
-      base.elementOverrides["/Doc/Amt"].additionalConstraints?.[0].annotations
+      base.elementOverrides["/Doc/Amt"].additionalConstraints?.["Rule A"]
+        .annotations
     ).toEqual({
       Severity: "x",
     })

@@ -105,15 +105,14 @@ describe("serializeMig", () => {
           "/Doc/Amt": {
             pattern: "[0-9]+",
             minOccurs: 0,
-            additionalConstraints: [
-              { name: "Zebra", definition: "z" },
-              {
-                name: "Alpha",
+            additionalConstraints: {
+              Zebra: { definition: "z" },
+              Alpha: {
                 definition: "a",
                 expression: "x > 0",
                 annotations: { Severity: "high" },
               },
-            ],
+            },
           },
         },
       })
@@ -123,9 +122,9 @@ describe("serializeMig", () => {
     expect(out.indexOf("pattern")).toBeLessThan(
       out.indexOf("additionalConstraints")
     )
-    // Constraints sorted by name (Alpha before Zebra).
+    // Constraints sorted by name key (Alpha before Zebra).
     expect(out.indexOf("Alpha")).toBeLessThan(out.indexOf("Zebra"))
-    // Constraint field order: name, definition, expression, annotations.
+    // Constraint field order under the name key: definition, expression, annotations.
     const alpha = out.slice(out.indexOf("Alpha"))
     expect(alpha.indexOf("definition")).toBeLessThan(
       alpha.indexOf("expression")
@@ -140,7 +139,7 @@ describe("serializeMig", () => {
       mig({
         elementOverrides: {
           "/Doc/Amt": {
-            additionalConstraints: [{ name: "Add", definition: "a" }],
+            additionalConstraints: { Add: { definition: "a" } },
             constraintOverrides: {
               Zeta: { expression: "x > 0" },
               Alpha: { expression: null },

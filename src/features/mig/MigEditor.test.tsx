@@ -551,7 +551,7 @@ describe("MigEditor", () => {
     expect(
       (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
         ?.additionalConstraints
-    ).toEqual([{ name: "New constraint", definition: "" }])
+    ).toEqual({ "New constraint": { definition: "" } })
   })
 
   it("gives each added constraint a non-duplicate name", async () => {
@@ -572,9 +572,10 @@ describe("MigEditor", () => {
     await user.click(screen.getByRole("treeitem", { name: "Document" }))
     await add()
 
-    const names = (await loadMig(getMigKey(MIG)))?.elementOverrides[
-      "/DocumentTag"
-    ]?.additionalConstraints?.map((c) => c.name)
+    const names = Object.keys(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.additionalConstraints ?? {}
+    )
     expect(names).toEqual(["New constraint", "New constraint 2"])
   })
 
@@ -607,12 +608,11 @@ describe("MigEditor", () => {
     expect(
       (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
         ?.additionalConstraints
-    ).toEqual([
-      {
-        name: "New constraint",
+    ).toEqual({
+      "New constraint": {
         definition: "Must reference a settlement date",
       },
-    ])
+    })
   })
 
   it("edits an added constraint's expression", async () => {
@@ -644,9 +644,9 @@ describe("MigEditor", () => {
     expect(
       (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
         ?.additionalConstraints
-    ).toEqual([
-      { name: "New constraint", definition: "", expression: "Amt > 0" },
-    ])
+    ).toEqual({
+      "New constraint": { definition: "", expression: "Amt > 0" },
+    })
   })
 
   it("renames an added constraint, keeping it selected in the tree", async () => {
@@ -679,7 +679,7 @@ describe("MigEditor", () => {
     expect(
       (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
         ?.additionalConstraints
-    ).toEqual([{ name: "Settlement rule", definition: "" }])
+    ).toEqual({ "Settlement rule": { definition: "" } })
     const node = await screen.findByRole("treeitem", {
       name: /constraint settlement rule$/i,
     })
@@ -715,9 +715,10 @@ describe("MigEditor", () => {
     await user.type(input, "New constraint")
     await user.tab()
 
-    const names = (await loadMig(getMigKey(MIG)))?.elementOverrides[
-      "/DocumentTag"
-    ]?.additionalConstraints?.map((c) => c.name)
+    const names = Object.keys(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.additionalConstraints ?? {}
+    )
     expect(names).toEqual(["New constraint", "New constraint 2"])
   })
 
@@ -904,7 +905,7 @@ describe("MigEditor", () => {
       elementOverrides: {
         "/DocumentTag/GrpHdrTag": {
           maxLength: 20,
-          additionalConstraints: [{ name: "MyRule", definition: "" }],
+          additionalConstraints: { MyRule: { definition: "" } },
         },
       },
     }
@@ -959,7 +960,7 @@ describe("MigEditor", () => {
       ...MIG,
       elementOverrides: {
         "/DocumentTag": {
-          additionalConstraints: [{ name: "Mine", definition: "" }],
+          additionalConstraints: { Mine: { definition: "" } },
         },
       },
     }
@@ -1032,9 +1033,7 @@ describe("MigEditor", () => {
       messageIdentifier: "pacs.008.001.10",
       elementOverrides: {
         "/DocumentTag": {
-          additionalConstraints: [
-            { name: "InhRule", definition: "Inherited rule" },
-          ],
+          additionalConstraints: { InhRule: { definition: "Inherited rule" } },
         },
       },
     }
@@ -1755,13 +1754,12 @@ describe("MigEditor", () => {
     expect(
       (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
         ?.additionalConstraints
-    ).toEqual([
-      {
-        name: "New constraint",
+    ).toEqual({
+      "New constraint": {
         definition: "",
         annotations: { Severity: "high" },
       },
-    ])
+    })
     // The set value is this MIG's own → a blue provenance dot.
     expect(within(panel).getByTitle("Overridden — inherited: —")).toHaveClass(
       "bg-provenance-own"
@@ -1778,7 +1776,7 @@ describe("MigEditor", () => {
     expect(saved?.constraintAnnotationNames).toBeUndefined()
     expect(
       saved?.elementOverrides["/DocumentTag"]?.additionalConstraints
-    ).toEqual([{ name: "New constraint", definition: "" }])
+    ).toEqual({ "New constraint": { definition: "" } })
   })
 
   it("re-versions the MIG (metadata), re-keys storage, repoints children and re-routes", async () => {

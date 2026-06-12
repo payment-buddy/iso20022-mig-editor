@@ -52,11 +52,11 @@ export function resolveConstraints(
       disabled: disabled(c.name),
     })
   )
-  const additional = (override?.additionalConstraints ?? []).map(
-    (c): ResolvedConstraint => ({
-      constraint: overlay(c, override),
+  const additional = Object.entries(override?.additionalConstraints ?? {}).map(
+    ([name, ac]): ResolvedConstraint => ({
+      constraint: overlay({ name, ...ac }, override),
       source: "additional",
-      disabled: disabled(c.name),
+      disabled: disabled(name),
     })
   )
   return [...standard, ...additional]

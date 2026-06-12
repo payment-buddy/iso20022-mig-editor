@@ -46,18 +46,16 @@ export function applyFieldCopy(
 
   // ref.type === "constraint"
   const { name } = ref
-  const srcC = srcOv?.additionalConstraints?.find((c) => c.name === name)
-  const exists = target.elementOverrides[path]?.additionalConstraints?.some(
-    (c) => c.name === name
-  )
+  const srcC = srcOv?.additionalConstraints?.[name]
+  const exists =
+    target.elementOverrides[path]?.additionalConstraints?.[name] !== undefined
 
   if (!srcC) return exists ? removeConstraint(target, path, name) : target
-  if (!exists) return addConstraint(target, path, srcC)
+  if (!exists) return addConstraint(target, path, name, srcC)
   // Overwrite the existing constraint to mirror the source exactly. Passing ""
   // expression / {} annotations makes updateConstraint prune them when the source
   // has none, so the copy isn't left with stale fields.
   return updateConstraint(target, path, name, {
-    name: srcC.name,
     definition: srcC.definition,
     expression: srcC.expression ?? "",
     annotations: srcC.annotations ?? {},

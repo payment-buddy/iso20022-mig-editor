@@ -184,9 +184,7 @@ function constraintsAt(
       return "inherited"
     return null
   }
-  const ownNames = new Set(
-    (ownOv?.additionalConstraints ?? []).map((c) => c.name)
-  )
+  const ownNames = new Set(Object.keys(ownOv?.additionalConstraints ?? {}))
   const standard = el.constraints.map((constraint) => {
     const origin = "standard" as const
     return {
@@ -196,17 +194,20 @@ function constraintsAt(
       colour: colourOf(constraint.name, origin),
     }
   })
-  const additional = (effOv?.additionalConstraints ?? []).map((constraint) => {
-    const origin = ownNames.has(constraint.name)
-      ? ("own" as const)
-      : ("inherited" as const)
-    return {
-      constraint,
-      origin,
-      disabled: disabled(constraint.name),
-      colour: colourOf(constraint.name, origin),
+  const additional = Object.entries(effOv?.additionalConstraints ?? {}).map(
+    ([name, ac]) => {
+      const constraint: Constraint = { name, ...ac }
+      const origin = ownNames.has(name)
+        ? ("own" as const)
+        : ("inherited" as const)
+      return {
+        constraint,
+        origin,
+        disabled: disabled(name),
+        colour: colourOf(name, origin),
+      }
     }
-  })
+  )
   return [...standard, ...additional]
 }
 

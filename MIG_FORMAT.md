@@ -77,8 +77,8 @@ pattern
 allowedValues      # list
 examples           # list
 annotations        # map; element custom properties (see §4.1)
-additionalConstraints:  # list of { name, definition, expression, annotations }
-  - name
+additionalConstraints:    # map; MIG-added constraints, keyed by constraint name
+  <constraint name>:
     definition
     expression            # optional; formal rule expression (omitted when empty)
     annotations           # map; constraint custom properties (see §4.1)
@@ -90,7 +90,8 @@ constraintOverrides:      # map; overlays on standard/inherited constraints, key
 ```
 
 - **Exclusion** stays as **`maxOccurs: 0`** (no separate `excluded` flag).
-- `additionalConstraints` items carry the constraint field order `name, definition, expression, annotations`.
+- `additionalConstraints` entries are keyed by constraint name (sorted) and carry the field order
+  `definition, expression, annotations` — mirroring `constraintOverrides`, the name lives in the map key, not a field.
   `expression` is an optional formal rule expression, omitted when empty.
 - `constraintOverrides` overlay fields onto a **standard (ISO) or inherited** constraint of the same name (it does not
   create one): `definition` and `expression` are tri-state (§5), plus a `disabled` **bool** (`true` skips the rule
@@ -102,10 +103,10 @@ constraintOverrides:      # map; overlays on standard/inherited constraints, key
 Elements and constraints each have an **independent** set of custom properties:
 
 - **Declared once, MIG-wide** as ordered name lists: `elementAnnotationNames` (for element overrides) and
-  `constraintAnnotationNames` (for the items in `additionalConstraints`). The two lists are unrelated — the same label
+  `constraintAnnotationNames` (for the entries in `additionalConstraints`). The two lists are unrelated — the same label
   may appear in both, or in neither, with no shared meaning.
 - **Valued per target** in an `annotations` map: one on each `ElementOverride` (keyed by element-annotation names) and
-  one on each `additionalConstraints` item (keyed by constraint-annotation names). The two maps differ in type:
+  one on each `additionalConstraints` entry (keyed by constraint-annotation names). The two maps differ in type:
   element-override values are plain strings (`Record<string, string>`), while constraint values are nullable (
   `Record<string, string | null>`) — a stored constraint `null` is a real (rare) state that **serializes as `Name: null`
   **, not dropped.
@@ -190,7 +191,7 @@ elementOverrides:
       Unstructured remittance information, limited to 140 characters
       for Bank X straight-through processing.
     additionalConstraints:
-      - name: NoMandateReference
+      NoMandateReference:
         definition: |-
           Ustrd must not carry a mandate reference under Bank X rules.
         expression: not(contains(Ustrd, 'MANDATE'))  # optional formal rule

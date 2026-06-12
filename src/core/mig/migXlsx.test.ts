@@ -219,7 +219,7 @@ describe("buildMigExportRows — element rows", () => {
   it("marks a disabled added constraint gray with muted text, like an ISO one", () => {
     const m = mig("M", {
       "/Doc/GrpHdr/MsgId": {
-        additionalConstraints: [{ name: "MyRule", definition: "custom" }],
+        additionalConstraints: { MyRule: { definition: "custom" } },
         constraintOverrides: { MyRule: { disabled: true } },
       },
     })
@@ -303,9 +303,7 @@ describe("buildMigExportRows — overrides", () => {
     const { columns, rows } = buildMigExportRows(
       mig("M", {
         "/Doc/Amt": {
-          additionalConstraints: [
-            { name: "Positive", definition: "Must be > 0" },
-          ],
+          additionalConstraints: { Positive: { definition: "Must be > 0" } },
         },
       }),
       [],
@@ -323,7 +321,7 @@ describe("buildMigExportRows — provenance and annotations", () => {
     "Base",
     {
       "/Doc/Amt": {
-        additionalConstraints: [{ name: "Inherited", definition: "From base" }],
+        additionalConstraints: { Inherited: { definition: "From base" } },
       },
     },
     { version: "1.0" }
@@ -332,13 +330,12 @@ describe("buildMigExportRows — provenance and annotations", () => {
     "Leaf",
     {
       "/Doc/Amt": {
-        additionalConstraints: [
-          {
-            name: "Own",
+        additionalConstraints: {
+          Own: {
             definition: "From leaf",
             annotations: { Usage: "Mandatory" },
           },
-        ],
+        },
       },
     },
     {
@@ -374,7 +371,7 @@ describe("buildMigXlsx", () => {
     const { content, filename } = buildMigXlsx(
       mig("M", {
         "/Doc/Amt": {
-          additionalConstraints: [{ name: "R", definition: 'a, b and "c"' }],
+          additionalConstraints: { R: { definition: 'a, b and "c"' } },
         },
         // A disabled rule exercises the gray fill + muted text styling.
         "/Doc/GrpHdr/MsgId": {
@@ -444,7 +441,7 @@ describe("buildMigsXlsx", () => {
     // to the (distinct) MIG names.
     const a = mig("EPC", {
       "/Doc/Amt": {
-        additionalConstraints: [{ name: "Pos", definition: "> 0" }],
+        additionalConstraints: { Pos: { definition: "> 0" } },
       },
     })
     const b = mig("CBPR", {})

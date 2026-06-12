@@ -6,8 +6,7 @@
 import { z } from "zod"
 import type { MessageImplementationGuide } from "@/core/types/types"
 
-const constraint = z.object({
-  name: z.string(),
+const additionalConstraint = z.object({
   definition: z.string(),
   expression: z.string().optional(),
   annotations: z.record(z.string(), z.string().nullable()).optional(),
@@ -33,7 +32,9 @@ const elementOverride = z.object({
   allowedValues: z.array(z.string()).optional(),
   examples: z.array(z.string()).optional(),
   annotations: z.record(z.string(), z.string()).optional(),
-  additionalConstraints: z.array(constraint).optional(),
+  additionalConstraints: z
+    .record(z.string(), additionalConstraint)
+    .optional(),
   constraintOverrides: z.record(z.string(), constraintOverride).optional(),
 })
 

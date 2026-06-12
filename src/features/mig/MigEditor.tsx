@@ -396,14 +396,14 @@ export function MigEditor({
                   // Unique within the element across standard + already-added.
                   const existing = [
                     ...sel.element.constraints.map((c) => c.name),
-                    ...(
+                    ...Object.keys(
                       mig.elementOverrides[sel.path]?.additionalConstraints ??
-                      []
-                    ).map((c) => c.name),
+                        {}
+                    ),
                   ]
                   const name = nextConstraintName(existing)
                   persist(
-                    addConstraint(mig, sel.path, { name, definition: "" })
+                    addConstraint(mig, sel.path, name, { definition: "" })
                   )
                   // Reveal and select the new constraint under its element.
                   actions.select(`${sel.path}/${name}`)
@@ -503,9 +503,9 @@ export function MigEditor({
             const current = sel.constraint.name
             const takenNames = [
               ...(owner?.constraints ?? []).map((c) => c.name),
-              ...(
-                mig.elementOverrides[elementPath]?.additionalConstraints ?? []
-              ).map((c) => c.name),
+              ...Object.keys(
+                mig.elementOverrides[elementPath]?.additionalConstraints ?? {}
+              ),
             ].filter((n) => n !== current)
             return (
               // Keyed by path so a rename remounts cleanly and resets any edit.

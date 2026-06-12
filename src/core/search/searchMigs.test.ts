@@ -68,13 +68,12 @@ const mig: MessageImplementationGuide = {
       definition: "Local debtor rules",
       allowedValues: ["AAAA", "BBBB"],
       annotations: { Usage: "mandatory for domestic" },
-      additionalConstraints: [
-        {
-          name: "DbtrRule",
+      additionalConstraints: {
+        DbtrRule: {
           definition: "debtor must be a bank",
           annotations: { Rationale: "scheme requires settlement agent" },
         },
-      ],
+      },
     },
   },
 }

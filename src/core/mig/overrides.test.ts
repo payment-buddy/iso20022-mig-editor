@@ -104,38 +104,34 @@ describe("nextConstraintName", () => {
 
 describe("addConstraint", () => {
   it("creates additionalConstraints on a new path", () => {
-    const next = addConstraint(mig(), "/Doc/Amt", {
-      name: "Rule A",
+    const next = addConstraint(mig(), "/Doc/Amt", "Rule A", {
       definition: "",
     })
-    expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "Rule A", definition: "" },
-    ])
+    expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      "Rule A": { definition: "" },
+    })
   })
 
   it("appends to an existing override, keeping other fields", () => {
     const next = addConstraint(
       mig({ "/Doc/Amt": { minOccurs: 0 } }),
       "/Doc/Amt",
-      {
-        name: "Rule A",
-        definition: "",
-      }
+      "Rule A",
+      { definition: "" }
     )
     expect(next.elementOverrides["/Doc/Amt"]).toEqual({
       minOccurs: 0,
-      additionalConstraints: [{ name: "Rule A", definition: "" }],
+      additionalConstraints: { "Rule A": { definition: "" } },
     })
   })
 
   it("is a no-op when a constraint of the same name already exists", () => {
     const before = mig({
       "/Doc/Amt": {
-        additionalConstraints: [{ name: "Rule A", definition: "" }],
+        additionalConstraints: { "Rule A": { definition: "" } },
       },
     })
-    const next = addConstraint(before, "/Doc/Amt", {
-      name: "Rule A",
+    const next = addConstraint(before, "/Doc/Amt", "Rule A", {
       definition: "new",
     })
     expect(next).toBe(before)
@@ -143,7 +139,7 @@ describe("addConstraint", () => {
 
   it("does not mutate the input MIG", () => {
     const before = mig()
-    addConstraint(before, "Doc", { name: "Rule A", definition: "" })
+    addConstraint(before, "Doc", "Rule A", { definition: "" })
     expect(before.elementOverrides).toEqual({})
   })
 })
@@ -152,7 +148,9 @@ describe("updateConstraint", () => {
   const withConstraints = (...names: string[]) =>
     mig({
       "/Doc/Amt": {
-        additionalConstraints: names.map((name) => ({ name, definition: "" })),
+        additionalConstraints: Object.fromEntries(
+          names.map((name) => [name, { definition: "" }])
+        ),
       },
     })
 
@@ -160,45 +158,45 @@ describe("updateConstraint", () => {
     const next = updateConstraint(withConstraints("A", "B"), "/Doc/Amt", "A", {
       name: "Z",
     })
-    expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "Z", definition: "" },
-      { name: "B", definition: "" },
-    ])
+    expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      Z: { definition: "" },
+      B: { definition: "" },
+    })
   })
 
   it("updates the definition", () => {
     const next = updateConstraint(withConstraints("A"), "/Doc/Amt", "A", {
       definition: "Must be set",
     })
-    expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "A", definition: "Must be set" },
-    ])
+    expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      A: { definition: "Must be set" },
+    })
   })
 
   it("sets the expression, and prunes an emptied one", () => {
     const set = updateConstraint(withConstraints("A"), "/Doc/Amt", "A", {
       expression: "amt > 0",
     })
-    expect(set.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "A", definition: "", expression: "amt > 0" },
-    ])
+    expect(set.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      A: { definition: "", expression: "amt > 0" },
+    })
     const cleared = updateConstraint(set, "/Doc/Amt", "A", { expression: "" })
-    expect(cleared.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "A", definition: "" },
-    ])
+    expect(cleared.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      A: { definition: "" },
+    })
   })
 
   it("sets annotation values, and prunes an emptied annotations map", () => {
     const set = updateConstraint(withConstraints("A"), "/Doc/Amt", "A", {
       annotations: { Severity: "high" },
     })
-    expect(set.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "A", definition: "", annotations: { Severity: "high" } },
-    ])
+    expect(set.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      A: { definition: "", annotations: { Severity: "high" } },
+    })
     const cleared = updateConstraint(set, "/Doc/Amt", "A", { annotations: {} })
-    expect(cleared.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "A", definition: "" },
-    ])
+    expect(cleared.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      A: { definition: "" },
+    })
   })
 
   it("is a no-op when the rename collides with a sibling", () => {
@@ -221,9 +219,9 @@ describe("updateConstraint", () => {
   it("does not mutate the input MIG", () => {
     const before = withConstraints("A")
     updateConstraint(before, "/Doc/Amt", "A", { name: "Z" })
-    expect(before.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "A", definition: "" },
-    ])
+    expect(before.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      A: { definition: "" },
+    })
   })
 })
 
@@ -231,22 +229,24 @@ describe("removeConstraint", () => {
   const withConstraints = (...names: string[]) =>
     mig({
       "/Doc/Amt": {
-        additionalConstraints: names.map((name) => ({ name, definition: "" })),
+        additionalConstraints: Object.fromEntries(
+          names.map((name) => [name, { definition: "" }])
+        ),
       },
     })
 
   it("removes one additional constraint, keeping the rest", () => {
     const next = removeConstraint(withConstraints("A", "B"), "/Doc/Amt", "A")
-    expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "B", definition: "" },
-    ])
+    expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      B: { definition: "" },
+    })
   })
 
-  it("prunes the empty array but keeps other override fields", () => {
+  it("prunes the empty map but keeps other override fields", () => {
     const before = mig({
       "/Doc/Amt": {
         minOccurs: 0,
-        additionalConstraints: [{ name: "A", definition: "" }],
+        additionalConstraints: { A: { definition: "" } },
       },
     })
     const next = removeConstraint(before, "/Doc/Amt", "A")
@@ -267,16 +267,16 @@ describe("removeConstraint", () => {
   it("drops a leftover disable overlay for the removed constraint", () => {
     const before = mig({
       "/Doc/Amt": {
-        additionalConstraints: [
-          { name: "A", definition: "" },
-          { name: "B", definition: "" },
-        ],
+        additionalConstraints: {
+          A: { definition: "" },
+          B: { definition: "" },
+        },
         constraintOverrides: { A: { disabled: true }, B: { disabled: true } },
       },
     })
     const next = removeConstraint(before, "/Doc/Amt", "A")
     expect(next.elementOverrides["/Doc/Amt"]).toEqual({
-      additionalConstraints: [{ name: "B", definition: "" }],
+      additionalConstraints: { B: { definition: "" } },
       constraintOverrides: { B: { disabled: true } },
     })
   })
@@ -284,7 +284,7 @@ describe("removeConstraint", () => {
   it("prunes the override entry even when only a disable overlay remains", () => {
     const before = mig({
       "/Doc/Amt": {
-        additionalConstraints: [{ name: "A", definition: "" }],
+        additionalConstraints: { A: { definition: "" } },
         constraintOverrides: { A: { disabled: true } },
       },
     })
@@ -296,9 +296,9 @@ describe("removeConstraint", () => {
   it("does not mutate the input MIG", () => {
     const before = withConstraints("A")
     removeConstraint(before, "/Doc/Amt", "A")
-    expect(before.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "A", definition: "" },
-    ])
+    expect(before.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      A: { definition: "" },
+    })
   })
 })
 

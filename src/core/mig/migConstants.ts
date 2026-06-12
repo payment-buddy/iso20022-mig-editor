@@ -31,8 +31,8 @@ export const ELEMENT_OVERRIDE_PROPERTY_ORDER = [
   "constraintOverrides",
 ] as const
 
-export const CONSTRAINT_PROPERTY_ORDER = [
-  "name",
+// Field order within each `additionalConstraints` entry (the name is the map key).
+export const ADDITIONAL_CONSTRAINT_PROPERTY_ORDER = [
   "definition",
   "expression",
   "annotations",

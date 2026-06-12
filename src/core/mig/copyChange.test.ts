@@ -126,34 +126,33 @@ describe("applyFieldCopy — annotations", () => {
 describe("applyFieldCopy — additional constraints", () => {
   it("adds a constraint the target lacks", () => {
     const src = mig({
-      [P]: { additionalConstraints: [{ name: "R1", definition: "positive" }] },
+      [P]: { additionalConstraints: { R1: { definition: "positive" } } },
     })
     const tgt = mig({ [P]: {} })
     const next = applyFieldCopy(src, tgt, P, { type: "constraint", name: "R1" })
-    expect(next.elementOverrides[P].additionalConstraints).toEqual([
-      { name: "R1", definition: "positive" },
-    ])
+    expect(next.elementOverrides[P].additionalConstraints).toEqual({
+      R1: { definition: "positive" },
+    })
   })
 
   it("overwrites an existing constraint to mirror the source", () => {
     const src = mig({
       [P]: {
-        additionalConstraints: [
-          { name: "R1", definition: "non-negative", expression: "a>=0" },
-        ],
+        additionalConstraints: {
+          R1: { definition: "non-negative", expression: "a>=0" },
+        },
       },
     })
     const tgt = mig({
       [P]: {
-        additionalConstraints: [
-          { name: "R1", definition: "positive", annotations: { S: "1" } },
-        ],
+        additionalConstraints: {
+          R1: { definition: "positive", annotations: { S: "1" } },
+        },
       },
     })
     const next = applyFieldCopy(src, tgt, P, { type: "constraint", name: "R1" })
-    const c = next.elementOverrides[P].additionalConstraints![0]
+    const c = next.elementOverrides[P].additionalConstraints!.R1
     expect(c).toEqual({
-      name: "R1",
       definition: "non-negative",
       expression: "a>=0",
     })
@@ -162,7 +161,7 @@ describe("applyFieldCopy — additional constraints", () => {
   it("removes a constraint absent in the source", () => {
     const src = mig({ [P]: {} })
     const tgt = mig({
-      [P]: { additionalConstraints: [{ name: "R1", definition: "x" }] },
+      [P]: { additionalConstraints: { R1: { definition: "x" } } },
     })
     const next = applyFieldCopy(src, tgt, P, { type: "constraint", name: "R1" })
     expect(P in next.elementOverrides).toBe(false)

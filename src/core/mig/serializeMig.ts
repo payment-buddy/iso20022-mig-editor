@@ -5,8 +5,8 @@
 //   - `elementOverrides` ordered by message **schema (document) order**, parents
 //     before children, via a `pathOrder` index; unknown paths sort last.
 //   - Each override / constraint orders its keys per the property-order constants.
-//   - `additionalConstraints` sorted by name; each `annotations` map ordered by
-//     its declared-name list then alphabetically.
+//   - `additionalConstraints` is a name-keyed map (sorted by name); each entry's
+//     `annotations` map is ordered by its declared-name list then alphabetically.
 //   - Absent keys omitted and empty arrays/maps dropped, but explicit `null` is
 //     **preserved** (tri-state "remove the constraint").
 //   - `lineWidth: 0`, multi-line strings as block literals, no anchors/aliases,
@@ -15,13 +15,13 @@
 import { stringify } from "yaml"
 import { rootPath } from "@/core/erepository/elementPath"
 import {
+  ADDITIONAL_CONSTRAINT_PROPERTY_ORDER,
   CONSTRAINT_OVERRIDE_PROPERTY_ORDER,
-  CONSTRAINT_PROPERTY_ORDER,
   ELEMENT_OVERRIDE_PROPERTY_ORDER,
   MIG_PROPERTY_ORDER,
 } from "@/core/mig/migConstants"
 import type {
-  Constraint,
+  AdditionalConstraint,
   ConstraintOverride,
   ElementOverride,
   MessageElement,
@@ -77,12 +77,12 @@ function canonicalAnnotations(
 }
 
 /** One additional constraint with keys in canonical order (empty annotations dropped). */
-function canonicalConstraint(
-  c: Constraint,
+function canonicalAdditionalConstraint(
+  c: AdditionalConstraint,
   declared: string[] | undefined
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {}
-  for (const key of CONSTRAINT_PROPERTY_ORDER) {
+  for (const key of ADDITIONAL_CONSTRAINT_PROPERTY_ORDER) {
     if (!(key in c)) continue
     if (key === "annotations") {
       const a = canonicalAnnotations(c.annotations ?? {}, declared)
@@ -93,6 +93,18 @@ function canonicalConstraint(
     if (v !== undefined) out[key] = v
   }
   return out
+}
+
+/** An `additionalConstraints` map, keyed by name (sorted); empty map dropped. */
+function canonicalAdditionalConstraints(
+  map: Record<string, AdditionalConstraint>,
+  declared: string[] | undefined
+): Record<string, unknown> | null {
+  const out: Record<string, unknown> = {}
+  for (const name of Object.keys(map).sort(byString)) {
+    out[name] = canonicalAdditionalConstraint(map[name], declared)
+  }
+  return Object.keys(out).length > 0 ? out : null
 }
 
 /** One constraint override with keys in canonical order; preserves `null`, drops empties. */
@@ -136,12 +148,11 @@ function canonicalOverride(
       continue
     }
     if (key === "additionalConstraints") {
-      const list = override.additionalConstraints ?? []
-      if (list.length > 0) {
-        out.additionalConstraints = [...list]
-          .sort((a, b) => byString(a.name, b.name))
-          .map((c) => canonicalConstraint(c, mig.constraintAnnotationNames))
-      }
+      const ac = canonicalAdditionalConstraints(
+        override.additionalConstraints ?? {},
+        mig.constraintAnnotationNames
+      )
+      if (ac) out.additionalConstraints = ac
       continue
     }
     if (key === "constraintOverrides") {

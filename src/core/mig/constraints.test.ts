@@ -46,7 +46,7 @@ function el(constraints: Constraint[]): MessageElement {
 describe("resolveConstraints", () => {
   it("returns standard then additional constraints, tagged by source", () => {
     const override: ElementOverride = {
-      additionalConstraints: [constraint("Extra")],
+      additionalConstraints: { Extra: { definition: "Extra def" } },
     }
     const out = resolveConstraints(el([constraint("Std")]), override)
     expect(out.map((r) => [r.constraint.name, r.source])).toEqual([

@@ -145,9 +145,22 @@ export interface ElementOverride {
   allowedValues?: string[]
   examples?: string[]
   annotations?: Record<string, string>
-  additionalConstraints?: Constraint[]
+  /** MIG-added constraints, keyed by constraint name (the name is the key). */
+  additionalConstraints?: Record<string, AdditionalConstraint>
   /** Overlays on standard/inherited constraints, keyed by constraint name. */
   constraintOverrides?: Record<string, ConstraintOverride>
+}
+
+/**
+ * A MIG-added constraint, keyed by name in `ElementOverride.additionalConstraints`.
+ * The name lives in the map key (mirroring `constraintOverrides`); this is the
+ * authored subset of `Constraint` — no `isoExpression` (that's ISO-derived only).
+ */
+export interface AdditionalConstraint {
+  definition: string
+  /** Optional formal rule expression in this app's path DSL (omitted when empty). */
+  expression?: string
+  annotations?: Record<string, string | null>
 }
 
 /**

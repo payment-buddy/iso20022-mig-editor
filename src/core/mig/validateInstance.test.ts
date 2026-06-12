@@ -246,7 +246,7 @@ describe("validateMessageInstance", () => {
       definition = "Amount must exceed 600"
     ): ElementOverrides => ({
       "/Doc": {
-        additionalConstraints: [{ name: "AmtRule", definition, expression }],
+        additionalConstraints: { AmtRule: { definition, expression } },
       },
     })
 
@@ -275,7 +275,7 @@ describe("validateMessageInstance", () => {
     it("skips a constraint with no expression, a syntax error, or an unsupported function", () => {
       expect(
         run(valid(), {
-          "/Doc": { additionalConstraints: [{ name: "X", definition: "" }] },
+          "/Doc": { additionalConstraints: { X: { definition: "" } } },
         })
       ).toEqual([])
       expect(run(valid(), constraint("Amt >"))).toEqual([]) // syntax error → skipped
@@ -308,9 +308,9 @@ describe("validateMessageInstance", () => {
     it("skips a disabled rule even when its expression would fail", () => {
       const overrides = {
         "/Doc": {
-          additionalConstraints: [
-            { name: "R", definition: "", expression: "Amt > 600" },
-          ],
+          additionalConstraints: {
+            R: { definition: "", expression: "Amt > 600" },
+          },
           constraintOverrides: { R: { disabled: true } },
         },
       }

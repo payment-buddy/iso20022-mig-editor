@@ -12,22 +12,19 @@
 
 import { getMigKey } from "./migKey"
 import type {
-  Constraint,
+  AdditionalConstraint,
   ConstraintOverride,
   ElementOverride,
   ElementOverrides,
   MessageImplementationGuide,
 } from "@/core/types/types"
 
-/** Union two constraint lists by name, the later list winning on a name clash. */
+/** Union two additional-constraint maps by name; the layer wins (whole entry) on a clash. */
 function unionConstraints(
-  base: Constraint[] = [],
-  layer: Constraint[] = []
-): Constraint[] {
-  const byName = new Map<string, Constraint>()
-  for (const c of base) byName.set(c.name, c)
-  for (const c of layer) byName.set(c.name, c)
-  return [...byName.values()]
+  base: Record<string, AdditionalConstraint> = {},
+  layer: Record<string, AdditionalConstraint> = {}
+): Record<string, AdditionalConstraint> {
+  return { ...base, ...layer }
 }
 
 /**
@@ -63,7 +60,8 @@ function mergeOverride(
     base.additionalConstraints,
     layer.additionalConstraints
   )
-  if (constraints.length > 0) out.additionalConstraints = constraints
+  if (Object.keys(constraints).length > 0)
+    out.additionalConstraints = constraints
   else delete out.additionalConstraints
 
   const constraintOverrides = mergeConstraintOverrides(

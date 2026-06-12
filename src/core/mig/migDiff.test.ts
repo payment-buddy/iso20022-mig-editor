@@ -139,14 +139,13 @@ describe("diffMig field classification", () => {
   it("carries additional constraints with expression and annotations", () => {
     const d = only({
       "/Doc/GrpHdr": {
-        additionalConstraints: [
-          {
-            name: "R",
+        additionalConstraints: {
+          R: {
             definition: "must hold",
             expression: "x > 0",
             annotations: { Severity: "high" },
           },
-        ],
+        },
       },
     })
     expect(d.constraints).toEqual([

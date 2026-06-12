@@ -408,7 +408,10 @@ export function buildMigExportRows(
         (r) => r.source === "additional"
       )) {
         const prov = provenanceFor(path, (o) =>
-          (o.additionalConstraints ?? []).some((x) => x.name === c.name)
+          Object.prototype.hasOwnProperty.call(
+            o.additionalConstraints ?? {},
+            c.name
+          )
         )
         rows.push(
           ruleRow(

@@ -216,11 +216,14 @@ function diffOverride(
     )
   }
 
-  const consA = ovA.additionalConstraints ?? []
-  const consB = ovB.additionalConstraints ?? []
-  for (const name of new Set([...consA, ...consB].map((c) => c.name))) {
-    const ca = consA.find((c) => c.name === name)
-    const cb = consB.find((c) => c.name === name)
+  const consA = ovA.additionalConstraints ?? {}
+  const consB = ovB.additionalConstraints ?? {}
+  for (const name of new Set([
+    ...Object.keys(consA),
+    ...Object.keys(consB),
+  ])) {
+    const ca = consA[name] ? { name, ...consA[name] } : undefined
+    const cb = consB[name] ? { name, ...consB[name] } : undefined
     if (ca && cb && sameConstraint(ca, cb)) continue
     push(
       pair(

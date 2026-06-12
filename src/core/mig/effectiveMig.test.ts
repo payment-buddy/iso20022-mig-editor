@@ -99,23 +99,23 @@ describe("mergeOverrides (key-presence, tri-state)", () => {
       chainOf(
         {
           "/Doc/Amt": {
-            additionalConstraints: [{ name: "A", definition: "base" }],
+            additionalConstraints: { A: { definition: "base" } },
           },
         },
         {
           "/Doc/Amt": {
-            additionalConstraints: [
-              { name: "A", definition: "override" },
-              { name: "B", definition: "new" },
-            ],
+            additionalConstraints: {
+              A: { definition: "override" },
+              B: { definition: "new" },
+            },
           },
         }
       )
     )
-    expect(merged["/Doc/Amt"].additionalConstraints).toEqual([
-      { name: "A", definition: "override" },
-      { name: "B", definition: "new" },
-    ])
+    expect(merged["/Doc/Amt"].additionalConstraints).toEqual({
+      A: { definition: "override" },
+      B: { definition: "new" },
+    })
   })
 
   it("prunes a path whose merged override is empty", () => {

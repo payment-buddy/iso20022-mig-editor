@@ -19,7 +19,7 @@ describe("validateMigImport", () => {
       elementOverrides: {
         "/Doc/Amt": {
           maxLength: null,
-          additionalConstraints: [{ name: "R", definition: "" }],
+          additionalConstraints: { R: { definition: "" } },
         },
       },
     }

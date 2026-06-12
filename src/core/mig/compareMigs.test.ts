@@ -131,18 +131,18 @@ describe("compareMigs", () => {
   it("diffs additional constraints per name and ignores identical ones", () => {
     const a = mig({
       "/Doc/Amt": {
-        additionalConstraints: [
-          { name: "R1", definition: "must be positive" },
-          { name: "R2", definition: "kept", expression: "a > 0" },
-        ],
+        additionalConstraints: {
+          R1: { definition: "must be positive" },
+          R2: { definition: "kept", expression: "a > 0" },
+        },
       },
     })
     const b = mig({
       "/Doc/Amt": {
-        additionalConstraints: [
-          { name: "R1", definition: "must be non-negative" },
-          { name: "R2", definition: "kept", expression: "a > 0" },
-        ],
+        additionalConstraints: {
+          R1: { definition: "must be non-negative" },
+          R2: { definition: "kept", expression: "a > 0" },
+        },
       },
     })
     const fields = compareMigs(a, b).paths[0].fields
@@ -156,16 +156,16 @@ describe("compareMigs", () => {
   it("flags a constraint that differs only by annotation", () => {
     const a = mig({
       "/Doc/Amt": {
-        additionalConstraints: [
-          { name: "R1", definition: "d", annotations: { S: "1" } },
-        ],
+        additionalConstraints: {
+          R1: { definition: "d", annotations: { S: "1" } },
+        },
       },
     })
     const b = mig({
       "/Doc/Amt": {
-        additionalConstraints: [
-          { name: "R1", definition: "d", annotations: { S: "2" } },
-        ],
+        additionalConstraints: {
+          R1: { definition: "d", annotations: { S: "2" } },
+        },
       },
     })
     const fields = compareMigs(a, b).paths[0].fields
