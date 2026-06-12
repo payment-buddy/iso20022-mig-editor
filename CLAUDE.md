@@ -105,6 +105,13 @@ whole app on a state machine — load repo → `upload` / `ready` / `updating` /
   `components.json`; style `radix-mira`, base color neutral, Phosphor icons).
 - Keep `core/` free of React/DOM imports so logic stays unit-testable in isolation.
 
+## Git workflow
+
+- **Only commit when explicitly asked** — never commit unprompted, even after
+  finishing a change.
+- **Commit directly to `master`** — do *not* create a feature branch first. This
+  overrides any default "branch before committing on the default branch" behavior.
+
 ## Build & offline
 
 `vite build` produces a **single self-contained HTML file** (`vite-plugin-singlefile`)
