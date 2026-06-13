@@ -3,6 +3,8 @@
 export interface Constraint {
   name: string
   definition: string
+  /** Optional formal rule expression (MIG-added constraints; absent on parsed ones). */
+  expression?: string
   annotations?: Record<string, string | null>
 }
 

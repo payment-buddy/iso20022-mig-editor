@@ -135,6 +135,17 @@ describe("updateConstraint", () => {
     ])
   })
 
+  it("sets the expression, and prunes an emptied one", () => {
+    const set = updateConstraint(withConstraints("A"), "Doc/Amt", "A", { expression: "amt > 0" })
+    expect(set.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
+      { name: "A", definition: "", expression: "amt > 0" },
+    ])
+    const cleared = updateConstraint(set, "Doc/Amt", "A", { expression: "" })
+    expect(cleared.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
+      { name: "A", definition: "" },
+    ])
+  })
+
   it("sets annotation values, and prunes an emptied annotations map", () => {
     const set = updateConstraint(withConstraints("A"), "Doc/Amt", "A", {
       annotations: { Severity: "high" },

@@ -278,6 +278,29 @@ describe("MigEditor", () => {
     ).toEqual([{ name: "New constraint", definition: "Must reference a settlement date" }])
   })
 
+  it("edits an added constraint's expression", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    const elementPanel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(elementPanel).getByRole("button", { name: /add constraint/i }))
+    const panel = await screen.findByRole("region", { name: /constraint details/i })
+
+    await user.click(within(panel).getByRole("button", { name: "Edit Constraint expression" }))
+    await user.type(
+      within(panel).getByRole("textbox", { name: "Constraint expression" }),
+      "Amt > 0",
+    )
+    await user.tab() // blur commits
+
+    // Expression is stored as an optional field alongside name/definition.
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.additionalConstraints,
+    ).toEqual([{ name: "New constraint", definition: "", expression: "Amt > 0" }])
+  })
+
   it("renames an added constraint, keeping it selected in the tree", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

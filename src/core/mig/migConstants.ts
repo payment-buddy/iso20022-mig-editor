@@ -30,4 +30,9 @@ export const ELEMENT_OVERRIDE_PROPERTY_ORDER = [
   "additionalConstraints",
 ] as const
 
-export const CONSTRAINT_PROPERTY_ORDER = ["name", "definition", "annotations"] as const
+export const CONSTRAINT_PROPERTY_ORDER = [
+  "name",
+  "definition",
+  "expression",
+  "annotations",
+] as const

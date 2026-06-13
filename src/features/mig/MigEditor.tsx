@@ -161,6 +161,9 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                 onSetDefinition={(definition) =>
                   persist(updateConstraint(mig, elementPath, current, { definition }))
                 }
+                onSetExpression={(expression) =>
+                  persist(updateConstraint(mig, elementPath, current, { expression }))
+                }
                 onSetAnnotations={(annotations) =>
                   persist(updateConstraint(mig, elementPath, current, { annotations }))
                 }
@@ -206,6 +209,11 @@ function ConstraintDetail({ constraint, path }: { constraint: Constraint; path: 
       {constraint.definition && (
         <Field label="Definition">
           <span className="whitespace-pre-wrap">{constraint.definition}</span>
+        </Field>
+      )}
+      {constraint.expression && (
+        <Field label="Expression">
+          <span className="whitespace-pre-wrap">{constraint.expression}</span>
         </Field>
       )}
     </DetailPanel>

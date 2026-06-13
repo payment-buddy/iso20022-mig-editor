@@ -7,10 +7,10 @@ import { DetailPanel, Field } from "@/features/repository/ElementTree"
 
 /**
  * Editable detail panel for a MIG-specific (additional) constraint
- * (FUNCTIONALITY §5.7): inline-edit name and definition. The name stays unique
- * within the element — a rename that is blank, unchanged, or already taken by a
- * sibling constraint is rejected (the field reverts). Standard, spec-inherited
- * constraints use the read-only view instead.
+ * (FUNCTIONALITY §5.7): inline-edit name, definition, expression and custom
+ * properties. The name stays unique within the element — a rename that is blank,
+ * unchanged, or already taken by a sibling constraint is rejected (the field
+ * reverts). Standard, spec-inherited constraints use the read-only view instead.
  */
 export function MigConstraintDetail({
   constraint,
@@ -19,6 +19,7 @@ export function MigConstraintDetail({
   annotationNames,
   onRename,
   onSetDefinition,
+  onSetExpression,
   onSetAnnotations,
   onDelete,
 }: {
@@ -31,6 +32,7 @@ export function MigConstraintDetail({
   annotationNames: string[]
   onRename: (name: string) => void
   onSetDefinition: (definition: string) => void
+  onSetExpression: (expression: string) => void
   onSetAnnotations: (annotations: Record<string, string | null>) => void
   onDelete: () => void
 }) {
@@ -43,6 +45,11 @@ export function MigConstraintDetail({
   }
   const commitDefinition = (text: string) => {
     if (text !== constraint.definition) onSetDefinition(text)
+  }
+  // Expression is optional; empty clears it (pruned upstream).
+  const expression = constraint.expression ?? ""
+  const commitExpression = (text: string) => {
+    if (text !== expression) onSetExpression(text)
   }
 
   // Per-constraint annotation values (names are declared MIG-level). Empty
@@ -80,6 +87,18 @@ export function MigConstraintDetail({
           onCommit={commitDefinition}
           ariaLabel="Constraint definition"
           placeholder="Add a definition…"
+          multiline
+        />
+      </div>
+      <div>
+        <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
+          Expression
+        </div>
+        <InlineEdit
+          value={expression}
+          onCommit={commitExpression}
+          ariaLabel="Constraint expression"
+          placeholder="Add an expression…"
           multiline
         />
       </div>
