@@ -749,6 +749,38 @@ describe("MigEditor", () => {
     expect(within(panel).getByTitle(/longer than max length 35/i)).toBeInTheDocument()
   })
 
+  it("flags examples that exceed the fraction-digits facet", async () => {
+    const user = userEvent.setup()
+    const repo: ERepository = {
+      businessAreas: [
+        {
+          name: "A",
+          code: "a",
+          definition: "",
+          messages: [
+            {
+              name: "Msg",
+              identifier: "pacs.008.001.10",
+              shortCode: "pacs.008",
+              rootElement: el("Document", {
+                elements: [el("Amt", { baseType: "Amount", fractionDigits: 2 })],
+              }),
+            },
+          ],
+        },
+      ],
+    }
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={repo} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    await user.click(screen.getByRole("treeitem", { name: "Amt" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    await user.click(within(panel).getByRole("button", { name: "Edit Examples" }))
+    await user.type(within(panel).getByRole("textbox", { name: /add to examples/i }), "1.234")
+    expect(within(panel).getByText(/more than 2 fraction digits/i)).toBeInTheDocument()
+  })
+
   it("declares custom property names in metadata and edits per-element values", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

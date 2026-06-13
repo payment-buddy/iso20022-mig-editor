@@ -75,6 +75,31 @@ describe("createValueValidator", () => {
     expect(v("anything")).toBeNull()
   })
 
+  it("flags values exceeding the total/fraction-digit facets", () => {
+    const v = createValueValidator(el({ baseType: "Amount", totalDigits: 5, fractionDigits: 2 }), undefined)
+    expect(v("123.45")).toBeNull() // 5 total, 2 fraction
+    expect(v("1.234")).toMatch(/more than 2 fraction digits/i)
+    expect(v("123456")).toMatch(/more than 5 total digits/i)
+  })
+
+  it("counts significant digits only (leading/trailing zeros don't count)", () => {
+    const v = createValueValidator(el({ baseType: "Amount", totalDigits: 3, fractionDigits: 1 }), undefined)
+    expect(v("1.50")).toBeNull() // trailing fraction zero ignored → 1 fraction digit
+    expect(v("007.0")).toBeNull() // leading int zeros + trailing fraction zero ignored → 7
+    expect(v("100")).toBeNull() // 3 total digits (trailing int zeros are significant)
+  })
+
+  it("skips the digit facets for non-decimal values", () => {
+    const v = createValueValidator(el({ baseType: "Amount", totalDigits: 2 }), undefined)
+    expect(v("ACTV")).toBeNull()
+  })
+
+  it("uses the effective (override) digit facets", () => {
+    const e = el({ baseType: "Amount", fractionDigits: 4 })
+    expect(createValueValidator(e, { fractionDigits: 2 })("1.234")).toMatch(/more than 2 fraction/i)
+    expect(createValueValidator(e, { fractionDigits: null })("1.23456")).toBeNull()
+  })
+
   it("satisfies the ElementOverride type at the call site", () => {
     const override: ElementOverride = { minLength: 5 }
     expect(createValueValidator(el(), override)("abc")).toMatch(/shorter/i)
