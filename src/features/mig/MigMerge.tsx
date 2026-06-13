@@ -1,61 +1,59 @@
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, GitMerge, UploadSimple, Warning } from "@phosphor-icons/react"
+import { ArrowLeft, ArrowLineLeft, FloppyDisk, GitMerge, UploadSimple, Warning } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
 import { buildPathOrder } from "@/core/mig/serializeMig"
-import { compareMigs, type FieldRef, type PathDiff } from "@/core/mig/compareMigs"
+import { compareMigs, type FieldChange, type PathDiff } from "@/core/mig/compareMigs"
 import { applyFieldCopy } from "@/core/mig/copyChange"
-import { effectiveMig } from "@/core/mig/effectiveMig"
-import { getMigKey } from "@/core/mig/migKey"
-import { validateMigConsistency } from "@/core/mig/validateMig"
-import { loadAllMigs, saveMig } from "@/core/storage/migStore"
-import type {
-  ElementOverrides,
-  ERepository,
-  MessageImplementationGuide,
-} from "@/core/types/types"
+import { loadMig, saveMig } from "@/core/storage/migStore"
+import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
 import { parseMigYaml } from "./parseMigYaml"
-import { MigDiagnostics } from "./MigDiagnostics"
+import { peekPendingMerge, takePendingMerge } from "./pendingMerge"
 
 const COLS = "grid grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)]"
 
-/** Stable id for one diffed field, used to track accept choices. */
-function fieldId(path: string, ref: FieldRef): string {
-  const tail = ref.type === "field" ? ref.field : ref.name
-  return `${path}::${ref.type}:${tail}`
-}
-
 /**
- * Merge an uploaded MIG into an existing one (FUNCTIONALITY §5.2 / §10). Loads the
- * target by key, accepts an upload of a same-family MIG, and shows a per-field
- * diff where each difference can be **accepted** (take incoming) or **kept**
- * (default). The merged result is `target` with the accepted incoming fields
- * applied (`applyFieldCopy`); Apply persists it under the target's key. Reuses
- * the Compare engine plus the orphan-path and consistency guards.
+ * Merge an uploaded MIG into an existing one (FUNCTIONALITY §5.2 / §10). Works
+ * like Compare: it diffs the stored target (current) against the uploaded MIG
+ * (incoming) side-by-side and lets you copy individual incoming changes into a
+ * draft of the current MIG (resolved fields drop out of the diff). Save persists
+ * the merged result under the target's key. Only the current side is written;
+ * the incoming upload is throwaway. Reached from the import-duplicate "Merge"
+ * action (which hands the parsed MIG over) or by uploading on this screen.
  */
 export function MigMerge({ targetKey, repo }: { targetKey: string; repo: ERepository }) {
   const [status, setStatus] = useState<"loading" | "ready">("loading")
-  const [target, setTarget] = useState<MessageImplementationGuide | null>(null)
-  const [allMigs, setAllMigs] = useState<MessageImplementationGuide[]>([])
-  const [incoming, setIncoming] = useState<MessageImplementationGuide | null>(null)
+  const [saved, setSaved] = useState<MessageImplementationGuide | null>(null)
+  const [draft, setDraft] = useState<MessageImplementationGuide | null>(null)
+  // Pick up an incoming MIG handed off from the import-duplicate "Merge" action,
+  // so it isn't re-uploaded. `peek` (not `take`) keeps the initializer pure under
+  // StrictMode's double-invoke; the effect below clears the one-shot afterwards.
+  const [incoming, setIncoming] = useState<MessageImplementationGuide | null>(() =>
+    peekPendingMerge(targetKey),
+  )
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [accepted, setAccepted] = useState<Set<string>>(() => new Set())
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Clear the one-shot handoff now that the initializer has captured it (a module
+  // write, not a setState — safe to run in an effect).
+  useEffect(() => {
+    takePendingMerge(targetKey)
+  }, [targetKey])
 
   useEffect(() => {
     let active = true
-    loadAllMigs()
-      .then((all) => {
+    loadMig(targetKey)
+      .then((mig) => {
         if (!active) return
-        setAllMigs(all)
-        setTarget(all.find((m) => getMigKey(m) === targetKey) ?? null)
+        setSaved(mig)
+        setDraft(mig)
         setStatus("ready")
       })
       .catch((err) => {
-        console.error("Failed to load MIGs for merge:", err)
+        console.error("Failed to load MIG for merge:", err)
         if (active) setStatus("ready")
       })
     return () => {
@@ -64,7 +62,7 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
   }, [targetKey])
 
   if (status === "loading") return <Notice title="Loading…" />
-  if (!target) {
+  if (!saved || !draft) {
     return (
       <Notice title="MIG not found">
         No MIG is stored under “{targetKey}”. Return to <Home /> to pick one to merge into.
@@ -77,71 +75,41 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
     if (errors.length > 0) return setUpload(null, errors[0])
     if (migs.length === 0) return setUpload(null, "No MIG found in the file.")
     if (migs.length > 1) return setUpload(null, "The file holds several MIGs; upload a single MIG to merge.")
-    const candidate = migs[0]
-    if (
-      shortCodeForIdentifier(candidate.messageIdentifier) !==
-      shortCodeForIdentifier(target.messageIdentifier)
-    ) {
-      return setUpload(
-        null,
-        `That MIG targets ${candidate.messageIdentifier}, a different message family than ${target.messageIdentifier}.`,
-      )
-    }
-    setUpload(candidate, null)
+    setUpload(migs[0], null)
   }
-
   const setUpload = (mig: MessageImplementationGuide | null, error: string | null) => {
     setIncoming(mig)
     setUploadError(error)
-    setAccepted(new Set())
   }
 
-  const message = resolveMessage(repo, target.messageIdentifier)?.current
+  const message = resolveMessage(repo, draft.messageIdentifier)?.current
   const order = message ? buildPathOrder(message.rootElement) : undefined
 
-  // Accepting writes into the target, so a path must exist in the target's message
-  // version — otherwise the merge would create an orphan override.
-  const canAccept = (path: string) => !message || elementAtPath(message.rootElement, path) !== null
+  const familyMismatch =
+    incoming != null &&
+    shortCodeForIdentifier(incoming.messageIdentifier) !==
+      shortCodeForIdentifier(draft.messageIdentifier)
 
-  const diff = incoming ? compareMigs(target, incoming, order) : null
-  const acceptableIds = diff
-    ? diff.paths.flatMap((p) => (canAccept(p.path) ? p.fields.map((f) => fieldId(p.path, f.ref)) : []))
-    : []
-  const allAccepted = acceptableIds.length > 0 && acceptableIds.every((id) => accepted.has(id))
+  const diff = incoming && !familyMismatch ? compareMigs(draft, incoming, order) : null
+  const dirty = draft !== saved
 
-  // The merged MIG: the target with each accepted incoming field applied.
-  const merged =
-    diff && incoming
-      ? diff.paths.reduce(
-          (acc, p) =>
-            p.fields.reduce(
-              (m, f) => (accepted.has(fieldId(p.path, f.ref)) ? applyFieldCopy(incoming, m, p.path, f.ref) : m),
-              acc,
-            ),
-          target,
-        )
-      : target
+  // Taking writes into the current draft, so the path must exist in the current
+  // MIG's message version — otherwise the merge would create an orphan override.
+  const canTake = (path: string) => !message || elementAtPath(message.rootElement, path) !== null
 
-  const parent = target.parentMIG
-    ? allMigs.find((m) => getMigKey(m) === target.parentMIG)
-    : undefined
-  const inherited: ElementOverrides = parent ? effectiveMig(parent, allMigs).mig.elementOverrides : {}
-  const diagnostics = message ? validateMigConsistency(merged, inherited, message) : []
+  // Copy one incoming field into the current draft. The field then matches and
+  // drops out of the recomputed diff; persistence waits for Save.
+  const take = (path: string, field: FieldChange) => {
+    if (!incoming) return
+    setDraft(applyFieldCopy(incoming, draft, path, field.ref))
+  }
 
-  const toggle = (id: string) =>
-    setAccepted((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  const toggleAll = () => setAccepted(allAccepted ? new Set() : new Set(acceptableIds))
-
-  const apply = () => {
-    saveMig(merged)
+  const save = () => {
+    saveMig(draft)
       .then(() => navigate({ name: "mig", key: targetKey }))
       .catch((err) => console.error("Failed to save merged MIG:", err))
   }
+  const discard = () => setDraft(saved)
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
@@ -149,17 +117,25 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
         <div className="space-y-1">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <GitMerge className="size-3.5" aria-hidden />
-            Merge into · {target.messageIdentifier}
+            Merge into · {draft.messageIdentifier}
           </p>
           <h1 className="text-base font-semibold tracking-tight">
-            {target.name} <span className="text-muted-foreground">{target.version}</span>
+            {draft.name} <span className="text-muted-foreground">{draft.version}</span>
           </h1>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {incoming && (
-            <Button size="sm" disabled={accepted.size === 0} onClick={apply}>
-              <GitMerge data-icon="inline-start" aria-hidden />
-              Merge {accepted.size > 0 ? `${accepted.size} ` : ""}change{accepted.size === 1 ? "" : "s"}
+          {dirty && (
+            <span className="text-xs text-amber-700 dark:text-amber-500">Unsaved merge</span>
+          )}
+          {dirty && (
+            <Button variant="outline" size="sm" onClick={discard}>
+              Discard
+            </Button>
+          )}
+          {incoming && !familyMismatch && (
+            <Button size="sm" disabled={!dirty} onClick={save}>
+              <FloppyDisk data-icon="inline-start" aria-hidden />
+              Save
             </Button>
           )}
           <Button variant="outline" size="sm" asChild>
@@ -184,13 +160,7 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
       />
 
       {uploadError && (
-        <div
-          role="alert"
-          className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-        >
-          <Warning className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <p>{uploadError}</p>
-        </div>
+        <Alert>{uploadError}</Alert>
       )}
 
       {!incoming ? (
@@ -198,33 +168,27 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
           <p className="text-sm text-muted-foreground">
             Upload a MIG of the same message family to merge into{" "}
             <span className="font-medium text-foreground">
-              {target.name} {target.version}
+              {draft.name} {draft.version}
             </span>
-            . You’ll choose, field by field, which changes to take.
+            . You’ll copy changes across field by field.
           </p>
           <Button size="sm" onClick={() => inputRef.current?.click()}>
             <UploadSimple data-icon="inline-start" aria-hidden />
             Upload MIG to merge
           </Button>
         </div>
+      ) : familyMismatch ? (
+        <Alert>
+          That MIG targets {incoming.messageIdentifier}, a different message family than{" "}
+          {draft.messageIdentifier}. Upload a MIG of the same family to merge.
+        </Alert>
       ) : !diff || diff.paths.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           The uploaded MIG ({incoming.name} {incoming.version}) has no differences from this one —
           nothing to merge.
         </p>
       ) : (
-        <MergePanel
-          diff={diff}
-          incoming={incoming}
-          accepted={accepted}
-          canAccept={canAccept}
-          allAccepted={allAccepted}
-          onToggle={toggle}
-          onToggleAll={toggleAll}
-          diagnostics={
-            <MigDiagnostics subject="Merged result" diagnostics={diagnostics} onSelect={() => {}} />
-          }
-        />
+        <MergePanel diff={diff} incoming={incoming} canTake={canTake} onTake={take} />
       )}
     </div>
   )
@@ -233,35 +197,20 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
 function MergePanel({
   diff,
   incoming,
-  accepted,
-  canAccept,
-  allAccepted,
-  onToggle,
-  onToggleAll,
-  diagnostics,
+  canTake,
+  onTake,
 }: {
   diff: ReturnType<typeof compareMigs>
   incoming: MessageImplementationGuide
-  accepted: Set<string>
-  canAccept: (path: string) => boolean
-  allAccepted: boolean
-  onToggle: (id: string) => void
-  onToggleAll: () => void
-  diagnostics: React.ReactNode
+  canTake: (path: string) => boolean
+  onTake: (path: string, field: FieldChange) => void
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span>
-          {diff.paths.length} element{diff.paths.length === 1 ? "" : "s"} differ · check a row to take
-          the incoming value
-        </span>
-        <Button variant="outline" size="sm" onClick={onToggleAll}>
-          {allAccepted ? "Keep all current" : "Accept all incoming"}
-        </Button>
+      <div className="text-xs text-muted-foreground">
+        {diff.paths.length} element{diff.paths.length === 1 ? "" : "s"} differ · hover a row and take
+        the incoming value
       </div>
-
-      {diagnostics}
 
       {/* Column headers: current (target) vs incoming. */}
       <div className={`${COLS} overflow-hidden rounded-t-md border border-b-0 text-xs font-medium`}>
@@ -276,13 +225,7 @@ function MergePanel({
 
       <div className="-mt-3 flex flex-col">
         {diff.paths.map((p) => (
-          <ElementCard
-            key={p.path}
-            diff={p}
-            accepted={accepted}
-            disabled={!canAccept(p.path)}
-            onToggle={onToggle}
-          />
+          <ElementCard key={p.path} diff={p} disabled={!canTake(p.path)} onTake={onTake} />
         ))}
       </div>
     </div>
@@ -297,20 +240,15 @@ const KIND_BADGE: Record<PathDiff["kind"], string> = {
 
 function ElementCard({
   diff,
-  accepted,
   disabled,
-  onToggle,
+  onTake,
 }: {
   diff: PathDiff
-  accepted: Set<string>
   disabled: boolean
-  onToggle: (id: string) => void
+  onTake: (path: string, field: FieldChange) => void
 }) {
   return (
-    <section
-      aria-label={`${diff.name} — ${KIND_BADGE[diff.kind]}`}
-      className="border border-t-0"
-    >
+    <section aria-label={`${diff.name} — ${KIND_BADGE[diff.kind]}`} className="border border-t-0">
       <header className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <span className="font-medium">{diff.name}</span>
         <code className="truncate text-xs text-muted-foreground">{diff.path}</code>
@@ -319,50 +257,54 @@ function ElementCard({
         </span>
       </header>
       <div className="flex flex-col divide-y">
-        {diff.fields.map((f) => {
-          const id = fieldId(diff.path, f.ref)
-          const take = accepted.has(id)
-          return (
-            <div key={f.label} className={COLS}>
-              <Cell label={f.label} value={f.a} chosen={!take} />
-              <div className="flex items-center justify-center border-x bg-muted/10">
-                <input
-                  type="checkbox"
-                  checked={take}
-                  disabled={disabled}
-                  onChange={() => onToggle(id)}
-                  aria-label={`Take incoming ${f.label} for ${diff.path}`}
-                  title={disabled ? "This version has no element at this path" : undefined}
-                />
-              </div>
-              <Cell label={f.label} value={f.b} chosen={take} accent />
+        {diff.fields.map((f) => (
+          <div key={f.label} className={`group ${COLS}`}>
+            <Cell label={f.label} value={f.a} />
+            <div className="flex items-center justify-center border-x bg-muted/10 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+              <button
+                type="button"
+                onClick={() => onTake(diff.path, f)}
+                disabled={disabled}
+                aria-label={
+                  disabled
+                    ? `Can’t take ${f.label}: this version has no element at this path`
+                    : `Take incoming ${f.label}`
+                }
+                title={disabled ? "This version has no element at this path" : "Take incoming value"}
+                className="rounded p-0.5 text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-30"
+              >
+                <ArrowLineLeft className="size-3.5" aria-hidden />
+              </button>
             </div>
-          )
-        })}
+            <Cell label={f.label} value={f.b} accent />
+          </div>
+        ))}
       </div>
     </section>
   )
 }
 
-/** One side's value. The chosen side is solid; the other is dimmed. */
-function Cell({
-  label,
-  value,
-  chosen,
-  accent = false,
-}: {
-  label: string
-  value: string | null
-  chosen: boolean
-  accent?: boolean
-}) {
-  const tint = chosen && accent ? "bg-emerald-500/10" : ""
+/** One side's value, tri-state aware. The incoming side is tinted when present. */
+function Cell({ label, value, accent = false }: { label: string; value: string | null; accent?: boolean }) {
+  const tint = accent && value !== null ? "bg-emerald-500/10" : ""
   return (
-    <div className={`px-3 py-1.5 text-sm ${tint} ${chosen ? "" : "opacity-50"}`}>
+    <div className={`px-3 py-1.5 text-sm ${tint}`}>
       <span className="text-xs text-muted-foreground">{label}</span>
       <div className="break-words">
         {value === null ? <span className="italic text-muted-foreground/70">inherits</span> : value}
       </div>
+    </div>
+  )
+}
+
+function Alert({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      role="alert"
+      className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+    >
+      <Warning className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <p>{children}</p>
     </div>
   )
 }

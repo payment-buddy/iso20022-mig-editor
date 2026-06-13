@@ -15,6 +15,7 @@ import type {
   MessageImplementationGuide,
 } from "@/core/types/types"
 import { MigMerge } from "./MigMerge"
+import { setPendingMerge } from "./pendingMerge"
 
 function mig(
   name: string,
@@ -56,7 +57,6 @@ function el(xmlTag: string, elements: MessageElement[] = []): MessageElement {
   }
 }
 
-/** Repo with one pacs.008.001.08 message rooted at the given element. */
 function repoWith(root: MessageElement): ERepository {
   const def: MessageDefinition = {
     name: "FIToFICstmrCdtTrf",
@@ -64,9 +64,7 @@ function repoWith(root: MessageElement): ERepository {
     shortCode: "pacs.008",
     rootElement: root,
   }
-  return {
-    businessAreas: [{ name: "Payments", code: "pacs", definition: "", messages: [def] }],
-  }
+  return { businessAreas: [{ name: "Payments", code: "pacs", definition: "", messages: [def] }] }
 }
 
 const docAmt = repoWith(el("Doc", [el("Amt")]))
@@ -74,7 +72,6 @@ const docAmt = repoWith(el("Doc", [el("Amt")]))
 async function renderMerge(target: MessageImplementationGuide, repo: ERepository = docAmt) {
   await saveMig(target)
   render(<MigMerge targetKey={getMigKey(target)} repo={repo} />)
-  await screen.findByRole("button", { name: /upload mig to merge/i })
 }
 
 afterEach(async () => {
@@ -85,8 +82,8 @@ afterEach(async () => {
 
 describe("MigMerge", () => {
   it("prompts for an upload, then shows the field diff", async () => {
-    const target = mig("Target", { "Doc/Amt": { maxLength: 18 } })
-    await renderMerge(target)
+    await renderMerge(mig("Target", { "Doc/Amt": { maxLength: 18 } }))
+    await screen.findByRole("button", { name: /upload mig to merge/i })
 
     await userEvent.upload(
       screen.getByLabelText("MIG to merge"),
@@ -98,31 +95,39 @@ describe("MigMerge", () => {
     expect(within(card).getByText("12")).toBeInTheDocument()
   })
 
-  it("keeps current by default and merges only accepted fields on Merge", async () => {
-    const target = mig("Target", { "Doc/Amt": { maxLength: 18 } })
-    await renderMerge(target)
+  it("takes an incoming field into the draft and Save persists it", async () => {
+    await renderMerge(mig("Target", { "Doc/Amt": { maxLength: 18 } }))
+    await screen.findByRole("button", { name: /upload mig to merge/i })
     await userEvent.upload(
       screen.getByLabelText("MIG to merge"),
       migFile(mig("Incoming", { "Doc/Amt": { maxLength: 12 } })),
     )
 
-    // Nothing accepted yet → Merge is disabled.
     const card = await screen.findByRole("region", { name: /Amt — changed/i })
-    expect(screen.getByRole("button", { name: /^merge/i })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled() // not dirty yet
 
-    await userEvent.click(within(card).getByRole("checkbox", { name: /take incoming max length/i }))
-    await userEvent.click(screen.getByRole("button", { name: /merge 1 change/i }))
+    await userEvent.click(within(card).getByRole("button", { name: /take incoming max length/i }))
+    await userEvent.click(screen.getByRole("button", { name: /^save$/i }))
 
-    // Persisted into the target's key, and routed to its editor.
     await waitFor(async () =>
       expect((await loadMig("Target:1.0"))?.elementOverrides["Doc/Amt"].maxLength).toBe(12),
     )
     expect(window.location.hash).toBe("#mig/Target%3A1.0")
   })
 
-  it("rejects an incoming MIG from a different message family", async () => {
-    const target = mig("Target", { "Doc/Amt": { maxLength: 18 } }, "pacs.008.001.08")
+  it("consumes an incoming MIG handed off from the import flow (no upload)", async () => {
+    const target = mig("Target", { "Doc/Amt": { maxLength: 18 } })
+    setPendingMerge(getMigKey(target), mig("Incoming", { "Doc/Amt": { maxLength: 12 } }))
     await renderMerge(target)
+
+    // Diff shown straight away, without the upload step.
+    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    expect(within(card).getByText("12")).toBeInTheDocument()
+  })
+
+  it("rejects an incoming MIG from a different message family", async () => {
+    await renderMerge(mig("Target", { "Doc/Amt": { maxLength: 18 } }, "pacs.008.001.08"))
+    await screen.findByRole("button", { name: /upload mig to merge/i })
 
     await userEvent.upload(
       screen.getByLabelText("MIG to merge"),
@@ -133,10 +138,9 @@ describe("MigMerge", () => {
     expect(screen.queryByRole("region", { name: /Amt/i })).not.toBeInTheDocument()
   })
 
-  it("disables accepting a field absent from the target's message version", async () => {
-    // Target message has only Doc/Amt; incoming overrides Doc/Extra.
-    const target = mig("Target", { "Doc/Amt": { maxLength: 18 } })
-    await renderMerge(target)
+  it("disables taking a field absent from the target's message version", async () => {
+    await renderMerge(mig("Target", { "Doc/Amt": { maxLength: 18 } }))
+    await screen.findByRole("button", { name: /upload mig to merge/i })
 
     await userEvent.upload(
       screen.getByLabelText("MIG to merge"),
@@ -144,12 +148,12 @@ describe("MigMerge", () => {
     )
 
     const card = await screen.findByRole("region", { name: /Extra — only in incoming/i })
-    expect(within(card).getByRole("checkbox")).toBeDisabled()
+    expect(within(card).getByRole("button")).toBeDisabled()
   })
 
   it("reports no differences when the upload matches the target", async () => {
-    const target = mig("Target", { "Doc/Amt": { maxLength: 18 } })
-    await renderMerge(target)
+    await renderMerge(mig("Target", { "Doc/Amt": { maxLength: 18 } }))
+    await screen.findByRole("button", { name: /upload mig to merge/i })
 
     await userEvent.upload(
       screen.getByLabelText("MIG to merge"),

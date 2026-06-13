@@ -8,17 +8,30 @@ import { deleteDatabase } from "@/core/storage/db"
 import { loadAllMigs, loadMig, saveMig } from "@/core/storage/migStore"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { MigHome } from "./MigHome"
+import { takePendingMerge } from "./pendingMerge"
 
-function migYaml(name: string, version: string, description?: string): string {
+function migYaml(
+  name: string,
+  version: string,
+  description?: string,
+  messageIdentifier = "pacs.008.001.08",
+): string {
   return (
-    `name: ${name}\nversion: '${version}'\nmessageIdentifier: pacs.008.001.08\n` +
+    `name: ${name}\nversion: '${version}'\nmessageIdentifier: ${messageIdentifier}\n` +
     `elementOverrides: {}\n` +
     (description ? `description: ${description}\n` : "")
   )
 }
 
-function migFile(name: string, version: string, description?: string): File {
-  return new File([migYaml(name, version, description)], `${name}.yaml`, { type: "text/yaml" })
+function migFile(
+  name: string,
+  version: string,
+  description?: string,
+  messageIdentifier?: string,
+): File {
+  return new File([migYaml(name, version, description, messageIdentifier)], `${name}.yaml`, {
+    type: "text/yaml",
+  })
 }
 
 /** A single file holding an array of MIGs. */
@@ -242,19 +255,41 @@ describe("MigHome", () => {
     expect(compare()).toBeEnabled()
   })
 
-  it("Merge is enabled only with exactly one selected and routes to the merge screen", async () => {
+  it("offers Merge for a single same-family duplicate and hands it to the merge screen", async () => {
+    await renderWith(migObj("EPC", "1.0"))
+    await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0", "updated"))
+
+    const dialog = await screen.findByRole("alertdialog")
+    await userEvent.click(within(dialog).getByRole("button", { name: /merge/i }))
+
+    // Routes to the merge screen and hands the parsed incoming over.
+    expect(window.location.hash).toBe("#merge/EPC%3A1.0")
+    expect(takePendingMerge("EPC:1.0")?.description).toBe("updated")
+  })
+
+  it("does not offer Merge when the duplicate is a different message family", async () => {
+    await renderWith(migObj("EPC", "1.0", "pacs.008.001.08"))
+    await userEvent.upload(
+      screen.getByLabelText("MIG YAML file"),
+      migFile("EPC", "1.0", "updated", "pacs.009.001.08"),
+    )
+
+    const dialog = await screen.findByRole("alertdialog")
+    expect(within(dialog).queryByRole("button", { name: /merge/i })).not.toBeInTheDocument()
+  })
+
+  it("does not offer Merge when several MIGs collide", async () => {
     await renderWith(migObj("A", "1"), migObj("B", "1"))
-    const merge = () => screen.getByRole("button", { name: /^merge$/i })
+    await userEvent.upload(
+      screen.getByLabelText("MIG YAML file"),
+      migArrayFile([
+        ["A", "1", "x"],
+        ["B", "1", "y"],
+      ]),
+    )
 
-    expect(merge()).toBeDisabled()
-    await userEvent.click(within(rowFor("A")).getByRole("checkbox"))
-    expect(merge()).toBeEnabled()
-    await userEvent.click(within(rowFor("B")).getByRole("checkbox"))
-    expect(merge()).toBeDisabled() // two selected
-
-    await userEvent.click(within(rowFor("B")).getByRole("checkbox")) // back to one (A)
-    await userEvent.click(merge())
-    expect(window.location.hash).toBe("#merge/A%3A1")
+    const dialog = await screen.findByRole("alertdialog")
+    expect(within(dialog).queryByRole("button", { name: /merge/i })).not.toBeInTheDocument()
   })
 
   it("deletes the selection after confirming", async () => {

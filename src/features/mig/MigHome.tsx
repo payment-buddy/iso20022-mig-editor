@@ -8,7 +8,6 @@ import {
 import {
   DownloadSimple,
   GitDiff,
-  GitMerge,
   Trash,
   TreeStructure,
   UploadSimple,
@@ -29,6 +28,7 @@ import type { MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { parseMigYaml } from "./parseMigYaml"
 import { ImportDuplicateDialog } from "./ImportDuplicateDialog"
+import { setPendingMerge } from "./pendingMerge"
 import { downloadMigs } from "./downloadMigs"
 
 type PendingImport = {
@@ -119,6 +119,32 @@ export function MigHome() {
     const { incoming, duplicateKeys, errors } = pendingImport
     setPendingImport(null)
     commitImport(migsForResolution(incoming, duplicateKeys, resolution, Date.now()), errors)
+  }
+
+  // Merge is offered only for a single colliding MIG whose message family matches
+  // the stored one — it hands the parsed upload to the merge screen (Compare-like).
+  const mergeCandidate = (() => {
+    if (!pendingImport || pendingImport.incoming.length !== 1 || pendingImport.duplicateKeys.size !== 1) {
+      return null
+    }
+    const candidate = pendingImport.incoming[0]
+    const existing = migs.find((m) => getMigKey(m) === getMigKey(candidate))
+    if (
+      !existing ||
+      shortCodeForIdentifier(candidate.messageIdentifier) !==
+        shortCodeForIdentifier(existing.messageIdentifier)
+    ) {
+      return null
+    }
+    return candidate
+  })()
+
+  const mergePendingImport = () => {
+    if (!mergeCandidate) return
+    const key = getMigKey(mergeCandidate)
+    setPendingImport(null)
+    setPendingMerge(key, mergeCandidate)
+    navigate({ name: "merge", key })
   }
 
   const focusRow = (key: string) => {
@@ -234,13 +260,6 @@ export function MigHome() {
     })
   }
 
-  // Merge takes a single target MIG; the incoming MIG is uploaded on the merge screen.
-  const mergeDisabled = selectedMigs.length !== 1
-  const onMerge = () => {
-    if (selectedMigs.length !== 1) return
-    navigate({ name: "merge", key: getMigKey(selectedMigs[0]) })
-  }
-
   const hiddenFileInput = (
     <input
       ref={inputRef}
@@ -336,15 +355,6 @@ export function MigHome() {
               >
                 <GitDiff data-icon="inline-start" aria-hidden />
                 Compare
-              </Button>
-            </span>
-            <span
-              title={mergeDisabled ? "Select one MIG to merge another into" : undefined}
-              className="inline-flex"
-            >
-              <Button variant="outline" size="sm" disabled={mergeDisabled} onClick={onMerge}>
-                <GitMerge data-icon="inline-start" aria-hidden />
-                Merge
               </Button>
             </span>
             <Button
@@ -457,6 +467,7 @@ export function MigHome() {
             : []
         }
         onResolve={resolvePendingImport}
+        onMerge={mergeCandidate ? mergePendingImport : undefined}
       />
     </div>
   )

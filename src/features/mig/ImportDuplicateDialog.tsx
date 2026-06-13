@@ -14,11 +14,14 @@ export function ImportDuplicateDialog({
   onOpenChange,
   duplicates,
   onResolve,
+  onMerge,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   duplicates: string[]
   onResolve: (resolution: DuplicateResolution) => void
+  /** Provided only when a single same-family duplicate can be merged. */
+  onMerge?: () => void
 }) {
   const n = duplicates.length
   return (
@@ -38,7 +41,8 @@ export function ImportDuplicateDialog({
             ))}
           </ul>
           <p className="mt-2 text-sm text-muted-foreground">
-            Skip them, upload as a new version, or overwrite the stored ones?
+            {onMerge ? "Skip, merge changes, upload as a new version, or overwrite?" : null}
+            {!onMerge ? "Skip them, upload as a new version, or overwrite the stored ones?" : null}
           </p>
 
           <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
@@ -51,6 +55,14 @@ export function ImportDuplicateDialog({
             >
               Skip
             </AlertDialog.Action>
+            {onMerge && (
+              <AlertDialog.Action
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                onClick={onMerge}
+              >
+                Merge…
+              </AlertDialog.Action>
+            )}
             <AlertDialog.Action
               className={cn(buttonVariants({ variant: "default", size: "sm" }))}
               onClick={() => onResolve("new")}
