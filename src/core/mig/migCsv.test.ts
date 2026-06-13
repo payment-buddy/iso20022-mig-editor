@@ -143,7 +143,7 @@ describe("buildMigCsvRows — overrides", () => {
       MESSAGE,
     )
     const r = rows.find((x) => x[col(columns, "Rule")] === "Multiplicity")!
-    expect(r[col(columns, "Source")]).toBe("MIG")
+    expect(r[col(columns, "Source")]).toBe("M")
     expect(r[col(columns, "Definition")]).toBe("[1..1]")
   })
 
@@ -154,7 +154,7 @@ describe("buildMigCsvRows — overrides", () => {
       MESSAGE,
     )
     const r = rows.find((x) => x[col(columns, "Rule")] === "Type")!
-    expect(r[col(columns, "Source")]).toBe("MIG")
+    expect(r[col(columns, "Source")]).toBe("M")
     expect(r[col(columns, "Definition")]).toBe("Text[1..20]")
   })
 
@@ -167,7 +167,7 @@ describe("buildMigCsvRows — overrides", () => {
       MESSAGE,
     )
     const r = rows.find((x) => x[col(columns, "Rule")] === "Positive")!
-    expect(r[col(columns, "Source")]).toBe("MIG")
+    expect(r[col(columns, "Source")]).toBe("M")
     expect(r[col(columns, "Definition")]).toBe("Must be > 0")
   })
 
@@ -208,7 +208,7 @@ describe("buildMigCsvRows — provenance and annotations", () => {
     const inherited = rows.find((r) => r[col(columns, "Rule")] === "Inherited")!
     const own = rows.find((r) => r[col(columns, "Rule")] === "Own")!
     expect(inherited[col(columns, "Source")]).toBe("Base")
-    expect(own[col(columns, "Source")]).toBe("MIG")
+    expect(own[col(columns, "Source")]).toBe("Leaf")
   })
 
   it("adds one column per constraint annotation and fills it", () => {
@@ -230,6 +230,6 @@ describe("buildMigCsv", () => {
     )
     expect(filename).toBe("M-1.0.csv")
     expect(content.endsWith("\r\n")).toBe(true)
-    expect(content).toContain('ISO,R,"a, b and ""c"""'.replace("ISO", "MIG"))
+    expect(content).toContain('M,R,"a, b and ""c"""')
   })
 })

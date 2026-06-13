@@ -10,9 +10,9 @@
 // rule columns are blank on the element row:
 //   Source | Rule | Definition | Expression | <one column per constraint annotation>
 //
-// Source provenance: "ISO" (rule from the message definition), the parent MIG's
-// name (a rule inherited from the chain), or "MIG" (set in this MIG). Computed
-// from the effective parent chain (ancestor→leaf, leaf = this MIG).
+// Source provenance: "ISO" (rule from the message definition) or a MIG name —
+// this MIG's own name when it set the rule, or an ancestor's when inherited.
+// Computed from the effective parent chain (ancestor→leaf, leaf = this MIG).
 
 import { effectiveMig } from "./effectiveMig"
 import type {
@@ -140,13 +140,14 @@ export function buildMigCsvRows(
   const columns = [...COMMON_COLUMNS, ...RULE_COLUMNS, ...annotationNames]
   const leafIndex = chain.length - 1
 
-  // The most-descendant chain layer whose override at `path` satisfies `has`.
+  // The most-descendant chain layer whose override at `path` satisfies `has`,
+  // named by its MIG (this MIG or an ancestor) for consistency with "ISO".
   const sourceFor = (path: string, has: (ov: ElementOverride) => boolean): string => {
     for (let i = leafIndex; i >= 0; i--) {
       const ov = chain[i].elementOverrides[path]
-      if (ov && has(ov)) return i === leafIndex ? "MIG" : chain[i].name
+      if (ov && has(ov)) return chain[i].name
     }
-    return "MIG"
+    return mig.name
   }
 
   const rows: string[][] = []
