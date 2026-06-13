@@ -1,10 +1,12 @@
 import {
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
+  type Ref,
 } from "react"
 import { CaretRight, Check, MagnifyingGlass } from "@phosphor-icons/react"
 import type { Constraint, ElementOverrides, MessageElement } from "@/core/types/types"
@@ -50,6 +52,9 @@ export type TreeActions = {
    */
   select: (path: string) => void
 }
+
+/** Imperative handle for selecting a node from outside the tree (e.g. diagnostics). */
+export type ElementTreeHandle = TreeActions
 
 /**
  * Whether `el` is excluded in its own right — its effective `maxOccurs` is 0.
@@ -241,6 +246,7 @@ export function ElementTree({
   ariaLabel,
   renderDetail,
   elementOverrides,
+  ref,
 }: {
   root: MessageElement
   ariaLabel: string
@@ -252,6 +258,8 @@ export function ElementTree({
    * Omitted by the read-only Message Explorer.
    */
   elementOverrides?: ElementOverrides
+  /** Imperative handle to select a node from outside (e.g. the diagnostics drawer). */
+  ref?: Ref<ElementTreeHandle>
 }) {
   const [showXmlTags, setShowXmlTags] = useState(false)
   // Root is expanded by default; expansion is keyed by xmlPath so the keyboard
@@ -333,6 +341,10 @@ export function ElementTree({
       nodeRefs.current.get(path)?.focus()
     }
   })
+
+  // Expose `select` so the diagnostics drawer can jump to an element. `select` is
+  // behaviorally stable (only touches state setters and refs).
+  useImperativeHandle(ref, () => ({ select }), [])
 
   const onKeyDown = (e: ReactKeyboardEvent<HTMLUListElement>) => {
     if (!active) return

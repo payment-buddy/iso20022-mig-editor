@@ -6,9 +6,16 @@ import { cn } from "@/lib/utils"
 /**
  * Advisory consistency banner (FUNCTIONALITY §5.7): "This MIG has N issues",
  * expanding to a drawer that lists each loosening/consistency diagnostic
- * (element, field, message, path). Renders nothing when the MIG is clean.
+ * (element, field, message, path). Clicking one selects its element via
+ * `onSelect`. Renders nothing when the MIG is clean.
  */
-export function MigDiagnostics({ diagnostics }: { diagnostics: Diagnostic[] }) {
+export function MigDiagnostics({
+  diagnostics,
+  onSelect,
+}: {
+  diagnostics: Diagnostic[]
+  onSelect: (path: string) => void
+}) {
   const [open, setOpen] = useState(false)
   if (diagnostics.length === 0) return null
 
@@ -30,13 +37,20 @@ export function MigDiagnostics({ diagnostics }: { diagnostics: Diagnostic[] }) {
       </button>
 
       {open && (
-        <ul aria-label="Diagnostics" className="flex flex-col gap-1.5 border-t border-amber-500/30 px-3 py-2">
+        <ul aria-label="Diagnostics" className="flex flex-col border-t border-amber-500/30 py-1">
           {diagnostics.map((d, i) => (
-            <li key={`${d.path}-${d.field}-${i}`} className="text-xs">
-              <span className="font-medium">{d.elementName}</span>
-              <span className="text-amber-700/70 dark:text-amber-500/70"> · {d.field}</span>
-              <p className="text-amber-700/90 dark:text-amber-500/90">{d.message}</p>
-              <code className="text-[0.625rem] text-amber-700/60 dark:text-amber-500/60">{d.path}</code>
+            <li key={`${d.path}-${d.field}-${i}`}>
+              <button
+                type="button"
+                onClick={() => onSelect(d.path)}
+                title={`Go to ${d.path}`}
+                className="w-full rounded-sm px-3 py-1 text-left text-xs outline-none hover:bg-amber-500/15 focus-visible:ring-2 focus-visible:ring-ring/30"
+              >
+                <span className="font-medium">{d.elementName}</span>
+                <span className="text-amber-700/70 dark:text-amber-500/70"> · {d.field}</span>
+                <span className="block text-amber-700/90 dark:text-amber-500/90">{d.message}</span>
+                <code className="text-[0.625rem] text-amber-700/60 dark:text-amber-500/60">{d.path}</code>
+              </button>
             </li>
           ))}
         </ul>

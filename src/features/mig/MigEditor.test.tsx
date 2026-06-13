@@ -792,6 +792,10 @@ describe("MigEditor", () => {
     const region = screen.getByRole("region", { name: /consistency diagnostics/i })
     expect(within(region).getByText(/above 35/i)).toBeInTheDocument()
     expect(within(region).getByText("GrpHdr")).toBeInTheDocument()
+
+    // Clicking a diagnostic selects its element in the tree.
+    await user.click(within(region).getByRole("button", { name: /grphdr/i }))
+    expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toHaveAttribute("aria-selected", "true")
   })
 
   it("shows no consistency banner for a clean MIG", async () => {

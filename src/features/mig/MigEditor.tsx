@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Check, DownloadSimple, FileText } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { effectiveMig } from "@/core/mig/effectiveMig"
@@ -23,7 +23,12 @@ import type {
 } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
-import { DetailPanel, ElementTree, Field } from "@/features/repository/ElementTree"
+import {
+  DetailPanel,
+  ElementTree,
+  Field,
+  type ElementTreeHandle,
+} from "@/features/repository/ElementTree"
 import { MigMetadata } from "./MigMetadata"
 import { MigElementDetail } from "./MigElementDetail"
 import { MigConstraintDetail } from "./MigConstraintDetail"
@@ -41,6 +46,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   const [status, setStatus] = useState<Status>("loading")
   const [mig, setMig] = useState<MessageImplementationGuide | null>(null)
   const [allMigs, setAllMigs] = useState<MessageImplementationGuide[]>([])
+  const treeRef = useRef<ElementTreeHandle>(null)
 
   useEffect(() => {
     let active = true
@@ -144,9 +150,13 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
 
       <MigMetadata mig={mig} allMigs={allMigs} onChange={persist} onRename={rename} />
 
-      <MigDiagnostics diagnostics={diagnostics} />
+      <MigDiagnostics
+        diagnostics={diagnostics}
+        onSelect={(path) => treeRef.current?.select(path)}
+      />
 
       <ElementTree
+        ref={treeRef}
         key={mig.messageIdentifier}
         root={root}
         ariaLabel={`${mig.name} structure`}
