@@ -119,6 +119,9 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   // inherited/overridden-here affordances and reset targets.
   const parent = mig.parentMIG ? allMigs.find((m) => getMigKey(m) === mig.parentMIG) : undefined
   const inheritedOverrides = parent ? effectiveMig(parent, allMigs).mig.elementOverrides : {}
+  // Effective overrides (own + inherited chain) — drive the tree's cardinality
+  // and excluded styling.
+  const effectiveOverrides = effectiveMig(mig, allMigs).mig.elementOverrides
 
   // Advisory loosening/consistency diagnostics across the whole MIG.
   const diagnostics = validateMigConsistency(mig, inheritedOverrides, resolved.current)
@@ -161,6 +164,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
         root={root}
         ariaLabel={`${mig.name} structure`}
         elementOverrides={mig.elementOverrides}
+        effectiveOverrides={effectiveOverrides}
         renderDetail={(sel, actions) => {
           if (sel?.kind === "element") {
             return (

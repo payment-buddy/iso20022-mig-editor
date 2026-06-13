@@ -270,6 +270,38 @@ describe("MigEditor", () => {
     expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.minOccurs).toBeUndefined()
   })
 
+  it("shows the effective cardinality in the tree (own override)", async () => {
+    // GrpHdr is [1..1] in ISO; overriding maxOccurs to 5 shows [1..5] in the tree.
+    await saveMig({ ...MIG, elementOverrides: { "DocumentTag/GrpHdrTag": { maxOccurs: 5 } } })
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const grpHdr = screen.getByRole("treeitem", { name: "GrpHdr" })
+    expect(within(grpHdr).getByText("[1..5]")).toBeInTheDocument()
+  })
+
+  it("shows inherited cardinality from the parent MIG in the tree", async () => {
+    const parent: MessageImplementationGuide = {
+      name: "Base",
+      version: "1",
+      messageIdentifier: "pacs.008.001.10",
+      elementOverrides: { "DocumentTag/GrpHdrTag": { maxOccurs: 3 } },
+    }
+    const child: MessageImplementationGuide = {
+      name: "Child",
+      version: "1",
+      messageIdentifier: "pacs.008.001.10",
+      parentMIG: "Base:1",
+      elementOverrides: {},
+    }
+    await saveMig(parent)
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const grpHdr = screen.getByRole("treeitem", { name: "GrpHdr" })
+    // [1..3] inherited from the parent, though the child has no own override.
+    expect(within(grpHdr).getByText("[1..3]")).toBeInTheDocument()
+  })
+
   it("counts and hides elements excluded via a maxOccurs:0 override", async () => {
     const user = userEvent.setup()
     // Exclude CdtTrfTxInf by overriding its effective maxOccurs to 0.

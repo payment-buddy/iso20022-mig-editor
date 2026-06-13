@@ -26,7 +26,13 @@ type FlatNode = {
   /** Effective `maxOccurs:0` on this node or an ancestor — styled as excluded. */
   excluded: boolean
 } & (
-  | { kind: "element"; element: MessageElement }
+  | {
+      kind: "element"
+      element: MessageElement
+      /** Effective cardinality (own + inherited override over the base). */
+      minOccurs: number
+      maxOccurs: number | null
+    }
   | { kind: "constraint"; constraint: Constraint; /** MIG-specific (vs. standard). */ added: boolean }
 )
 
@@ -69,6 +75,19 @@ function isOwnExcluded(
   const override = overrides?.[path]
   const maxOccurs = override && "maxOccurs" in override ? override.maxOccurs : el.maxOccurs
   return maxOccurs === 0
+}
+
+/** Effective cardinality at `path` — its override (own + inherited) over the base. */
+function effectiveOccurs(
+  path: string,
+  el: MessageElement,
+  overrides: ElementOverrides | undefined,
+): { minOccurs: number; maxOccurs: number | null } {
+  const override = overrides?.[path]
+  return {
+    minOccurs: override && "minOccurs" in override ? (override.minOccurs ?? 0) : el.minOccurs,
+    maxOccurs: override && "maxOccurs" in override ? (override.maxOccurs ?? null) : el.maxOccurs,
+  }
 }
 
 /**
@@ -147,14 +166,17 @@ function buildFilter(
  * Walk the element tree, emitting only nodes whose ancestors are all expanded.
  * When `filter` is set, prune to its `keep` set and force its `expand` paths
  * open (a node also stays open if the user expanded it). When `hideExcluded` is
- * set, drop `maxOccurs:0` elements (and their subtrees) entirely.
+ * set, drop `maxOccurs:0` elements (and their subtrees) entirely. `ownOverrides`
+ * drive the MIG-specific constraint nodes; `effectiveOverrides` (own + inherited)
+ * drive exclusion styling and the displayed cardinality.
  */
 function flattenTree(
   root: MessageElement,
   expanded: Set<string>,
   filter: TreeFilter | null,
   hideExcluded: boolean,
-  overrides: ElementOverrides | undefined,
+  ownOverrides: ElementOverrides | undefined,
+  effectiveOverrides: ElementOverrides | undefined,
 ): FlatNode[] {
   const out: FlatNode[] = []
   const walk = (
@@ -165,16 +187,16 @@ function flattenTree(
     ancestorExcluded: boolean,
   ) => {
     if (filter && !filter.keep.has(path)) return
-    const excluded = ancestorExcluded || isOwnExcluded(path, el, overrides)
+    const excluded = ancestorExcluded || isOwnExcluded(path, el, effectiveOverrides)
     if (hideExcluded && excluded) return
 
     // Children are visible unless filtered out or (when hiding) excluded.
     const childEls = el.elements.filter((c) => {
       if (filter && !filter.keep.has(`${path}/${c.xmlTag}`)) return false
-      if (hideExcluded && isOwnExcluded(`${path}/${c.xmlTag}`, c, overrides)) return false
+      if (hideExcluded && isOwnExcluded(`${path}/${c.xmlTag}`, c, effectiveOverrides)) return false
       return true
     })
-    const cons = constraintsAt(path, el, overrides)
+    const cons = constraintsAt(path, el, ownOverrides)
     const childCons = filter
       ? cons.filter((c) => filter.keep.has(`${path}/${c.constraint.name}`))
       : cons
@@ -183,6 +205,7 @@ function flattenTree(
     out.push({
       kind: "element",
       element: el,
+      ...effectiveOccurs(path, el, effectiveOverrides),
       path,
       level,
       parentPath,
@@ -246,21 +269,29 @@ export function ElementTree({
   ariaLabel,
   renderDetail,
   elementOverrides,
+  effectiveOverrides,
   ref,
 }: {
   root: MessageElement
   ariaLabel: string
   renderDetail: (selected: SelectedNode | null, actions: TreeActions) => ReactNode
   /**
-   * MIG overrides keyed by `xmlPath`. Drives two MIG-only behaviors: an element
-   * excluded via an override (`maxOccurs: 0`) is styled/counted as excluded, and
-   * each path's `additionalConstraints` appear as MIG-specific tree nodes.
-   * Omitted by the read-only Message Explorer.
+   * This MIG's **own** overrides keyed by `xmlPath` — each path's
+   * `additionalConstraints` appear as MIG-specific tree nodes. Omitted by the
+   * read-only Message Explorer.
    */
   elementOverrides?: ElementOverrides
+  /**
+   * **Effective** overrides (own merged over the inherited parent chain) — drive
+   * the displayed cardinality and the excluded styling/count. Defaults to
+   * `elementOverrides` when omitted (no inheritance); both omitted = the base
+   * message (Message Explorer).
+   */
+  effectiveOverrides?: ElementOverrides
   /** Imperative handle to select a node from outside (e.g. the diagnostics drawer). */
   ref?: Ref<ElementTreeHandle>
 }) {
+  const effective = effectiveOverrides ?? elementOverrides
   const [showXmlTags, setShowXmlTags] = useState(false)
   // Root is expanded by default; expansion is keyed by xmlPath so the keyboard
   // handler can drive it centrally (each node no longer owns its open state).
@@ -272,18 +303,15 @@ export function ElementTree({
   const nodeRefs = useRef(new Map<string, HTMLElement>())
   const filterRef = useRef<HTMLInputElement>(null)
 
-  const excludedCount = useMemo(
-    () => countExcluded(root, elementOverrides),
-    [root, elementOverrides],
-  )
+  const excludedCount = useMemo(() => countExcluded(root, effective), [root, effective])
   const q = filter.trim().toLowerCase()
   const treeFilter = useMemo(
     () => (q ? buildFilter(root, q, elementOverrides) : null),
     [root, q, elementOverrides],
   )
   const flatNodes = useMemo(
-    () => flattenTree(root, expanded, treeFilter, hideExcluded, elementOverrides),
-    [root, expanded, treeFilter, hideExcluded, elementOverrides],
+    () => flattenTree(root, expanded, treeFilter, hideExcluded, elementOverrides, effective),
+    [root, expanded, treeFilter, hideExcluded, elementOverrides, effective],
   )
   const noMatches = treeFilter !== null && flatNodes.length === 0
 
@@ -524,8 +552,8 @@ export function ElementTree({
   )
 }
 
-function cardinality(e: MessageElement): string {
-  return `[${e.minOccurs}..${e.maxOccurs ?? "*"}]`
+function cardinality(minOccurs: number, maxOccurs: number | null): string {
+  return `[${minOccurs}..${maxOccurs ?? "*"}]`
 }
 
 /**
@@ -601,7 +629,9 @@ function TreeNode({
           {label}
         </span>
         {node.kind === "element" && (
-          <span className="text-xs text-muted-foreground">{cardinality(node.element)}</span>
+          <span className="text-xs text-muted-foreground">
+            {cardinality(node.minOccurs, node.maxOccurs)}
+          </span>
         )}
         {node.excluded && (
           <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
