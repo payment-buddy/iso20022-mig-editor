@@ -31,6 +31,35 @@ function overlay(
     if (co.expression == null) delete out.expression
     else out.expression = co.expression
   }
+  if (co.annotations) {
+    const merged = constraintAnnotations(base, override)
+    if (Object.keys(merged).length > 0) out.annotations = merged
+    else delete out.annotations
+  }
+  return out
+}
+
+/**
+ * The effective annotation values of a constraint at an element path: the base
+ * constraint's own `annotations` (set on a MIG-added constraint) overlaid by the
+ * `constraintOverrides[name].annotations` entry — per name, `null`/absent clears.
+ * `override` is the **effective** (own + inherited) override for the element's
+ * path. Used both to overlay reported constraints and to resolve the inherited
+ * baseline a child's annotation field shows.
+ */
+export function constraintAnnotations(
+  base: Pick<Constraint, "name" | "annotations">,
+  override: ElementOverride | undefined
+): Record<string, string> {
+  const out: Record<string, string> = {}
+  const apply = (map: Record<string, string | null> | undefined) => {
+    for (const [name, value] of Object.entries(map ?? {})) {
+      if (value == null || value === "") delete out[name]
+      else out[name] = value
+    }
+  }
+  apply(base.annotations)
+  apply(override?.constraintOverrides?.[base.name]?.annotations)
   return out
 }
 

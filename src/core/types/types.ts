@@ -173,6 +173,14 @@ export interface ConstraintOverride {
   expression?: string | null
   /** Switch the rule off (presence = set; absent inherits; a child can re-enable with `false`). */
   disabled?: boolean
+  /**
+   * Per-name annotation overlay on a standard (ISO) or inherited constraint —
+   * tri-state per name (absent = inherit, `null` = clear, value = set). Lets a MIG
+   * override one inherited constraint annotation without re-owning the whole
+   * constraint. `AdditionalConstraint.annotations` carries the values for the
+   * MIG's *own* added constraints; this carries the overlay on everything else.
+   */
+  annotations?: Record<string, string | null>
 }
 
 /** Map of `xmlPath` → override. */

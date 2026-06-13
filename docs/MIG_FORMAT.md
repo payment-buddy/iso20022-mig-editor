@@ -87,6 +87,7 @@ constraintOverrides:      # map; overlays on standard/inherited constraints, key
     definition            # tri-state; overlay the rule's definition text
     expression            # tri-state; overlay a formal expression on an ISO/inherited rule
     disabled              # optional bool; true skips the rule during validation
+    annotations           # map; per-name overlay on the constraint's annotations (see §4.1)
 ```
 
 - **Exclusion** stays as **`maxOccurs: 0`** (no separate `excluded` flag).
@@ -95,8 +96,9 @@ constraintOverrides:      # map; overlays on standard/inherited constraints, key
   `expression` is an optional formal rule expression, omitted when empty.
 - `constraintOverrides` overlay fields onto a **standard (ISO) or inherited** constraint of the same name (it does not
   create one): `definition` and `expression` are tri-state (§5), plus a `disabled` **bool** (`true` skips the rule
-  during validation; absent = active). Entries are keyed by constraint name, sorted; empty entries and an empty map are
-  dropped.
+  during validation; absent = active) and an `annotations` overlay (tri-state per name, like an `ElementOverride`'s — it
+  lets a MIG override a single inherited constraint annotation without re-owning the whole constraint). Entries are keyed
+  by constraint name, sorted; empty entries and an empty map are dropped.
 
 ### 4.1 Annotations (custom properties)
 
@@ -105,8 +107,11 @@ Elements and constraints each have an **independent** set of custom properties:
 - **Declared once, MIG-wide** as ordered name lists: `elementAnnotationNames` (for element overrides) and
   `constraintAnnotationNames` (for the entries in `additionalConstraints`). The two lists are unrelated — the same label
   may appear in both, or in neither, with no shared meaning.
-- **Valued per target** in an `annotations` map: one on each `ElementOverride` (keyed by element-annotation names) and
-  one on each `additionalConstraints` entry (keyed by constraint-annotation names). The two maps differ in type:
+- **Valued per target** in an `annotations` map: one on each `ElementOverride` (keyed by element-annotation names),
+  one on each `additionalConstraints` entry, and one on each `constraintOverrides` entry (both keyed by
+  constraint-annotation names). The latter overlays the annotations of a **standard or inherited** constraint, so a MIG
+  can override one inherited constraint annotation in place; the effective value is the base constraint's annotation
+  overlaid by the `constraintOverrides` one (per name, `null`/absent clears). The two map kinds differ in type:
   element-override values are plain strings (`Record<string, string>`), while constraint values are nullable (
   `Record<string, string | null>`) — a stored constraint `null` is a real (rare) state that **serializes as `Name: null`
   **, not dropped.

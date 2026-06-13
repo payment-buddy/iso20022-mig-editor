@@ -28,12 +28,16 @@ export function MigStandardConstraintDetail({
   path,
   override,
   inherited,
+  annotationNames,
+  ownAnnotations,
+  inheritedAnnotations,
   onSetDefinition,
   onClearDefinition,
   onSetExpression,
   onClearExpression,
   onSetDisabled,
   onClearDisabled,
+  onSetAnnotation,
 }: {
   /** The base standard/inherited constraint (its ISO/ancestor name + fields). */
   constraint: Constraint
@@ -45,12 +49,20 @@ export function MigStandardConstraintDetail({
   override: ConstraintOverride | undefined
   /** The inherited (parent-chain) overlay entry for the constraint. */
   inherited: ConstraintOverride | undefined
+  /** Declared constraint-annotation names of the **current** MIG (own list). */
+  annotationNames: string[]
+  /** This MIG's own annotation overlay for the constraint (by name). */
+  ownAnnotations: Record<string, string | null>
+  /** Resolved inherited annotation values (parent chain) by name — the baseline. */
+  inheritedAnnotations: Record<string, string>
   onSetDefinition: (value: string | null) => void
   onClearDefinition: () => void
   onSetExpression: (value: string | null) => void
   onClearExpression: () => void
   onSetDisabled: (value: boolean) => void
   onClearDisabled: () => void
+  /** Set/clear (empty value clears) one annotation overlay for the constraint. */
+  onSetAnnotation: (name: string, value: string) => void
 }) {
   // Effective + inherited-baseline for one overlay field. The inherited baseline
   // is a parent's overlay if it sets the field, else the ISO constraint's own
@@ -160,6 +172,45 @@ export function MigStandardConstraintDetail({
           </p>
         ))}
       </OverrideField>
+
+      {annotationNames.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
+            Annotations
+          </div>
+          {annotationNames.map((name) => {
+            // Annotations have no ISO baseline: a value is set by this MIG (own)
+            // or inherited from a parent constraint/overlay; show the effective
+            // value + provenance, mirroring the element detail panel.
+            const ownVal = ownAnnotations[name]
+            const inhVal = inheritedAnnotations[name]
+            const overridden = ownVal != null && ownVal !== ""
+            const inheritedHere = !overridden && inhVal != null && inhVal !== ""
+            const value =
+              (overridden ? ownVal : inheritedHere ? inhVal : "") ?? ""
+            return (
+              <div key={name} className="flex items-start gap-2">
+                <div className="flex w-28 shrink-0 items-center gap-1.5 pt-1.5 text-xs font-medium break-words">
+                  {name}
+                  <ProvenanceDot
+                    overridden={overridden}
+                    inherited={inheritedHere}
+                    baseline={inhVal || "—"}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <InlineEdit
+                    value={value}
+                    onCommit={(v) => onSetAnnotation(name, v)}
+                    ariaLabel={`${name} value`}
+                    placeholder="—"
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       <div className="border-t border-border pt-3">
         <label className="flex items-center gap-2 text-xs font-medium">

@@ -1664,24 +1664,25 @@ describe("MigEditor", () => {
     expect(saved?.elementOverrides["/DocumentTag"]).toBeUndefined()
   })
 
-  it("shows inherited annotation fields with a provenance dot, even when this MIG declares no names", async () => {
+  it("shows inherited element-annotation values with provenance, limited to the MIG's own declared names", async () => {
     const user = userEvent.setup()
-    // The parent declares the names and sets both values; the child redeclares
-    // nothing and only overrides one — the effective names come from the parent.
+    // The parent declares three names and sets values; the child declares only
+    // two of them and overrides one. Only the child's own names are shown.
     const parent: MessageImplementationGuide = {
       name: "Base",
       version: "1.0",
       messageIdentifier: "pacs.008.001.10",
-      elementAnnotationNames: ["Owner", "Usage"],
+      elementAnnotationNames: ["Owner", "Usage", "Extra"],
       elementOverrides: {
         "/DocumentTag/GrpHdrTag": {
-          annotations: { Owner: "ops", Usage: "credit" },
+          annotations: { Owner: "ops", Usage: "credit", Extra: "parent-extra" },
         },
       },
     }
     const child: MessageImplementationGuide = {
       ...MIG,
       parentMIG: getMigKey(parent),
+      elementAnnotationNames: ["Owner", "Usage"],
       elementOverrides: {
         "/DocumentTag/GrpHdrTag": { annotations: { Owner: "mine" } },
       },
@@ -1693,17 +1694,79 @@ describe("MigEditor", () => {
     await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
     const panel = screen.getByRole("region", { name: /element details/i })
 
-    // Owner is overridden here (over the parent's "ops") → blue dot.
+    // Owner is overridden here (over the parent's "ops") → own (green) dot.
     expect(within(panel).getByTitle("Overridden — inherited: ops")).toHaveClass(
       "bg-provenance-own"
     )
     expect(within(panel).getByText("mine")).toBeInTheDocument()
-    // Usage is inherited from the parent → blue dot, and its value shows even
-    // though the child declares no annotation names of its own.
+    // Usage is inherited from the parent → inherited (blue) dot, value shown.
     expect(
       within(panel).getByTitle("Inherited from a parent MIG: credit")
     ).toHaveClass("bg-provenance-inherited")
     expect(within(panel).getByText("credit")).toBeInTheDocument()
+    // "Extra" is declared only by the parent — the child doesn't list it, so its
+    // field (and inherited value) are hidden.
+    expect(within(panel).queryByText("Extra")).not.toBeInTheDocument()
+    expect(within(panel).queryByText("parent-extra")).not.toBeInTheDocument()
+  })
+
+  it("shows and overrides an inherited constraint's annotation with provenance", async () => {
+    const user = userEvent.setup()
+    // The parent adds a constraint carrying a Severity annotation; the child
+    // inherits the constraint and declares Severity in its own names.
+    const parent: MessageImplementationGuide = {
+      name: "Base",
+      version: "1.0",
+      messageIdentifier: "pacs.008.001.10",
+      constraintAnnotationNames: ["Severity"],
+      elementOverrides: {
+        "/DocumentTag": {
+          additionalConstraints: {
+            R1: { definition: "inherited rule", annotations: { Severity: "high" } },
+          },
+        },
+      },
+    }
+    const child: MessageImplementationGuide = {
+      ...MIG,
+      parentMIG: getMigKey(parent),
+      constraintAnnotationNames: ["Severity"],
+      elementOverrides: {},
+    }
+    await saveMig(parent)
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // Select the inherited constraint → the standard/inherited detail panel.
+    await user.click(screen.getByRole("treeitem", { name: "Constraint R1" }))
+    const panel = await screen.findByRole("region", {
+      name: /constraint details/i,
+    })
+
+    // Severity is inherited from the parent → inherited (blue) dot, value shown.
+    expect(
+      within(panel).getByTitle("Inherited from a parent MIG: high")
+    ).toHaveClass("bg-provenance-inherited")
+    expect(within(panel).getByText("high")).toBeInTheDocument()
+
+    // Override it for this MIG — stored on the constraint overlay's annotations.
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Severity value" })
+    )
+    const input = within(panel).getByRole("textbox", { name: "Severity value" })
+    await user.clear(input)
+    await user.type(input, "low")
+    await user.tab()
+
+    expect(
+      (await loadMig(getMigKey(child)))?.elementOverrides["/DocumentTag"]
+        ?.constraintOverrides?.R1?.annotations
+    ).toEqual({ Severity: "low" })
+    // Now overridden here → own (green) dot, with the inherited value as baseline.
+    expect(within(panel).getByTitle("Overridden — inherited: high")).toHaveClass(
+      "bg-provenance-own"
+    )
   })
 
   it("declares constraint-annotation names in metadata and edits per-constraint values", async () => {

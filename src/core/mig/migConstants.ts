@@ -42,4 +42,5 @@ export const CONSTRAINT_OVERRIDE_PROPERTY_ORDER = [
   "definition",
   "expression",
   "disabled",
+  "annotations",
 ] as const

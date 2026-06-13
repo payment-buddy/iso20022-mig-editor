@@ -109,11 +109,17 @@ function canonicalAdditionalConstraints(
 
 /** One constraint override with keys in canonical order; preserves `null`, drops empties. */
 function canonicalConstraintOverride(
-  co: ConstraintOverride
+  co: ConstraintOverride,
+  declared: string[] | undefined
 ): Record<string, unknown> | null {
   const out: Record<string, unknown> = {}
   for (const key of CONSTRAINT_OVERRIDE_PROPERTY_ORDER) {
     if (!(key in co)) continue
+    if (key === "annotations") {
+      const a = canonicalAnnotations(co.annotations ?? {}, declared)
+      if (a) out.annotations = a
+      continue
+    }
     out[key] = co[key] // value or explicit null (tri-state preserved)
   }
   return Object.keys(out).length > 0 ? out : null
@@ -121,11 +127,12 @@ function canonicalConstraintOverride(
 
 /** A `constraintOverrides` map, keyed by name (sorted); empty entries/map dropped. */
 function canonicalConstraintOverrides(
-  map: Record<string, ConstraintOverride>
+  map: Record<string, ConstraintOverride>,
+  declared: string[] | undefined
 ): Record<string, unknown> | null {
   const out: Record<string, unknown> = {}
   for (const name of Object.keys(map).sort(byString)) {
-    const co = canonicalConstraintOverride(map[name])
+    const co = canonicalConstraintOverride(map[name], declared)
     if (co) out[name] = co
   }
   return Object.keys(out).length > 0 ? out : null
@@ -157,7 +164,8 @@ function canonicalOverride(
     }
     if (key === "constraintOverrides") {
       const co = canonicalConstraintOverrides(
-        override.constraintOverrides ?? {}
+        override.constraintOverrides ?? {},
+        mig.constraintAnnotationNames
       )
       if (co) out.constraintOverrides = co
       continue

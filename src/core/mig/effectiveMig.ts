@@ -28,8 +28,10 @@ function unionConstraints(
 }
 
 /**
- * Merge two `constraintOverrides` maps by name; within a name, layer fields win
- * by key-presence (a descendant's `null`/`false` beats an ancestor's value).
+ * Merge two `constraintOverrides` maps by name; within a name, scalar fields win
+ * by key-presence (a descendant's `null`/`false` beats an ancestor's value) and
+ * the `annotations` overlay accumulates per name (like element annotations) so a
+ * descendant's per-name override layers over, rather than replaces, an ancestor's.
  */
 function mergeConstraintOverrides(
   base: Record<string, ConstraintOverride> = {},
@@ -37,7 +39,14 @@ function mergeConstraintOverrides(
 ): Record<string, ConstraintOverride> {
   const out: Record<string, ConstraintOverride> = {}
   for (const name of new Set([...Object.keys(base), ...Object.keys(layer)])) {
-    out[name] = { ...base[name], ...layer[name] }
+    const merged: ConstraintOverride = { ...base[name], ...layer[name] }
+    const annotations = {
+      ...(base[name]?.annotations ?? {}),
+      ...(layer[name]?.annotations ?? {}),
+    }
+    if (Object.keys(annotations).length > 0) merged.annotations = annotations
+    else delete merged.annotations
+    out[name] = merged
   }
   return out
 }

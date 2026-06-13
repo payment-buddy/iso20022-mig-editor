@@ -8,6 +8,7 @@ import {
 } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
+import { constraintAnnotations } from "@/core/mig/constraints"
 import { effectiveMig } from "@/core/mig/effectiveMig"
 import { getMigKey } from "@/core/mig/migKey"
 import { renameMig } from "@/core/mig/renameMig"
@@ -385,7 +386,7 @@ export function MigEditor({
                 path={sel.path}
                 override={mig.elementOverrides[sel.path]}
                 inherited={inheritedOverrides[sel.path]}
-                propertyNames={effective.elementAnnotationNames ?? []}
+                propertyNames={mig.elementAnnotationNames ?? []}
                 onSet={(field, value) =>
                   persist(setOverrideField(mig, sel.path, field, value))
                 }
@@ -432,6 +433,41 @@ export function MigEditor({
                   inherited={
                     inheritedOverrides[elementPath]?.constraintOverrides?.[name]
                   }
+                  annotationNames={mig.constraintAnnotationNames ?? []}
+                  ownAnnotations={
+                    mig.elementOverrides[elementPath]?.constraintOverrides?.[
+                      name
+                    ]?.annotations ?? {}
+                  }
+                  inheritedAnnotations={constraintAnnotations(
+                    sel.constraint,
+                    inheritedOverrides[elementPath]
+                  )}
+                  onSetAnnotation={(annName, value) => {
+                    const cur =
+                      mig.elementOverrides[elementPath]?.constraintOverrides?.[
+                        name
+                      ]?.annotations ?? {}
+                    const next = { ...cur }
+                    if (value.trim() === "") delete next[annName]
+                    else next[annName] = value
+                    persist(
+                      Object.keys(next).length === 0
+                        ? clearConstraintOverrideField(
+                            mig,
+                            elementPath,
+                            name,
+                            "annotations"
+                          )
+                        : setConstraintOverrideField(
+                            mig,
+                            elementPath,
+                            name,
+                            "annotations",
+                            next
+                          )
+                    )
+                  }}
                   onSetDefinition={(definition) =>
                     persist(
                       setConstraintOverrideField(
@@ -515,7 +551,7 @@ export function MigEditor({
                 element={owner}
                 path={sel.path}
                 takenNames={takenNames}
-                annotationNames={effective.constraintAnnotationNames ?? []}
+                annotationNames={mig.constraintAnnotationNames ?? []}
                 disabled={
                   mig.elementOverrides[elementPath]?.constraintOverrides?.[
                     current
