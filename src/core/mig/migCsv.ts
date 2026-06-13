@@ -3,10 +3,12 @@
 // (structure + ISO type), then one row per rule (ISO constraints, the MIG's
 // multiplicity/type overrides, and added constraints) with its provenance. Pure.
 //
-// Layout — common columns describe the element and are blank on rule rows:
-//   Level | Choice | Name | XML tag | XML path | Multiplicity | Type
+// Layout — common columns describe the element and are blank on rule rows
+// (`Path` is an indented multiline name tree, root skipped; `Annotations` holds
+// the element's own annotations as multiline `key: value`):
+//   Level | Choice | Name | XML tag | Path | Multiplicity | Type | Annotations
 // rule columns are blank on the element row:
-//   Source | Rule | Definition | <one column per constraint-annotation name>
+//   Source | Rule | Definition | Expression | <one column per constraint annotation>
 //
 // Source provenance: "ISO" (rule from the message definition), the parent MIG's
 // name (a rule inherited from the chain), or "MIG" (set in this MIG). Computed
@@ -40,7 +42,7 @@ const COMMON_COLUMNS = [
   "Choice",
   "Name",
   "XML tag",
-  "XML path",
+  "Path",
   "Multiplicity",
   "Type",
   "Annotations",
@@ -115,6 +117,18 @@ function annotationsCell(ov: ElementOverride | undefined): string {
 
 const multiplicity = (min: number, max: number | null) => `[${min}..${max === null ? "*" : max}]`
 
+/**
+ * The element's name path as an indented multiline tree — one ancestor *name*
+ * (not tag) per line, indented with `+`×depth, the root element skipped. E.g.
+ * `+GroupHeader\n++ControlSum`. Blank for the root.
+ */
+function namePath(names: string[]): string {
+  return names
+    .slice(1)
+    .map((name, i) => "+".repeat(i + 1) + name)
+    .join("\n")
+}
+
 export function buildMigCsvRows(
   mig: MessageImplementationGuide,
   allMigs: MessageImplementationGuide[],
@@ -150,7 +164,7 @@ export function buildMigCsvRows(
     annotations: string[],
   ): string[] => [...blankCommon, source, rule, definition, expression, ...annotations]
 
-  const walk = (el: MessageElement, level: number, path: string) => {
+  const walk = (el: MessageElement, level: number, path: string, names: string[]) => {
     const ov = overrides[path]
     const iso = isoFacets(el)
 
@@ -159,7 +173,7 @@ export function buildMigCsvRows(
       el.isChoice ? "Y" : "",
       el.name,
       el.xmlTag,
-      path,
+      namePath(names),
       multiplicity(el.minOccurs, el.maxOccurs),
       typeString(el, iso),
       annotationsCell(ov),
@@ -210,10 +224,12 @@ export function buildMigCsvRows(
       }
     }
 
-    for (const child of el.elements) walk(child, level + 1, `${path}/${child.xmlTag}`)
+    for (const child of el.elements) {
+      walk(child, level + 1, `${path}/${child.xmlTag}`, [...names, child.name])
+    }
   }
 
-  walk(message.rootElement, 0, message.rootElement.xmlTag)
+  walk(message.rootElement, 0, message.rootElement.xmlTag, [message.rootElement.name])
   return { columns, rows }
 }
 

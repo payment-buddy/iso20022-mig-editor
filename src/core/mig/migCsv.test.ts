@@ -81,28 +81,38 @@ function col(columns: string[], name: string): number {
 describe("buildMigCsvRows — element rows", () => {
   it("emits one row per element in document order, with ISO structure and type", () => {
     const { columns, rows } = buildMigCsvRows(mig("M", {}), [], MESSAGE)
-    expect(columns.slice(0, 7)).toEqual([
+    expect(columns.slice(0, 8)).toEqual([
       "Level",
       "Choice",
       "Name",
       "XML tag",
-      "XML path",
+      "Path",
       "Multiplicity",
       "Type",
+      "Annotations",
     ])
 
-    // Element rows only (rule columns blank).
+    // Element rows only (Level, Name, XML tag, Multiplicity, Type).
     const elementRows = rows.filter((r) => r[col(columns, "Name")] !== "")
-    expect(elementRows.map((r) => [r[0], r[2], r[4], r[5], r[6]])).toEqual([
+    expect(elementRows.map((r) => [r[0], r[2], r[3], r[5], r[6]])).toEqual([
       ["0", "Doc", "Doc", "[1..1]", ""],
-      ["1", "GrpHdr", "Doc/GrpHdr", "[1..1]", ""],
-      ["2", "MsgId", "Doc/GrpHdr/MsgId", "[1..1]", "Text[1..35]"],
-      ["2", "Itm", "Doc/GrpHdr/Itm", "[1..*]", ""],
-      ["3", "Val", "Doc/GrpHdr/Itm/Val", "[1..1]", "Text[..4]"],
-      ["1", "Amt", "Doc/Amt", "[0..1]", "Decimal[18.4]"],
-      ["1", "Ccy", "Doc/Ccy", "[1..1]", "Text[EUR|USD|NOK]"],
-      ["1", "Dt", "Doc/Dt", "[0..1]", "DateTime"],
+      ["1", "GrpHdr", "GrpHdr", "[1..1]", ""],
+      ["2", "MsgId", "MsgId", "[1..1]", "Text[1..35]"],
+      ["2", "Itm", "Itm", "[1..*]", ""],
+      ["3", "Val", "Val", "[1..1]", "Text[..4]"],
+      ["1", "Amt", "Amt", "[0..1]", "Decimal[18.4]"],
+      ["1", "Ccy", "Ccy", "[1..1]", "Text[EUR|USD|NOK]"],
+      ["1", "Dt", "Dt", "[0..1]", "DateTime"],
     ])
+  })
+
+  it("renders Path as an indented multiline name tree, root skipped", () => {
+    const { columns, rows } = buildMigCsvRows(mig("M", {}), [], MESSAGE)
+    const pathOf = (name: string) =>
+      rows.find((r) => r[col(columns, "Name")] === name)![col(columns, "Path")]
+    expect(pathOf("Doc")).toBe("") // root skipped
+    expect(pathOf("GrpHdr")).toBe("+GrpHdr")
+    expect(pathOf("Val")).toBe("+GrpHdr\n++Itm\n+++Val")
   })
 
   it("lists ISO constraints as rule rows sourced to ISO", () => {
@@ -120,7 +130,7 @@ describe("buildMigCsvRows — element rows", () => {
       [],
       MESSAGE,
     )
-    const amt = rows.find((r) => r[col(columns, "XML path")] === "Doc/Amt")!
+    const amt = rows.find((r) => r[col(columns, "Name")] === "Amt")!
     expect(amt[col(columns, "Annotations")]).toBe("Purpose: Payment\nNote: x")
   })
 })
