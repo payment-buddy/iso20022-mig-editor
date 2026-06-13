@@ -781,6 +781,26 @@ describe("MigEditor", () => {
     expect(within(panel).getByText(/more than 2 fraction digits/i)).toBeInTheDocument()
   })
 
+  it("surfaces loosening diagnostics in the consistency banner/drawer", async () => {
+    const user = userEvent.setup()
+    // GrpHdr maxLength 35 → overriding to 50 loosens it.
+    await saveMig({ ...MIG, elementOverrides: { "DocumentTag/GrpHdrTag": { maxLength: 50 } } })
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    await user.click(screen.getByRole("button", { name: /this mig has 1 issue/i }))
+    const region = screen.getByRole("region", { name: /consistency diagnostics/i })
+    expect(within(region).getByText(/above 35/i)).toBeInTheDocument()
+    expect(within(region).getByText("GrpHdr")).toBeInTheDocument()
+  })
+
+  it("shows no consistency banner for a clean MIG", async () => {
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    expect(screen.queryByRole("region", { name: /consistency diagnostics/i })).not.toBeInTheDocument()
+  })
+
   it("declares custom property names in metadata and edits per-element values", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

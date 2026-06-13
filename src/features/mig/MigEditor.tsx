@@ -5,6 +5,7 @@ import { effectiveMig } from "@/core/mig/effectiveMig"
 import { getMigKey } from "@/core/mig/migKey"
 import { renameMig } from "@/core/mig/renameMig"
 import { buildPathOrder } from "@/core/mig/serializeMig"
+import { validateMigConsistency } from "@/core/mig/validateMig"
 import {
   addConstraint,
   clearOverrideField,
@@ -26,6 +27,7 @@ import { DetailPanel, ElementTree, Field } from "@/features/repository/ElementTr
 import { MigMetadata } from "./MigMetadata"
 import { MigElementDetail } from "./MigElementDetail"
 import { MigConstraintDetail } from "./MigConstraintDetail"
+import { MigDiagnostics } from "./MigDiagnostics"
 import { downloadMigMarkdown, downloadMigs } from "./downloadMigs"
 
 type Status = "loading" | "missing" | "ready"
@@ -112,6 +114,9 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   const parent = mig.parentMIG ? allMigs.find((m) => getMigKey(m) === mig.parentMIG) : undefined
   const inheritedOverrides = parent ? effectiveMig(parent, allMigs).mig.elementOverrides : {}
 
+  // Advisory loosening/consistency diagnostics across the whole MIG.
+  const diagnostics = validateMigConsistency(mig, inheritedOverrides, resolved.current)
+
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
       <div className="flex items-start justify-between gap-4">
@@ -138,6 +143,8 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
       </div>
 
       <MigMetadata mig={mig} allMigs={allMigs} onChange={persist} onRename={rename} />
+
+      <MigDiagnostics diagnostics={diagnostics} />
 
       <ElementTree
         key={mig.messageIdentifier}
