@@ -211,6 +211,24 @@ describe("buildMigCsvRows — provenance and annotations", () => {
     expect(own[col(columns, "Source")]).toBe("Leaf")
   })
 
+  it("strips the message identifier / short code from the Source MIG name", () => {
+    const base = mig(
+      "pacs.008 Base",
+      { "Doc/Amt": { additionalConstraints: [{ name: "Inh", definition: "x" }] } },
+      { version: "1.0" },
+    )
+    const top = mig(
+      "pacs.008.001.08 EPC SCT",
+      { "Doc/Amt": { additionalConstraints: [{ name: "Mine", definition: "y" }] } },
+      { version: "2.0", parentMIG: "pacs.008 Base:1.0" },
+    )
+    const { columns, rows } = buildMigCsvRows(top, [top, base], MESSAGE)
+    expect(rows.find((r) => r[col(columns, "Rule")] === "Mine")![col(columns, "Source")]).toBe(
+      "EPC SCT",
+    )
+    expect(rows.find((r) => r[col(columns, "Rule")] === "Inh")![col(columns, "Source")]).toBe("Base")
+  })
+
   it("adds one column per constraint annotation and fills it", () => {
     const { columns, rows } = buildMigCsvRows(leaf, [leaf, parent], MESSAGE)
     expect(columns).toContain("Usage")

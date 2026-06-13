@@ -15,6 +15,7 @@
 // Computed from the effective parent chain (ancestor→leaf, leaf = this MIG).
 
 import { effectiveMig } from "./effectiveMig"
+import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
 import type {
   Constraint,
   ElementOverride,
@@ -118,6 +119,25 @@ function annotationsCell(ov: ElementOverride | undefined): string {
 const multiplicity = (min: number, max: number | null) => `[${min}..${max === null ? "*" : max}]`
 
 /**
+ * The MIG's name for the Source column, with its message identifier and/or short
+ * code stripped out if they're embedded in the name (e.g. "pacs.008.001.08 EPC"
+ * → "EPC"). The full identifier is removed before the short code (which is its
+ * prefix). Falls back to the raw name if stripping would leave it empty.
+ */
+function migSourceName(mig: MessageImplementationGuide): string {
+  const id = mig.messageIdentifier
+  let name = mig.name
+  if (id) name = name.split(id).join("")
+  const short = shortCodeForIdentifier(id)
+  if (short) name = name.split(short).join("")
+  const cleaned = name
+    .replace(/\s{2,}/g, " ")
+    .replace(/^[\s\-_:|.]+|[\s\-_:|.]+$/g, "")
+    .trim()
+  return cleaned || mig.name
+}
+
+/**
  * The element's name path as an indented multiline tree — one ancestor *name*
  * (not tag) per line, indented with `+`×depth, the root element skipped. E.g.
  * `+GroupHeader\n++ControlSum`. Blank for the root.
@@ -145,9 +165,9 @@ export function buildMigCsvRows(
   const sourceFor = (path: string, has: (ov: ElementOverride) => boolean): string => {
     for (let i = leafIndex; i >= 0; i--) {
       const ov = chain[i].elementOverrides[path]
-      if (ov && has(ov)) return chain[i].name
+      if (ov && has(ov)) return migSourceName(chain[i])
     }
-    return mig.name
+    return migSourceName(mig)
   }
 
   const rows: string[][] = []
