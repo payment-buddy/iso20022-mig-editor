@@ -451,8 +451,9 @@ function summarize(values: string[]): string {
 /**
  * A numeric override field (occurs, length, …). `allowNull` controls whether an
  * empty input means "no constraint" (`null`) — true for the nullable facets,
- * false for min-occurs which must stay a number. `emptyLabel` is shown for a
- * `null` value (e.g. "unbounded", "none") and used as the edit placeholder.
+ * false for min-occurs which must stay a number. A `null` value reads as
+ * `<none>`; `emptyLabel` is the edit placeholder hinting what empty means
+ * (e.g. "unbounded", "none").
  */
 function NumberOverrideField({
   label,
@@ -482,7 +483,9 @@ function NumberOverrideField({
   onSet: (value: number | null) => void
   onClear: () => void
 }) {
-  const fmt = (v: number | null) => (v === null ? emptyLabel : String(v))
+  // Empty facet reads as "<none>" in view/tooltip (consistent with text fields);
+  // `emptyLabel` is only the editing hint for what leaving it empty means.
+  const fmt = (v: number | null) => (v === null ? "<none>" : String(v))
 
   const commit = (text: string) => {
     const t = text.trim()
