@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Check, DownloadSimple } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { getMigKey } from "@/core/mig/migKey"
+import { buildPathOrder } from "@/core/mig/serializeMig"
 import {
   addConstraint,
   clearOverrideField,
@@ -99,7 +100,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
           </p>
           <h1 className="text-base font-semibold tracking-tight">{mig.name}</h1>
         </div>
-        <Button size="sm" onClick={() => downloadMigs([mig])}>
+        <Button size="sm" onClick={() => downloadMigs([mig], buildPathOrder(root))}>
           <DownloadSimple data-icon="inline-start" aria-hidden />
           Download
         </Button>

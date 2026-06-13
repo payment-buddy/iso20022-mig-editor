@@ -120,9 +120,11 @@ describe("MigEditor", () => {
 
     await user.click(screen.getByRole("button", { name: /download/i }))
     expect(downloadMigs).toHaveBeenCalledTimes(1)
-    expect(downloadMigs).toHaveBeenCalledWith([
-      expect.objectContaining({ name: "EPC Guide", version: "1.0" }),
-    ])
+    // Called with the MIG and a schema-order index (Map) for its overrides.
+    expect(downloadMigs).toHaveBeenCalledWith(
+      [expect.objectContaining({ name: "EPC Guide", version: "1.0" })],
+      expect.any(Map),
+    )
   })
 
   it("shows the focused element's read-only fields in the detail panel", async () => {
