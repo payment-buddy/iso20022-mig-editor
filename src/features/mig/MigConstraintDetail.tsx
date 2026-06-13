@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Check, Trash, Warning } from "@phosphor-icons/react"
-import type { Constraint } from "@/core/types/types"
-import { validateExpressionSyntax } from "@/core/mig/expression"
+import type { Constraint, MessageElement } from "@/core/types/types"
+import { validateConstraintExpression } from "@/core/mig/expression"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
@@ -15,6 +15,7 @@ import { DetailPanel, Field } from "@/features/repository/ElementTree"
  */
 export function MigConstraintDetail({
   constraint,
+  element,
   path,
   takenNames,
   annotationNames,
@@ -25,6 +26,8 @@ export function MigConstraintDetail({
   onDelete,
 }: {
   constraint: Constraint
+  /** The element this constraint is attached to — paths resolve against it. */
+  element: MessageElement | null
   /** Full xmlPath of the constraint (for display). */
   path: string
   /** Sibling constraint names (standard + other additional), excluding this one. */
@@ -52,8 +55,9 @@ export function MigConstraintDetail({
   const commitExpression = (text: string) => {
     if (text !== expression) onSetExpression(text)
   }
-  // Advisory syntax check (never blocks editing/export, per FUNCTIONALITY §5.7).
-  const expressionWarn = validateExpressionSyntax(expression)
+  // Advisory syntax + path checks (never block editing/export, per §5.7): paths
+  // must resolve to nested elements/attributes of this constraint's element.
+  const expressionWarnings = validateConstraintExpression(expression, element)
 
   // Per-constraint annotation values (names are declared MIG-level). Empty
   // clears the value; an emptied map prunes the override (handled upstream).
@@ -104,15 +108,16 @@ export function MigConstraintDetail({
           placeholder="Add an expression…"
           multiline
         />
-        {expressionWarn && (
+        {expressionWarnings.map((warning) => (
           <p
+            key={warning}
             role="alert"
             className="mt-1 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500"
           >
             <Warning className="size-3 shrink-0" aria-hidden />
-            {expressionWarn}
+            {warning}
           </p>
-        )}
+        ))}
       </div>
 
       {annotationNames.length > 0 && (

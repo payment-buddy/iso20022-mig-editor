@@ -219,6 +219,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
               <MigConstraintDetail
                 key={sel.path}
                 constraint={sel.constraint}
+                element={owner}
                 path={sel.path}
                 takenNames={takenNames}
                 annotationNames={mig.constraintAnnotationNames ?? []}

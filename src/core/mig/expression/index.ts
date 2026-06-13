@@ -1,6 +1,8 @@
 // Public surface of the constraint-expression module. The UI uses
-// `validateExpressionSyntax`; later phases (path resolution, evaluation) consume
-// the AST via `parseExpression`.
+// `validateConstraintExpression`; the evaluation phase will consume the AST via
+// `parseExpression`.
+
+import type { MessageElement } from "@/core/types/types"
 
 export type {
   Binary,
@@ -17,8 +19,13 @@ export type {
 } from "./ast"
 export { kindOf } from "./ast"
 export { parseExpression, type ExprError, type ParseResult } from "./parser"
+export { collectPaths, pathText, validateExpressionPaths } from "./paths"
 
 import { parseExpression } from "./parser"
+import { validateExpressionPaths } from "./paths"
+
+/** Format a parse error with its 1-based source position. */
+const atPosition = (message: string, start: number) => `${message} (at position ${start + 1})`
 
 /**
  * Validate a constraint expression's syntax for display. Returns `null` when the
@@ -30,5 +37,23 @@ export function validateExpressionSyntax(src: string): string | null {
   if (src.trim() === "") return null
   const result = parseExpression(src)
   if (result.ok) return null
-  return `${result.error.message} (at position ${result.error.start + 1})`
+  return atPosition(result.error.message, result.error.start)
+}
+
+/**
+ * Validate a constraint expression for display: first its syntax, then — when it
+ * parses and an `owner` element is given — that each location path resolves to a
+ * nested element/attribute of that owner. Returns one advisory message per issue
+ * (empty when clean). A syntax error short-circuits path checks. Never blocks
+ * editing or export.
+ */
+export function validateConstraintExpression(
+  src: string,
+  owner: MessageElement | null,
+): string[] {
+  if (src.trim() === "") return []
+  const result = parseExpression(src)
+  if (!result.ok) return [atPosition(result.error.message, result.error.start)]
+  if (!owner) return []
+  return validateExpressionPaths(result.ast, owner).map((e) => atPosition(e.message, e.start))
 }
