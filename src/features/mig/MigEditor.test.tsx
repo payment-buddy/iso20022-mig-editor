@@ -340,6 +340,40 @@ describe("MigEditor", () => {
     expect(within(panel).getByTitle(/longer than max length 35/i)).toBeInTheDocument()
   })
 
+  it("declares custom property names in metadata and edits per-element values", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const meta = screen.getByRole("region", { name: /mig metadata/i })
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    // No names yet → no custom-properties section in the detail panel.
+    expect(within(panel).queryByText("Custom properties")).not.toBeInTheDocument()
+
+    // Declare a shared property name in the metadata block.
+    await user.type(
+      within(meta).getByRole("textbox", { name: /add to custom element properties/i }),
+      "Usage",
+    )
+    await user.keyboard("{Enter}")
+    expect((await loadMig(getMigKey(MIG)))?.customElementPropertyNames).toEqual(["Usage"])
+
+    // Its value field now appears in the detail panel; set this element's value.
+    await user.click(within(panel).getByRole("button", { name: "Edit Usage value" }))
+    await user.type(within(panel).getByRole("textbox", { name: "Usage value" }), "debit only")
+    await user.tab()
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.customProperties,
+    ).toEqual({ Usage: "debit only" })
+
+    // Removing the name in metadata drops it everywhere (cascades to overrides).
+    await user.click(within(meta).getByRole("button", { name: "Remove Usage" }))
+    const saved = await loadMig(getMigKey(MIG))
+    expect(saved?.customElementPropertyNames).toBeUndefined()
+    expect(saved?.elementOverrides["DocumentTag"]).toBeUndefined()
+  })
+
   it("offers same-message MIGs as parents and autosaves the choice", async () => {
     const user = userEvent.setup()
     const base: MessageImplementationGuide = { ...MIG, name: "Base", description: undefined }

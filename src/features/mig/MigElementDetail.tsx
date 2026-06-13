@@ -32,12 +32,15 @@ export function MigElementDetail({
   element,
   path,
   override,
+  propertyNames,
   onSet,
   onClear,
 }: {
   element: MessageElement
   path: string
   override: ElementOverride | undefined
+  /** Declared MIG-level custom element property names (managed in the metadata block). */
+  propertyNames: string[]
   /** Persist one override field. */
   onSet: <K extends keyof ElementOverride>(field: K, value: ElementOverride[K]) => void
   /** Drop one override field (back to inherited). */
@@ -96,6 +99,16 @@ export function MigElementDetail({
 
   // Allowed values and examples are validated against the effective length/pattern.
   const validateValue = createValueValidator(element, override)
+
+  // Custom property values for this element (names are declared MIG-level).
+  const customValues = override?.customProperties ?? {}
+  const setCustomValue = (name: string, value: string) => {
+    const next = { ...customValues }
+    if (value.trim() === "") delete next[name]
+    else next[name] = value
+    if (Object.keys(next).length === 0) onClear("customProperties")
+    else onSet("customProperties", next)
+  }
 
   return (
     <DetailPanel label="Element details">
@@ -255,6 +268,27 @@ export function MigElementDetail({
             validate={validateValue}
           />
         </OverrideRow>
+      )}
+
+      {propertyNames.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
+            Custom properties
+          </div>
+          {propertyNames.map((name) => (
+            <div key={name} className="flex items-start gap-2">
+              <div className="w-28 shrink-0 pt-1.5 text-xs font-medium break-words">{name}</div>
+              <div className="min-w-0 flex-1">
+                <InlineEdit
+                  value={customValues[name] ?? ""}
+                  onCommit={(v) => setCustomValue(name, v)}
+                  ariaLabel={`${name} value`}
+                  placeholder="—"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </DetailPanel>
   )

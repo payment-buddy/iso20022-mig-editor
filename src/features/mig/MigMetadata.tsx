@@ -1,15 +1,21 @@
 import { type ReactNode } from "react"
 import { Warning } from "@phosphor-icons/react"
+import {
+  addCustomElementPropertyName,
+  removeCustomElementPropertyName,
+} from "@/core/mig/customProperties"
 import { getMigKey } from "@/core/mig/migKey"
 import { eligibleParents } from "@/core/mig/parentMig"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
+import { EditableList } from "@/components/ui/editable-list"
 import { InlineEdit } from "@/components/ui/inline-edit"
 
 /**
- * Editable MIG metadata block (FUNCTIONALITY §5.7). This slice: Description
- * (inline textarea) and Parent MIG (eligible-parent dropdown with a link and a
- * not-loaded warning). Name and Version are shown read-only — their
+ * Editable MIG metadata block (FUNCTIONALITY §5.7): Description (inline
+ * textarea), Parent MIG (eligible-parent dropdown with a link and a not-loaded
+ * warning), and the shared Custom element property names (elements then fill
+ * values in the detail panel). Name and Version are shown read-only — their
  * identity-key rename + reference rewrite lands in a follow-up slice.
  */
 export function MigMetadata({
@@ -46,6 +52,20 @@ export function MigMetadata({
     if (text.trim()) next.description = text
     else delete next.description
     onChange(next)
+  }
+
+  // Apply add/remove of custom element property names; removals cascade into
+  // every element override (handled by removeCustomElementPropertyName).
+  const setPropertyNames = (next: string[]) => {
+    const current = mig.customElementPropertyNames ?? []
+    let result = mig
+    for (const name of current.filter((n) => !next.includes(n))) {
+      result = removeCustomElementPropertyName(result, name)
+    }
+    for (const name of next.filter((n) => !current.includes(n))) {
+      result = addCustomElementPropertyName(result, name)
+    }
+    onChange(result)
   }
 
   return (
@@ -93,6 +113,14 @@ export function MigMetadata({
           ariaLabel="Description"
           placeholder="Add a description…"
           multiline
+        />
+      </Row>
+      <Row label="Custom element properties">
+        <EditableList
+          values={mig.customElementPropertyNames ?? []}
+          onChange={setPropertyNames}
+          ariaLabel="Custom element properties"
+          placeholder="Add a property name…"
         />
       </Row>
     </section>
