@@ -4,17 +4,20 @@ import type { Diagnostic } from "@/core/mig/validateMig"
 import { cn } from "@/lib/utils"
 
 /**
- * Advisory consistency banner (FUNCTIONALITY §5.7): "This MIG has N issues",
+ * Advisory consistency banner (FUNCTIONALITY §5.7): "<subject> has N issues",
  * expanding to a drawer that lists each loosening/consistency diagnostic
  * (element, field, message, path). Clicking one selects its element via
- * `onSelect`. Renders nothing when the MIG is clean.
+ * `onSelect`. Renders nothing when the MIG is clean. `subject` defaults to "This
+ * MIG" (the editor); Compare passes a MIG name so its two banners are distinct.
  */
 export function MigDiagnostics({
   diagnostics,
   onSelect,
+  subject = "This MIG",
 }: {
   diagnostics: Diagnostic[]
   onSelect: (path: string) => void
+  subject?: string
 }) {
   const [open, setOpen] = useState(false)
   if (diagnostics.length === 0) return null
@@ -22,7 +25,9 @@ export function MigDiagnostics({
   const n = diagnostics.length
   return (
     <section
-      aria-label="Consistency diagnostics"
+      aria-label={
+        subject === "This MIG" ? "Consistency diagnostics" : `${subject}: consistency diagnostics`
+      }
       className="rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-500"
     >
       <button
@@ -32,7 +37,7 @@ export function MigDiagnostics({
         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
       >
         <Warning className="size-4 shrink-0" aria-hidden />
-        This MIG has {n} {n === 1 ? "issue" : "issues"}
+        {subject} has {n} {n === 1 ? "issue" : "issues"}
         <CaretRight className={cn("ml-auto size-3.5 transition-transform", open && "rotate-90")} aria-hidden />
       </button>
 
