@@ -1,53 +1,64 @@
 import { useEffect, useState } from "react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
-import { loadMig } from "@/core/storage/migStore"
+import { getMigKey } from "@/core/mig/migKey"
+import { loadAllMigs, saveMig } from "@/core/storage/migStore"
 import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
 import { DetailPanel, ElementTree } from "@/features/repository/ElementTree"
+import { MigMetadata } from "./MigMetadata"
 
-type LoadState =
-  | { status: "loading" }
-  | { status: "missing" }
-  | { status: "ready"; mig: MessageImplementationGuide }
+type Status = "loading" | "missing" | "ready"
 
 /**
- * MIG Editor (FUNCTIONALITY §5.7). First slice: load the MIG by key, resolve its
- * message in the e-Repository, and show the element tree. The editable metadata
- * block and the inline-edit detail panel land in later slices.
+ * MIG Editor (FUNCTIONALITY §5.7). Loads the MIG by key, resolves its message in
+ * the e-Repository, and shows the editable metadata block plus the element tree.
+ * The inline-edit detail panel lands in a later slice.
  */
 export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository }) {
-  const [state, setState] = useState<LoadState>({ status: "loading" })
+  const [status, setStatus] = useState<Status>("loading")
+  const [mig, setMig] = useState<MessageImplementationGuide | null>(null)
+  const [allMigs, setAllMigs] = useState<MessageImplementationGuide[]>([])
 
   useEffect(() => {
     let active = true
-    loadMig(migKey)
-      .then((mig) => {
+    loadAllMigs()
+      .then((all) => {
         if (!active) return
-        setState(mig ? { status: "ready", mig } : { status: "missing" })
+        const found = all.find((m) => getMigKey(m) === migKey) ?? null
+        setAllMigs(all)
+        setMig(found)
+        setStatus(found ? "ready" : "missing")
       })
       .catch((err) => {
         console.error("Failed to load MIG:", err)
-        if (active) setState({ status: "missing" })
+        if (active) setStatus("missing")
       })
     return () => {
       active = false
     }
   }, [migKey])
 
-  if (state.status === "loading") {
+  // Autosave: persist the edited MIG and reflect it in the loaded list. Name and
+  // Version are read-only here, so the identity key is unchanged.
+  const persist = (next: MessageImplementationGuide) => {
+    setMig(next)
+    setAllMigs((prev) => prev.map((m) => (getMigKey(m) === migKey ? next : m)))
+    saveMig(next).catch((err) => console.error("Failed to save MIG:", err))
+  }
+
+  if (status === "loading") {
     return <Notice title="Loading MIG…" />
   }
 
-  if (state.status === "missing") {
+  if (status === "missing" || !mig) {
     return (
       <Notice title="MIG not found">
-        No MIG is stored under “{migKey}”. It may have been deleted. Return to{" "}
-        <Home /> to see your MIGs.
+        No MIG is stored under “{migKey}”. It may have been deleted. Return to <Home /> to see your
+        MIGs.
       </Notice>
     )
   }
 
-  const { mig } = state
   const resolved = resolveMessage(repo, mig.messageIdentifier)
 
   if (!resolved) {
@@ -64,17 +75,13 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
       <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">{resolved.current.name}</p>
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-base font-semibold tracking-tight">{mig.name}</h1>
-          <code className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
-            v{mig.version}
-          </code>
-          <code className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
-            {mig.messageIdentifier}
-          </code>
-        </div>
+        <p className="text-xs text-muted-foreground">
+          {resolved.current.name} · {mig.messageIdentifier}
+        </p>
+        <h1 className="text-base font-semibold tracking-tight">{mig.name}</h1>
       </div>
+
+      <MigMetadata mig={mig} allMigs={allMigs} onChange={persist} />
 
       <ElementTree
         key={mig.messageIdentifier}

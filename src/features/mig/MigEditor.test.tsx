@@ -3,8 +3,9 @@ import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it } from "vitest"
 import { cleanup, render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
-import { saveMig } from "@/core/storage/migStore"
+import { loadMig, saveMig } from "@/core/storage/migStore"
 import { getMigKey } from "@/core/mig/migKey"
 import type {
   ERepository,
@@ -101,6 +102,47 @@ describe("MigEditor", () => {
   it("shows a not-found state when the MIG is absent", async () => {
     render(<MigEditor migKey="Ghost:9.9" repo={REPO} />)
     expect(await screen.findByRole("heading", { name: /mig not found/i })).toBeInTheDocument()
+  })
+
+  it("edits and autosaves the description inline", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    await user.click(screen.getByRole("button", { name: "Edit Description" }))
+    await user.type(screen.getByRole("textbox", { name: "Description" }), "Domestic credit transfers")
+    await user.tab() // blur commits
+
+    // Reflected in the UI and persisted to storage.
+    expect(screen.getByRole("button", { name: "Edit Description" })).toHaveTextContent(
+      "Domestic credit transfers",
+    )
+    const saved = await loadMig(getMigKey(MIG))
+    expect(saved?.description).toBe("Domestic credit transfers")
+  })
+
+  it("offers same-message MIGs as parents and autosaves the choice", async () => {
+    const user = userEvent.setup()
+    const base: MessageImplementationGuide = { ...MIG, name: "Base", description: undefined }
+    await saveMig(base)
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "Parent MIG" }), "Base:1.0")
+
+    const saved = await loadMig(getMigKey(MIG))
+    expect(saved?.parentMIG).toBe("Base:1.0")
+  })
+
+  it("warns when the parent MIG isn't loaded", async () => {
+    const child: MessageImplementationGuide = { ...MIG, name: "Child", parentMIG: "Ghost:1.0" }
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    expect(screen.getByText(/which isn.t loaded/i)).toBeInTheDocument()
   })
 
   it("warns when the MIG's message isn't in the repository", async () => {
