@@ -33,8 +33,19 @@ const TYPE_FACET_KEYS: (keyof ElementOverride)[] = [
   "allowedValues",
 ]
 
-const COMMON_COLUMNS = ["Level", "Choice", "Name", "XML tag", "XML path", "Multiplicity", "Type"]
-const RULE_COLUMNS = ["Source", "Rule", "Definition"]
+// Common (element) columns; "Annotations" holds the element's own annotations as
+// multiline `key: value`. Rule columns describe one constraint/override.
+const COMMON_COLUMNS = [
+  "Level",
+  "Choice",
+  "Name",
+  "XML tag",
+  "XML path",
+  "Multiplicity",
+  "Type",
+  "Annotations",
+]
+const RULE_COLUMNS = ["Source", "Rule", "Definition", "Expression"]
 
 type Facets = {
   codes: string[]
@@ -90,9 +101,16 @@ function facetString(f: Facets): string | null {
 /** ISO data type with simple constraints, e.g. `Text[1..35]`. Blank for complex elements. */
 function typeString(el: MessageElement, facets: Facets): string {
   if (el.elements.length > 0) return "" // complex type — no simple data type
-  const base = el.baseType ?? el.type ?? ""
+  const base = (el.baseType ?? el.type ?? "").replace(/^ISO/, "")
   const facet = facetString(facets)
   return facet ? `${base}[${facet}]` : base
+}
+
+/** An element's own annotations as multiline `key: value` (one per line). */
+function annotationsCell(ov: ElementOverride | undefined): string {
+  return Object.entries(ov?.annotations ?? {})
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("\n")
 }
 
 const multiplicity = (min: number, max: number | null) => `[${min}..${max === null ? "*" : max}]`
@@ -118,17 +136,19 @@ export function buildMigCsvRows(
   }
 
   const rows: string[][] = []
+  const blankCommon = COMMON_COLUMNS.map(() => "")
+  const blankAnnotations = annotationNames.map(() => "")
 
   const annotationCells = (c: Constraint): string[] =>
     annotationNames.map((name) => c.annotations?.[name] ?? "")
 
-  const ruleRow = (source: string, rule: string, definition: string, annotations: string[]): string[] => [
-    "", "", "", "", "", "", "", // blank common columns
-    source,
-    rule,
-    definition,
-    ...annotations,
-  ]
+  const ruleRow = (
+    source: string,
+    rule: string,
+    definition: string,
+    expression: string,
+    annotations: string[],
+  ): string[] => [...blankCommon, source, rule, definition, expression, ...annotations]
 
   const walk = (el: MessageElement, level: number, path: string) => {
     const ov = overrides[path]
@@ -142,13 +162,14 @@ export function buildMigCsvRows(
       path,
       multiplicity(el.minOccurs, el.maxOccurs),
       typeString(el, iso),
-      "", "", "", // blank rule columns
-      ...annotationNames.map(() => ""),
+      annotationsCell(ov),
+      ...RULE_COLUMNS.map(() => ""),
+      ...blankAnnotations,
     ])
 
     // ISO-defined constraints.
     for (const c of el.constraints) {
-      rows.push(ruleRow("ISO", c.name, c.definition, annotationCells(c)))
+      rows.push(ruleRow("ISO", c.name, c.definition, c.expression ?? "", annotationCells(c)))
     }
 
     if (ov) {
@@ -163,7 +184,8 @@ export function buildMigCsvRows(
             sourceFor(path, (o) => "minOccurs" in o || "maxOccurs" in o),
             "Multiplicity",
             multiplicity(effMin, effMax),
-            annotationNames.map(() => ""),
+            "",
+            blankAnnotations,
           ),
         )
       }
@@ -175,7 +197,8 @@ export function buildMigCsvRows(
             sourceFor(path, (o) => TYPE_FACET_KEYS.some((k) => k in o)),
             "Type",
             typeString(el, withOverride(iso, ov)),
-            annotationNames.map(() => ""),
+            "",
+            blankAnnotations,
           ),
         )
       }
@@ -183,7 +206,7 @@ export function buildMigCsvRows(
       // Added constraints.
       for (const c of ov.additionalConstraints ?? []) {
         const source = sourceFor(path, (o) => (o.additionalConstraints ?? []).some((x) => x.name === c.name))
-        rows.push(ruleRow(source, c.name, c.definition || c.expression || "", annotationCells(c)))
+        rows.push(ruleRow(source, c.name, c.definition, c.expression ?? "", annotationCells(c)))
       }
     }
 

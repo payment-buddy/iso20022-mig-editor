@@ -61,7 +61,7 @@ const MESSAGE: MessageDefinition = {
     ]),
     el("Amt", { baseType: "Decimal", type: "Amount", totalDigits: 18, fractionDigits: 4, minOccurs: 0 }),
     el("Ccy", { baseType: "Text", type: "CurrencyCode", codes: codes("EUR", "USD", "NOK") }),
-    el("Dt", { baseType: "DateTime", type: "ISODateTime", minOccurs: 0 }),
+    el("Dt", { baseType: "ISODateTime", type: "ISODateTime", minOccurs: 0 }),
   ]),
 }
 
@@ -107,8 +107,21 @@ describe("buildMigCsvRows — element rows", () => {
 
   it("lists ISO constraints as rule rows sourced to ISO", () => {
     const { columns, rows } = buildMigCsvRows(mig("M", {}), [], MESSAGE)
-    const ruleRows = rows.filter((r) => r[col(columns, "Rule")] !== "")
-    expect(ruleRows).toContainEqual(["", "", "", "", "", "", "", "ISO", "Format", "No leading spaces."])
+    const r = rows.find((x) => x[col(columns, "Rule")] === "Format")!
+    expect(r[col(columns, "Source")]).toBe("ISO")
+    expect(r[col(columns, "Definition")]).toBe("No leading spaces.")
+    // Common columns are blank on a rule row.
+    expect(r.slice(0, 8)).toEqual(["", "", "", "", "", "", "", ""])
+  })
+
+  it("renders element annotations as a single multiline cell before Source", () => {
+    const { columns, rows } = buildMigCsvRows(
+      mig("M", { "Doc/Amt": { annotations: { Purpose: "Payment", Note: "x" } } }),
+      [],
+      MESSAGE,
+    )
+    const amt = rows.find((r) => r[col(columns, "XML path")] === "Doc/Amt")!
+    expect(amt[col(columns, "Annotations")]).toBe("Purpose: Payment\nNote: x")
   })
 })
 
@@ -146,6 +159,19 @@ describe("buildMigCsvRows — overrides", () => {
     const r = rows.find((x) => x[col(columns, "Rule")] === "Positive")!
     expect(r[col(columns, "Source")]).toBe("MIG")
     expect(r[col(columns, "Definition")]).toBe("Must be > 0")
+  })
+
+  it("fills the Expression column for a constraint", () => {
+    const { columns, rows } = buildMigCsvRows(
+      mig("M", {
+        "Doc/Amt": { additionalConstraints: [{ name: "R", definition: "d", expression: "a > 0" }] },
+      }),
+      [],
+      MESSAGE,
+    )
+    const r = rows.find((x) => x[col(columns, "Rule")] === "R")!
+    expect(r[col(columns, "Definition")]).toBe("d")
+    expect(r[col(columns, "Expression")]).toBe("a > 0")
   })
 })
 
