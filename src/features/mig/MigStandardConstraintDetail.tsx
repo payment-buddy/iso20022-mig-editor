@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import {
   ArrowCounterClockwiseIcon,
   CheckIcon,
+  ProhibitIcon,
   WarningIcon,
 } from "@phosphor-icons/react"
 import type {
@@ -10,6 +11,7 @@ import type {
   MessageElement,
 } from "@/core/types/types"
 import { validateConstraintExpression } from "@/core/mig/expression"
+import { DotsMenu, type DotsMenuItem } from "@/components/ui/dots-menu"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
 import { ProvenanceDot } from "./ProvenanceDot"
@@ -110,8 +112,6 @@ export function MigStandardConstraintDetail({
   const disabledBaseline =
     inherited && "disabled" in inherited ? !!inherited.disabled : false
   const disabledOverridden = override !== undefined && "disabled" in override
-  const disabledInherited =
-    !disabledOverridden && inherited !== undefined && "disabled" in inherited
   const disabledEffective = disabledOverridden
     ? !!override.disabled
     : disabledBaseline
@@ -121,11 +121,30 @@ export function MigStandardConstraintDetail({
     else onSetDisabled(value)
   }
 
+  // Disabling/enabling lives in a kebab menu on the name row — like the
+  // added-constraint panel, but with no Delete (a standard/inherited rule can't
+  // be removed). There's no separate "reset to inherited": `toggleDisabled`
+  // already drops the override when it returns to the inherited baseline.
+  const actions: DotsMenuItem[] = [
+    disabledEffective
+      ? { label: "Enable", icon: CheckIcon, onSelect: toggleDisabled }
+      : { label: "Disable", icon: ProhibitIcon, onSelect: toggleDisabled },
+  ]
+
   return (
     <DetailPanel label="Constraint details">
       <div className="flex items-center gap-1.5 font-medium">
-        <CheckIcon className="size-3.5 text-muted-foreground" aria-hidden />
-        {constraint.name}
+        <CheckIcon
+          className="size-3.5 shrink-0 text-muted-foreground"
+          aria-hidden
+        />
+        <span className="min-w-0 flex-1 truncate">{constraint.name}</span>
+        {disabledEffective && (
+          <span className="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
+            disabled
+          </span>
+        )}
+        <DotsMenu label="Constraint actions" items={actions} />
       </div>
       <Field label="XML path">
         <code className="text-xs">{path.slice(0, path.lastIndexOf("/"))}</code>
@@ -212,41 +231,15 @@ export function MigStandardConstraintDetail({
         </div>
       )}
 
-      <div className="border-t border-border pt-3">
-        <label className="flex items-center gap-2 text-xs font-medium">
-          <input
-            type="checkbox"
-            checked={disabledEffective}
-            onChange={toggleDisabled}
-            className="size-3.5 accent-destructive"
-          />
-          Disable this rule
-          <ProvenanceDot
-            overridden={disabledOverridden}
-            inherited={disabledInherited}
-            baseline={disabledBaseline ? "disabled" : "enabled"}
-          />
-          {disabledOverridden && (
-            <button
-              type="button"
-              onClick={onClearDisabled}
-              className="ml-auto flex items-center gap-1 rounded-sm text-[0.625rem] text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/30"
-            >
-              <ArrowCounterClockwiseIcon className="size-3" aria-hidden />
-              Reset to inherited
-            </button>
-          )}
-        </label>
-        {disabledEffective && (
-          <p
-            role="alert"
-            className="mt-1 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500"
-          >
-            <WarningIcon className="size-3 shrink-0" aria-hidden />
-            Disabling this rule is looser than the original.
-          </p>
-        )}
-      </div>
+      {disabledEffective && (
+        <p
+          role="alert"
+          className="flex items-center gap-1 border-t border-border pt-3 text-xs text-amber-600 dark:text-amber-500"
+        >
+          <WarningIcon className="size-3 shrink-0" aria-hidden />
+          Disabling this rule is looser than the original.
+        </p>
+      )}
     </DetailPanel>
   )
 }

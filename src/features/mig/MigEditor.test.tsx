@@ -665,8 +665,9 @@ describe("MigEditor", () => {
       name: /constraint details/i,
     })
     await user.click(
-      within(panel).getByRole("checkbox", { name: /disable this rule/i })
+      within(panel).getByRole("button", { name: /constraint actions/i })
     )
+    await user.click(screen.getByRole("menuitem", { name: /disable/i }))
 
     // The off switch lands on the added constraint, not in constraintOverrides.
     const saved = (await loadMig(getMigKey(MIG)))?.elementOverrides[
@@ -676,6 +677,39 @@ describe("MigEditor", () => {
       "New constraint": { definition: "", enabled: false },
     })
     expect(saved?.constraintOverrides).toBeUndefined()
+  })
+
+  it("shows a disabled badge and re-enables an added constraint from the menu", async () => {
+    const user = userEvent.setup()
+    const guide: MessageImplementationGuide = {
+      ...MIG,
+      elementOverrides: {
+        "/DocumentTag": {
+          additionalConstraints: { Mine: { definition: "", enabled: false } },
+        },
+      },
+    }
+    await saveMig(guide)
+    render(<MigEditor migKey={getMigKey(guide)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    await user.click(
+      screen.getByRole("treeitem", { name: /constraint mine/i })
+    )
+
+    const panel = screen.getByRole("region", { name: /constraint details/i })
+    expect(within(panel).getByText("disabled")).toBeInTheDocument()
+
+    // The menu offers Enable (not Disable) while the rule is off.
+    await user.click(
+      within(panel).getByRole("button", { name: /constraint actions/i })
+    )
+    await user.click(screen.getByRole("menuitem", { name: /enable/i }))
+
+    // Re-enabling prunes the flag back to the minimal form.
+    expect(
+      (await loadMig(getMigKey(guide)))?.elementOverrides["/DocumentTag"]
+        ?.additionalConstraints
+    ).toEqual({ Mine: { definition: "" } })
   })
 
   it("renames an added constraint, keeping it selected in the tree", async () => {
@@ -872,29 +906,30 @@ describe("MigEditor", () => {
     expect(ownDot).toHaveClass("rounded-full", "bg-provenance-own")
   })
 
-  it("disables a standard constraint via the toggle", async () => {
+  const stdRuleRepo = (): ERepository => ({
+    businessAreas: [
+      {
+        name: "A",
+        code: "a",
+        definition: "",
+        messages: [
+          {
+            name: "Msg",
+            identifier: "pacs.008.001.10",
+            shortCode: "pacs.008",
+            rootElement: el("Document", {
+              constraints: [{ name: "StdRule", definition: "Spec rule" }],
+            }),
+          },
+        ],
+      },
+    ],
+  })
+
+  it("disables a standard constraint from the menu", async () => {
     const user = userEvent.setup()
-    const repo: ERepository = {
-      businessAreas: [
-        {
-          name: "A",
-          code: "a",
-          definition: "",
-          messages: [
-            {
-              name: "Msg",
-              identifier: "pacs.008.001.10",
-              shortCode: "pacs.008",
-              rootElement: el("Document", {
-                constraints: [{ name: "StdRule", definition: "Spec rule" }],
-              }),
-            },
-          ],
-        },
-      ],
-    }
     await saveMig(MIG)
-    render(<MigEditor migKey={getMigKey(MIG)} repo={repo} />)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={stdRuleRepo()} />)
     await screen.findByRole("treeitem", { name: "Document" })
     await user.click(
       screen.getByRole("treeitem", { name: /constraint stdrule/i })
@@ -902,13 +937,90 @@ describe("MigEditor", () => {
 
     const panel = screen.getByRole("region", { name: /constraint details/i })
     await user.click(
-      within(panel).getByRole("checkbox", { name: /disable this rule/i })
+      within(panel).getByRole("button", { name: /constraint actions/i })
     )
+    await user.click(screen.getByRole("menuitem", { name: /disable/i }))
 
     expect(
       (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
         ?.constraintOverrides
     ).toEqual({ StdRule: { disabled: true } })
+  })
+
+  it("badges an inherited-disabled standard rule and re-enables it from the menu", async () => {
+    const user = userEvent.setup()
+    const parent: MessageImplementationGuide = {
+      name: "Base",
+      version: "1.0",
+      messageIdentifier: "pacs.008.001.10",
+      elementOverrides: {
+        "/DocumentTag": { constraintOverrides: { StdRule: { disabled: true } } },
+      },
+    }
+    const child: MessageImplementationGuide = {
+      ...MIG,
+      parentMIG: getMigKey(parent),
+    }
+    await saveMig(parent)
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(child)} repo={stdRuleRepo()} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    await user.click(
+      screen.getByRole("treeitem", { name: /constraint stdrule/i })
+    )
+
+    const panel = screen.getByRole("region", { name: /constraint details/i })
+    // The inherited disable is reflected as a badge.
+    expect(within(panel).getByText("disabled")).toBeInTheDocument()
+
+    // The rule is off, so the menu offers Enable (and no Reset — not own here).
+    await user.click(
+      within(panel).getByRole("button", { name: /constraint actions/i })
+    )
+    expect(
+      screen.getByRole("menuitem", { name: /enable/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole("menuitem", { name: /reset to inherited/i })
+    ).not.toBeInTheDocument()
+    await user.click(screen.getByRole("menuitem", { name: /enable/i }))
+
+    // Re-enabling the inherited-off rule records an explicit `disabled: false`.
+    expect(
+      (await loadMig(getMigKey(child)))?.elementOverrides["/DocumentTag"]
+        ?.constraintOverrides
+    ).toEqual({ StdRule: { disabled: false } })
+  })
+
+  it("re-enabling an own-disabled standard rule clears the override (no separate reset)", async () => {
+    const user = userEvent.setup()
+    const guide: MessageImplementationGuide = {
+      ...MIG,
+      elementOverrides: {
+        "/DocumentTag": { constraintOverrides: { StdRule: { disabled: true } } },
+      },
+    }
+    await saveMig(guide)
+    render(<MigEditor migKey={getMigKey(guide)} repo={stdRuleRepo()} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    await user.click(
+      screen.getByRole("treeitem", { name: /constraint stdrule/i })
+    )
+
+    const panel = screen.getByRole("region", { name: /constraint details/i })
+    await user.click(
+      within(panel).getByRole("button", { name: /constraint actions/i })
+    )
+    // No "Reset to inherited" — the toggle handles reverting to the baseline.
+    expect(
+      screen.queryByRole("menuitem", { name: /reset to inherited/i })
+    ).not.toBeInTheDocument()
+    await user.click(screen.getByRole("menuitem", { name: /enable/i }))
+
+    // Enabling returns to the ISO baseline, so the override is dropped entirely.
+    expect(
+      (await loadMig(getMigKey(guide)))?.elementOverrides["/DocumentTag"]
+    ).toBeUndefined()
   })
 
   it("colours an own-overridden node and shows the legend", async () => {
@@ -1138,10 +1250,15 @@ describe("MigEditor", () => {
       name: /constraint details/i,
     })
 
+    const deleteFromMenu = async () => {
+      await user.click(
+        within(panel).getByRole("button", { name: /constraint actions/i })
+      )
+      await user.click(screen.getByRole("menuitem", { name: /delete/i }))
+    }
+
     // Cancelling the confirm leaves the constraint in place.
-    await user.click(
-      within(panel).getByRole("button", { name: /delete constraint/i })
-    )
+    await deleteFromMenu()
     await user.click(
       within(await screen.findByRole("alertdialog")).getByRole("button", {
         name: "Cancel",
@@ -1152,9 +1269,7 @@ describe("MigEditor", () => {
     ).toBeInTheDocument()
 
     // Confirming removes it and selection falls back to the owning element.
-    await user.click(
-      within(panel).getByRole("button", { name: /delete constraint/i })
-    )
+    await deleteFromMenu()
     await user.click(
       within(await screen.findByRole("alertdialog")).getByRole("button", {
         name: "Delete",

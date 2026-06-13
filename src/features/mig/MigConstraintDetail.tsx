@@ -1,8 +1,14 @@
 import { useState } from "react"
-import { CheckIcon, TrashIcon, WarningIcon } from "@phosphor-icons/react"
+import {
+  CheckIcon,
+  ProhibitIcon,
+  TrashIcon,
+  WarningIcon,
+} from "@phosphor-icons/react"
 import type { Constraint, MessageElement } from "@/core/types/types"
 import { validateConstraintExpression } from "@/core/mig/expression"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { DotsMenu } from "@/components/ui/dots-menu"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
 import { ProvenanceDot } from "./ProvenanceDot"
@@ -14,9 +20,8 @@ import { ProvenanceDot } from "./ProvenanceDot"
  * unchanged, or already taken by a sibling constraint is rejected (the field
  * reverts). Standard, spec-inherited constraints use the read-only view instead.
  *
- * Like ISO/inherited rules, an added rule can also be **disabled** (kept in the
- * MIG but not enforced) without deleting it — a plain on/off here since an added
- * constraint has no inherited baseline to reset to.
+ * Disabling (kept in the MIG but not enforced) and deletion live in a kebab menu
+ * on the name row; a disabled rule also shows a "disabled" badge there.
  */
 export function MigConstraintDetail({
   constraint,
@@ -95,6 +100,33 @@ export function MigConstraintDetail({
             placeholder="Constraint name"
           />
         </div>
+        {disabled && (
+          <span className="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
+            disabled
+          </span>
+        )}
+        <DotsMenu
+          label="Constraint actions"
+          items={[
+            disabled
+              ? {
+                  label: "Enable",
+                  icon: CheckIcon,
+                  onSelect: () => onToggleDisabled(false),
+                }
+              : {
+                  label: "Disable",
+                  icon: ProhibitIcon,
+                  onSelect: () => onToggleDisabled(true),
+                },
+            {
+              label: "Delete",
+              icon: TrashIcon,
+              destructive: true,
+              onSelect: () => setConfirmOpen(true),
+            },
+          ]}
+        />
       </div>
       <Field label="XML path">
         <code className="text-xs">{path.slice(0, path.lastIndexOf("/"))}</code>
@@ -161,29 +193,6 @@ export function MigConstraintDetail({
           })}
         </div>
       )}
-
-      <div className="border-t border-border pt-3">
-        <label className="flex items-center gap-2 text-xs font-medium">
-          <input
-            type="checkbox"
-            checked={disabled}
-            onChange={() => onToggleDisabled(!disabled)}
-            className="size-3.5 accent-destructive"
-          />
-          Disable this rule
-        </label>
-      </div>
-
-      <div className="border-t border-border pt-3">
-        <button
-          type="button"
-          onClick={() => setConfirmOpen(true)}
-          className="flex items-center gap-1 rounded-sm text-xs font-medium text-destructive outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/30"
-        >
-          <TrashIcon className="size-3.5" aria-hidden />
-          Delete constraint
-        </button>
-      </div>
 
       <ConfirmDialog
         open={confirmOpen}
