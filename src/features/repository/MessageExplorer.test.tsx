@@ -107,6 +107,16 @@ describe("MessageExplorer", () => {
     expect(within(panel).getByText("DocumentTag/CdtTrfTxInfTag")).toBeInTheDocument()
   })
 
+  it("toggles tree labels between element names and XML tags", async () => {
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+    const primaryOf = (name: string) =>
+      screen.getByRole("button", { name }).querySelector("span")?.textContent
+
+    expect(primaryOf("GrpHdr")).toBe("GrpHdr")
+    await userEvent.click(screen.getByLabelText("Show XML tags"))
+    expect(primaryOf("GrpHdr")).toBe("GrpHdrTag")
+  })
+
   it("lists element constraints as nodes and shows their detail", async () => {
     render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
     // root constraint is visible (root expanded by default)

@@ -42,6 +42,7 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
   const root = current.rootElement
   const [picked, setPicked] = useState<Selection | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
+  const [showXmlTags, setShowXmlTags] = useState(false)
   const selected: Selection = picked ?? { kind: "element", element: root, path: root.xmlTag }
 
   return (
@@ -92,6 +93,15 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
         </div>
       )}
 
+      <label className="flex w-fit items-center gap-1.5 text-xs text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={showXmlTags}
+          onChange={(e) => setShowXmlTags(e.target.checked)}
+        />
+        Show XML tags
+      </label>
+
       <div className="grid gap-4 md:grid-cols-[3fr_4fr]">
         <ul className="flex flex-col text-sm">
           <ElementNode
@@ -99,6 +109,7 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
             level={0}
             path={root.xmlTag}
             selectedPath={selected.path}
+            showXmlTags={showXmlTags}
             onSelect={setPicked}
           />
         </ul>
@@ -121,12 +132,14 @@ function ElementNode({
   level,
   path,
   selectedPath,
+  showXmlTags,
   onSelect,
 }: {
   element: MessageElement
   level: number
   path: string
   selectedPath: string | null
+  showXmlTags: boolean
   onSelect: (sel: Selection) => void
 }) {
   const hasChildren = element.elements.length > 0 || element.constraints.length > 0
@@ -159,8 +172,7 @@ function ElementNode({
             isSelected && "bg-muted",
           )}
         >
-          <span className="font-medium">{element.name}</span>
-          <code className="text-[0.625rem] text-muted-foreground">{element.xmlTag}</code>
+          <span className="font-medium">{showXmlTags ? element.xmlTag : element.name}</span>
           <span className="text-xs text-muted-foreground">{cardinality(element)}</span>
           {element.isChoice && (
             <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
@@ -178,6 +190,7 @@ function ElementNode({
               level={level + 1}
               path={`${path}/${child.xmlTag}`}
               selectedPath={selectedPath}
+              showXmlTags={showXmlTags}
               onSelect={onSelect}
             />
           ))}
@@ -267,7 +280,7 @@ function ConstraintDetail({ constraint, path }: { constraint: Constraint; path: 
       </Field>
       {constraint.definition && (
         <Field label="Definition">
-          <span className="whitespace-pre-wrap text-muted-foreground">{constraint.definition}</span>
+          <span className="whitespace-pre-wrap">{constraint.definition}</span>
         </Field>
       )}
     </DetailPanel>
@@ -303,7 +316,7 @@ function ElementDetail({ element, path }: { element: MessageElement; path: strin
       </Field>
       {e.definition && (
         <Field label="Definition">
-          <span className="whitespace-pre-wrap text-muted-foreground">{e.definition}</span>
+          <span className="whitespace-pre-wrap">{e.definition}</span>
         </Field>
       )}
       {length && <Field label="Length">{length}</Field>}
