@@ -99,8 +99,8 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                 element={sel.element}
                 path={sel.path}
                 override={mig.elementOverrides[sel.path]}
-                onSet={(text) => persist(setOverrideField(mig, sel.path, "definition", text))}
-                onReset={() => persist(clearOverrideField(mig, sel.path, "definition"))}
+                onSet={(field, value) => persist(setOverrideField(mig, sel.path, field, value))}
+                onClear={(field) => persist(clearOverrideField(mig, sel.path, field))}
               />
             )
           }

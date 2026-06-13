@@ -146,6 +146,37 @@ describe("MigEditor", () => {
     expect(saved?.description).toBe("Domestic credit transfers")
   })
 
+  it("edits Min/Max occurs overrides (unbounded = null)", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    // Min occurs: baseline 1 → 0.
+    await user.click(within(panel).getByRole("button", { name: "Edit Min occurs" }))
+    const minInput = within(panel).getByRole("spinbutton", { name: "Min occurs" })
+    await user.clear(minInput)
+    await user.type(minInput, "0")
+    await user.tab()
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.minOccurs).toBe(0)
+
+    // Max occurs: baseline 1 → unbounded (empty number field, stored as null).
+    await user.click(within(panel).getByRole("button", { name: "Edit Max occurs" }))
+    const maxInput = within(panel).getByRole("spinbutton", { name: "Max occurs" })
+    await user.clear(maxInput)
+    await user.tab()
+    const saved = await loadMig(getMigKey(MIG))
+    const override = saved?.elementOverrides["DocumentTag"]
+    expect(override && "maxOccurs" in override).toBe(true)
+    expect(override?.maxOccurs).toBeNull()
+
+    // Both fields are now overridden → two reset actions; the first resets Min occurs.
+    const resets = within(panel).getAllByRole("button", { name: /reset to inherited/i })
+    await user.click(resets[0])
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.minOccurs).toBeUndefined()
+  })
+
   it("offers same-message MIGs as parents and autosaves the choice", async () => {
     const user = userEvent.setup()
     const base: MessageImplementationGuide = { ...MIG, name: "Base", description: undefined }

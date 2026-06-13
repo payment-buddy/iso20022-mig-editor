@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react"
+import { useState, type KeyboardEvent, type ReactNode } from "react"
 import { PencilSimple } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 
@@ -8,6 +8,10 @@ import { cn } from "@/lib/utils"
  * switches to an input/textarea (an explicit affordance, so the field can't be
  * edited by accident). Commits on blur, cancels on Esc; single-line also commits
  * on Enter (multiline keeps Enter for newlines).
+ *
+ * `type="number"` renders a numeric input with the browser's increment/decrement
+ * spinner. `display` overrides the non-editing label when it should differ from
+ * the raw value (e.g. an empty number field shown as "unbounded").
  */
 export function InlineEdit({
   value,
@@ -15,12 +19,16 @@ export function InlineEdit({
   ariaLabel,
   placeholder = "—",
   multiline = false,
+  type = "text",
+  display,
 }: {
   value: string
   onCommit: (next: string) => void
   ariaLabel: string
   placeholder?: string
   multiline?: boolean
+  type?: "text" | "number"
+  display?: ReactNode
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value)
@@ -39,15 +47,16 @@ export function InlineEdit({
   }
 
   if (!editing) {
+    const showPlaceholder = display == null && !value
     return (
       <div className="group flex w-full items-start justify-between gap-2 rounded-md px-2 py-1">
         <span
           className={cn(
             "min-w-0 whitespace-pre-wrap text-sm",
-            !value && "text-muted-foreground italic",
+            showPlaceholder && "text-muted-foreground italic",
           )}
         >
-          {value || placeholder}
+          {display ?? (value || placeholder)}
         </span>
         <button
           type="button"
@@ -87,7 +96,10 @@ export function InlineEdit({
     />
   ) : (
     <input
-      type="text"
+      type={type === "number" ? "number" : "text"}
+      inputMode={type === "number" ? "numeric" : undefined}
+      min={type === "number" ? 0 : undefined}
+      step={type === "number" ? 1 : undefined}
       autoFocus
       value={draft}
       aria-label={ariaLabel}
