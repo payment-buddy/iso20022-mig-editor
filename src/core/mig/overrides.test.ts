@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 import type { MessageImplementationGuide } from "@/core/types/types"
-import { clearOverrideField, setOverrideField } from "./overrides"
+import {
+  addConstraint,
+  clearOverrideField,
+  nextConstraintName,
+  setOverrideField,
+} from "./overrides"
 
 function mig(
   elementOverrides: MessageImplementationGuide["elementOverrides"] = {},
@@ -62,5 +67,49 @@ describe("clearOverrideField", () => {
     const before = mig({ "Doc": { definition: "X" } })
     clearOverrideField(before, "Doc", "definition")
     expect(before.elementOverrides).toEqual({ Doc: { definition: "X" } })
+  })
+})
+
+describe("nextConstraintName", () => {
+  it("uses the base name when free", () => {
+    expect(nextConstraintName([])).toBe("New constraint")
+    expect(nextConstraintName(["Other"])).toBe("New constraint")
+  })
+
+  it("suffixes a number to avoid collisions", () => {
+    expect(nextConstraintName(["New constraint"])).toBe("New constraint 2")
+    expect(nextConstraintName(["New constraint", "New constraint 2"])).toBe("New constraint 3")
+  })
+})
+
+describe("addConstraint", () => {
+  it("creates additionalConstraints on a new path", () => {
+    const next = addConstraint(mig(), "Doc/Amt", { name: "Rule A", definition: "" })
+    expect(next.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
+      { name: "Rule A", definition: "" },
+    ])
+  })
+
+  it("appends to an existing override, keeping other fields", () => {
+    const next = addConstraint(mig({ "Doc/Amt": { minOccurs: 0 } }), "Doc/Amt", {
+      name: "Rule A",
+      definition: "",
+    })
+    expect(next.elementOverrides["Doc/Amt"]).toEqual({
+      minOccurs: 0,
+      additionalConstraints: [{ name: "Rule A", definition: "" }],
+    })
+  })
+
+  it("is a no-op when a constraint of the same name already exists", () => {
+    const before = mig({ "Doc/Amt": { additionalConstraints: [{ name: "Rule A", definition: "" }] } })
+    const next = addConstraint(before, "Doc/Amt", { name: "Rule A", definition: "new" })
+    expect(next).toBe(before)
+  })
+
+  it("does not mutate the input MIG", () => {
+    const before = mig()
+    addConstraint(before, "Doc", { name: "Rule A", definition: "" })
+    expect(before.elementOverrides).toEqual({})
   })
 })

@@ -1,5 +1,5 @@
 import { type ReactNode } from "react"
-import { ArrowCounterClockwise } from "@phosphor-icons/react"
+import { ArrowCounterClockwise, Plus } from "@phosphor-icons/react"
 import type { ElementOverride, MessageElement } from "@/core/types/types"
 import { createValueValidator } from "@/core/mig/fieldValidation"
 import { EditableList } from "@/components/ui/editable-list"
@@ -35,6 +35,7 @@ export function MigElementDetail({
   propertyNames,
   onSet,
   onClear,
+  onAddConstraint,
 }: {
   element: MessageElement
   path: string
@@ -45,6 +46,8 @@ export function MigElementDetail({
   onSet: <K extends keyof ElementOverride>(field: K, value: ElementOverride[K]) => void
   /** Drop one override field (back to inherited). */
   onClear: (field: keyof ElementOverride) => void
+  /** Add a MIG-specific constraint to this element and select it in the tree. */
+  onAddConstraint: () => void
 }) {
   // Key-presence, not truthiness: a stored `null` still counts as overridden.
   const has = (field: keyof ElementOverride) => override !== undefined && field in override
@@ -290,6 +293,17 @@ export function MigElementDetail({
           ))}
         </div>
       )}
+
+      <div className="border-t border-border pt-3">
+        <button
+          type="button"
+          onClick={onAddConstraint}
+          className="flex items-center gap-1 rounded-sm text-xs font-medium text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/30"
+        >
+          <Plus className="size-3.5" aria-hidden />
+          Add constraint
+        </button>
+      </div>
     </DetailPanel>
   )
 }

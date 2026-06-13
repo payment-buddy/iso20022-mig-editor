@@ -212,6 +212,49 @@ describe("MigEditor", () => {
     expect(screen.queryByRole("treeitem", { name: "CdtTrfTxInf" })).not.toBeInTheDocument()
   })
 
+  it("adds a MIG-specific constraint, revealing and selecting it in the tree", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    // Root (Document) is selected by default; add a constraint to it.
+    await user.click(within(panel).getByRole("button", { name: /add constraint/i }))
+
+    // The constraint appears in the tree, tagged "added", and is now selected.
+    const node = await screen.findByRole("treeitem", { name: /constraint new constraint$/i })
+    expect(within(node).getByText("added")).toBeInTheDocument()
+    expect(node).toHaveAttribute("aria-selected", "true")
+
+    // Persisted as a MIG-specific (additional) constraint on the root path.
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.additionalConstraints,
+    ).toEqual([{ name: "New constraint", definition: "" }])
+  })
+
+  it("gives each added constraint a non-duplicate name", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // Add once (selection moves to the new constraint), re-select the element,
+    // then add again — the second name must not collide with the first.
+    const add = async () => {
+      const panel = screen.getByRole("region", { name: /element details/i })
+      await user.click(within(panel).getByRole("button", { name: /add constraint/i }))
+    }
+    await add()
+    await user.click(screen.getByRole("treeitem", { name: "Document" }))
+    await add()
+
+    const names = (await loadMig(getMigKey(MIG)))?.elementOverrides[
+      "DocumentTag"
+    ]?.additionalConstraints?.map((c) => c.name)
+    expect(names).toEqual(["New constraint", "New constraint 2"])
+  })
+
   it("shows Min/Max length only for length-bearing types and edits them", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

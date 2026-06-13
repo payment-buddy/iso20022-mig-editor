@@ -2,7 +2,12 @@ import { useEffect, useState } from "react"
 import { Check } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { getMigKey } from "@/core/mig/migKey"
-import { clearOverrideField, setOverrideField } from "@/core/mig/overrides"
+import {
+  addConstraint,
+  clearOverrideField,
+  nextConstraintName,
+  setOverrideField,
+} from "@/core/mig/overrides"
 import { loadAllMigs, saveMig } from "@/core/storage/migStore"
 import type { Constraint, ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
@@ -91,7 +96,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
         root={root}
         ariaLabel={`${mig.name} structure`}
         elementOverrides={mig.elementOverrides}
-        renderDetail={(sel) => {
+        renderDetail={(sel, actions) => {
           if (sel?.kind === "element") {
             return (
               // Keyed by path so navigating elements resets any in-progress edit.
@@ -103,6 +108,19 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                 propertyNames={mig.elementAnnotationNames ?? []}
                 onSet={(field, value) => persist(setOverrideField(mig, sel.path, field, value))}
                 onClear={(field) => persist(clearOverrideField(mig, sel.path, field))}
+                onAddConstraint={() => {
+                  // Unique within the element across standard + already-added.
+                  const existing = [
+                    ...sel.element.constraints.map((c) => c.name),
+                    ...(mig.elementOverrides[sel.path]?.additionalConstraints ?? []).map(
+                      (c) => c.name,
+                    ),
+                  ]
+                  const name = nextConstraintName(existing)
+                  persist(addConstraint(mig, sel.path, { name, definition: "" }))
+                  // Reveal and select the new constraint under its element.
+                  actions.select(`${sel.path}/${name}`)
+                }}
               />
             )
           }

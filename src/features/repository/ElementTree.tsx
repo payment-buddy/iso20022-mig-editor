@@ -25,13 +25,23 @@ type FlatNode = {
   excluded: boolean
 } & (
   | { kind: "element"; element: MessageElement }
-  | { kind: "constraint"; constraint: Constraint }
+  | { kind: "constraint"; constraint: Constraint; /** MIG-specific (vs. standard). */ added: boolean }
 )
 
 /** The focused/selected node, handed to the detail-panel renderer (selection follows focus). */
 export type SelectedNode =
   | { kind: "element"; element: MessageElement; path: string }
   | { kind: "constraint"; constraint: Constraint; path: string }
+
+/** Imperative tree actions handed to the detail-panel renderer. */
+export type TreeActions = {
+  /**
+   * Focus and select the node at `path`. If it isn't rendered yet (e.g. a
+   * constraint the detail panel just added to the MIG), focus lands on it once
+   * it next appears.
+   */
+  select: (path: string) => void
+}
 
 /**
  * Whether `el` is excluded in its own right — its effective `maxOccurs` is 0.
@@ -46,6 +56,24 @@ function isOwnExcluded(
   const override = overrides?.[path]
   const maxOccurs = override && "maxOccurs" in override ? override.maxOccurs : el.maxOccurs
   return maxOccurs === 0
+}
+
+/**
+ * An element's constraints as shown in the tree: the standard (spec-inherited)
+ * ones followed by the MIG-specific ones from this path's override, each tagged
+ * with whether it was `added` by the MIG.
+ */
+function constraintsAt(
+  path: string,
+  el: MessageElement,
+  overrides: ElementOverrides | undefined,
+): { constraint: Constraint; added: boolean }[] {
+  const standard = el.constraints.map((constraint) => ({ constraint, added: false }))
+  const additional = (overrides?.[path]?.additionalConstraints ?? []).map((constraint) => ({
+    constraint,
+    added: true,
+  }))
+  return [...standard, ...additional]
 }
 
 /** Count elements excluded in their own right (effective `maxOccurs:0`) tree-wide. */
@@ -75,7 +103,11 @@ function matchesQuery(text: string, q: string): boolean {
  * any descendant element/constraint) matches; ancestors of a match are kept and
  * auto-expanded so the match is visible. `q` must already be lower-cased.
  */
-function buildFilter(root: MessageElement, q: string): TreeFilter {
+function buildFilter(
+  root: MessageElement,
+  q: string,
+  overrides: ElementOverrides | undefined,
+): TreeFilter {
   const keep = new Set<string>()
   const expand = new Set<string>()
   const visit = (el: MessageElement, path: string): boolean => {
@@ -84,9 +116,9 @@ function buildFilter(root: MessageElement, q: string): TreeFilter {
     for (const child of el.elements) {
       if (visit(child, `${path}/${child.xmlTag}`)) descMatch = true
     }
-    for (const c of el.constraints) {
-      if (matchesQuery(c.name, q)) {
-        keep.add(`${path}/${c.name}`)
+    for (const { constraint } of constraintsAt(path, el, overrides)) {
+      if (matchesQuery(constraint.name, q)) {
+        keep.add(`${path}/${constraint.name}`)
         descMatch = true
       }
     }
@@ -129,9 +161,10 @@ function flattenTree(
       if (hideExcluded && isOwnExcluded(`${path}/${c.xmlTag}`, c, overrides)) return false
       return true
     })
+    const cons = constraintsAt(path, el, overrides)
     const childCons = filter
-      ? el.constraints.filter((c) => filter.keep.has(`${path}/${c.name}`))
-      : el.constraints
+      ? cons.filter((c) => filter.keep.has(`${path}/${c.constraint.name}`))
+      : cons
     const hasChildren = childEls.length > 0 || childCons.length > 0
     const isOpen = filter ? filter.expand.has(path) || expanded.has(path) : expanded.has(path)
     out.push({
@@ -148,11 +181,12 @@ function flattenTree(
     for (const child of childEls) {
       walk(child, `${path}/${child.xmlTag}`, level + 1, path, excluded)
     }
-    for (const c of childCons) {
+    for (const { constraint, added } of childCons) {
       out.push({
         kind: "constraint",
-        constraint: c,
-        path: `${path}/${c.name}`,
+        constraint,
+        added,
+        path: `${path}/${constraint.name}`,
         level: level + 1,
         parentPath: path,
         hasChildren: false,
@@ -196,11 +230,12 @@ export function ElementTree({
 }: {
   root: MessageElement
   ariaLabel: string
-  renderDetail: (selected: SelectedNode | null) => ReactNode
+  renderDetail: (selected: SelectedNode | null, actions: TreeActions) => ReactNode
   /**
-   * MIG overrides keyed by `xmlPath`, used so an element excluded via an
-   * override (`maxOccurs: 0`) is styled and counted as excluded. Omitted by the
-   * read-only Message Explorer, where exclusion comes from the base message.
+   * MIG overrides keyed by `xmlPath`. Drives two MIG-only behaviors: an element
+   * excluded via an override (`maxOccurs: 0`) is styled/counted as excluded, and
+   * each path's `additionalConstraints` appear as MIG-specific tree nodes.
+   * Omitted by the read-only Message Explorer.
    */
   elementOverrides?: ElementOverrides
 }) {
@@ -220,7 +255,10 @@ export function ElementTree({
     [root, elementOverrides],
   )
   const q = filter.trim().toLowerCase()
-  const treeFilter = useMemo(() => (q ? buildFilter(root, q) : null), [root, q])
+  const treeFilter = useMemo(
+    () => (q ? buildFilter(root, q, elementOverrides) : null),
+    [root, q, elementOverrides],
+  )
   const flatNodes = useMemo(
     () => flattenTree(root, expanded, treeFilter, hideExcluded, elementOverrides),
     [root, expanded, treeFilter, hideExcluded, elementOverrides],
@@ -255,6 +293,32 @@ export function ElementTree({
     setFocusedPath(path)
     nodeRefs.current.get(path)?.focus()
   }
+
+  // A node requested by `select` that wasn't mounted yet (e.g. a constraint the
+  // detail panel just added). The effect below focuses it once it renders.
+  const pendingFocus = useRef<string | null>(null)
+  const select = (path: string) => {
+    // Open every ancestor so the target is reachable (its parent may be collapsed).
+    const parts = path.split("/")
+    if (parts.length > 1) {
+      setExpanded((prev) => {
+        const next = new Set(prev)
+        for (let i = 1; i < parts.length; i++) next.add(parts.slice(0, i).join("/"))
+        return next
+      })
+    }
+    setFocusedPath(path)
+    const node = nodeRefs.current.get(path)
+    if (node) node.focus()
+    else pendingFocus.current = path
+  }
+  useEffect(() => {
+    const path = pendingFocus.current
+    if (path && nodeRefs.current.has(path)) {
+      pendingFocus.current = null
+      nodeRefs.current.get(path)?.focus()
+    }
+  })
 
   const onKeyDown = (e: ReactKeyboardEvent<HTMLUListElement>) => {
     if (!active) return
@@ -425,7 +489,10 @@ export function ElementTree({
             ))}
           </ul>
         )}
-        {renderDetail(active ? toSelected(active) : null)}
+        {/* `select` reads refs but is only invoked from the detail panel's event
+            handlers (never during render), so the refs-in-render rule is moot. */}
+        {/* eslint-disable-next-line react-hooks/refs */}
+        {renderDetail(active ? toSelected(active) : null, { select })}
       </div>
     </div>
   )
@@ -519,6 +586,9 @@ function TreeNode({
           <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
             choice
           </span>
+        )}
+        {node.kind === "constraint" && node.added && (
+          <span className="rounded-sm bg-primary/10 px-1 text-[0.625rem] text-primary">added</span>
         )}
       </div>
     </li>
