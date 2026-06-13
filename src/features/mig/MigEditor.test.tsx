@@ -686,9 +686,10 @@ describe("MigEditor", () => {
       within(rootPanel).queryByRole("textbox", { name: /add to allowed values/i }),
     ).not.toBeInTheDocument()
 
-    // Sts is a CodeSet → its inherited codes are editable; remove one.
+    // Sts is a CodeSet → its inherited codes are editable; enter edit, remove one.
     await user.click(screen.getByRole("treeitem", { name: "Sts" }))
     const panel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(panel).getByRole("button", { name: "Edit Allowed values" }))
     await user.click(within(panel).getByRole("button", { name: "Remove INAC" }))
     expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/StsTag"]?.allowedValues).toEqual([
       "ACTV",
@@ -717,9 +718,10 @@ describe("MigEditor", () => {
       within(rootPanel).queryByRole("textbox", { name: /add to examples/i }),
     ).not.toBeInTheDocument()
 
-    // Rate is a simple type → its inherited examples are editable; remove one.
+    // Rate is a simple type → its inherited examples are editable; enter edit, remove one.
     await user.click(screen.getByRole("treeitem", { name: "Rate" }))
     const panel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(panel).getByRole("button", { name: "Edit Examples" }))
     await user.click(within(panel).getByRole("button", { name: "Remove 2.0" }))
     expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/RateTag"]?.examples).toEqual([
       "1.5",
@@ -735,6 +737,7 @@ describe("MigEditor", () => {
     // GrpHdr is Text with maxLength 35.
     await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
     const panel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(panel).getByRole("button", { name: "Edit Allowed values" }))
     const input = within(panel).getByRole("textbox", { name: /add to allowed values/i })
 
     await user.type(input, "x".repeat(40))
@@ -758,6 +761,7 @@ describe("MigEditor", () => {
     expect(within(panel).queryByText("Annotations")).not.toBeInTheDocument()
 
     // Declare a shared element-annotation name in the metadata block.
+    await user.click(within(meta).getByRole("button", { name: "Edit Element annotations" }))
     await user.type(
       within(meta).getByRole("textbox", { name: /add to element annotations/i }),
       "Usage",
@@ -774,6 +778,7 @@ describe("MigEditor", () => {
     ).toEqual({ Usage: "debit only" })
 
     // Removing the name in metadata drops it everywhere (cascades to overrides).
+    await user.click(within(meta).getByRole("button", { name: "Edit Element annotations" }))
     await user.click(within(meta).getByRole("button", { name: "Remove Usage" }))
     const saved = await loadMig(getMigKey(MIG))
     expect(saved?.elementAnnotationNames).toBeUndefined()
@@ -796,6 +801,7 @@ describe("MigEditor", () => {
     expect(within(panel).queryByText("Annotations")).not.toBeInTheDocument()
 
     // Declare a constraint-annotation name — its own list, separate from elements.
+    await user.click(within(meta).getByRole("button", { name: "Edit Constraint annotations" }))
     await user.type(
       within(meta).getByRole("textbox", { name: /add to constraint annotations/i }),
       "Severity",
@@ -814,6 +820,7 @@ describe("MigEditor", () => {
     ).toEqual([{ name: "New constraint", definition: "", annotations: { Severity: "high" } }])
 
     // Removing the name strips the value but leaves the constraint in place.
+    await user.click(within(meta).getByRole("button", { name: "Edit Constraint annotations" }))
     await user.click(within(meta).getByRole("button", { name: "Remove Severity" }))
     const saved = await loadMig(getMigKey(MIG))
     expect(saved?.constraintAnnotationNames).toBeUndefined()
