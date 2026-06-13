@@ -92,7 +92,7 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-[1fr_20rem]">
+      <div className="grid gap-4 md:grid-cols-[3fr_4fr]">
         <ul className="flex flex-col text-sm">
           <ElementNode
             element={root}
@@ -166,9 +166,6 @@ function ElementNode({
             <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
               choice
             </span>
-          )}
-          {element.type && (
-            <span className="ml-auto text-xs text-muted-foreground">{element.type}</span>
           )}
         </button>
       </div>
