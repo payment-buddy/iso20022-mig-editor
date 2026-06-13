@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react"
 import { CaretRight, Check, MagnifyingGlass } from "@phosphor-icons/react"
-import type { Constraint, MessageElement } from "@/core/types/types"
+import type { Constraint, ElementOverrides, MessageElement } from "@/core/types/types"
 import { cn } from "@/lib/utils"
 
 /** Number of rows ↕ a PageUp/PageDown jumps. */
@@ -33,14 +33,29 @@ export type SelectedNode =
   | { kind: "element"; element: MessageElement; path: string }
   | { kind: "constraint"; constraint: Constraint; path: string }
 
-/** Count elements explicitly excluded (own `maxOccurs:0`) anywhere in the tree. */
-function countExcluded(root: MessageElement): number {
+/**
+ * Whether `el` is excluded in its own right — its effective `maxOccurs` is 0.
+ * In the MIG editor exclusion is set via a per-path override (`maxOccurs: 0`);
+ * with no overrides this is just the base message's `maxOccurs`.
+ */
+function isOwnExcluded(
+  path: string,
+  el: MessageElement,
+  overrides: ElementOverrides | undefined,
+): boolean {
+  const override = overrides?.[path]
+  const maxOccurs = override && "maxOccurs" in override ? override.maxOccurs : el.maxOccurs
+  return maxOccurs === 0
+}
+
+/** Count elements excluded in their own right (effective `maxOccurs:0`) tree-wide. */
+function countExcluded(root: MessageElement, overrides: ElementOverrides | undefined): number {
   let n = 0
-  const walk = (el: MessageElement) => {
-    if (el.maxOccurs === 0) n++
-    for (const child of el.elements) walk(child)
+  const walk = (el: MessageElement, path: string) => {
+    if (isOwnExcluded(path, el, overrides)) n++
+    for (const child of el.elements) walk(child, `${path}/${child.xmlTag}`)
   }
-  walk(root)
+  walk(root, root.xmlTag)
   return n
 }
 
@@ -94,6 +109,7 @@ function flattenTree(
   expanded: Set<string>,
   filter: TreeFilter | null,
   hideExcluded: boolean,
+  overrides: ElementOverrides | undefined,
 ): FlatNode[] {
   const out: FlatNode[] = []
   const walk = (
@@ -104,13 +120,13 @@ function flattenTree(
     ancestorExcluded: boolean,
   ) => {
     if (filter && !filter.keep.has(path)) return
-    const excluded = ancestorExcluded || el.maxOccurs === 0
+    const excluded = ancestorExcluded || isOwnExcluded(path, el, overrides)
     if (hideExcluded && excluded) return
 
     // Children are visible unless filtered out or (when hiding) excluded.
     const childEls = el.elements.filter((c) => {
       if (filter && !filter.keep.has(`${path}/${c.xmlTag}`)) return false
-      if (hideExcluded && c.maxOccurs === 0) return false
+      if (hideExcluded && isOwnExcluded(`${path}/${c.xmlTag}`, c, overrides)) return false
       return true
     })
     const childCons = filter
@@ -176,10 +192,17 @@ export function ElementTree({
   root,
   ariaLabel,
   renderDetail,
+  elementOverrides,
 }: {
   root: MessageElement
   ariaLabel: string
   renderDetail: (selected: SelectedNode | null) => ReactNode
+  /**
+   * MIG overrides keyed by `xmlPath`, used so an element excluded via an
+   * override (`maxOccurs: 0`) is styled and counted as excluded. Omitted by the
+   * read-only Message Explorer, where exclusion comes from the base message.
+   */
+  elementOverrides?: ElementOverrides
 }) {
   const [showXmlTags, setShowXmlTags] = useState(false)
   // Root is expanded by default; expansion is keyed by xmlPath so the keyboard
@@ -192,12 +215,15 @@ export function ElementTree({
   const nodeRefs = useRef(new Map<string, HTMLElement>())
   const filterRef = useRef<HTMLInputElement>(null)
 
-  const excludedCount = useMemo(() => countExcluded(root), [root])
+  const excludedCount = useMemo(
+    () => countExcluded(root, elementOverrides),
+    [root, elementOverrides],
+  )
   const q = filter.trim().toLowerCase()
   const treeFilter = useMemo(() => (q ? buildFilter(root, q) : null), [root, q])
   const flatNodes = useMemo(
-    () => flattenTree(root, expanded, treeFilter, hideExcluded),
-    [root, expanded, treeFilter, hideExcluded],
+    () => flattenTree(root, expanded, treeFilter, hideExcluded, elementOverrides),
+    [root, expanded, treeFilter, hideExcluded, elementOverrides],
   )
   const noMatches = treeFilter !== null && flatNodes.length === 0
 

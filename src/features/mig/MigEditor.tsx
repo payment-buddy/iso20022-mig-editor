@@ -90,6 +90,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
         key={mig.messageIdentifier}
         root={root}
         ariaLabel={`${mig.name} structure`}
+        elementOverrides={mig.elementOverrides}
         renderDetail={(sel) => {
           if (sel?.kind === "element") {
             return (

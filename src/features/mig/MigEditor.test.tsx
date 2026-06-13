@@ -194,6 +194,24 @@ describe("MigEditor", () => {
     expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.minOccurs).toBeUndefined()
   })
 
+  it("counts and hides elements excluded via a maxOccurs:0 override", async () => {
+    const user = userEvent.setup()
+    // Exclude CdtTrfTxInf by overriding its effective maxOccurs to 0.
+    await saveMig({ ...MIG, elementOverrides: { "DocumentTag/CdtTrfTxInfTag": { maxOccurs: 0 } } })
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // The override styles the row as excluded and feeds the toggle's count.
+    const row = screen.getByRole("treeitem", { name: "CdtTrfTxInf" })
+    expect(within(row).getByText("excluded")).toBeInTheDocument()
+    const toggle = screen.getByLabelText(/hide excluded \(1\)/i)
+    expect(toggle).toBeEnabled()
+
+    // Toggling on drops the excluded element (and its subtree) from the tree.
+    await user.click(toggle)
+    expect(screen.queryByRole("treeitem", { name: "CdtTrfTxInf" })).not.toBeInTheDocument()
+  })
+
   it("shows Min/Max length only for length-bearing types and edits them", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)
