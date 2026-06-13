@@ -456,6 +456,51 @@ describe("MigEditor", () => {
     )
   })
 
+  it("shows the parent MIG's value as the inherited baseline and resets to it", async () => {
+    const user = userEvent.setup()
+    const parent: MessageImplementationGuide = {
+      name: "Base",
+      version: "1",
+      messageIdentifier: "pacs.008.001.10",
+      elementOverrides: { "DocumentTag/GrpHdrTag": { maxLength: 20 } },
+    }
+    const child: MessageImplementationGuide = {
+      name: "Child",
+      version: "1",
+      messageIdentifier: "pacs.008.001.10",
+      parentMIG: "Base:1",
+      elementOverrides: {},
+    }
+    await saveMig(parent)
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    // Max length inherits the parent's 20 (not the ISO 35), flagged "inherited".
+    expect(within(panel).getByTitle(/inherited from a parent mig: 20/i)).toBeInTheDocument()
+    await user.click(within(panel).getByRole("button", { name: "Edit Max length" }))
+    expect(within(panel).getByRole("spinbutton", { name: "Max length" })).toHaveValue(20)
+
+    // Override it here → its baseline (reset target) is still the inherited 20.
+    const input = within(panel).getByRole("spinbutton", { name: "Max length" })
+    await user.clear(input)
+    await user.type(input, "15")
+    await user.tab()
+    expect(
+      (await loadMig(getMigKey(child)))?.elementOverrides["DocumentTag/GrpHdrTag"]?.maxLength,
+    ).toBe(15)
+    expect(within(panel).getByTitle(/overridden — inherited: 20/i)).toBeInTheDocument()
+
+    // Reset drops the own override → back to inheriting the parent's 20.
+    await user.click(within(panel).getByRole("button", { name: /reset to inherited/i }))
+    expect(
+      (await loadMig(getMigKey(child)))?.elementOverrides["DocumentTag/GrpHdrTag"],
+    ).toBeUndefined()
+    expect(within(panel).getByTitle(/inherited from a parent mig: 20/i)).toBeInTheDocument()
+  })
+
   it("shows Min/Max length only for length-bearing types and edits them", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

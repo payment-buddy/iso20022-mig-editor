@@ -32,6 +32,7 @@ export function MigElementDetail({
   element,
   path,
   override,
+  inherited,
   propertyNames,
   onSet,
   onClear,
@@ -40,6 +41,12 @@ export function MigElementDetail({
   element: MessageElement
   path: string
   override: ElementOverride | undefined
+  /**
+   * Effective override inherited from the parent-MIG chain (merged), used as the
+   * baseline a field shows and resets to. Absent fields fall back to the ISO
+   * standard. Omitted when this MIG has no (loaded) parent.
+   */
+  inherited: ElementOverride | undefined
   /** Declared MIG-level annotation names (managed in the metadata block). */
   propertyNames: string[]
   /** Persist one override field. */
@@ -49,26 +56,34 @@ export function MigElementDetail({
   /** Add a MIG-specific constraint to this element and select it in the tree. */
   onAddConstraint: () => void
 }) {
-  // Key-presence, not truthiness: a stored `null` still counts as overridden.
+  // Key-presence, not truthiness: a stored `null` still counts as set.
   const has = (field: keyof ElementOverride) => override !== undefined && field in override
+  const inh = (field: keyof ElementOverride) => inherited !== undefined && field in inherited
+  // A field shown without its own override but set by a parent reads "inherited".
+  const inheritedHere = (field: keyof ElementOverride) => !has(field) && inh(field)
+  // Baseline number = the parent's value if it sets one, else the ISO standard.
+  const numBaseline = (field: keyof ElementOverride, iso: number | null): number | null => {
+    const v = inherited?.[field]
+    return inh(field) && (typeof v === "number" || v === null) ? v : iso
+  }
 
-  // Definition (text).
+  // Definition (text). Inherited-or-ISO baseline.
   const defOverridden = has("definition")
-  const defBaseline = element.definition
+  const defBaseline = inh("definition") ? (inherited?.definition ?? "") : element.definition
   const defEffective = defOverridden ? (override?.definition ?? "") : defBaseline
   const commitDefinition = (text: string) =>
     text === defBaseline ? onClear("definition") : onSet("definition", text)
 
-  // An exact `length` acts as the baseline for both min and max length.
-  const baseMinLength = element.minLength ?? element.length
-  const baseMaxLength = element.maxLength ?? element.length
+  // An exact `length` acts as the ISO baseline for both min and max length.
+  const baseMinLength = numBaseline("minLength", element.minLength ?? element.length)
+  const baseMaxLength = numBaseline("maxLength", element.maxLength ?? element.length)
   const showLength = element.baseType !== null && LENGTH_BASE_TYPES.has(element.baseType)
   const showInclusive = element.baseType !== null && INCLUSIVE_BASE_TYPES.has(element.baseType)
   const showPattern = element.baseType !== null && PATTERN_BASE_TYPES.has(element.baseType)
 
   // Pattern (regex text). Empty means "no pattern" (null = remove the constraint).
   const patternOverridden = has("pattern")
-  const basePattern = element.pattern
+  const basePattern = inh("pattern") ? (inherited?.pattern ?? null) : element.pattern
   const patternEffective = patternOverridden ? (override?.pattern ?? "") : (basePattern ?? "")
   const commitPattern = (text: string) => {
     const value = text === "" ? null : text
@@ -76,10 +91,12 @@ export function MigElementDetail({
     else onSet("pattern", value)
   }
 
-  // Allowed values (enumerated). Baseline is the inherited code set.
+  // Allowed values (enumerated). Baseline is the inherited list, else the ISO code set.
   const showAllowedValues =
     element.baseType !== null && ALLOWED_VALUES_BASE_TYPES.has(element.baseType)
-  const baseAllowedValues = element.codes.map((c) => c.codeName)
+  const baseAllowedValues = inh("allowedValues")
+    ? (inherited?.allowedValues ?? [])
+    : element.codes.map((c) => c.codeName)
   const allowedOverridden = has("allowedValues")
   const effectiveAllowed = allowedOverridden
     ? (override?.allowedValues ?? [])
@@ -92,7 +109,7 @@ export function MigElementDetail({
 
   // Examples (simple types only).
   const showExamples = element.baseType !== null
-  const baseExamples = element.examples
+  const baseExamples = inh("examples") ? (inherited?.examples ?? []) : element.examples
   const examplesOverridden = has("examples")
   const effectiveExamples = examplesOverridden ? (override?.examples ?? []) : baseExamples
   const commitExamples = (values: string[]) => {
@@ -100,8 +117,9 @@ export function MigElementDetail({
     else onSet("examples", values)
   }
 
-  // Allowed values and examples are validated against the effective length/pattern.
-  const validateValue = createValueValidator(element, override)
+  // Allowed values and examples are validated against the effective (inherited +
+  // own) length/pattern, so an inherited constraint still applies.
+  const validateValue = createValueValidator(element, { ...inherited, ...override })
 
   // Custom property values for this element (names are declared MIG-level).
   const customValues = override?.annotations ?? {}
@@ -130,6 +148,7 @@ export function MigElementDetail({
       <OverrideRow
         label="Definition"
         overridden={defOverridden}
+        inherited={inheritedHere("definition")}
         baseline={defBaseline || "none"}
         onReset={() => onClear("definition")}
       >
@@ -146,9 +165,14 @@ export function MigElementDetail({
         <NumberOverrideField
           label="Min occurs"
           ariaLabel="Min occurs"
-          baseline={element.minOccurs}
+          baseline={numBaseline("minOccurs", element.minOccurs)}
           overridden={has("minOccurs")}
-          effective={has("minOccurs") ? (override?.minOccurs ?? element.minOccurs) : element.minOccurs}
+          inherited={inheritedHere("minOccurs")}
+          effective={
+            has("minOccurs")
+              ? (override?.minOccurs ?? element.minOccurs)
+              : numBaseline("minOccurs", element.minOccurs)
+          }
           allowNull={false}
           emptyLabel="0"
           onSet={(v) => onSet("minOccurs", v)}
@@ -157,9 +181,12 @@ export function MigElementDetail({
         <NumberOverrideField
           label="Max occurs"
           ariaLabel="Max occurs"
-          baseline={element.maxOccurs}
+          baseline={numBaseline("maxOccurs", element.maxOccurs)}
           overridden={has("maxOccurs")}
-          effective={has("maxOccurs") ? (override?.maxOccurs ?? null) : element.maxOccurs}
+          inherited={inheritedHere("maxOccurs")}
+          effective={
+            has("maxOccurs") ? (override?.maxOccurs ?? null) : numBaseline("maxOccurs", element.maxOccurs)
+          }
           allowNull
           emptyLabel="unbounded"
           onSet={(v) => onSet("maxOccurs", v)}
@@ -174,6 +201,7 @@ export function MigElementDetail({
             ariaLabel="Min length"
             baseline={baseMinLength}
             overridden={has("minLength")}
+            inherited={inheritedHere("minLength")}
             effective={has("minLength") ? (override?.minLength ?? null) : baseMinLength}
             allowNull
             emptyLabel="none"
@@ -185,6 +213,7 @@ export function MigElementDetail({
             ariaLabel="Max length"
             baseline={baseMaxLength}
             overridden={has("maxLength")}
+            inherited={inheritedHere("maxLength")}
             effective={has("maxLength") ? (override?.maxLength ?? null) : baseMaxLength}
             allowNull
             emptyLabel="none"
@@ -199,9 +228,14 @@ export function MigElementDetail({
           <NumberOverrideField
             label="Min inclusive"
             ariaLabel="Min inclusive"
-            baseline={element.minInclusive}
+            baseline={numBaseline("minInclusive", element.minInclusive)}
             overridden={has("minInclusive")}
-            effective={has("minInclusive") ? (override?.minInclusive ?? null) : element.minInclusive}
+            inherited={inheritedHere("minInclusive")}
+            effective={
+              has("minInclusive")
+                ? (override?.minInclusive ?? null)
+                : numBaseline("minInclusive", element.minInclusive)
+            }
             allowNull
             integer={false}
             emptyLabel="none"
@@ -211,9 +245,14 @@ export function MigElementDetail({
           <NumberOverrideField
             label="Max inclusive"
             ariaLabel="Max inclusive"
-            baseline={element.maxInclusive}
+            baseline={numBaseline("maxInclusive", element.maxInclusive)}
             overridden={has("maxInclusive")}
-            effective={has("maxInclusive") ? (override?.maxInclusive ?? null) : element.maxInclusive}
+            inherited={inheritedHere("maxInclusive")}
+            effective={
+              has("maxInclusive")
+                ? (override?.maxInclusive ?? null)
+                : numBaseline("maxInclusive", element.maxInclusive)
+            }
             allowNull
             integer={false}
             emptyLabel="none"
@@ -227,6 +266,7 @@ export function MigElementDetail({
         <OverrideRow
           label="Pattern"
           overridden={patternOverridden}
+          inherited={inheritedHere("pattern")}
           baseline={basePattern || "none"}
           onReset={() => onClear("pattern")}
         >
@@ -243,6 +283,7 @@ export function MigElementDetail({
         <OverrideRow
           label="Allowed values"
           overridden={allowedOverridden}
+          inherited={inheritedHere("allowedValues")}
           baseline={summarize(baseAllowedValues)}
           onReset={() => onClear("allowedValues")}
         >
@@ -260,6 +301,7 @@ export function MigElementDetail({
         <OverrideRow
           label="Examples"
           overridden={examplesOverridden}
+          inherited={inheritedHere("examples")}
           baseline={summarize(baseExamples)}
           onReset={() => onClear("examples")}
         >
@@ -326,6 +368,7 @@ function NumberOverrideField({
   ariaLabel,
   baseline,
   overridden,
+  inherited = false,
   effective,
   allowNull,
   emptyLabel,
@@ -337,6 +380,7 @@ function NumberOverrideField({
   ariaLabel: string
   baseline: number | null
   overridden: boolean
+  inherited?: boolean
   effective: number | null
   allowNull: boolean
   emptyLabel: string
@@ -364,7 +408,13 @@ function NumberOverrideField({
   }
 
   return (
-    <OverrideRow label={label} overridden={overridden} baseline={fmt(baseline)} onReset={onClear}>
+    <OverrideRow
+      label={label}
+      overridden={overridden}
+      inherited={inherited}
+      baseline={fmt(baseline)}
+      onReset={onClear}
+    >
       <InlineEdit
         value={effective === null ? "" : String(effective)}
         display={fmt(effective)}
@@ -378,19 +428,22 @@ function NumberOverrideField({
 }
 
 /**
- * One editable override field: a label, a reset-to-inherited action and an
- * "overridden" dot (its tooltip carries the inherited baseline) shown when
- * overridden, then the editor.
+ * One editable override field: a label, plus a state affordance — a primary dot
+ * + reset when **overridden here**, or a muted "inherited" badge when the value
+ * comes from a parent MIG (otherwise it's the unmarked ISO original). Both
+ * carry the baseline in their tooltip.
  */
 function OverrideRow({
   label,
   overridden,
+  inherited = false,
   baseline,
   onReset,
   children,
 }: {
   label: string
   overridden: boolean
+  inherited?: boolean
   baseline: string
   onReset: () => void
   children: ReactNode
@@ -402,13 +455,21 @@ function OverrideRow({
           <span className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
             {label}
           </span>
-          {overridden && (
+          {overridden ? (
             <span
               title={`Overridden — inherited: ${baseline}`}
               aria-label={`Overridden — inherited: ${baseline}`}
               className="size-1.5 shrink-0 cursor-help rounded-full bg-primary"
             />
-          )}
+          ) : inherited ? (
+            <span
+              title={`Inherited from a parent MIG: ${baseline}`}
+              aria-label={`Inherited from a parent MIG: ${baseline}`}
+              className="cursor-help rounded-sm bg-muted px-1 text-[0.5rem] tracking-wide text-muted-foreground uppercase"
+            >
+              inherited
+            </span>
+          ) : null}
         </div>
         {overridden && (
           <button

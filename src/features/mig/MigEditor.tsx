@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Check, DownloadSimple, FileText } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
+import { effectiveMig } from "@/core/mig/effectiveMig"
 import { getMigKey } from "@/core/mig/migKey"
 import { buildPathOrder } from "@/core/mig/serializeMig"
 import {
@@ -91,6 +92,12 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
 
   const root = resolved.current.rootElement
 
+  // Inherited baseline = the parent chain's effective overrides (empty when this
+  // MIG has no parent, or its parent isn't loaded). Drives the detail panel's
+  // inherited/overridden-here affordances and reset targets.
+  const parent = mig.parentMIG ? allMigs.find((m) => getMigKey(m) === mig.parentMIG) : undefined
+  const inheritedOverrides = parent ? effectiveMig(parent, allMigs).mig.elementOverrides : {}
+
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
       <div className="flex items-start justify-between gap-4">
@@ -132,6 +139,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                 element={sel.element}
                 path={sel.path}
                 override={mig.elementOverrides[sel.path]}
+                inherited={inheritedOverrides[sel.path]}
                 propertyNames={mig.elementAnnotationNames ?? []}
                 onSet={(field, value) => persist(setOverrideField(mig, sel.path, field, value))}
                 onClear={(field) => persist(clearOverrideField(mig, sel.path, field))}
