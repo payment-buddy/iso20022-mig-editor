@@ -220,6 +220,24 @@ describe("MigEditor", () => {
     expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.minOccurs).toBe(2)
   })
 
+  it("warns when an element is excluded (max 0) but min occurs still requires it", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    // GrpHdr is mandatory (min occurs 1, inherited from ISO).
+    await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    await user.click(within(panel).getByRole("button", { name: "Edit Max occurs" }))
+    const input = within(panel).getByRole("spinbutton", { name: "Max occurs" })
+    await user.clear(input)
+    await user.type(input, "0")
+    await user.tab()
+
+    expect(within(panel).getByRole("alert")).toHaveTextContent(/excluded.*min occurs is 1/i)
+  })
+
   it("edits Min/Max occurs overrides (unbounded = null)", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

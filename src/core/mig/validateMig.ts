@@ -74,7 +74,7 @@ function elementDiagnostics(
     )
 
   // Max facets: an empty range (max below min) when this MIG touches either side,
-  // otherwise loosening when the max is raised. occurs `maxOccurs: 0` = exclusion.
+  // otherwise loosening when the max is raised.
   type Num = { baseline: number | null; effective: number | null }
   const maxPair = (
     maxField: keyof ElementOverride,
@@ -83,13 +83,11 @@ function elementDiagnostics(
     rangeLabel: string,
     max: Num,
     min: Num,
-    allowZeroMax: boolean,
   ) => {
     if (
       (ownHas(maxField) || ownHas(minField)) &&
       max.effective !== null &&
       min.effective !== null &&
-      (!allowZeroMax || max.effective > 0) &&
       max.effective < min.effective
     ) {
       add(label, `${rangeLabel}: max ${max.effective} is below min ${min.effective}.`)
@@ -97,9 +95,27 @@ function elementDiagnostics(
     }
     if (ownHas(maxField)) add(label, looseningWarning(label.toLowerCase(), max.baseline, max.effective, "max"))
   }
-  maxPair("maxOccurs", "minOccurs", "Max occurs", "Occurs", maxOccurs, minOccurs, true)
-  maxPair("maxLength", "minLength", "Max length", "Length", maxLength, minLength, false)
-  maxPair("maxInclusive", "minInclusive", "Max inclusive", "Inclusive", maxInclusive, minInclusive, false)
+
+  // Occurs: `maxOccurs: 0` excludes the element, but only consistently when
+  // `minOccurs` is 0 too — an exclusion that still requires the element (min ≥ 1)
+  // is contradictory. Otherwise a positive max below min is an empty range.
+  if (
+    (ownHas("maxOccurs") || ownHas("minOccurs")) &&
+    maxOccurs.effective !== null &&
+    minOccurs.effective !== null &&
+    maxOccurs.effective < minOccurs.effective
+  ) {
+    add(
+      "Max occurs",
+      maxOccurs.effective === 0
+        ? `Excluded (max occurs 0), but min occurs is ${minOccurs.effective} — also set min occurs to 0.`
+        : `Occurs: max ${maxOccurs.effective} is below min ${minOccurs.effective}.`,
+    )
+  } else if (ownHas("maxOccurs")) {
+    add("Max occurs", looseningWarning("max occurs", maxOccurs.baseline, maxOccurs.effective, "max"))
+  }
+  maxPair("maxLength", "minLength", "Max length", "Length", maxLength, minLength)
+  maxPair("maxInclusive", "minInclusive", "Max inclusive", "Inclusive", maxInclusive, minInclusive)
 
   // Digit facets loosen when raised (allow more digits).
   if (ownHas("totalDigits"))

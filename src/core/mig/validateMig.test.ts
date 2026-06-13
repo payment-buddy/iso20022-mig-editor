@@ -45,9 +45,10 @@ const MESSAGE: MessageDefinition = {
   shortCode: "pacs.008",
   rootElement: el("Doc", {
     elements: [
-      el("GrpHdr", { baseType: "Text", maxLength: 35 }),
+      el("GrpHdr", { baseType: "Text", maxLength: 35 }), // mandatory (minOccurs 1)
       el("Amt", { baseType: "Amount", fractionDigits: 2 }),
       el("Sts", { baseType: "CodeSet", codes: codes("ACTV", "INAC") }),
+      el("Opt", { minOccurs: 0 }), // optional
     ],
   }),
 }
@@ -86,18 +87,23 @@ describe("validateMigConsistency", () => {
     })
   })
 
-  it("flags an empty range (max below min), but not maxOccurs:0 exclusion", () => {
+  it("flags empty ranges, including an exclusion that still requires the element", () => {
     expect(run({ "Doc/GrpHdr": { minLength: 10, maxLength: 5 } })[0]).toMatchObject({
       field: "Max length",
       message: expect.stringMatching(/length: max 5 is below min 10/i),
     })
-    // Max occurs below min occurs is flagged…
+    // A positive max below min occurs.
     expect(run({ "Doc/GrpHdr": { minOccurs: 2, maxOccurs: 1 } })[0]).toMatchObject({
       field: "Max occurs",
       message: expect.stringMatching(/occurs: max 1 is below min 2/i),
     })
-    // …but maxOccurs 0 is intentional exclusion, not an empty range.
-    expect(run({ "Doc/GrpHdr": { maxOccurs: 0 } })).toEqual([])
+    // Excluding a mandatory element (min 1) without zeroing min is contradictory.
+    expect(run({ "Doc/GrpHdr": { maxOccurs: 0 } })[0]).toMatchObject({
+      field: "Max occurs",
+      message: expect.stringMatching(/excluded.*min occurs is 1.*set min occurs to 0/i),
+    })
+    // A clean exclusion of an optional element (min already 0) is fine.
+    expect(run({ "Doc/Opt": { maxOccurs: 0 } })).toEqual([])
   })
 
   it("flags an invalid pattern and a non-subset allowed-values list", () => {
