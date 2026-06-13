@@ -77,8 +77,27 @@ describe("validateMigConsistency", () => {
         elementName: "GrpHdr",
         field: "Max length",
         message: expect.stringMatching(/above 35/i),
+        kind: "loosening",
       },
     ])
+  })
+
+  it("tags consistency issues distinctly from loosening", () => {
+    // Empty range, invalid pattern and out-of-set values are consistency issues…
+    expect(
+      run({ "/Doc/GrpHdr": { minLength: 10, maxLength: 5 } })[0].kind
+    ).toBe("consistency")
+    expect(run({ "/Doc/GrpHdr": { pattern: "[" } })[0].kind).toBe("consistency")
+    expect(
+      run({ "/Doc/Sts": { allowedValues: ["ACTV", "NEW"] } })[0].kind
+    ).toBe("consistency")
+    // …while a relaxed facet or a disabled rule is loosening.
+    expect(run({ "/Doc/GrpHdr": { maxLength: 50 } })[0].kind).toBe("loosening")
+    expect(
+      run({
+        "/Doc/GrpHdr": { constraintOverrides: { R1: { disabled: true } } },
+      })[0].kind
+    ).toBe("loosening")
   })
 
   it("flags a lowered min facet", () => {

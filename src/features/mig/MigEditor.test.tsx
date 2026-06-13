@@ -1715,12 +1715,14 @@ describe("MigEditor", () => {
     ).toBeInTheDocument()
   })
 
-  it("surfaces loosening diagnostics in the consistency banner/drawer", async () => {
+  it("surfaces consistency diagnostics in the banner/drawer", async () => {
     const user = userEvent.setup()
-    // GrpHdr maxLength 35 → overriding to 50 loosens it.
+    // minLength 10 > maxLength 5 → an empty range (a consistency issue).
     await saveMig({
       ...MIG,
-      elementOverrides: { "/DocumentTag/GrpHdrTag": { maxLength: 50 } },
+      elementOverrides: {
+        "/DocumentTag/GrpHdrTag": { minLength: 10, maxLength: 5 },
+      },
     })
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
@@ -1731,7 +1733,9 @@ describe("MigEditor", () => {
     const region = screen.getByRole("region", {
       name: /consistency diagnostics/i,
     })
-    expect(within(region).getByText(/above 35/i)).toBeInTheDocument()
+    expect(
+      within(region).getByText(/max 5 is below min 10/i)
+    ).toBeInTheDocument()
     expect(within(region).getByText("GrpHdr")).toBeInTheDocument()
 
     // Clicking a diagnostic selects its element in the tree.
@@ -1740,6 +1744,21 @@ describe("MigEditor", () => {
       "aria-selected",
       "true"
     )
+  })
+
+  it("excludes loosening warnings from the consistency banner", async () => {
+    // GrpHdr maxLength 35 → overriding to 50 loosens it — advisory, not a banner
+    // issue (it's still flagged inline on the field).
+    await saveMig({
+      ...MIG,
+      elementOverrides: { "/DocumentTag/GrpHdrTag": { maxLength: 50 } },
+    })
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    expect(
+      screen.queryByRole("region", { name: /consistency diagnostics/i })
+    ).not.toBeInTheDocument()
   })
 
   it("shows no consistency banner for a clean MIG", async () => {

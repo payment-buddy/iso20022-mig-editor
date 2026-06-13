@@ -258,12 +258,15 @@ export function MigEditor({
   const effective = effectiveMig(mig, allMigs).mig
   const effectiveOverrides = effective.elementOverrides
 
-  // Advisory loosening/consistency diagnostics across the whole MIG.
+  // Internal-consistency issues across the whole MIG for the banner. Loosening
+  // diagnostics are excluded — relaxing the message is often intentional and is
+  // already flagged inline on the field being edited, so it shouldn't inflate
+  // the "issues" count.
   const diagnostics = validateMigConsistency(
     mig,
     inheritedOverrides,
     resolved.current
-  )
+  ).filter((d) => d.kind !== "loosening")
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6 xl:max-w-6xl">

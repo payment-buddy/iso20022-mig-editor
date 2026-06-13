@@ -13,12 +13,21 @@ import type {
   MessageImplementationGuide,
 } from "@/core/types/types"
 
+/**
+ * `loosening` — the MIG relaxes the message (a dropped restriction); often
+ * intentional, so it's advisory and kept out of the editor's "issues" banner.
+ * `consistency` — an internal contradiction (empty range, invalid pattern,
+ * values outside the standard set); a genuine problem.
+ */
+export type DiagnosticKind = "loosening" | "consistency"
+
 export type Diagnostic = {
   path: string
   elementName: string
   /** Field label, e.g. "Max length". */
   field: string
   message: string
+  kind: DiagnosticKind
 }
 
 /** Per-field diagnostics for one element vs its inherited/ISO baseline. */
@@ -26,13 +35,13 @@ function elementDiagnostics(
   element: MessageElement,
   inherited: ElementOverride | undefined,
   own: ElementOverride
-): { field: string; message: string }[] {
-  const out: { field: string; message: string }[] = []
+): { field: string; message: string; kind: DiagnosticKind }[] {
+  const out: { field: string; message: string; kind: DiagnosticKind }[] = []
   const inh = (f: keyof ElementOverride) =>
     inherited !== undefined && f in inherited
   const ownHas = (f: keyof ElementOverride) => f in own
-  const add = (field: string, message: string | null) => {
-    if (message) out.push({ field, message })
+  const add = (field: string, message: string | null, kind: DiagnosticKind) => {
+    if (message) out.push({ field, message, kind })
   }
   // Effective value (own → inherited → ISO) and the baseline it loosens against.
   const numAt = (f: keyof ElementOverride, iso: number | null) => {
@@ -59,7 +68,8 @@ function elementDiagnostics(
         minOccurs.baseline,
         minOccurs.effective,
         "min"
-      )
+      ),
+      "loosening"
     )
   if (ownHas("minLength"))
     add(
@@ -69,7 +79,8 @@ function elementDiagnostics(
         minLength.baseline,
         minLength.effective,
         "min"
-      )
+      ),
+      "loosening"
     )
   if (ownHas("minInclusive"))
     add(
@@ -79,7 +90,8 @@ function elementDiagnostics(
         minInclusive.baseline,
         minInclusive.effective,
         "min"
-      )
+      ),
+      "loosening"
     )
 
   // Max facets: an empty range (max below min) when this MIG touches either side,
@@ -101,7 +113,8 @@ function elementDiagnostics(
     ) {
       add(
         label,
-        `${rangeLabel}: max ${max.effective} is below min ${min.effective}.`
+        `${rangeLabel}: max ${max.effective} is below min ${min.effective}.`,
+        "consistency"
       )
       return
     }
@@ -113,7 +126,8 @@ function elementDiagnostics(
           max.baseline,
           max.effective,
           "max"
-        )
+        ),
+        "loosening"
       )
   }
 
@@ -154,7 +168,8 @@ function elementDiagnostics(
         totalDigits.baseline,
         totalDigits.effective,
         "max"
-      )
+      ),
+      "loosening"
     )
   if (ownHas("fractionDigits"))
     add(
@@ -164,10 +179,12 @@ function elementDiagnostics(
         fractionDigits.baseline,
         fractionDigits.effective,
         "max"
-      )
+      ),
+      "loosening"
     )
 
-  if (ownHas("pattern")) add("Pattern", patternWarning(own.pattern ?? null))
+  if (ownHas("pattern"))
+    add("Pattern", patternWarning(own.pattern ?? null), "consistency")
 
   // Allowed values must stay a subset of the inherited/standard code set.
   if (ownHas("allowedValues") && own.allowedValues != null) {
@@ -180,7 +197,8 @@ function elementDiagnostics(
       if (extra.length > 0)
         add(
           "Allowed values",
-          `Adds values outside the standard set: ${extra.join(", ")}`
+          `Adds values outside the standard set: ${extra.join(", ")}`,
+          "consistency"
         )
     }
   }
@@ -193,7 +211,8 @@ function elementDiagnostics(
     if (co.disabled === true && !inhDisabled) {
       add(
         "Constraint",
-        `Disables the "${name}" rule — looser than the original.`
+        `Disables the "${name}" rule — looser than the original.`,
+        "loosening"
       )
     }
   }
@@ -215,12 +234,12 @@ export function validateMigConsistency(
   for (const [path, own] of Object.entries(mig.elementOverrides)) {
     const element = elementAtPath(message.rootElement, path)
     if (!element) continue
-    for (const { field, message: msg } of elementDiagnostics(
+    for (const { field, message: msg, kind } of elementDiagnostics(
       element,
       inherited[path],
       own
     )) {
-      out.push({ path, elementName: element.name, field, message: msg })
+      out.push({ path, elementName: element.name, field, message: msg, kind })
     }
   }
   return out
