@@ -10,7 +10,12 @@ import { CreateMigDialog } from "./CreateMigDialog"
 
 function renderDialog() {
   return render(
-    <CreateMigDialog open onOpenChange={vi.fn()} messageIdentifier="pacs.008.001.08" />,
+    <CreateMigDialog
+      open
+      onOpenChange={vi.fn()}
+      messageIdentifier="pacs.008.001.08"
+      shortCode="pacs.008"
+    />,
   )
 }
 
@@ -21,9 +26,10 @@ afterEach(async () => {
 })
 
 describe("CreateMigDialog", () => {
-  it("seeds default name and version", () => {
+  it("seeds the default name from the short code, plus version", () => {
     renderDialog()
-    expect(screen.getByLabelText("Name")).toHaveValue("MIG-pacs.008.001.08")
+    // Short code in the name, not the full identifier.
+    expect(screen.getByLabelText("Name")).toHaveValue("MIG-pacs.008")
     expect(screen.getByLabelText("Version")).toHaveValue("1.0-DRAFT")
   })
 
@@ -31,14 +37,13 @@ describe("CreateMigDialog", () => {
     renderDialog()
     await userEvent.click(screen.getByRole("button", { name: "Create" }))
 
-    await waitFor(() =>
-      expect(window.location.hash).toBe("#mig/MIG-pacs.008.001.08%3A1.0-DRAFT"),
-    )
+    await waitFor(() => expect(window.location.hash).toBe("#mig/MIG-pacs.008%3A1.0-DRAFT"))
     const migs = await loadAllMigs()
     expect(migs).toHaveLength(1)
     expect(migs[0]).toMatchObject({
-      name: "MIG-pacs.008.001.08",
+      name: "MIG-pacs.008",
       version: "1.0-DRAFT",
+      // The exact message version is still stored.
       messageIdentifier: "pacs.008.001.08",
       elementOverrides: {},
     })
@@ -55,7 +60,7 @@ describe("CreateMigDialog", () => {
 
   it("rejects a duplicate name:version", async () => {
     await saveMig({
-      name: "MIG-pacs.008.001.08",
+      name: "MIG-pacs.008",
       version: "1.0-DRAFT",
       messageIdentifier: "pacs.008.001.08",
       elementOverrides: {},

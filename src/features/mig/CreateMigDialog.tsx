@@ -10,17 +10,21 @@ const inputClass =
   "h-8 rounded-md border border-border bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
 
 /**
- * Create an empty MIG for a message. Defaults Name to `MIG-<identifier>` and Version to `1.0-DRAFT`;
- * on save persists and navigates to the new MIG's editor.
+ * Create an empty MIG for a message. Defaults Name to `MIG-<shortCode>` (e.g.
+ * `MIG-pacs.008`) and Version to `1.0-DRAFT`; on save persists (storing the exact
+ * `messageIdentifier`) and navigates to the new MIG's editor.
  */
 export function CreateMigDialog({
   open,
   onOpenChange,
   messageIdentifier,
+  shortCode,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   messageIdentifier: string
+  /** Message family code (e.g. `pacs.008`) used for the default MIG name. */
+  shortCode: string
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -36,6 +40,7 @@ export function CreateMigDialog({
           {/* Content unmounts on close, so the form seeds fresh defaults each open. */}
           <CreateMigForm
             messageIdentifier={messageIdentifier}
+            shortCode={shortCode}
             onClose={() => onOpenChange(false)}
           />
         </Dialog.Content>
@@ -46,12 +51,14 @@ export function CreateMigDialog({
 
 function CreateMigForm({
   messageIdentifier,
+  shortCode,
   onClose,
 }: {
   messageIdentifier: string
+  shortCode: string
   onClose: () => void
 }) {
-  const [name, setName] = useState(`MIG-${messageIdentifier}`)
+  const [name, setName] = useState(`MIG-${shortCode}`)
   const [version, setVersion] = useState("1.0-DRAFT")
   const [error, setError] = useState<string | null>(null)
   const nameId = useId()

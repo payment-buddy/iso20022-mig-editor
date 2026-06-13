@@ -61,6 +61,7 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
         open={createOpen}
         onOpenChange={setCreateOpen}
         messageIdentifier={current.identifier}
+        shortCode={current.shortCode}
       />
 
       {versions.length > 1 && (
