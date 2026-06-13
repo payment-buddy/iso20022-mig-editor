@@ -51,7 +51,9 @@ in `features/`, `app/`, and `components/`. Path alias `@/` → `src/`.
   `migMarkdown.ts` and `migCsv.ts` are **export-only** reports. The heart of the app.
 - **`core/mig/expression/`** — a small lexer→parser→evaluator for the formal
   constraint-expression language (custom DSL on element paths). Used for advisory
-  validation of constraint rules; never blocks editing.
+  validation of constraint rules; never blocks editing. The XML grammar a
+  constraint's `expression` field carries is specified in
+  [`docs/RULES.md`](./docs/RULES.md).
 - **`core/storage/`** — IndexedDB persistence. `db.ts` is a dependency-free raw
   wrapper around one database (`iso20022`) with four object stores: `eRepository`
   (single record), `mig`, `revision`, `trash`. Each `*Store.ts` wraps one store.
@@ -86,7 +88,8 @@ in `features/`, `app/`, and `components/`. Path alias `@/` → `src/`.
   in schema/document order so diffs stay stable; `null` is preserved, empty
   collections dropped. Don't casually change the ordering or key emission — read
   the contract comment at the top of the file (and `migConstants.ts` for the
-  property orders).
+  property orders). The on-disk MIG file format is specified in
+  [`docs/MIG_FORMAT.md`](./docs/MIG_FORMAT.md).
 
 - **Revisions are append-only full snapshots.** Each carries a one-line
   `summary` computed once against the previous revision (`core/mig/revisions.ts`);
