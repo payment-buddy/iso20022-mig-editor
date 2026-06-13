@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { Check, Trash } from "@phosphor-icons/react"
+import { Check, Trash, Warning } from "@phosphor-icons/react"
 import type { Constraint } from "@/core/types/types"
+import { validateExpressionSyntax } from "@/core/mig/expression"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
@@ -51,6 +52,8 @@ export function MigConstraintDetail({
   const commitExpression = (text: string) => {
     if (text !== expression) onSetExpression(text)
   }
+  // Advisory syntax check (never blocks editing/export, per FUNCTIONALITY §5.7).
+  const expressionWarn = validateExpressionSyntax(expression)
 
   // Per-constraint annotation values (names are declared MIG-level). Empty
   // clears the value; an emptied map prunes the override (handled upstream).
@@ -101,6 +104,15 @@ export function MigConstraintDetail({
           placeholder="Add an expression…"
           multiline
         />
+        {expressionWarn && (
+          <p
+            role="alert"
+            className="mt-1 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500"
+          >
+            <Warning className="size-3 shrink-0" aria-hidden />
+            {expressionWarn}
+          </p>
+        )}
       </div>
 
       {annotationNames.length > 0 && (
