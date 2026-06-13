@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react"
-import { CaretRight, Desktop, House, MagnifyingGlass, Moon, Sun } from "@phosphor-icons/react"
+import { CaretRight, Desktop, House, Moon, Sun } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
 import { breadcrumbsFor } from "./breadcrumbs"
@@ -20,18 +20,6 @@ export function AppShell({ route, children }: { route: Route; children: ReactNod
         </a>
 
         <div className="ml-auto flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled
-            title="Command palette — coming in a later phase"
-          >
-            <MagnifyingGlass data-icon="inline-start" aria-hidden />
-            Search
-            <kbd className="ml-1 rounded border border-border px-1 text-[0.625rem] text-muted-foreground">
-              ⌘K
-            </kbd>
-          </Button>
           <ThemeToggle />
         </div>
       </header>
