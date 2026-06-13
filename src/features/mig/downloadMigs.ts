@@ -1,4 +1,5 @@
 import { buildMigMarkdown } from "@/core/mig/migMarkdown"
+import { buildMigCsv } from "@/core/mig/migCsv"
 import { serializeMig, serializeMigs } from "@/core/mig/serializeMig"
 import type { MessageDefinition, MessageImplementationGuide } from "@/core/types/types"
 
@@ -26,6 +27,7 @@ type FileKind = { mime: string; description: string; extensions: string[] }
 
 const YAML: FileKind = { mime: "text/yaml", description: "YAML", extensions: [".yaml", ".yml"] }
 const MARKDOWN: FileKind = { mime: "text/markdown", description: "Markdown", extensions: [".md"] }
+const CSV: FileKind = { mime: "text/csv", description: "CSV", extensions: [".csv"] }
 
 /**
  * Minimal slice of the File System Access API we use — not in every lib.dom, and
@@ -105,4 +107,16 @@ export async function downloadMigMarkdown(
   message: MessageDefinition,
 ): Promise<void> {
   await saveTextFile(buildMigMarkdown(mig, allMigs, message), MARKDOWN)
+}
+
+/**
+ * Trigger a browser download of a MIG's CSV — the ISO message tree flattened with
+ * the MIG's effective rules (opens in Excel).
+ */
+export async function downloadMigCsv(
+  mig: MessageImplementationGuide,
+  allMigs: MessageImplementationGuide[],
+  message: MessageDefinition,
+): Promise<void> {
+  await saveTextFile(buildMigCsv(mig, allMigs, message), CSV)
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Check, DownloadSimple, FileText, ShieldCheck } from "@phosphor-icons/react"
+import { Check, DownloadSimple, FileText, ShieldCheck, Table } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import { effectiveMig } from "@/core/mig/effectiveMig"
@@ -30,7 +30,7 @@ import { MigElementDetail } from "./MigElementDetail"
 import { MigConstraintDetail } from "./MigConstraintDetail"
 import { MigDiagnostics } from "./MigDiagnostics"
 import { ValidateInstanceDialog } from "./ValidateInstanceDialog"
-import { downloadMigMarkdown, downloadMigs } from "./downloadMigs"
+import { downloadMigCsv, downloadMigMarkdown, downloadMigs } from "./downloadMigs"
 
 type Status = "loading" | "missing" | "ready"
 
@@ -145,6 +145,14 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
           >
             <FileText data-icon="inline-start" aria-hidden />
             Markdown
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => downloadMigCsv(mig, allMigs, resolved.current)}
+          >
+            <Table data-icon="inline-start" aria-hidden />
+            CSV
           </Button>
           <Button size="sm" onClick={() => downloadMigs([mig], buildPathOrder(root))}>
             <DownloadSimple data-icon="inline-start" aria-hidden />
