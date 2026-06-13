@@ -1008,6 +1008,24 @@ describe("MigEditor", () => {
     )
   })
 
+  it("marks a disabled added constraint (`enabled: false`) in the tree", async () => {
+    const guide: MessageImplementationGuide = {
+      ...MIG,
+      elementOverrides: {
+        "/DocumentTag": {
+          additionalConstraints: { Mine: { definition: "", enabled: false } },
+        },
+      },
+    }
+    await saveMig(guide)
+    render(<MigEditor migKey={getMigKey(guide)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: /Document/ })
+
+    const con = screen.getByRole("treeitem", { name: /constraint mine/i })
+    expect(within(con).getByText("disabled")).toBeInTheDocument()
+    expect(con.querySelector(".line-through")?.textContent).toContain("Mine")
+  })
+
   it("tints a standard constraint this MIG overlays, leaving untouched ISO rules plain", async () => {
     const repo: ERepository = {
       businessAreas: [

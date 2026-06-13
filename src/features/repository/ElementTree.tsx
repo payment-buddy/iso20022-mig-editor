@@ -196,14 +196,18 @@ function constraintsAt(
   })
   const additional = Object.entries(effOv?.additionalConstraints ?? {}).map(
     ([name, ac]) => {
-      const constraint: Constraint = { name, ...ac }
+      // `enabled` is the rule's own off switch, not a constraint field — keep it
+      // out of the displayed `Constraint`. A legacy `constraintOverrides` disable
+      // is still honoured for MIGs saved before the flag moved here.
+      const { enabled, ...base } = ac
+      const constraint: Constraint = { name, ...base }
       const origin = ownNames.has(name)
         ? ("own" as const)
         : ("inherited" as const)
       return {
         constraint,
         origin,
-        disabled: disabled(name),
+        disabled: enabled === false || disabled(name),
         colour: colourOf(name, origin),
       }
     }
