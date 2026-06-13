@@ -1,6 +1,7 @@
 import { ERepositoryBrowser } from "@/features/repository/ERepositoryBrowser"
+import { MigHome } from "@/features/mig/MigHome"
 import type { ERepository } from "@/core/types/types"
-import { hashFor, type Route } from "./routes"
+import type { Route } from "./routes"
 
 /**
  * Maps the current route to its screen. The screens themselves are placeholders
@@ -18,7 +19,7 @@ export function RouteView({
 }) {
   switch (route.name) {
     case "home":
-      return <HomePlaceholder repo={repo} />
+      return <MigHome />
     case "browse":
       return <ERepositoryBrowser repo={repo} onUpdateRepository={onUpdateRepository} />
     case "message":
@@ -33,30 +34,6 @@ export function RouteView({
         />
       )
   }
-}
-
-function HomePlaceholder({ repo }: { repo: ERepository }) {
-  const messageCount = repo.businessAreas.reduce((n, a) => n + a.messages.length, 0)
-  return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-6">
-      <div>
-        <h1 className="text-base font-semibold tracking-tight">Your MIGs</h1>
-        <p className="text-sm text-muted-foreground">
-          The MIG list lands in Phase 1. For now you can{" "}
-          <a
-            href={hashFor({ name: "browse" })}
-            className="text-primary underline-offset-4 hover:underline"
-          >
-            browse the e-Repository
-          </a>
-          .
-        </p>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        {repo.businessAreas.length} business areas · {messageCount} messages loaded.
-      </p>
-    </div>
-  )
 }
 
 function Placeholder({ title, note }: { title: string; note: string }) {
