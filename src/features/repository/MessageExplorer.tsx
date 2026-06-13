@@ -1,11 +1,12 @@
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react"
-import { CaretRight, Check, Plus } from "@phosphor-icons/react"
+import { CaretRight, Check, MagnifyingGlass, Plus } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { CreateMigDialog } from "@/features/mig/CreateMigDialog"
 import { resolveMessage, type ResolvedMessage } from "@/core/erepository/resolveMessage"
@@ -29,18 +30,72 @@ type FlatNode = {
   | { kind: "constraint"; constraint: Constraint }
 )
 
-/** Walk the element tree, emitting only nodes whose ancestors are all expanded. */
-function flattenTree(root: MessageElement, expanded: Set<string>): FlatNode[] {
-  const out: FlatNode[] = []
-  const walk = (el: MessageElement, path: string, level: number, parentPath: string | null) => {
-    const hasChildren = el.elements.length > 0 || el.constraints.length > 0
-    const isOpen = expanded.has(path)
-    out.push({ kind: "element", element: el, path, level, parentPath, hasChildren, expanded: isOpen })
-    if (!hasChildren || !isOpen) return
+/**
+ * A computed filter: `keep` is every path to render (matches + their
+ * ancestors + matching constraints), `expand` is every ancestor to auto-open so
+ * the matches are revealed. Built once per query in `buildFilter`.
+ */
+type TreeFilter = { keep: Set<string>; expand: Set<string> }
+
+function matchesQuery(text: string, q: string): boolean {
+  return text.toLowerCase().includes(q)
+}
+
+/**
+ * Compute the kept/expanded paths for a query. An element is kept when it (or
+ * any descendant element/constraint) matches; ancestors of a match are kept and
+ * auto-expanded so the match is visible. `q` must already be lower-cased.
+ */
+function buildFilter(root: MessageElement, q: string): TreeFilter {
+  const keep = new Set<string>()
+  const expand = new Set<string>()
+  const visit = (el: MessageElement, path: string): boolean => {
+    const selfMatch = matchesQuery(el.name, q) || matchesQuery(el.xmlTag, q)
+    let descMatch = false
     for (const child of el.elements) {
-      walk(child, `${path}/${child.xmlTag}`, level + 1, path)
+      if (visit(child, `${path}/${child.xmlTag}`)) descMatch = true
     }
     for (const c of el.constraints) {
+      if (matchesQuery(c.name, q)) {
+        keep.add(`${path}/${c.name}`)
+        descMatch = true
+      }
+    }
+    if (selfMatch || descMatch) keep.add(path)
+    if (descMatch) expand.add(path)
+    return selfMatch || descMatch
+  }
+  visit(root, root.xmlTag)
+  return { keep, expand }
+}
+
+/**
+ * Walk the element tree, emitting only nodes whose ancestors are all expanded.
+ * When `filter` is set, prune to its `keep` set and force its `expand` paths
+ * open (a node also stays open if the user expanded it).
+ */
+function flattenTree(
+  root: MessageElement,
+  expanded: Set<string>,
+  filter: TreeFilter | null,
+): FlatNode[] {
+  const out: FlatNode[] = []
+  const walk = (el: MessageElement, path: string, level: number, parentPath: string | null) => {
+    if (filter && !filter.keep.has(path)) return
+    const childEls = filter
+      ? el.elements.filter((c) => filter.keep.has(`${path}/${c.xmlTag}`))
+      : el.elements
+    const childCons = filter
+      ? el.constraints.filter((c) => filter.keep.has(`${path}/${c.name}`))
+      : el.constraints
+    const hasChildren = childEls.length > 0 || childCons.length > 0
+    const isOpen = filter ? filter.expand.has(path) || expanded.has(path) : expanded.has(path)
+    out.push({ kind: "element", element: el, path, level, parentPath, hasChildren, expanded: isOpen })
+    if (!hasChildren || !isOpen) return
+    for (const child of childEls) {
+      walk(child, `${path}/${child.xmlTag}`, level + 1, path)
+    }
+    for (const c of childCons) {
       out.push({
         kind: "constraint",
         constraint: c,
@@ -99,10 +154,18 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
   // handler can drive it centrally (each node no longer owns its open state).
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set([root.xmlTag]))
   const [focusedPath, setFocusedPath] = useState<string | null>(null)
+  const [filter, setFilter] = useState("")
 
   const nodeRefs = useRef(new Map<string, HTMLElement>())
+  const filterRef = useRef<HTMLInputElement>(null)
 
-  const flatNodes = useMemo(() => flattenTree(root, expanded), [root, expanded])
+  const q = filter.trim().toLowerCase()
+  const treeFilter = useMemo(() => (q ? buildFilter(root, q) : null), [root, q])
+  const flatNodes = useMemo(
+    () => flattenTree(root, expanded, treeFilter),
+    [root, expanded, treeFilter],
+  )
+  const noMatches = treeFilter !== null && flatNodes.length === 0
 
   // The single tab-stop; falls back to the root if the focused node vanished
   // (e.g. its parent was collapsed). Selection follows focus, so this also
@@ -204,6 +267,35 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
     else nodeRefs.current.delete(path)
   }
 
+  // Focus the filter on "/" or Ctrl/Cmd+F. Unlike the e-Repository browser this
+  // tree drops collapsed subtrees from the DOM, so native find can't reach them
+  // — we bind Ctrl/Cmd+F too (FUNCTIONALITY §10, editor-tree behavior).
+  useEffect(() => {
+    const handler = (e: globalThis.KeyboardEvent) => {
+      const cmdF = (e.metaKey || e.ctrlKey) && e.key === "f"
+      const slash = e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey
+      if (!cmdF && !slash) return
+      const target = e.target as HTMLElement | null
+      if (slash && target?.closest("input, textarea, [contenteditable='true']")) return
+      e.preventDefault()
+      filterRef.current?.focus()
+      filterRef.current?.select()
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [])
+
+  // Keyboard flow between the filter box and the tree.
+  const onFilterKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      if (activeId) focusNode(activeId)
+    } else if (e.key === "Escape" && filter) {
+      e.preventDefault()
+      setFilter("")
+    }
+  }
+
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
       <div className="flex items-start justify-between gap-4">
@@ -252,35 +344,59 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
         </div>
       )}
 
-      <label className="flex w-fit items-center gap-1.5 text-xs text-muted-foreground">
-        <input
-          type="checkbox"
-          checked={showXmlTags}
-          onChange={(e) => setShowXmlTags(e.target.checked)}
-        />
-        Show XML tags
-      </label>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="relative min-w-56 flex-1">
+          <MagnifyingGlass
+            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          <input
+            ref={filterRef}
+            type="search"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            onKeyDown={onFilterKeyDown}
+            placeholder="Filter elements and constraints…  ( / )"
+            aria-label="Filter elements and constraints"
+            className="h-8 w-full rounded-md border border-border bg-transparent pr-2 pl-8 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+          />
+        </div>
+        <label className="flex w-fit items-center gap-1.5 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={showXmlTags}
+            onChange={(e) => setShowXmlTags(e.target.checked)}
+          />
+          Show XML tags
+        </label>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-[3fr_4fr]">
-        <ul
-          role="tree"
-          aria-label={`${current.name} structure`}
-          className="flex flex-col text-sm"
-          onKeyDown={onKeyDown}
-        >
-          {flatNodes.map((node) => (
-            <TreeNode
-              key={node.path}
-              node={node}
-              active={node.path === activeId}
-              showXmlTags={showXmlTags}
-              onFocus={() => setFocusedPath(node.path)}
-              onSelect={() => focusNode(node.path)}
-              onToggle={() => toggle(node.path)}
-              setRef={setRef(node.path)}
-            />
-          ))}
-        </ul>
+        {noMatches ? (
+          <p className="px-1 py-8 text-center text-sm text-muted-foreground">
+            No elements or constraints match “{filter.trim()}”.
+          </p>
+        ) : (
+          <ul
+            role="tree"
+            aria-label={`${current.name} structure`}
+            className="flex flex-col text-sm"
+            onKeyDown={onKeyDown}
+          >
+            {flatNodes.map((node) => (
+              <TreeNode
+                key={node.path}
+                node={node}
+                active={node.path === activeId}
+                showXmlTags={showXmlTags}
+                onFocus={() => setFocusedPath(node.path)}
+                onSelect={() => focusNode(node.path)}
+                onToggle={() => toggle(node.path)}
+                setRef={setRef(node.path)}
+              />
+            ))}
+          </ul>
+        )}
         {active?.kind === "constraint" ? (
           <ConstraintDetail constraint={active.constraint} path={active.path} />
         ) : (

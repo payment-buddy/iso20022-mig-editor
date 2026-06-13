@@ -193,6 +193,47 @@ describe("MessageExplorer", () => {
     expect(screen.getByRole("treeitem", { name: "Amt" })).toBeInTheDocument()
   })
 
+  it("filters the tree to matches plus their ancestors and auto-expands", async () => {
+    const user = userEvent.setup()
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+
+    // Amt is a collapsed grandchild; typing reveals it with its ancestor chain
+    // (CdtTrfTxInf) auto-expanded, while non-matching siblings are pruned.
+    expect(screen.queryByRole("treeitem", { name: "Amt" })).not.toBeInTheDocument()
+    await user.type(screen.getByLabelText("Filter elements and constraints"), "Amt")
+
+    expect(screen.getByRole("treeitem", { name: "Amt" })).toBeInTheDocument()
+    expect(screen.getByRole("treeitem", { name: "CdtTrfTxInf" })).toBeInTheDocument()
+    expect(screen.getByRole("treeitem", { name: "Document" })).toBeInTheDocument()
+    expect(screen.queryByRole("treeitem", { name: "GrpHdr" })).not.toBeInTheDocument()
+  })
+
+  it("keeps matching constraints and shows a no-matches message", async () => {
+    const user = userEvent.setup()
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+    const box = screen.getByLabelText("Filter elements and constraints")
+
+    await user.type(box, "SupplementaryData")
+    expect(
+      screen.getByRole("treeitem", { name: /constraint SupplementaryDataRule/i }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole("treeitem", { name: "GrpHdr" })).not.toBeInTheDocument()
+
+    await user.clear(box)
+    await user.type(box, "zzz-no-such-node")
+    expect(screen.queryByRole("tree")).not.toBeInTheDocument()
+    expect(screen.getByText(/no elements or constraints match/i)).toBeInTheDocument()
+  })
+
+  it("focuses the filter box with '/'", async () => {
+    const user = userEvent.setup()
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+
+    await user.click(screen.getByRole("treeitem", { name: "Document" }))
+    await user.keyboard("/")
+    expect(screen.getByLabelText("Filter elements and constraints")).toHaveFocus()
+  })
+
   it("opens the Create MIG dialog from the header", async () => {
     render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
     await userEvent.click(screen.getByRole("button", { name: /create mig/i }))
