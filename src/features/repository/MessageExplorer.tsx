@@ -1,11 +1,16 @@
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { CaretRight } from "@phosphor-icons/react"
-import { resolveMessage } from "@/core/erepository/resolveMessage"
+import { resolveMessage, type ResolvedMessage } from "@/core/erepository/resolveMessage"
 import type { ERepository, MessageElement } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
 import { cn } from "@/lib/utils"
 
-/** Read-only message explorer (FUNCTIONALITY §5.4, bare minimum). */
+interface Selection {
+  element: MessageElement
+  path: string
+}
+
+/** Read-only message explorer (FUNCTIONALITY §5.4, bare minimum) with a detail panel. */
 export function MessageExplorer({ repo, code }: { repo: ERepository; code: string }) {
   const resolved = resolveMessage(repo, code)
 
@@ -27,10 +32,18 @@ export function MessageExplorer({ repo, code }: { repo: ERepository; code: strin
     )
   }
 
+  // Keyed by identifier so navigating to another message/version resets selection.
+  return <MessageView key={resolved.current.identifier} resolved={resolved} />
+}
+
+function MessageView({ resolved }: { resolved: ResolvedMessage }) {
   const { area, current, versions } = resolved
+  const root = current.rootElement
+  const [picked, setPicked] = useState<Selection | null>(null)
+  const selected: Selection = picked ?? { element: root, path: root.xmlTag }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
       <div className="space-y-1">
         <p className="text-xs text-muted-foreground">{area.name}</p>
         <div className="flex flex-wrap items-center gap-2">
@@ -65,13 +78,18 @@ export function MessageExplorer({ repo, code }: { repo: ERepository; code: strin
         </div>
       )}
 
-      {current.rootElement.definition && (
-        <p className="text-sm text-muted-foreground">{current.rootElement.definition}</p>
-      )}
-
-      <ul className="flex flex-col text-sm">
-        <ElementNode element={current.rootElement} level={0} />
-      </ul>
+      <div className="grid gap-4 md:grid-cols-[1fr_20rem]">
+        <ul className="flex flex-col text-sm">
+          <ElementNode
+            element={root}
+            level={0}
+            path={root.xmlTag}
+            selectedPath={selected.path}
+            onSelect={setPicked}
+          />
+        </ul>
+        <ElementDetail element={selected.element} path={selected.path} />
+      </div>
     </div>
   )
 }
@@ -80,55 +98,166 @@ function cardinality(e: MessageElement): string {
   return `[${e.minOccurs}..${e.maxOccurs ?? "*"}]`
 }
 
-function ElementNode({ element, level }: { element: MessageElement; level: number }) {
+function ElementNode({
+  element,
+  level,
+  path,
+  selectedPath,
+  onSelect,
+}: {
+  element: MessageElement
+  level: number
+  path: string
+  selectedPath: string | null
+  onSelect: (sel: Selection) => void
+}) {
   const hasChildren = element.elements.length > 0
   const [open, setOpen] = useState(level === 0)
-
-  const label = (
-    <>
-      {hasChildren ? (
-        <CaretRight
-          className={cn("size-3.5 shrink-0 text-muted-foreground", open && "rotate-90")}
-          aria-hidden
-        />
-      ) : (
-        <span className="inline-block size-3.5 shrink-0" aria-hidden />
-      )}
-      <span className="font-medium">{element.name}</span>
-      <code className="text-[0.625rem] text-muted-foreground">{element.xmlTag}</code>
-      <span className="text-xs text-muted-foreground">{cardinality(element)}</span>
-      {element.isChoice && (
-        <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
-          choice
-        </span>
-      )}
-      {element.type && <span className="ml-auto text-xs text-muted-foreground">{element.type}</span>}
-    </>
-  )
+  const isSelected = path === selectedPath
 
   return (
-    <li style={{ paddingLeft: level === 0 ? 0 : 16 }}>
-      {hasChildren ? (
+    <li>
+      <div
+        className="flex items-center gap-1"
+        style={{ paddingLeft: level === 0 ? 0 : level * 16 }}
+      >
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={open}
+            aria-label={`${open ? "Collapse" : "Expand"} ${element.name}`}
+            className="rounded-sm p-0.5 text-muted-foreground outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30"
+          >
+            <CaretRight className={cn("size-3.5", open && "rotate-90")} aria-hidden />
+          </button>
+        ) : (
+          <span className="inline-block size-4 shrink-0" aria-hidden />
+        )}
         <button
           type="button"
-          onClick={() => setOpen((o) => !o)}
-          aria-expanded={open}
-          className="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-left outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30"
+          onClick={() => onSelect({ element, path })}
+          aria-label={element.name}
+          aria-current={isSelected ? "true" : undefined}
+          className={cn(
+            "flex flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30",
+            isSelected && "bg-muted",
+          )}
         >
-          {label}
+          <span className="font-medium">{element.name}</span>
+          <code className="text-[0.625rem] text-muted-foreground">{element.xmlTag}</code>
+          <span className="text-xs text-muted-foreground">{cardinality(element)}</span>
+          {element.isChoice && (
+            <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
+              choice
+            </span>
+          )}
+          {element.type && (
+            <span className="ml-auto text-xs text-muted-foreground">{element.type}</span>
+          )}
         </button>
-      ) : (
-        <div className="flex items-center gap-1.5 px-1.5 py-1" title={element.definition}>
-          {label}
-        </div>
-      )}
+      </div>
       {hasChildren && open && (
         <ul className="flex flex-col">
           {element.elements.map((child) => (
-            <ElementNode key={child.id} element={child} level={level + 1} />
+            <ElementNode
+              key={child.id}
+              element={child}
+              level={level + 1}
+              path={`${path}/${child.xmlTag}`}
+              selectedPath={selectedPath}
+              onSelect={onSelect}
+            />
           ))}
         </ul>
       )}
     </li>
+  )
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">{label}</div>
+      <div className="text-sm break-words">{children}</div>
+    </div>
+  )
+}
+
+function ElementDetail({ element, path }: { element: MessageElement; path: string }) {
+  const e = element
+  const range = (lo: number | null, hi: number | null) =>
+    lo != null || hi != null ? `${lo ?? "*"} … ${hi ?? "*"}` : null
+  const length = range(e.minLength, e.maxLength) ?? (e.length != null ? String(e.length) : null)
+  const inclusive = range(e.minInclusive, e.maxInclusive)
+  const digits =
+    e.totalDigits != null || e.fractionDigits != null
+      ? `${e.totalDigits ?? "—"} total, ${e.fractionDigits ?? "—"} fraction`
+      : null
+
+  return (
+    <div
+      role="region"
+      aria-label="Element details"
+      className="flex h-fit flex-col gap-3 rounded-lg border border-border p-3 md:sticky md:top-24"
+    >
+      <div className="font-medium">{e.name}</div>
+      <Field label={e.isAttribute ? "XML attribute" : "XML tag"}>
+        <code className="text-xs">{e.xmlTag}</code>
+      </Field>
+      <Field label="XML path">
+        <code className="text-xs">{path}</code>
+      </Field>
+      <Field label="Type">
+        {e.type}
+        {e.baseType && <span className="text-muted-foreground"> ({e.baseType})</span>}
+      </Field>
+      <Field label="Multiplicity">
+        [{e.minOccurs}..{e.maxOccurs ?? "unbounded"}]
+      </Field>
+      {e.definition && (
+        <Field label="Definition">
+          <span className="whitespace-pre-wrap text-muted-foreground">{e.definition}</span>
+        </Field>
+      )}
+      {length && <Field label="Length">{length}</Field>}
+      {inclusive && <Field label="Inclusive range">{inclusive}</Field>}
+      {digits && <Field label="Digits">{digits}</Field>}
+      {e.pattern && (
+        <Field label="Pattern">
+          <code className="text-xs break-all">{e.pattern}</code>
+        </Field>
+      )}
+      {e.codes.length > 0 && (
+        <Field label={`Allowed values (${e.codes.length})`}>
+          <div className="flex flex-wrap gap-1">
+            {e.codes.map((c) => (
+              <code
+                key={c.codeName}
+                title={c.definition}
+                className="rounded-sm bg-muted px-1 text-[0.625rem]"
+              >
+                {c.codeName}
+              </code>
+            ))}
+          </div>
+        </Field>
+      )}
+      {e.examples.length > 0 && <Field label="Examples">{e.examples.join(", ")}</Field>}
+      {e.constraints.length > 0 && (
+        <Field label={`Constraints (${e.constraints.length})`}>
+          <ul className="flex flex-col gap-1">
+            {e.constraints.map((c) => (
+              <li key={c.name}>
+                <span className="font-medium">{c.name}</span>
+                {c.definition && (
+                  <span className="text-muted-foreground"> — {c.definition}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </Field>
+      )}
+    </div>
   )
 }

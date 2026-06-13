@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it } from "vitest"
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ERepository, MessageDefinition, MessageElement } from "@/core/types/types"
 import { MessageExplorer } from "./MessageExplorer"
@@ -79,7 +79,7 @@ describe("MessageExplorer", () => {
     expect(screen.getByRole("link", { name: "10" })).toHaveAttribute("aria-current", "page")
   })
 
-  it("expands the root and reveals nested elements on click", async () => {
+  it("expands a node and reveals nested elements via its caret", async () => {
     render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
     // root expanded by default
     expect(screen.getByText("GrpHdr")).toBeInTheDocument()
@@ -87,8 +87,23 @@ describe("MessageExplorer", () => {
     // grandchild hidden until its parent is expanded
     expect(screen.queryByText("Amt")).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole("button", { name: /CdtTrfTxInf/ }))
+    await userEvent.click(screen.getByRole("button", { name: /expand CdtTrfTxInf/i }))
     expect(screen.getByText("Amt")).toBeInTheDocument()
+  })
+
+  it("shows the root element in the detail panel by default", () => {
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+    const panel = screen.getByRole("region", { name: /element details/i })
+    expect(within(panel).getByText("Document")).toBeInTheDocument()
+    expect(within(panel).getByText("The credit transfer message.")).toBeInTheDocument()
+  })
+
+  it("shows the clicked element's path in the detail panel", async () => {
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+    await userEvent.click(screen.getByRole("button", { name: "CdtTrfTxInf" }))
+
+    const panel = screen.getByRole("region", { name: /element details/i })
+    expect(within(panel).getByText("DocumentTag/CdtTrfTxInfTag")).toBeInTheDocument()
   })
 
   it("shows a not-found state for an unknown code", () => {
