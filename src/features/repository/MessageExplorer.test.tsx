@@ -52,6 +52,7 @@ const REPO: ERepository = {
           "pacs.008.001.10",
           el("Document", {
             definition: "The credit transfer message.",
+            constraints: [{ name: "SupplementaryDataRule", definition: "Must not be empty." }],
             elements: [
               el("GrpHdr"),
               el("CdtTrfTxInf", { elements: [el("Amt")] }),
@@ -104,6 +105,17 @@ describe("MessageExplorer", () => {
 
     const panel = screen.getByRole("region", { name: /element details/i })
     expect(within(panel).getByText("DocumentTag/CdtTrfTxInfTag")).toBeInTheDocument()
+  })
+
+  it("lists element constraints as nodes and shows their detail", async () => {
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+    // root constraint is visible (root expanded by default)
+    const node = screen.getByRole("button", { name: /constraint SupplementaryDataRule/i })
+    await userEvent.click(node)
+
+    const panel = screen.getByRole("region", { name: /constraint details/i })
+    expect(within(panel).getByText("Must not be empty.")).toBeInTheDocument()
+    expect(within(panel).getByText("DocumentTag/SupplementaryDataRule")).toBeInTheDocument()
   })
 
   it("opens the Create MIG dialog from the header", async () => {

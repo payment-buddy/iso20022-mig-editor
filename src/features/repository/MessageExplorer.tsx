@@ -1,16 +1,15 @@
 import { useState, type ReactNode } from "react"
-import { CaretRight, Plus } from "@phosphor-icons/react"
+import { CaretRight, Check, Plus } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { CreateMigDialog } from "@/features/mig/CreateMigDialog"
 import { resolveMessage, type ResolvedMessage } from "@/core/erepository/resolveMessage"
-import type { ERepository, MessageElement } from "@/core/types/types"
+import type { Constraint, ERepository, MessageElement } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
 import { cn } from "@/lib/utils"
 
-interface Selection {
-  element: MessageElement
-  path: string
-}
+type Selection =
+  | { kind: "element"; element: MessageElement; path: string }
+  | { kind: "constraint"; constraint: Constraint; path: string }
 
 /** Read-only message explorer (FUNCTIONALITY §5.4, bare minimum) with a detail panel. */
 export function MessageExplorer({ repo, code }: { repo: ERepository; code: string }) {
@@ -43,7 +42,7 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
   const root = current.rootElement
   const [picked, setPicked] = useState<Selection | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
-  const selected: Selection = picked ?? { element: root, path: root.xmlTag }
+  const selected: Selection = picked ?? { kind: "element", element: root, path: root.xmlTag }
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
@@ -103,7 +102,11 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
             onSelect={setPicked}
           />
         </ul>
-        <ElementDetail element={selected.element} path={selected.path} />
+        {selected.kind === "element" ? (
+          <ElementDetail element={selected.element} path={selected.path} />
+        ) : (
+          <ConstraintDetail constraint={selected.constraint} path={selected.path} />
+        )}
       </div>
     </div>
   )
@@ -126,16 +129,13 @@ function ElementNode({
   selectedPath: string | null
   onSelect: (sel: Selection) => void
 }) {
-  const hasChildren = element.elements.length > 0
+  const hasChildren = element.elements.length > 0 || element.constraints.length > 0
   const [open, setOpen] = useState(level === 0)
   const isSelected = path === selectedPath
 
   return (
     <li>
-      <div
-        className="flex items-center gap-1"
-        style={{ paddingLeft: level === 0 ? 0 : level * 16 }}
-      >
+      <div className="flex items-center gap-1" style={{ paddingLeft: level === 0 ? 0 : level * 16 }}>
         {hasChildren ? (
           <button
             type="button"
@@ -151,7 +151,7 @@ function ElementNode({
         )}
         <button
           type="button"
-          onClick={() => onSelect({ element, path })}
+          onClick={() => onSelect({ kind: "element", element, path })}
           aria-label={element.name}
           aria-current={isSelected ? "true" : undefined}
           className={cn(
@@ -184,8 +184,54 @@ function ElementNode({
               onSelect={onSelect}
             />
           ))}
+          {element.constraints.map((constraint) => (
+            <ConstraintNode
+              key={constraint.name}
+              constraint={constraint}
+              level={level + 1}
+              path={`${path}/${constraint.name}`}
+              selectedPath={selectedPath}
+              onSelect={onSelect}
+            />
+          ))}
         </ul>
       )}
+    </li>
+  )
+}
+
+function ConstraintNode({
+  constraint,
+  level,
+  path,
+  selectedPath,
+  onSelect,
+}: {
+  constraint: Constraint
+  level: number
+  path: string
+  selectedPath: string | null
+  onSelect: (sel: Selection) => void
+}) {
+  const isSelected = path === selectedPath
+  return (
+    <li>
+      <div className="flex items-center gap-1" style={{ paddingLeft: level * 16 }}>
+        <span className="inline-block size-4 shrink-0" aria-hidden />
+        <button
+          type="button"
+          onClick={() => onSelect({ kind: "constraint", constraint, path })}
+          aria-label={`Constraint ${constraint.name}`}
+          aria-current={isSelected ? "true" : undefined}
+          className={cn(
+            "flex flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30",
+            isSelected && "bg-muted",
+          )}
+        >
+          <Check className="size-3 shrink-0 text-muted-foreground" aria-hidden />
+          <span>{constraint.name}</span>
+        </button>
+      </div>
     </li>
   )
 }
@@ -196,6 +242,38 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">{label}</div>
       <div className="text-sm break-words">{children}</div>
     </div>
+  )
+}
+
+function DetailPanel({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div
+      role="region"
+      aria-label={label}
+      className="flex h-fit flex-col gap-3 rounded-lg border border-border p-3 md:sticky md:top-24"
+    >
+      {children}
+    </div>
+  )
+}
+
+function ConstraintDetail({ constraint, path }: { constraint: Constraint; path: string }) {
+  return (
+    <DetailPanel label="Constraint details">
+      <div className="flex items-center gap-1.5 font-medium">
+        <Check className="size-3.5 text-muted-foreground" aria-hidden />
+        {constraint.name}
+      </div>
+      <Field label="Kind">Constraint (rule)</Field>
+      <Field label="Path">
+        <code className="text-xs">{path}</code>
+      </Field>
+      {constraint.definition && (
+        <Field label="Definition">
+          <span className="whitespace-pre-wrap text-muted-foreground">{constraint.definition}</span>
+        </Field>
+      )}
+    </DetailPanel>
   )
 }
 
@@ -211,11 +289,7 @@ function ElementDetail({ element, path }: { element: MessageElement; path: strin
       : null
 
   return (
-    <div
-      role="region"
-      aria-label="Element details"
-      className="flex h-fit flex-col gap-3 rounded-lg border border-border p-3 md:sticky md:top-24"
-    >
+    <DetailPanel label="Element details">
       <div className="font-medium">{e.name}</div>
       <Field label={e.isAttribute ? "XML attribute" : "XML tag"}>
         <code className="text-xs">{e.xmlTag}</code>
@@ -259,20 +333,6 @@ function ElementDetail({ element, path }: { element: MessageElement; path: strin
         </Field>
       )}
       {e.examples.length > 0 && <Field label="Examples">{e.examples.join(", ")}</Field>}
-      {e.constraints.length > 0 && (
-        <Field label={`Constraints (${e.constraints.length})`}>
-          <ul className="flex flex-col gap-1">
-            {e.constraints.map((c) => (
-              <li key={c.name}>
-                <span className="font-medium">{c.name}</span>
-                {c.definition && (
-                  <span className="text-muted-foreground"> — {c.definition}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </Field>
-      )}
-    </div>
+    </DetailPanel>
   )
 }
