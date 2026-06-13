@@ -14,6 +14,9 @@ const isLongText = (s: string) => s.length > LONG_TEXT_CHARS || s.split("\n").le
  * edited by accident). Commits on blur, cancels on Esc; single-line also commits
  * on Enter (multiline keeps Enter for newlines).
  *
+ * An empty value reads as `<none>` (optional fields aren't a to-do); `placeholder`
+ * is only the hint shown inside the editor while typing.
+ *
  * `type="number"` renders a numeric input with the browser's increment/decrement
  * spinner. `display` overrides the non-editing label when it should differ from
  * the raw value (e.g. an empty number field shown as "unbounded").
@@ -73,7 +76,8 @@ export function InlineEdit({
             <span
               className={cn("whitespace-pre-wrap", showPlaceholder && "text-muted-foreground italic")}
             >
-              {display ?? (value || placeholder)}
+              {/* Empty optional value reads as "<none>", not the "Add…" input hint. */}
+              {display ?? (value || "<none>")}
             </span>
           )}
         </div>
@@ -108,6 +112,7 @@ export function InlineEdit({
       rows={3}
       value={draft}
       aria-label={ariaLabel}
+      placeholder={placeholder}
       onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={onKeyDown}
@@ -122,6 +127,7 @@ export function InlineEdit({
       autoFocus
       value={draft}
       aria-label={ariaLabel}
+      placeholder={placeholder}
       onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={onKeyDown}

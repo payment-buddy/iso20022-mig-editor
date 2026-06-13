@@ -80,7 +80,8 @@ export function EditableList({
     return (
       <div className="group flex w-full items-start justify-between gap-2 rounded-md border border-transparent px-2 py-1 transition-colors hover:border-border focus-within:border-border">
         <div className="min-w-0">
-          {chips(false) ?? <span className="text-sm text-muted-foreground italic">{placeholder}</span>}
+          {/* Empty optional list reads as "<none>", not the "Add…" input hint. */}
+          {chips(false) ?? <span className="text-sm text-muted-foreground italic">{"<none>"}</span>}
         </div>
         <button
           type="button"
