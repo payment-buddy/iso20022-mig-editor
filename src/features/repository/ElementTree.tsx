@@ -516,20 +516,23 @@ export function ElementTree({
 
   // A node requested by `select` that wasn't mounted yet (e.g. a constraint the
   // detail panel just added). The effect below focuses it once it renders.
+  // Open every ancestor of `path` so the target is reachable (its parent may be
+  // collapsed). Paths are absolute, so parts[0] is "" and parts[1] is the root —
+  // the first real ancestor prefix is parts[0..2] (e.g. "/Document").
+  const expandAncestors = (path: string) => {
+    const parts = path.split("/")
+    if (parts.length <= 2) return
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      for (let i = 2; i < parts.length; i++)
+        next.add(parts.slice(0, i).join("/"))
+      return next
+    })
+  }
+
   const pendingFocus = useRef<string | null>(null)
   const select = (path: string) => {
-    // Open every ancestor so the target is reachable (its parent may be collapsed).
-    // Paths are absolute, so parts[0] is "" and parts[1] is the root — the first
-    // real ancestor prefix is parts[0..2] (e.g. "/Document").
-    const parts = path.split("/")
-    if (parts.length > 2) {
-      setExpanded((prev) => {
-        const next = new Set(prev)
-        for (let i = 2; i < parts.length; i++)
-          next.add(parts.slice(0, i).join("/"))
-        return next
-      })
-    }
+    expandAncestors(path)
     setFocusedPath(path)
     const node = nodeRefs.current.get(path)
     if (node) node.focus()
@@ -695,7 +698,14 @@ export function ElementTree({
             <input
               type="checkbox"
               checked={changesOnly}
-              onChange={(e) => setChangesOnly(e.target.checked)}
+              onChange={(e) => {
+                // The changes-only view force-expands ancestors via the filter,
+                // not the `expanded` set. Fold the selected node's ancestors in
+                // first so it stays visible — and thus selected — once the
+                // filter's force-expansion goes away.
+                if (focusedPath) expandAncestors(focusedPath)
+                setChangesOnly(e.target.checked)
+              }}
             />
             Only changes
           </label>
