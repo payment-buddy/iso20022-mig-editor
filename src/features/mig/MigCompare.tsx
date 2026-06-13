@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, ArrowLineLeft, ArrowLineRight, GitDiff, Warning } from "@phosphor-icons/react"
+import {
+  ArrowCounterClockwise,
+  ArrowLeft,
+  ArrowLineLeft,
+  ArrowLineRight,
+  FloppyDisk,
+  GitDiff,
+  Warning,
+} from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { buildPathOrder } from "@/core/mig/serializeMig"
 import { applyFieldCopy } from "@/core/mig/copyChange"
@@ -31,14 +39,18 @@ const COLS = "grid grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)]"
  */
 export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; repo: ERepository }) {
   const [status, setStatus] = useState<"loading" | "ready">("loading")
-  const [loaded, setLoaded] = useState<Loaded>({ a: null, b: null })
+  // `saved` mirrors what's in storage; `draft` holds the in-progress copies.
+  // Edits go to the draft and only persist on Save (reference-equal until then).
+  const [saved, setSaved] = useState<Loaded>({ a: null, b: null })
+  const [draft, setDraft] = useState<Loaded>({ a: null, b: null })
 
   useEffect(() => {
     let active = true
     Promise.all([loadMig(keyA), loadMig(keyB)])
       .then(([a, b]) => {
         if (!active) return
-        setLoaded({ a, b })
+        setSaved({ a, b })
+        setDraft({ a, b })
         setStatus("ready")
       })
       .catch((err) => {
@@ -52,7 +64,7 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
 
   if (status === "loading") return <Notice title="Loading…" />
 
-  const { a, b } = loaded
+  const { a, b } = draft
   if (!a || !b) {
     const missing = [!a && keyA, !b && keyB].filter(Boolean) as string[]
     return (
@@ -70,14 +82,28 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
 
   const diff = compareMigs(a, b, order)
 
-  // Copy one field from one MIG into the other, persist, and reflect locally. The
-  // edited field then matches and drops out of the recomputed diff.
+  // Copy one field from one MIG into the other — applied to the draft only. The
+  // edited field then matches and drops out of the recomputed diff; persistence
+  // waits for Save.
   const copy: CopyFn = (path, ref, dir) => {
     const [from, to] = dir === "a-to-b" ? [a, b] : [b, a]
     const next = applyFieldCopy(from, to, path, ref)
-    setLoaded(dir === "a-to-b" ? { a, b: next } : { a: next, b })
-    saveMig(next).catch((err) => console.error("Failed to save MIG:", err))
+    setDraft(dir === "a-to-b" ? { a, b: next } : { a: next, b })
   }
+
+  // Reference inequality is enough: only applyFieldCopy produces new objects.
+  const dirty = draft.a !== saved.a || draft.b !== saved.b
+
+  const save = () => {
+    const writes: Promise<void>[] = []
+    if (draft.a && draft.a !== saved.a) writes.push(saveMig(draft.a))
+    if (draft.b && draft.b !== saved.b) writes.push(saveMig(draft.b))
+    Promise.all(writes)
+      .then(() => setSaved(draft))
+      .catch((err) => console.error("Failed to save MIGs:", err))
+  }
+
+  const discard = () => setDraft(saved)
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
@@ -93,12 +119,29 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
             <span className="text-muted-foreground">{diff.b.version}</span>
           </h1>
         </div>
-        <Button variant="outline" size="sm" asChild>
-          <a href={hashFor({ name: "home" })}>
-            <ArrowLeft data-icon="inline-start" aria-hidden />
-            Back
-          </a>
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          {dirty && (
+            <span className="text-xs text-amber-700 dark:text-amber-500" aria-live="polite">
+              Unsaved changes
+            </span>
+          )}
+          {dirty && (
+            <Button variant="outline" size="sm" onClick={discard}>
+              <ArrowCounterClockwise data-icon="inline-start" aria-hidden />
+              Discard
+            </Button>
+          )}
+          <Button size="sm" disabled={!dirty} onClick={save}>
+            <FloppyDisk data-icon="inline-start" aria-hidden />
+            Save
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <a href={hashFor({ name: "home" })}>
+              <ArrowLeft data-icon="inline-start" aria-hidden />
+              Back
+            </a>
+          </Button>
+        </div>
       </div>
 
       {!diff.sameMessage && (

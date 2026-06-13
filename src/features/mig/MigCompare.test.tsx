@@ -2,7 +2,7 @@
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it } from "vitest"
-import { cleanup, render, screen, within } from "@testing-library/react"
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
@@ -68,7 +68,7 @@ describe("MigCompare", () => {
     expect(await screen.findByText(/target different messages/i)).toBeInTheDocument()
   })
 
-  it("copies a field from A to B, persists it, and resolves the difference", async () => {
+  it("copies a field from A to B and resolves the difference in the draft", async () => {
     const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
     const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
@@ -76,23 +76,61 @@ describe("MigCompare", () => {
     const card = await screen.findByRole("region", { name: /Amt — changed/i })
     await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
 
-    // The two MIGs now agree on that field → nothing left to compare.
+    // The draft now agrees on that field → nothing left to compare.
     expect(await screen.findByText(/identical overrides/i)).toBeInTheDocument()
-    const storedB = await loadMig(getMigKey(b))
-    expect(storedB?.elementOverrides["Doc/Amt"].maxLength).toBe(18)
   })
 
-  it("copies a field from B to A in the other direction", async () => {
+  it("does not persist a copy until Save is clicked", async () => {
+    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    await renderCompare(a, b)
+
+    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
+
+    // Still in the draft only — storage is unchanged, and the UI flags it.
+    expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument()
+    expect((await loadMig(getMigKey(b)))?.elementOverrides["Doc/Amt"].maxLength).toBe(12)
+
+    await userEvent.click(screen.getByRole("button", { name: /^save$/i }))
+
+    await waitFor(async () =>
+      expect((await loadMig(getMigKey(b)))?.elementOverrides["Doc/Amt"].maxLength).toBe(18),
+    )
+    expect(screen.queryByText(/unsaved changes/i)).not.toBeInTheDocument()
+  })
+
+  it("persists a B→A copy on Save", async () => {
     const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
     const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
     const card = await screen.findByRole("region", { name: /Amt — changed/i })
     await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i }))
+    await userEvent.click(screen.getByRole("button", { name: /^save$/i }))
 
-    expect(await screen.findByText(/identical overrides/i)).toBeInTheDocument()
-    const storedA = await loadMig(getMigKey(a))
-    expect(storedA?.elementOverrides["Doc/Amt"].maxLength).toBe(12)
+    await waitFor(async () =>
+      expect((await loadMig(getMigKey(a)))?.elementOverrides["Doc/Amt"].maxLength).toBe(12),
+    )
+  })
+
+  it("disables Save until there are edits and reverts them with Discard", async () => {
+    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    await renderCompare(a, b)
+
+    expect(await screen.findByRole("button", { name: /^save$/i })).toBeDisabled()
+
+    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
+    expect(screen.getByRole("button", { name: /^save$/i })).toBeEnabled()
+
+    await userEvent.click(screen.getByRole("button", { name: /discard/i }))
+
+    // Back to the original difference, Save disabled, storage untouched.
+    expect(await screen.findByRole("region", { name: /Amt — changed/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled()
+    expect((await loadMig(getMigKey(b)))?.elementOverrides["Doc/Amt"].maxLength).toBe(12)
   })
 
   it("reports a missing MIG", async () => {
