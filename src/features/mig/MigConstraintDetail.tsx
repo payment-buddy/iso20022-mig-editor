@@ -172,15 +172,6 @@ export function MigConstraintDetail({
           />
           Disable this rule
         </label>
-        {disabled && (
-          <p
-            role="alert"
-            className="mt-1 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500"
-          >
-            <WarningIcon className="size-3 shrink-0" aria-hidden />
-            A disabled rule is kept in the MIG but not enforced.
-          </p>
-        )}
       </div>
 
       <div className="border-t border-border pt-3">
