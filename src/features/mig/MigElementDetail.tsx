@@ -1,7 +1,7 @@
 import { type ReactNode } from "react"
-import { ArrowCounterClockwise, Plus } from "@phosphor-icons/react"
+import { ArrowCounterClockwise, Plus, Warning } from "@phosphor-icons/react"
 import type { ElementOverride, MessageElement } from "@/core/types/types"
-import { createValueValidator } from "@/core/mig/fieldValidation"
+import { createValueValidator, fractionDigitsWarning } from "@/core/mig/fieldValidation"
 import { EditableList } from "@/components/ui/editable-list"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
@@ -290,6 +290,12 @@ export function MigElementDetail({
             baseline={numBaseline("fractionDigits", element.fractionDigits)}
             overridden={has("fractionDigits")}
             inherited={inheritedHere("fractionDigits")}
+            warning={fractionDigitsWarning(
+              numBaseline("fractionDigits", element.fractionDigits),
+              has("fractionDigits")
+                ? (override?.fractionDigits ?? null)
+                : numBaseline("fractionDigits", element.fractionDigits),
+            )}
             effective={
               has("fractionDigits")
                 ? (override?.fractionDigits ?? null)
@@ -410,6 +416,7 @@ function NumberOverrideField({
   baseline,
   overridden,
   inherited = false,
+  warning = null,
   effective,
   allowNull,
   emptyLabel,
@@ -422,6 +429,7 @@ function NumberOverrideField({
   baseline: number | null
   overridden: boolean
   inherited?: boolean
+  warning?: string | null
   effective: number | null
   allowNull: boolean
   emptyLabel: string
@@ -453,6 +461,7 @@ function NumberOverrideField({
       label={label}
       overridden={overridden}
       inherited={inherited}
+      warning={warning}
       baseline={fmt(baseline)}
       onReset={onClear}
     >
@@ -478,6 +487,7 @@ function OverrideRow({
   label,
   overridden,
   inherited = false,
+  warning = null,
   baseline,
   onReset,
   children,
@@ -485,6 +495,8 @@ function OverrideRow({
   label: string
   overridden: boolean
   inherited?: boolean
+  /** Advisory loosening warning shown beneath the field. */
+  warning?: string | null
   baseline: string
   onReset: () => void
   children: ReactNode
@@ -524,6 +536,15 @@ function OverrideRow({
         )}
       </div>
       {children}
+      {warning && (
+        <p
+          role="alert"
+          className="mt-1 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500"
+        >
+          <Warning className="size-3 shrink-0" aria-hidden />
+          {warning}
+        </p>
+      )}
     </div>
   )
 }

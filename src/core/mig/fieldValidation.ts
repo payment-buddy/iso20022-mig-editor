@@ -31,3 +31,17 @@ export function createValueValidator(
     return null
   }
 }
+
+/**
+ * Advisory warning when an effective `fractionDigits` is **higher** than its
+ * baseline (the inherited/original limit) — allowing more decimal places
+ * *loosens* the constraint (FUNCTIONALITY §5.7). `null` when within the baseline,
+ * or when either side is unconstrained (raising or adding a limit only tightens).
+ */
+export function fractionDigitsWarning(
+  baseline: number | null,
+  value: number | null,
+): string | null {
+  if (baseline === null || value === null || value <= baseline) return null
+  return `Looser than the original: ${value} fraction digits allows more than ${baseline}.`
+}

@@ -529,6 +529,45 @@ describe("MigEditor", () => {
     ).toBe(2)
   })
 
+  it("warns when fraction digits are raised above the original (loosening)", async () => {
+    const user = userEvent.setup()
+    const repo: ERepository = {
+      businessAreas: [
+        {
+          name: "A",
+          code: "a",
+          definition: "",
+          messages: [
+            {
+              name: "Msg",
+              identifier: "pacs.008.001.10",
+              shortCode: "pacs.008",
+              rootElement: el("Document", {
+                elements: [el("Amt", { baseType: "Amount", fractionDigits: 2 })],
+              }),
+            },
+          ],
+        },
+      ],
+    }
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={repo} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    await user.click(screen.getByRole("treeitem", { name: "Amt" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    // No warning at the original 2 fraction digits.
+    expect(within(panel).queryByRole("alert")).not.toBeInTheDocument()
+
+    // Raise it to 5 → loosens, so a warning appears.
+    await user.click(within(panel).getByRole("button", { name: "Edit Fraction digits" }))
+    const input = within(panel).getByRole("spinbutton", { name: "Fraction digits" })
+    await user.clear(input)
+    await user.type(input, "5")
+    await user.tab()
+    expect(within(panel).getByRole("alert")).toHaveTextContent(/looser than the original/i)
+  })
+
   it("shows Min/Max length only for length-bearing types and edits them", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ElementOverride, MessageElement } from "@/core/types/types"
-import { createValueValidator } from "./fieldValidation"
+import { createValueValidator, fractionDigitsWarning } from "./fieldValidation"
 
 function el(props: Partial<MessageElement> = {}): MessageElement {
   return {
@@ -73,5 +73,18 @@ describe("createValueValidator", () => {
   it("satisfies the ElementOverride type at the call site", () => {
     const override: ElementOverride = { minLength: 5 }
     expect(createValueValidator(el(), override)("abc")).toMatch(/shorter/i)
+  })
+})
+
+describe("fractionDigitsWarning", () => {
+  it("warns only when the value exceeds the baseline", () => {
+    expect(fractionDigitsWarning(2, 5)).toMatch(/looser/i)
+    expect(fractionDigitsWarning(2, 2)).toBeNull()
+    expect(fractionDigitsWarning(2, 1)).toBeNull()
+  })
+
+  it("is silent when either side is unconstrained (raising/adding a limit only tightens)", () => {
+    expect(fractionDigitsWarning(null, 5)).toBeNull()
+    expect(fractionDigitsWarning(2, null)).toBeNull()
   })
 })
