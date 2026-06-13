@@ -5,6 +5,7 @@ import {
   clearOverrideField,
   nextConstraintName,
   setOverrideField,
+  updateConstraint,
 } from "./overrides"
 
 function mig(
@@ -111,5 +112,44 @@ describe("addConstraint", () => {
     const before = mig()
     addConstraint(before, "Doc", { name: "Rule A", definition: "" })
     expect(before.elementOverrides).toEqual({})
+  })
+})
+
+describe("updateConstraint", () => {
+  const withConstraints = (...names: string[]) =>
+    mig({ "Doc/Amt": { additionalConstraints: names.map((name) => ({ name, definition: "" })) } })
+
+  it("renames an additional constraint, keeping order", () => {
+    const next = updateConstraint(withConstraints("A", "B"), "Doc/Amt", "A", { name: "Z" })
+    expect(next.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
+      { name: "Z", definition: "" },
+      { name: "B", definition: "" },
+    ])
+  })
+
+  it("updates the definition", () => {
+    const next = updateConstraint(withConstraints("A"), "Doc/Amt", "A", { definition: "Must be set" })
+    expect(next.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
+      { name: "A", definition: "Must be set" },
+    ])
+  })
+
+  it("is a no-op when the rename collides with a sibling", () => {
+    const before = withConstraints("A", "B")
+    expect(updateConstraint(before, "Doc/Amt", "A", { name: "B" })).toBe(before)
+  })
+
+  it("is a no-op when the constraint or path is absent", () => {
+    const before = withConstraints("A")
+    expect(updateConstraint(before, "Doc/Amt", "Missing", { name: "Z" })).toBe(before)
+    expect(updateConstraint(before, "Doc/Other", "A", { name: "Z" })).toBe(before)
+  })
+
+  it("does not mutate the input MIG", () => {
+    const before = withConstraints("A")
+    updateConstraint(before, "Doc/Amt", "A", { name: "Z" })
+    expect(before.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
+      { name: "A", definition: "" },
+    ])
   })
 })

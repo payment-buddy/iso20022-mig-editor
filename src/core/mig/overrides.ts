@@ -82,3 +82,35 @@ export function addConstraint(
     },
   }
 }
+
+/**
+ * Edit a MIG-specific constraint (found by its current `name`) at `path`,
+ * applying `changes` (name and/or definition), returning a new MIG. No-op when
+ * the path has no such additional constraint, or when a rename would collide
+ * with another additional constraint there (names are unique within an element).
+ * Standard, spec-inherited constraints aren't represented here and are untouched.
+ */
+export function updateConstraint(
+  mig: MessageImplementationGuide,
+  path: string,
+  name: string,
+  changes: Partial<Pick<Constraint, "name" | "definition">>,
+): MessageImplementationGuide {
+  const prev = mig.elementOverrides[path]
+  const list = prev?.additionalConstraints
+  if (!list) return mig
+  const idx = list.findIndex((c) => c.name === name)
+  if (idx < 0) return mig
+
+  const nextName = changes.name ?? list[idx].name
+  if (nextName !== name && list.some((c, i) => i !== idx && c.name === nextName)) return mig
+
+  const additionalConstraints = list.map((c, i) => (i === idx ? { ...c, ...changes } : c))
+  return {
+    ...mig,
+    elementOverrides: {
+      ...mig.elementOverrides,
+      [path]: { ...prev, additionalConstraints },
+    },
+  }
+}

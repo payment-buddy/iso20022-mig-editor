@@ -31,7 +31,15 @@ type FlatNode = {
 /** The focused/selected node, handed to the detail-panel renderer (selection follows focus). */
 export type SelectedNode =
   | { kind: "element"; element: MessageElement; path: string }
-  | { kind: "constraint"; constraint: Constraint; path: string }
+  | {
+      kind: "constraint"
+      constraint: Constraint
+      path: string
+      /** xmlPath of the owning element. */
+      parentPath: string
+      /** MIG-specific (vs. a standard, read-only constraint). */
+      added: boolean
+    }
 
 /** Imperative tree actions handed to the detail-panel renderer. */
 export type TreeActions = {
@@ -209,7 +217,13 @@ function collectExpandable(el: MessageElement, path: string, into: Set<string>):
 
 function toSelected(node: FlatNode): SelectedNode {
   return node.kind === "constraint"
-    ? { kind: "constraint", constraint: node.constraint, path: node.path }
+    ? {
+        kind: "constraint",
+        constraint: node.constraint,
+        path: node.path,
+        parentPath: node.parentPath ?? "",
+        added: node.added,
+      }
     : { kind: "element", element: node.element, path: node.path }
 }
 

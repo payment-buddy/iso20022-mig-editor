@@ -255,6 +255,116 @@ describe("MigEditor", () => {
     expect(names).toEqual(["New constraint", "New constraint 2"])
   })
 
+  it("edits an added constraint's definition", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // Add a constraint (selection moves to it → constraint detail panel).
+    const elementPanel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(elementPanel).getByRole("button", { name: /add constraint/i }))
+    const panel = await screen.findByRole("region", { name: /constraint details/i })
+
+    await user.click(within(panel).getByRole("button", { name: "Edit Constraint definition" }))
+    await user.type(
+      within(panel).getByRole("textbox", { name: "Constraint definition" }),
+      "Must reference a settlement date",
+    )
+    await user.tab() // blur commits
+
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.additionalConstraints,
+    ).toEqual([{ name: "New constraint", definition: "Must reference a settlement date" }])
+  })
+
+  it("renames an added constraint, keeping it selected in the tree", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    const elementPanel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(elementPanel).getByRole("button", { name: /add constraint/i }))
+    const panel = await screen.findByRole("region", { name: /constraint details/i })
+
+    await user.click(within(panel).getByRole("button", { name: "Edit Constraint name" }))
+    const input = within(panel).getByRole("textbox", { name: "Constraint name" })
+    await user.clear(input)
+    await user.type(input, "Settlement rule")
+    await user.tab() // blur commits
+
+    // Renamed in storage and re-selected in the tree under its new path.
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.additionalConstraints,
+    ).toEqual([{ name: "Settlement rule", definition: "" }])
+    const node = await screen.findByRole("treeitem", { name: /constraint settlement rule$/i })
+    expect(node).toHaveAttribute("aria-selected", "true")
+  })
+
+  it("rejects a rename that duplicates a sibling constraint name", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // Two constraints on the root; the second stays selected.
+    const add = async () => {
+      const p = screen.getByRole("region", { name: /element details/i })
+      await user.click(within(p).getByRole("button", { name: /add constraint/i }))
+    }
+    await add()
+    await user.click(screen.getByRole("treeitem", { name: "Document" }))
+    await add()
+
+    // Try to rename "New constraint 2" → "New constraint" (taken): no change.
+    const panel = screen.getByRole("region", { name: /constraint details/i })
+    await user.click(within(panel).getByRole("button", { name: "Edit Constraint name" }))
+    const input = within(panel).getByRole("textbox", { name: "Constraint name" })
+    await user.clear(input)
+    await user.type(input, "New constraint")
+    await user.tab()
+
+    const names = (await loadMig(getMigKey(MIG)))?.elementOverrides[
+      "DocumentTag"
+    ]?.additionalConstraints?.map((c) => c.name)
+    expect(names).toEqual(["New constraint", "New constraint 2"])
+  })
+
+  it("keeps a standard, spec-inherited constraint read-only", async () => {
+    const user = userEvent.setup()
+    const repo: ERepository = {
+      businessAreas: [
+        {
+          name: "A",
+          code: "a",
+          definition: "",
+          messages: [
+            {
+              name: "Msg",
+              identifier: "pacs.008.001.10",
+              shortCode: "pacs.008",
+              rootElement: el("Document", {
+                constraints: [{ name: "StdRule", definition: "Spec rule" }],
+              }),
+            },
+          ],
+        },
+      ],
+    }
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={repo} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // Select the standard constraint (a child of the expanded root).
+    await user.click(screen.getByRole("treeitem", { name: /constraint stdrule/i }))
+
+    const panel = screen.getByRole("region", { name: /constraint details/i })
+    expect(within(panel).getByText("StdRule")).toBeInTheDocument()
+    // No inline-edit affordances on a standard constraint.
+    expect(within(panel).queryByRole("button", { name: /edit constraint/i })).not.toBeInTheDocument()
+  })
+
   it("shows Min/Max length only for length-bearing types and edits them", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

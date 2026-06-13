@@ -7,13 +7,20 @@ import {
   clearOverrideField,
   nextConstraintName,
   setOverrideField,
+  updateConstraint,
 } from "@/core/mig/overrides"
 import { loadAllMigs, saveMig } from "@/core/storage/migStore"
-import type { Constraint, ERepository, MessageImplementationGuide } from "@/core/types/types"
+import type {
+  Constraint,
+  ERepository,
+  MessageElement,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 import { hashFor } from "@/app/routes"
 import { DetailPanel, ElementTree, Field } from "@/features/repository/ElementTree"
 import { MigMetadata } from "./MigMetadata"
 import { MigElementDetail } from "./MigElementDetail"
+import { MigConstraintDetail } from "./MigConstraintDetail"
 
 type Status = "loading" | "missing" | "ready"
 
@@ -125,7 +132,35 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
             )
           }
           if (sel?.kind === "constraint") {
-            return <ConstraintDetail constraint={sel.constraint} path={sel.path} />
+            // Standard, spec-inherited constraints are read-only; MIG-specific
+            // (added) ones are editable.
+            if (!sel.added) {
+              return <ConstraintDetail constraint={sel.constraint} path={sel.path} />
+            }
+            const elementPath = sel.parentPath
+            const owner = elementAt(root, elementPath)
+            const current = sel.constraint.name
+            const takenNames = [
+              ...(owner?.constraints ?? []).map((c) => c.name),
+              ...(mig.elementOverrides[elementPath]?.additionalConstraints ?? []).map((c) => c.name),
+            ].filter((n) => n !== current)
+            return (
+              // Keyed by path so a rename remounts cleanly and resets any edit.
+              <MigConstraintDetail
+                key={sel.path}
+                constraint={sel.constraint}
+                path={sel.path}
+                takenNames={takenNames}
+                onRename={(name) => {
+                  persist(updateConstraint(mig, elementPath, current, { name }))
+                  // The path changed; keep the renamed constraint selected.
+                  actions.select(`${elementPath}/${name}`)
+                }}
+                onSetDefinition={(definition) =>
+                  persist(updateConstraint(mig, elementPath, current, { definition }))
+                }
+              />
+            )
           }
           return null
         }}
@@ -134,7 +169,20 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   )
 }
 
-/** Read-only constraint detail. Editing additional constraints lands in a later slice. */
+/** Resolve an element by its xmlPath (slash-joined xmlTags), starting at `root`. */
+function elementAt(root: MessageElement, path: string): MessageElement | null {
+  const segments = path.split("/")
+  if (segments[0] !== root.xmlTag) return null
+  let current = root
+  for (let i = 1; i < segments.length; i++) {
+    const next = current.elements.find((c) => c.xmlTag === segments[i])
+    if (!next) return null
+    current = next
+  }
+  return current
+}
+
+/** Read-only detail for a standard, spec-inherited constraint. */
 function ConstraintDetail({ constraint, path }: { constraint: Constraint; path: string }) {
   return (
     <DetailPanel label="Constraint details">
