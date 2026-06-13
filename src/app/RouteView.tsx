@@ -2,14 +2,11 @@ import { ERepositoryBrowser } from "@/features/repository/ERepositoryBrowser"
 import { MessageExplorer } from "@/features/repository/MessageExplorer"
 import { MigHome } from "@/features/mig/MigHome"
 import { MigEditor } from "@/features/mig/MigEditor"
+import { MigCompare } from "@/features/mig/MigCompare"
 import type { ERepository } from "@/core/types/types"
 import type { Route } from "./routes"
 
-/**
- * Maps the current route to its screen. The screens themselves are placeholders
- * until their phases land (MIG list, browser, explorer, editor, compare); the
- * routing, breadcrumbs, and links are fully wired now.
- */
+/** Maps the current route to its screen. */
 export function RouteView({
   route,
   repo,
@@ -30,20 +27,6 @@ export function RouteView({
       // Keyed so switching MIGs remounts with a fresh load state.
       return <MigEditor key={route.key} migKey={route.key} repo={repo} />
     case "compare":
-      return (
-        <Placeholder
-          title={`Compare: ${route.a} ↔ ${route.b}`}
-          note="Semantic compare lands in Phase 4."
-        />
-      )
+      return <MigCompare keyA={route.a} keyB={route.b} repo={repo} />
   }
-}
-
-function Placeholder({ title, note }: { title: string; note: string }) {
-  return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-2 p-6">
-      <h1 className="text-base font-semibold tracking-tight">{title}</h1>
-      <p className="text-sm text-muted-foreground">{note}</p>
-    </div>
-  )
 }
