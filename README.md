@@ -27,7 +27,7 @@ overlays that constrain a standard message for a specific use.
 - **Validate** constraint expressions (a small formal rule language over element
   paths) and validate sample message instances.
 - **Import / export** — import MIGs from YAML; export as YAML (the canonical,
-  diff-stable, re-importable form) or as Markdown / CSV (export-only).
+  diff-stable, re-importable form) or as Markdown / Excel (export-only reports).
 
 ## Usage
 

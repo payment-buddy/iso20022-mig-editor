@@ -48,7 +48,7 @@ in `features/`, `app/`, and `components/`. Path alias `@/` → `src/`.
 - **`core/mig/`** — all MIG logic: merging, diffing, validation, YAML
   serialization, revisions, and report export. **Only YAML round-trips** (export
   via `serializeMig.ts`, import-validation via `validateMigImport.ts`);
-  `migMarkdown.ts` and `migCsv.ts` are **export-only** reports. The heart of the app.
+  `migMarkdown.ts` and `migXlsx.ts` are **export-only** reports. The heart of the app.
 - **`core/mig/expression/`** — a small lexer→parser→evaluator for the formal
   constraint-expression language (custom DSL on element paths). Used for advisory
   validation of constraint rules; never blocks editing. The XML grammar a
