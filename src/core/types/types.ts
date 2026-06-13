@@ -112,6 +112,17 @@ export interface ElementOverride {
   examples?: string[]
   annotations?: Record<string, string>
   additionalConstraints?: Constraint[]
+  /** Overlays on standard/inherited constraints, keyed by constraint name. */
+  constraintOverrides?: Record<string, ConstraintOverride>
+}
+
+/**
+ * MIG overlay on a standard (ISO) or inherited constraint, keyed by name in
+ * `ElementOverride.constraintOverrides`. Tri-state per field (absent = inherit,
+ * `null` = clear, value = set).
+ */
+export interface ConstraintOverride {
+  expression?: string | null
 }
 
 /** Map of `xmlPath` → override. */

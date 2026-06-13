@@ -1,4 +1,9 @@
-import type { Constraint, ElementOverride, MessageImplementationGuide } from "@/core/types/types"
+import type {
+  Constraint,
+  ConstraintOverride,
+  ElementOverride,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 
 // Immutable helpers for editing a MIG's element overrides. Override fields are
 // tri-state (MIG_FORMAT.md / CLAUDE.md): absent = inherit, `null` = remove the
@@ -139,6 +144,64 @@ export function removeConstraint(
   const nextOverride = { ...prev }
   if (remaining.length === 0) delete nextOverride.additionalConstraints
   else nextOverride.additionalConstraints = remaining
+
+  const elementOverrides = { ...mig.elementOverrides }
+  if (Object.keys(nextOverride).length === 0) delete elementOverrides[path]
+  else elementOverrides[path] = nextOverride
+
+  return { ...mig, elementOverrides }
+}
+
+/**
+ * Set one field of the overlay on the standard/inherited constraint `name` at
+ * `path` (tri-state value, e.g. an `expression` string or `null`), returning a
+ * new MIG. Creates the `constraintOverrides` map and entry as needed.
+ */
+export function setConstraintOverrideField<K extends keyof ConstraintOverride>(
+  mig: MessageImplementationGuide,
+  path: string,
+  name: string,
+  field: K,
+  value: ConstraintOverride[K],
+): MessageImplementationGuide {
+  const prev = mig.elementOverrides[path] ?? {}
+  const map = prev.constraintOverrides ?? {}
+  return {
+    ...mig,
+    elementOverrides: {
+      ...mig.elementOverrides,
+      [path]: {
+        ...prev,
+        constraintOverrides: { ...map, [name]: { ...map[name], [field]: value } },
+      },
+    },
+  }
+}
+
+/**
+ * Remove one field of the overlay on constraint `name` at `path` (back to
+ * inherited). Prunes the emptied entry, then the `constraintOverrides` map, then
+ * the override entry — keeping the MIG minimal, like `clearOverrideField`.
+ */
+export function clearConstraintOverrideField(
+  mig: MessageImplementationGuide,
+  path: string,
+  name: string,
+  field: keyof ConstraintOverride,
+): MessageImplementationGuide {
+  const prev = mig.elementOverrides[path]
+  const entry = prev?.constraintOverrides?.[name]
+  if (!entry || !(field in entry)) return mig
+
+  const nextEntry = { ...entry }
+  delete nextEntry[field]
+  const map = { ...prev.constraintOverrides }
+  if (Object.keys(nextEntry).length === 0) delete map[name]
+  else map[name] = nextEntry
+
+  const nextOverride = { ...prev }
+  if (Object.keys(map).length === 0) delete nextOverride.constraintOverrides
+  else nextOverride.constraintOverrides = map
 
   const elementOverrides = { ...mig.elementOverrides }
   if (Object.keys(nextOverride).length === 0) delete elementOverrides[path]

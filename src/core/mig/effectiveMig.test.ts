@@ -102,6 +102,20 @@ describe("mergeOverrides (key-presence, tri-state)", () => {
   it("prunes a path whose merged override is empty", () => {
     expect(mergeOverrides(chainOf({ "Doc/Amt": {} }))).toEqual({})
   })
+
+  it("merges constraintOverrides by name, the leaf field winning by key-presence", () => {
+    const merged = mergeOverrides(
+      chainOf(
+        { "Doc/Amt": { constraintOverrides: { R1: { expression: "a > 0" } } } },
+        { "Doc/Amt": { constraintOverrides: { R1: { expression: null }, R2: { expression: "b" } } } },
+      ),
+    )
+    expect("expression" in merged["Doc/Amt"].constraintOverrides!.R1).toBe(true)
+    expect(merged["Doc/Amt"].constraintOverrides).toEqual({
+      R1: { expression: null },
+      R2: { expression: "b" },
+    })
+  })
 })
 
 describe("effectiveMig", () => {

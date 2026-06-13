@@ -28,6 +28,7 @@ export const ELEMENT_OVERRIDE_PROPERTY_ORDER = [
   "examples",
   "annotations",
   "additionalConstraints",
+  "constraintOverrides",
 ] as const
 
 export const CONSTRAINT_PROPERTY_ORDER = [
@@ -36,3 +37,5 @@ export const CONSTRAINT_PROPERTY_ORDER = [
   "expression",
   "annotations",
 ] as const
+
+export const CONSTRAINT_OVERRIDE_PROPERTY_ORDER = ["expression"] as const

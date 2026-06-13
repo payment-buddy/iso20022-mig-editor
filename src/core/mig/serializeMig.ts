@@ -14,12 +14,14 @@
 
 import { stringify } from "yaml"
 import {
+  CONSTRAINT_OVERRIDE_PROPERTY_ORDER,
   CONSTRAINT_PROPERTY_ORDER,
   ELEMENT_OVERRIDE_PROPERTY_ORDER,
   MIG_PROPERTY_ORDER,
 } from "@/core/mig/migConstants"
 import type {
   Constraint,
+  ConstraintOverride,
   ElementOverride,
   MessageElement,
   MessageImplementationGuide,
@@ -89,6 +91,28 @@ function canonicalConstraint(c: Constraint, declared: string[] | undefined): Rec
   return out
 }
 
+/** One constraint override with keys in canonical order; preserves `null`, drops empties. */
+function canonicalConstraintOverride(co: ConstraintOverride): Record<string, unknown> | null {
+  const out: Record<string, unknown> = {}
+  for (const key of CONSTRAINT_OVERRIDE_PROPERTY_ORDER) {
+    if (!(key in co)) continue
+    out[key] = co[key] // value or explicit null (tri-state preserved)
+  }
+  return Object.keys(out).length > 0 ? out : null
+}
+
+/** A `constraintOverrides` map, keyed by name (sorted); empty entries/map dropped. */
+function canonicalConstraintOverrides(
+  map: Record<string, ConstraintOverride>,
+): Record<string, unknown> | null {
+  const out: Record<string, unknown> = {}
+  for (const name of Object.keys(map).sort(byString)) {
+    const co = canonicalConstraintOverride(map[name])
+    if (co) out[name] = co
+  }
+  return Object.keys(out).length > 0 ? out : null
+}
+
 /** One element override with keys in canonical order; preserves `null`, drops empties. */
 function canonicalOverride(
   override: ElementOverride,
@@ -109,6 +133,11 @@ function canonicalOverride(
           .sort((a, b) => byString(a.name, b.name))
           .map((c) => canonicalConstraint(c, mig.constraintAnnotationNames))
       }
+      continue
+    }
+    if (key === "constraintOverrides") {
+      const co = canonicalConstraintOverrides(override.constraintOverrides ?? {})
+      if (co) out.constraintOverrides = co
       continue
     }
     const v = override[key]

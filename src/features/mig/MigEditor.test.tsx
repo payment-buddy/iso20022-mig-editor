@@ -484,7 +484,7 @@ describe("MigEditor", () => {
     expect(names).toEqual(["New constraint", "New constraint 2"])
   })
 
-  it("keeps a standard, spec-inherited constraint read-only", async () => {
+  it("overlays an expression on a standard constraint (name/definition stay read-only)", async () => {
     const user = userEvent.setup()
     const repo: ERepository = {
       businessAreas: [
@@ -514,9 +514,21 @@ describe("MigEditor", () => {
 
     const panel = screen.getByRole("region", { name: /constraint details/i })
     expect(within(panel).getByText("StdRule")).toBeInTheDocument()
-    // No inline-edit or delete affordances on a standard constraint.
-    expect(within(panel).queryByRole("button", { name: /edit constraint/i })).not.toBeInTheDocument()
+    // Name and definition stay read-only; there is no delete on a standard rule.
+    expect(within(panel).queryByRole("button", { name: "Edit Constraint name" })).not.toBeInTheDocument()
+    expect(
+      within(panel).queryByRole("button", { name: "Edit Constraint definition" }),
+    ).not.toBeInTheDocument()
     expect(within(panel).queryByRole("button", { name: /delete constraint/i })).not.toBeInTheDocument()
+
+    // The expression, however, can be overlaid — stored under constraintOverrides.
+    await user.click(within(panel).getByRole("button", { name: "Edit Constraint expression" }))
+    await user.type(within(panel).getByRole("textbox", { name: "Constraint expression" }), "Amt > 0")
+    await user.tab()
+
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.constraintOverrides,
+    ).toEqual({ StdRule: { expression: "Amt > 0" } })
   })
 
   it("deletes an added constraint after confirming, cancelling is a no-op", async () => {

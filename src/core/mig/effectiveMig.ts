@@ -13,6 +13,7 @@
 import { getMigKey } from "./migKey"
 import type {
   Constraint,
+  ConstraintOverride,
   ElementOverride,
   ElementOverrides,
   MessageImplementationGuide,
@@ -26,6 +27,21 @@ function unionConstraints(base: Constraint[] = [], layer: Constraint[] = []): Co
   return [...byName.values()]
 }
 
+/**
+ * Merge two `constraintOverrides` maps by name; within a name, layer fields win
+ * by key-presence (a descendant's `null`/`false` beats an ancestor's value).
+ */
+function mergeConstraintOverrides(
+  base: Record<string, ConstraintOverride> = {},
+  layer: Record<string, ConstraintOverride> = {},
+): Record<string, ConstraintOverride> {
+  const out: Record<string, ConstraintOverride> = {}
+  for (const name of new Set([...Object.keys(base), ...Object.keys(layer)])) {
+    out[name] = { ...base[name], ...layer[name] }
+  }
+  return out
+}
+
 /** Merge one override layer over a base: scalars by key-presence, composites accumulate. */
 function mergeOverride(base: ElementOverride, layer: ElementOverride): ElementOverride {
   const out: ElementOverride = { ...base, ...layer } // scalars/facets: layer wins, null preserved
@@ -37,6 +53,13 @@ function mergeOverride(base: ElementOverride, layer: ElementOverride): ElementOv
   const constraints = unionConstraints(base.additionalConstraints, layer.additionalConstraints)
   if (constraints.length > 0) out.additionalConstraints = constraints
   else delete out.additionalConstraints
+
+  const constraintOverrides = mergeConstraintOverrides(
+    base.constraintOverrides,
+    layer.constraintOverrides,
+  )
+  if (Object.keys(constraintOverrides).length > 0) out.constraintOverrides = constraintOverrides
+  else delete out.constraintOverrides
 
   return out
 }

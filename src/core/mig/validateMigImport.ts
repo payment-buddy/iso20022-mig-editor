@@ -13,6 +13,10 @@ const constraint = z.object({
   annotations: z.record(z.string(), z.string().nullable()).optional(),
 })
 
+const constraintOverride = z.object({
+  expression: z.string().nullable().optional(),
+})
+
 const elementOverride = z.object({
   definition: z.string().nullable().optional(),
   minOccurs: z.number().nullable().optional(),
@@ -28,6 +32,7 @@ const elementOverride = z.object({
   examples: z.array(z.string()).optional(),
   annotations: z.record(z.string(), z.string()).optional(),
   additionalConstraints: z.array(constraint).optional(),
+  constraintOverrides: z.record(z.string(), constraintOverride).optional(),
 })
 
 export const migSchema = z.object({

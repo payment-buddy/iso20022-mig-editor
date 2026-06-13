@@ -119,6 +119,28 @@ describe("serializeMig", () => {
     expect(alpha.indexOf("expression")).toBeLessThan(alpha.indexOf("annotations"))
   })
 
+  it("serializes constraintOverrides (after additionalConstraints, name-sorted, null kept, empties pruned)", () => {
+    const out = serializeMig(
+      mig({
+        elementOverrides: {
+          "Doc/Amt": {
+            additionalConstraints: [{ name: "Add", definition: "a" }],
+            constraintOverrides: {
+              Zeta: { expression: "x > 0" },
+              Alpha: { expression: null },
+              Empty: {}, // pruned
+            },
+          },
+        },
+      }),
+    )
+    expect(out.indexOf("additionalConstraints")).toBeLessThan(out.indexOf("constraintOverrides"))
+    const block = out.slice(out.indexOf("constraintOverrides"))
+    expect(block.indexOf("Alpha")).toBeLessThan(block.indexOf("Zeta")) // name-sorted
+    expect(block).not.toContain("Empty") // entry with no fields dropped
+    expect(block).toMatch(/Alpha:\s*\n\s*expression: null/) // tri-state null preserved
+  })
+
   it("orders annotation values by declared name, then alphabetically", () => {
     const out = serializeMig(
       mig({

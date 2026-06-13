@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { CheckIcon, DownloadSimpleIcon, ShieldCheckIcon } from "@phosphor-icons/react"
+import { DownloadSimpleIcon, ShieldCheckIcon } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import { effectiveMig } from "@/core/mig/effectiveMig"
@@ -9,25 +9,26 @@ import { buildPathOrder } from "@/core/mig/serializeMig"
 import { validateMigConsistency } from "@/core/mig/validateMig"
 import {
   addConstraint,
+  clearConstraintOverrideField,
   clearOverrideField,
   nextConstraintName,
   removeConstraint,
+  setConstraintOverrideField,
   setOverrideField,
   updateConstraint,
 } from "@/core/mig/overrides"
 import { deleteMig, loadAllMigs, saveMig } from "@/core/storage/migStore"
-import type { Constraint, ERepository, MessageImplementationGuide } from "@/core/types/types"
+import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
 import {
-  DetailPanel,
   ElementTree,
-  Field,
   type ElementTreeHandle,
 } from "@/features/repository/ElementTree"
 import { MigMetadata } from "./MigMetadata"
 import { MigElementDetail } from "./MigElementDetail"
 import { MigConstraintDetail } from "./MigConstraintDetail"
+import { MigStandardConstraintDetail } from "./MigStandardConstraintDetail"
 import { MigDiagnostics } from "./MigDiagnostics"
 import { ExportMenu } from "./ExportMenu"
 import { ValidateInstanceDialog } from "./ValidateInstanceDialog"
@@ -202,10 +203,30 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
             )
           }
           if (sel?.kind === "constraint") {
-            // Standard, spec-inherited constraints are read-only; MIG-specific
-            // (added) ones are editable.
+            // Standard (ISO) / inherited constraints: name + definition read-only,
+            // but the MIG can overlay an expression. MIG-added ones are fully
+            // editable below.
             if (!sel.added) {
-              return <ConstraintDetail constraint={sel.constraint} path={sel.path} />
+              const elementPath = sel.parentPath
+              const name = sel.constraint.name
+              return (
+                <MigStandardConstraintDetail
+                  key={sel.path}
+                  constraint={sel.constraint}
+                  element={elementAtPath(root, elementPath)}
+                  path={sel.path}
+                  override={mig.elementOverrides[elementPath]?.constraintOverrides?.[name]}
+                  inherited={inheritedOverrides[elementPath]?.constraintOverrides?.[name]}
+                  onSetExpression={(expression) =>
+                    persist(
+                      setConstraintOverrideField(mig, elementPath, name, "expression", expression),
+                    )
+                  }
+                  onClearExpression={() =>
+                    persist(clearConstraintOverrideField(mig, elementPath, name, "expression"))
+                  }
+                />
+              )
             }
             const elementPath = sel.parentPath
             const owner = elementAtPath(root, elementPath)
@@ -249,31 +270,6 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
         }}
       />
     </div>
-  )
-}
-
-/** Read-only detail for a standard, spec-inherited constraint. */
-function ConstraintDetail({ constraint, path }: { constraint: Constraint; path: string }) {
-  return (
-    <DetailPanel label="Constraint details">
-      <div className="flex items-center gap-1.5 font-medium">
-        <CheckIcon className="size-3.5 text-muted-foreground" aria-hidden />
-        {constraint.name}
-      </div>
-      <Field label="Path">
-        <code className="text-xs">{path}</code>
-      </Field>
-      {constraint.definition && (
-        <Field label="Definition">
-          <span className="whitespace-pre-wrap">{constraint.definition}</span>
-        </Field>
-      )}
-      {constraint.expression && (
-        <Field label="Expression">
-          <span className="whitespace-pre-wrap">{constraint.expression}</span>
-        </Field>
-      )}
-    </DetailPanel>
   )
 }
 

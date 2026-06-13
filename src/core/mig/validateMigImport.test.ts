@@ -23,6 +23,16 @@ describe("validateMigImport", () => {
     expect(validateMigImport(mig)).toEqual({ ok: true, mig })
   })
 
+  it("accepts constraintOverrides with a tri-state expression", () => {
+    const mig = {
+      ...base,
+      elementOverrides: {
+        "Doc/Amt": { constraintOverrides: { R1: { expression: "a > 0" }, R2: { expression: null } } },
+      },
+    }
+    expect(validateMigImport(mig)).toEqual({ ok: true, mig })
+  })
+
   it("strips unknown keys such as formatVersion", () => {
     const result = validateMigImport({ formatVersion: 1, ...base })
     expect(result.ok && result.mig).toEqual(base)
