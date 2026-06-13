@@ -26,10 +26,13 @@ export type InstanceNode = {
 }
 
 export type InstanceDiagnostic = {
-  /** Schema xmlPath of the element/attribute — used to navigate the tree. */
+  /** Schema xmlPath of the element/attribute (a constraint node for `kind`
+   *  "constraint") — used to navigate the tree. */
   path: string
   elementName: string
   message: string
+  /** A MIG rule-expression violation, vs. an (absent) structural one. */
+  kind?: "constraint"
 }
 
 /** Effective cardinality of `el` at a path, given its (merged) override. */
@@ -98,10 +101,13 @@ function walk(
     if (!parsed.ok) continue
     const result = evaluateExpression(parsed.ast, node)
     if (result.ok && !result.value) {
+      const definition = constraint.definition.trim()
       out.push({
-        path,
-        elementName: el.name,
-        message: `Constraint "${constraint.name}" is not satisfied.`,
+        kind: "constraint",
+        // Point at the constraint node so navigation opens its detail panel.
+        path: `${path}/${constraint.name}`,
+        elementName: constraint.name,
+        message: definition || "This constraint is not satisfied.",
       })
     }
   }

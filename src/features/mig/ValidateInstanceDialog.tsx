@@ -150,6 +150,11 @@ function Results({ result, onNavigate }: { result: Result; onNavigate: (path: st
               className="w-full rounded-sm px-3 py-1 text-left text-xs outline-none hover:bg-amber-500/15 focus-visible:ring-2 focus-visible:ring-ring/30"
             >
               <span className="font-medium">{d.elementName}</span>
+              {d.kind === "constraint" && (
+                <span className="ml-1.5 rounded-sm bg-amber-500/20 px-1 py-px text-[0.5625rem] font-semibold tracking-wide uppercase">
+                  Constraint
+                </span>
+              )}
               <span className="block text-amber-700/90 dark:text-amber-500/90">{d.message}</span>
               <code className="text-[0.625rem] text-amber-700/60 dark:text-amber-500/60">{d.path}</code>
             </button>

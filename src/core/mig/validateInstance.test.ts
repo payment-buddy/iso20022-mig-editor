@@ -155,16 +155,24 @@ describe("validateMessageInstance", () => {
   })
 
   describe("MIG-added constraint expressions", () => {
-    const constraint = (expression: string): ElementOverrides => ({
-      Doc: { additionalConstraints: [{ name: "AmtRule", definition: "", expression }] },
+    const constraint = (expression: string, definition = "Amount must exceed 600"): ElementOverrides => ({
+      Doc: { additionalConstraints: [{ name: "AmtRule", definition, expression }] },
     })
 
-    it("flags a constraint whose expression is false for the instance", () => {
+    it("flags a constraint whose expression is false, pointing at the constraint node", () => {
       // Amt is 500, so "Amt > 600" fails on the Doc context node.
       const d = run(valid(), constraint("Amt > 600"))
-      expect(d).toContainEqual(
-        expect.objectContaining({ path: "Doc", message: 'Constraint "AmtRule" is not satisfied.' }),
-      )
+      expect(d).toContainEqual({
+        kind: "constraint",
+        path: "Doc/AmtRule",
+        elementName: "AmtRule",
+        message: "Amount must exceed 600",
+      })
+    })
+
+    it("falls back to a generic message when the constraint has no definition", () => {
+      const d = run(valid(), constraint("Amt > 600", ""))
+      expect(d[0]).toMatchObject({ message: "This constraint is not satisfied." })
     })
 
     it("passes a satisfied expression", () => {
