@@ -6,6 +6,7 @@ import {
   addConstraint,
   clearOverrideField,
   nextConstraintName,
+  removeConstraint,
   setOverrideField,
   updateConstraint,
 } from "@/core/mig/overrides"
@@ -159,6 +160,11 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                 onSetDefinition={(definition) =>
                   persist(updateConstraint(mig, elementPath, current, { definition }))
                 }
+                onDelete={() => {
+                  persist(removeConstraint(mig, elementPath, current))
+                  // The constraint is gone; fall back to selecting its element.
+                  actions.select(elementPath)
+                }}
               />
             )
           }

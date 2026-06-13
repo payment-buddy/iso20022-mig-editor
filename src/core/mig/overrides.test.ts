@@ -4,6 +4,7 @@ import {
   addConstraint,
   clearOverrideField,
   nextConstraintName,
+  removeConstraint,
   setOverrideField,
   updateConstraint,
 } from "./overrides"
@@ -148,6 +149,45 @@ describe("updateConstraint", () => {
   it("does not mutate the input MIG", () => {
     const before = withConstraints("A")
     updateConstraint(before, "Doc/Amt", "A", { name: "Z" })
+    expect(before.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
+      { name: "A", definition: "" },
+    ])
+  })
+})
+
+describe("removeConstraint", () => {
+  const withConstraints = (...names: string[]) =>
+    mig({ "Doc/Amt": { additionalConstraints: names.map((name) => ({ name, definition: "" })) } })
+
+  it("removes one additional constraint, keeping the rest", () => {
+    const next = removeConstraint(withConstraints("A", "B"), "Doc/Amt", "A")
+    expect(next.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
+      { name: "B", definition: "" },
+    ])
+  })
+
+  it("prunes the empty array but keeps other override fields", () => {
+    const before = mig({
+      "Doc/Amt": { minOccurs: 0, additionalConstraints: [{ name: "A", definition: "" }] },
+    })
+    const next = removeConstraint(before, "Doc/Amt", "A")
+    expect(next.elementOverrides["Doc/Amt"]).toEqual({ minOccurs: 0 })
+  })
+
+  it("prunes the override entry entirely when nothing else remains", () => {
+    const next = removeConstraint(withConstraints("A"), "Doc/Amt", "A")
+    expect(next.elementOverrides).toEqual({})
+  })
+
+  it("is a no-op when the constraint or path is absent", () => {
+    const before = withConstraints("A")
+    expect(removeConstraint(before, "Doc/Amt", "Missing")).toBe(before)
+    expect(removeConstraint(before, "Doc/Other", "A")).toBe(before)
+  })
+
+  it("does not mutate the input MIG", () => {
+    const before = withConstraints("A")
+    removeConstraint(before, "Doc/Amt", "A")
     expect(before.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
       { name: "A", definition: "" },
     ])

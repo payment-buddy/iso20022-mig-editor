@@ -1,5 +1,7 @@
-import { Check } from "@phosphor-icons/react"
+import { useState } from "react"
+import { Check, Trash } from "@phosphor-icons/react"
 import type { Constraint } from "@/core/types/types"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
 
@@ -16,6 +18,7 @@ export function MigConstraintDetail({
   takenNames,
   onRename,
   onSetDefinition,
+  onDelete,
 }: {
   constraint: Constraint
   /** Full xmlPath of the constraint (for display). */
@@ -24,7 +27,10 @@ export function MigConstraintDetail({
   takenNames: string[]
   onRename: (name: string) => void
   onSetDefinition: (definition: string) => void
+  onDelete: () => void
 }) {
+  const [confirmOpen, setConfirmOpen] = useState(false)
+
   const commitName = (text: string) => {
     const name = text.trim()
     if (name === "" || name === constraint.name || takenNames.includes(name)) return
@@ -62,6 +68,27 @@ export function MigConstraintDetail({
           multiline
         />
       </div>
+
+      <div className="border-t border-border pt-3">
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          className="flex items-center gap-1 rounded-sm text-xs font-medium text-destructive outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/30"
+        >
+          <Trash className="size-3.5" aria-hidden />
+          Delete constraint
+        </button>
+      </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Delete “${constraint.name}”?`}
+        description="This removes the constraint from this MIG. This cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={onDelete}
+      />
     </DetailPanel>
   )
 }

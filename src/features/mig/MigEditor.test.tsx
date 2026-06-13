@@ -361,8 +361,38 @@ describe("MigEditor", () => {
 
     const panel = screen.getByRole("region", { name: /constraint details/i })
     expect(within(panel).getByText("StdRule")).toBeInTheDocument()
-    // No inline-edit affordances on a standard constraint.
+    // No inline-edit or delete affordances on a standard constraint.
     expect(within(panel).queryByRole("button", { name: /edit constraint/i })).not.toBeInTheDocument()
+    expect(within(panel).queryByRole("button", { name: /delete constraint/i })).not.toBeInTheDocument()
+  })
+
+  it("deletes an added constraint after confirming, cancelling is a no-op", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    const elementPanel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(elementPanel).getByRole("button", { name: /add constraint/i }))
+    const panel = await screen.findByRole("region", { name: /constraint details/i })
+
+    // Cancelling the confirm leaves the constraint in place.
+    await user.click(within(panel).getByRole("button", { name: /delete constraint/i }))
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Cancel" }))
+    expect(screen.getByRole("treeitem", { name: /constraint new constraint$/i })).toBeInTheDocument()
+
+    // Confirming removes it and selection falls back to the owning element.
+    await user.click(within(panel).getByRole("button", { name: /delete constraint/i }))
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Delete" }))
+
+    expect(
+      screen.queryByRole("treeitem", { name: /constraint new constraint$/i }),
+    ).not.toBeInTheDocument()
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]).toBeUndefined()
+    expect(screen.getByRole("treeitem", { name: "Document" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    )
   })
 
   it("shows Min/Max length only for length-bearing types and edits them", async () => {

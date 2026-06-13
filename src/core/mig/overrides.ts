@@ -114,3 +114,30 @@ export function updateConstraint(
     },
   }
 }
+
+/**
+ * Remove a MIG-specific constraint (by `name`) at `path`, returning a new MIG.
+ * Prunes the `additionalConstraints` array when it empties, then the override
+ * entry entirely when nothing else remains (keeping the MIG minimal, like
+ * `clearOverrideField`). No-op if no such additional constraint exists.
+ */
+export function removeConstraint(
+  mig: MessageImplementationGuide,
+  path: string,
+  name: string,
+): MessageImplementationGuide {
+  const prev = mig.elementOverrides[path]
+  const list = prev?.additionalConstraints
+  if (!list || !list.some((c) => c.name === name)) return mig
+
+  const remaining = list.filter((c) => c.name !== name)
+  const nextOverride = { ...prev }
+  if (remaining.length === 0) delete nextOverride.additionalConstraints
+  else nextOverride.additionalConstraints = remaining
+
+  const elementOverrides = { ...mig.elementOverrides }
+  if (Object.keys(nextOverride).length === 0) delete elementOverrides[path]
+  else elementOverrides[path] = nextOverride
+
+  return { ...mig, elementOverrides }
+}
