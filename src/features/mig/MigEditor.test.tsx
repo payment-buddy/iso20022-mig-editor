@@ -2,7 +2,7 @@
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen, within } from "@testing-library/react"
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
@@ -820,6 +820,62 @@ describe("MigEditor", () => {
     expect(saved?.elementOverrides["DocumentTag"]?.additionalConstraints).toEqual([
       { name: "New constraint", definition: "" },
     ])
+  })
+
+  it("renames the MIG, re-keys storage, repoints children and re-routes", async () => {
+    const user = userEvent.setup()
+    const child: MessageImplementationGuide = {
+      name: "Child",
+      version: "1",
+      messageIdentifier: "pacs.008.001.10",
+      parentMIG: "EPC Guide:1.0",
+      elementOverrides: {},
+    }
+    await saveMig(MIG)
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const meta = screen.getByRole("region", { name: /mig metadata/i })
+
+    await user.click(within(meta).getByRole("button", { name: "Edit Name" }))
+    const input = within(meta).getByRole("textbox", { name: "Name" })
+    await user.clear(input)
+    await user.type(input, "EPC Renamed")
+    await user.tab()
+
+    await waitFor(async () => {
+      // Stored under the new key; the old key is gone.
+      expect(await loadMig("EPC Renamed:1.0")).toMatchObject({ name: "EPC Renamed" })
+    })
+    expect(await loadMig("EPC Guide:1.0")).toBeNull()
+    // The child's parentMIG followed the rename, and the route points at the new key.
+    expect((await loadMig("Child:1"))?.parentMIG).toBe("EPC Renamed:1.0")
+    expect(window.location.hash).toBe("#mig/EPC%20Renamed%3A1.0")
+  })
+
+  it("rejects a rename that collides with an existing MIG", async () => {
+    const user = userEvent.setup()
+    const taken: MessageImplementationGuide = {
+      name: "Taken",
+      version: "1.0",
+      messageIdentifier: "pacs.008.001.10",
+      elementOverrides: {},
+    }
+    await saveMig(MIG)
+    await saveMig(taken)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const meta = screen.getByRole("region", { name: /mig metadata/i })
+
+    await user.click(within(meta).getByRole("button", { name: "Edit Name" }))
+    const input = within(meta).getByRole("textbox", { name: "Name" })
+    await user.clear(input)
+    await user.type(input, "Taken")
+    await user.tab()
+
+    expect(await within(meta).findByRole("alert")).toHaveTextContent(/already exists/i)
+    // Unchanged: still stored under its original key.
+    expect(await loadMig("EPC Guide:1.0")).toMatchObject({ name: "EPC Guide" })
   })
 
   it("offers same-message MIGs as parents and autosaves the choice", async () => {

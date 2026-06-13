@@ -1,4 +1,4 @@
-import { type ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { Warning } from "@phosphor-icons/react"
 import {
   addAnnotation,
@@ -17,19 +17,26 @@ import { InlineEdit } from "@/components/ui/inline-edit"
  * Editable MIG metadata block (FUNCTIONALITY §5.7): Description (inline
  * textarea), Parent MIG (eligible-parent dropdown with a link and a not-loaded
  * warning), and the shared element- and constraint-annotation names (values are
- * then filled per target in the detail panels). Name and Version are read-only —
- * their
- * identity-key rename + reference rewrite lands in a follow-up slice.
+ * then filled per target in the detail panels). Name and Version are inline-edit
+ * — committing either re-keys the MIG via `onRename` (which re-routes on success
+ * and returns an error message on failure).
  */
 export function MigMetadata({
   mig,
   allMigs,
   onChange,
+  onRename,
 }: {
   mig: MessageImplementationGuide
   allMigs: MessageImplementationGuide[]
   onChange: (next: MessageImplementationGuide) => void
+  /** Rename to a new name/version (new identity key). Returns an error, or `null`. */
+  onRename: (name: string, version: string) => Promise<string | null>
 }) {
+  const [renameError, setRenameError] = useState<string | null>(null)
+  const rename = (name: string, version: string) => {
+    void onRename(name, version).then(setRenameError)
+  }
   const eligible = eligibleParents(allMigs, mig)
   const parentKey = mig.parentMIG ?? ""
   const parentLoaded = allMigs.find((m) => getMigKey(m) === parentKey)
@@ -88,11 +95,26 @@ export function MigMetadata({
   return (
     <section aria-label="MIG metadata" className="flex flex-col gap-3">
       <Row label="Name">
-        <span title="Renaming the MIG lands in a later slice.">{mig.name}</span>
+        <InlineEdit
+          value={mig.name}
+          onCommit={(v) => rename(v, mig.version)}
+          ariaLabel="Name"
+          placeholder="MIG name"
+        />
       </Row>
       <Row label="Version">
-        <span title="Changing the version lands in a later slice.">{mig.version}</span>
+        <InlineEdit
+          value={mig.version}
+          onCommit={(v) => rename(mig.name, v)}
+          ariaLabel="Version"
+          placeholder="Version"
+        />
       </Row>
+      {renameError && (
+        <p role="alert" className="text-xs text-destructive">
+          {renameError}
+        </p>
+      )}
       <Row label="Parent MIG">
         <div className="flex flex-col gap-1">
           <select

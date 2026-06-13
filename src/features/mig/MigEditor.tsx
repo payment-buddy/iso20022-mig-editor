@@ -3,6 +3,7 @@ import { Check, DownloadSimple, FileText } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { effectiveMig } from "@/core/mig/effectiveMig"
 import { getMigKey } from "@/core/mig/migKey"
+import { renameMig } from "@/core/mig/renameMig"
 import { buildPathOrder } from "@/core/mig/serializeMig"
 import {
   addConstraint,
@@ -12,14 +13,14 @@ import {
   setOverrideField,
   updateConstraint,
 } from "@/core/mig/overrides"
-import { loadAllMigs, saveMig } from "@/core/storage/migStore"
+import { deleteMig, loadAllMigs, saveMig } from "@/core/storage/migStore"
 import type {
   Constraint,
   ERepository,
   MessageElement,
   MessageImplementationGuide,
 } from "@/core/types/types"
-import { hashFor } from "@/app/routes"
+import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
 import { DetailPanel, ElementTree, Field } from "@/features/repository/ElementTree"
 import { MigMetadata } from "./MigMetadata"
@@ -58,12 +59,25 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
     }
   }, [migKey])
 
-  // Autosave: persist the edited MIG and reflect it in the loaded list. Name and
-  // Version are read-only here, so the identity key is unchanged.
+  // Autosave: persist the edited MIG (same identity key) and reflect it locally.
   const persist = (next: MessageImplementationGuide) => {
     setMig(next)
     setAllMigs((prev) => prev.map((m) => (getMigKey(m) === migKey ? next : m)))
     saveMig(next).catch((err) => console.error("Failed to save MIG:", err))
+  }
+
+  // Rename (name and/or version) → a new identity key: write under the new key,
+  // repoint child MIGs' parentMIG, drop the old key, and route to the new one.
+  // Returns an error message to show, or `null` on success/no-op.
+  const rename = async (name: string, version: string): Promise<string | null> => {
+    const result = renameMig(allMigs, migKey, name, version)
+    if (!result.ok) return result.error
+    if (!result.changed) return null
+    await saveMig(result.renamed)
+    await Promise.all(result.reparented.map(saveMig))
+    await deleteMig(result.oldKey)
+    navigate({ name: "mig", key: result.newKey })
+    return null
   }
 
   if (status === "loading") {
@@ -123,7 +137,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
         </div>
       </div>
 
-      <MigMetadata mig={mig} allMigs={allMigs} onChange={persist} />
+      <MigMetadata mig={mig} allMigs={allMigs} onChange={persist} onRename={rename} />
 
       <ElementTree
         key={mig.messageIdentifier}
