@@ -235,7 +235,8 @@ describe("MigEditor", () => {
     await user.type(input, "0")
     await user.tab()
 
-    expect(within(panel).getByRole("alert")).toHaveTextContent(/excluded.*min occurs is 1/i)
+    // Excluding while min still requires it: max 0 < min 1 is flagged.
+    expect(within(panel).getByRole("alert")).toHaveTextContent(/max 0 is below min 1/i)
   })
 
   it("edits Min/Max occurs overrides (unbounded = null)", async () => {

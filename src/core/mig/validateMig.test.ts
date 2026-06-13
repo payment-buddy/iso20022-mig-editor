@@ -97,10 +97,10 @@ describe("validateMigConsistency", () => {
       field: "Max occurs",
       message: expect.stringMatching(/occurs: max 1 is below min 2/i),
     })
-    // Excluding a mandatory element (min 1) without zeroing min is contradictory.
+    // Excluding (max 0) a mandatory element (min 1) leaves min > max → flagged.
     expect(run({ "Doc/GrpHdr": { maxOccurs: 0 } })[0]).toMatchObject({
       field: "Max occurs",
-      message: expect.stringMatching(/excluded.*min occurs is 1.*set min occurs to 0/i),
+      message: expect.stringMatching(/occurs: max 0 is below min 1/i),
     })
     // A clean exclusion of an optional element (min already 0) is fine.
     expect(run({ "Doc/Opt": { maxOccurs: 0 } })).toEqual([])

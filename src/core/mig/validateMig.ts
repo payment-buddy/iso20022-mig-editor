@@ -96,24 +96,10 @@ function elementDiagnostics(
     if (ownHas(maxField)) add(label, looseningWarning(label.toLowerCase(), max.baseline, max.effective, "max"))
   }
 
-  // Occurs: `maxOccurs: 0` excludes the element, but only consistently when
-  // `minOccurs` is 0 too — an exclusion that still requires the element (min ≥ 1)
-  // is contradictory. Otherwise a positive max below min is an empty range.
-  if (
-    (ownHas("maxOccurs") || ownHas("minOccurs")) &&
-    maxOccurs.effective !== null &&
-    minOccurs.effective !== null &&
-    maxOccurs.effective < minOccurs.effective
-  ) {
-    add(
-      "Max occurs",
-      maxOccurs.effective === 0
-        ? `Excluded (max occurs 0), but min occurs is ${minOccurs.effective} — also set min occurs to 0.`
-        : `Occurs: max ${maxOccurs.effective} is below min ${minOccurs.effective}.`,
-    )
-  } else if (ownHas("maxOccurs")) {
-    add("Max occurs", looseningWarning("max occurs", maxOccurs.baseline, maxOccurs.effective, "max"))
-  }
+  // occurs included: `maxOccurs: 0` only consistently excludes when min is 0 too;
+  // any max below min (e.g. an exclusion that still requires the element) is an
+  // empty range and flagged like the others.
+  maxPair("maxOccurs", "minOccurs", "Max occurs", "Occurs", maxOccurs, minOccurs)
   maxPair("maxLength", "minLength", "Max length", "Length", maxLength, minLength)
   maxPair("maxInclusive", "minInclusive", "Max inclusive", "Inclusive", maxInclusive, minInclusive)
 

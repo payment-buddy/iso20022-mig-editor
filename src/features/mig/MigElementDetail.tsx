@@ -108,16 +108,14 @@ export function MigElementDetail({
 
   // Loosening / range warnings (advisory, FUNCTIONALITY §5.7).
   const minOccursWarn = looseningWarning("min occurs", minOccurs.baseline, minOccurs.effective, "min")
-  // `maxOccurs: 0` excludes the element, but only consistently when min is 0 too;
-  // an exclusion that still requires it (min ≥ 1), or a positive max below min,
-  // is flagged.
+  // Any max occurs below min occurs is flagged — including `maxOccurs: 0`
+  // (exclusion) while min still requires the element. Set min occurs to 0 too for
+  // a clean exclusion.
   const maxOccursWarn =
     maxOccurs.effective !== null &&
     minOccurs.effective !== null &&
     maxOccurs.effective < minOccurs.effective
-      ? maxOccurs.effective === 0
-        ? `Excluded (max occurs 0), but min occurs is ${minOccurs.effective} — also set min occurs to 0.`
-        : `Occurs: max ${maxOccurs.effective} is below min ${minOccurs.effective}.`
+      ? `Occurs: max ${maxOccurs.effective} is below min ${minOccurs.effective}.`
       : looseningWarning("max occurs", maxOccurs.baseline, maxOccurs.effective, "max")
   const minLengthWarn = looseningWarning("min length", minLength.baseline, minLength.effective, "min")
   const maxLengthWarn =
