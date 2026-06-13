@@ -2,7 +2,7 @@
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it } from "vitest"
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
@@ -90,13 +90,39 @@ describe("MigEditor", () => {
     expect(screen.queryByRole("treeitem", { name: "Amt" })).not.toBeInTheDocument()
   })
 
-  it("shows an empty detail panel (no inline editing yet)", async () => {
+  it("shows the focused element's read-only fields in the detail panel", async () => {
     await saveMig(MIG)
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
 
     await screen.findByRole("treeitem", { name: "Document" })
+    // Root is selected by default (selection follows focus).
     const panel = screen.getByRole("region", { name: /element details/i })
-    expect(panel).toHaveTextContent(/inline editing lands/i)
+    expect(within(panel).getByText("Document")).toBeInTheDocument()
+    expect(within(panel).getByRole("button", { name: "Edit Definition" })).toBeInTheDocument()
+  })
+
+  it("edits, autosaves and resets an element's definition override", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    // Edit the root element's definition.
+    await user.click(within(panel).getByRole("button", { name: "Edit Definition" }))
+    await user.type(within(panel).getByRole("textbox", { name: "Definition" }), "House rule")
+    await user.tab() // blur commits
+
+    // Persisted as a tri-state override keyed by xmlPath, and flagged overridden.
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.definition).toBe(
+      "House rule",
+    )
+    expect(within(panel).getByText(/overridden/i)).toBeInTheDocument()
+
+    // Reset removes the override entirely.
+    await user.click(within(panel).getByRole("button", { name: /reset to inherited/i }))
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]).toBeUndefined()
+    expect(within(panel).queryByText(/overridden/i)).not.toBeInTheDocument()
   })
 
   it("shows a not-found state when the MIG is absent", async () => {

@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react"
+import { Check } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { getMigKey } from "@/core/mig/migKey"
+import { clearOverrideField, setOverrideField } from "@/core/mig/overrides"
 import { loadAllMigs, saveMig } from "@/core/storage/migStore"
-import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
+import type { Constraint, ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
-import { DetailPanel, ElementTree } from "@/features/repository/ElementTree"
+import { DetailPanel, ElementTree, Field } from "@/features/repository/ElementTree"
 import { MigMetadata } from "./MigMetadata"
+import { MigElementDetail } from "./MigElementDetail"
 
 type Status = "loading" | "missing" | "ready"
 
@@ -87,15 +90,47 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
         key={mig.messageIdentifier}
         root={root}
         ariaLabel={`${mig.name} structure`}
-        renderDetail={() => (
-          <DetailPanel label="Element details">
-            <p className="text-sm text-muted-foreground">
-              Select an element to edit its overrides. Inline editing lands in the next slice.
-            </p>
-          </DetailPanel>
-        )}
+        renderDetail={(sel) => {
+          if (sel?.kind === "element") {
+            return (
+              // Keyed by path so navigating elements resets any in-progress edit.
+              <MigElementDetail
+                key={sel.path}
+                element={sel.element}
+                path={sel.path}
+                override={mig.elementOverrides[sel.path]}
+                onSet={(text) => persist(setOverrideField(mig, sel.path, "definition", text))}
+                onReset={() => persist(clearOverrideField(mig, sel.path, "definition"))}
+              />
+            )
+          }
+          if (sel?.kind === "constraint") {
+            return <ConstraintDetail constraint={sel.constraint} path={sel.path} />
+          }
+          return null
+        }}
       />
     </div>
+  )
+}
+
+/** Read-only constraint detail. Editing additional constraints lands in a later slice. */
+function ConstraintDetail({ constraint, path }: { constraint: Constraint; path: string }) {
+  return (
+    <DetailPanel label="Constraint details">
+      <div className="flex items-center gap-1.5 font-medium">
+        <Check className="size-3.5 text-muted-foreground" aria-hidden />
+        {constraint.name}
+      </div>
+      <Field label="Path">
+        <code className="text-xs">{path}</code>
+      </Field>
+      {constraint.definition && (
+        <Field label="Definition">
+          <span className="whitespace-pre-wrap">{constraint.definition}</span>
+        </Field>
+      )}
+    </DetailPanel>
   )
 }
 
