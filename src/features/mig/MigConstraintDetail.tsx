@@ -16,8 +16,10 @@ export function MigConstraintDetail({
   constraint,
   path,
   takenNames,
+  annotationNames,
   onRename,
   onSetDefinition,
+  onSetAnnotations,
   onDelete,
 }: {
   constraint: Constraint
@@ -25,8 +27,11 @@ export function MigConstraintDetail({
   path: string
   /** Sibling constraint names (standard + other additional), excluding this one. */
   takenNames: string[]
+  /** Declared MIG-level constraint-annotation names (managed in the metadata block). */
+  annotationNames: string[]
   onRename: (name: string) => void
   onSetDefinition: (definition: string) => void
+  onSetAnnotations: (annotations: Record<string, string | null>) => void
   onDelete: () => void
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -38,6 +43,16 @@ export function MigConstraintDetail({
   }
   const commitDefinition = (text: string) => {
     if (text !== constraint.definition) onSetDefinition(text)
+  }
+
+  // Per-constraint annotation values (names are declared MIG-level). Empty
+  // clears the value; an emptied map prunes the override (handled upstream).
+  const annotationValues = constraint.annotations ?? {}
+  const setAnnotation = (name: string, value: string) => {
+    const next = { ...annotationValues }
+    if (value.trim() === "") delete next[name]
+    else next[name] = value
+    onSetAnnotations(next)
   }
 
   return (
@@ -68,6 +83,27 @@ export function MigConstraintDetail({
           multiline
         />
       </div>
+
+      {annotationNames.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
+            Annotations
+          </div>
+          {annotationNames.map((name) => (
+            <div key={name} className="flex items-start gap-2">
+              <div className="w-28 shrink-0 pt-1.5 text-xs font-medium break-words">{name}</div>
+              <div className="min-w-0 flex-1">
+                <InlineEdit
+                  value={annotationValues[name] ?? ""}
+                  onCommit={(v) => setAnnotation(name, v)}
+                  ariaLabel={`${name} value`}
+                  placeholder="—"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="border-t border-border pt-3">
         <button

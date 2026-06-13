@@ -152,6 +152,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                 constraint={sel.constraint}
                 path={sel.path}
                 takenNames={takenNames}
+                annotationNames={mig.constraintAnnotationNames ?? []}
                 onRename={(name) => {
                   persist(updateConstraint(mig, elementPath, current, { name }))
                   // The path changed; keep the renamed constraint selected.
@@ -159,6 +160,9 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                 }}
                 onSetDefinition={(definition) =>
                   persist(updateConstraint(mig, elementPath, current, { definition }))
+                }
+                onSetAnnotations={(annotations) =>
+                  persist(updateConstraint(mig, elementPath, current, { annotations }))
                 }
                 onDelete={() => {
                   persist(removeConstraint(mig, elementPath, current))

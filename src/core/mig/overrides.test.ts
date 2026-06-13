@@ -135,6 +135,19 @@ describe("updateConstraint", () => {
     ])
   })
 
+  it("sets annotation values, and prunes an emptied annotations map", () => {
+    const set = updateConstraint(withConstraints("A"), "Doc/Amt", "A", {
+      annotations: { Severity: "high" },
+    })
+    expect(set.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
+      { name: "A", definition: "", annotations: { Severity: "high" } },
+    ])
+    const cleared = updateConstraint(set, "Doc/Amt", "A", { annotations: {} })
+    expect(cleared.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
+      { name: "A", definition: "" },
+    ])
+  })
+
   it("is a no-op when the rename collides with a sibling", () => {
     const before = withConstraints("A", "B")
     expect(updateConstraint(before, "Doc/Amt", "A", { name: "B" })).toBe(before)

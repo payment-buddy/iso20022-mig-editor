@@ -1,6 +1,11 @@
 import { type ReactNode } from "react"
 import { Warning } from "@phosphor-icons/react"
-import { addAnnotation, removeAnnotation } from "@/core/mig/annotations"
+import {
+  addAnnotation,
+  addConstraintAnnotation,
+  removeAnnotation,
+  removeConstraintAnnotation,
+} from "@/core/mig/annotations"
 import { getMigKey } from "@/core/mig/migKey"
 import { eligibleParents } from "@/core/mig/parentMig"
 import type { MessageImplementationGuide } from "@/core/types/types"
@@ -11,8 +16,9 @@ import { InlineEdit } from "@/components/ui/inline-edit"
 /**
  * Editable MIG metadata block (FUNCTIONALITY §5.7): Description (inline
  * textarea), Parent MIG (eligible-parent dropdown with a link and a not-loaded
- * warning), and the shared annotation names (elements then fill values in the
- * detail panel). Name and Version are shown read-only — their
+ * warning), and the shared element- and constraint-annotation names (values are
+ * then filled per target in the detail panels). Name and Version are read-only —
+ * their
  * identity-key rename + reference rewrite lands in a follow-up slice.
  */
 export function MigMetadata({
@@ -51,9 +57,9 @@ export function MigMetadata({
     onChange(next)
   }
 
-  // Apply add/remove of annotation names; removals cascade into every element
-  // override (handled by removeAnnotation).
-  const setAnnotations = (next: string[]) => {
+  // Apply add/remove of element-annotation names; removals cascade into every
+  // element override (handled by removeAnnotation).
+  const setElementAnnotations = (next: string[]) => {
     const current = mig.elementAnnotationNames ?? []
     let result = mig
     for (const name of current.filter((n) => !next.includes(n))) {
@@ -61,6 +67,20 @@ export function MigMetadata({
     }
     for (const name of next.filter((n) => !current.includes(n))) {
       result = addAnnotation(result, name)
+    }
+    onChange(result)
+  }
+
+  // Same, for the independent constraint-annotation names; removals cascade into
+  // every additional constraint (handled by removeConstraintAnnotation).
+  const setConstraintAnnotations = (next: string[]) => {
+    const current = mig.constraintAnnotationNames ?? []
+    let result = mig
+    for (const name of current.filter((n) => !next.includes(n))) {
+      result = removeConstraintAnnotation(result, name)
+    }
+    for (const name of next.filter((n) => !current.includes(n))) {
+      result = addConstraintAnnotation(result, name)
     }
     onChange(result)
   }
@@ -112,11 +132,19 @@ export function MigMetadata({
           multiline
         />
       </Row>
-      <Row label="Annotations">
+      <Row label="Element annotations">
         <EditableList
           values={mig.elementAnnotationNames ?? []}
-          onChange={setAnnotations}
-          ariaLabel="Annotations"
+          onChange={setElementAnnotations}
+          ariaLabel="Element annotations"
+          placeholder="Add an annotation name…"
+        />
+      </Row>
+      <Row label="Constraint annotations">
+        <EditableList
+          values={mig.constraintAnnotationNames ?? []}
+          onChange={setConstraintAnnotations}
+          ariaLabel="Constraint annotations"
           placeholder="Add an annotation name…"
         />
       </Row>

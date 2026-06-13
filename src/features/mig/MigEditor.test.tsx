@@ -552,8 +552,11 @@ describe("MigEditor", () => {
     // No names yet → no annotations section in the detail panel.
     expect(within(panel).queryByText("Annotations")).not.toBeInTheDocument()
 
-    // Declare a shared annotation name in the metadata block.
-    await user.type(within(meta).getByRole("textbox", { name: /add to annotations/i }), "Usage")
+    // Declare a shared element-annotation name in the metadata block.
+    await user.type(
+      within(meta).getByRole("textbox", { name: /add to element annotations/i }),
+      "Usage",
+    )
     await user.keyboard("{Enter}")
     expect((await loadMig(getMigKey(MIG)))?.elementAnnotationNames).toEqual(["Usage"])
 
@@ -570,6 +573,48 @@ describe("MigEditor", () => {
     const saved = await loadMig(getMigKey(MIG))
     expect(saved?.elementAnnotationNames).toBeUndefined()
     expect(saved?.elementOverrides["DocumentTag"]).toBeUndefined()
+  })
+
+  it("declares constraint-annotation names in metadata and edits per-constraint values", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const meta = screen.getByRole("region", { name: /mig metadata/i })
+
+    // Add a constraint (selection moves to it → constraint detail panel).
+    const elementPanel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(elementPanel).getByRole("button", { name: /add constraint/i }))
+    const panel = await screen.findByRole("region", { name: /constraint details/i })
+
+    // No constraint-annotation names yet → no annotations section in the panel.
+    expect(within(panel).queryByText("Annotations")).not.toBeInTheDocument()
+
+    // Declare a constraint-annotation name — its own list, separate from elements.
+    await user.type(
+      within(meta).getByRole("textbox", { name: /add to constraint annotations/i }),
+      "Severity",
+    )
+    await user.keyboard("{Enter}")
+    const declared = await loadMig(getMigKey(MIG))
+    expect(declared?.constraintAnnotationNames).toEqual(["Severity"])
+    expect(declared?.elementAnnotationNames).toBeUndefined()
+
+    // The value field appears in the constraint panel; set this constraint's value.
+    await user.click(within(panel).getByRole("button", { name: "Edit Severity value" }))
+    await user.type(within(panel).getByRole("textbox", { name: "Severity value" }), "high")
+    await user.tab()
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.additionalConstraints,
+    ).toEqual([{ name: "New constraint", definition: "", annotations: { Severity: "high" } }])
+
+    // Removing the name strips the value but leaves the constraint in place.
+    await user.click(within(meta).getByRole("button", { name: "Remove Severity" }))
+    const saved = await loadMig(getMigKey(MIG))
+    expect(saved?.constraintAnnotationNames).toBeUndefined()
+    expect(saved?.elementOverrides["DocumentTag"]?.additionalConstraints).toEqual([
+      { name: "New constraint", definition: "" },
+    ])
   })
 
   it("offers same-message MIGs as parents and autosaves the choice", async () => {
