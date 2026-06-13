@@ -86,3 +86,45 @@ export interface DataTypes {
 export interface ERepository {
   businessAreas: BusinessArea[]
 }
+
+// --- Message Implementation Guide (MIG) ---
+// A MIG is a named, versioned overlay on one message definition (ported from the
+// legacy model). Constraint fields are tri-state (FUNCTIONALITY.md §10 /
+// MIG_FORMAT.md): absent = inherit, `null` = remove the constraint, value = set.
+// These are plain interfaces today; a Zod validator is added at the import
+// boundary in Phase 3 (see IMPLEMENTATION_PLAN.md §0/§1.1). Additional
+// constraints reuse the e-Repository `Constraint` shape above.
+
+export interface ElementOverride {
+  definition?: string | null
+  minOccurs?: number | null
+  maxOccurs?: number | null
+  minInclusive?: number | null
+  maxInclusive?: number | null
+  totalDigits?: number | null
+  fractionDigits?: number | null
+  minLength?: number | null
+  maxLength?: number | null
+  pattern?: string | null
+  allowedValues?: string[]
+  examples?: string[]
+  customProperties?: Record<string, string>
+  additionalConstraints?: Constraint[]
+}
+
+/** Map of `xmlPath` → override. */
+export interface ElementOverrides {
+  [xmlPath: string]: ElementOverride
+}
+
+/** Identity key is `name:version`. */
+export interface MessageImplementationGuide {
+  name: string
+  messageIdentifier: string
+  parentMIG?: string
+  version: string
+  description?: string
+  customElementPropertyNames?: string[]
+  customConstraintPropertyNames?: string[]
+  elementOverrides: ElementOverrides
+}
