@@ -12,6 +12,9 @@ const LENGTH_BASE_TYPES = new Set(["Text", "CodeSet", "IdentifierSet", "Binary"]
 /** Base types that carry an inclusive-range facet (values may be decimals). */
 const INCLUSIVE_BASE_TYPES = new Set(["Year", "Amount", "Quantity", "Rate"])
 
+/** Base types that carry total/fraction-digits facets. */
+const DIGITS_BASE_TYPES = new Set(["Amount", "Quantity", "Rate"])
+
 /** Base types that carry a pattern (regex) facet. */
 const PATTERN_BASE_TYPES = new Set(["Text", "CodeSet", "IdentifierSet", "DateTime", "Quantity"])
 
@@ -79,6 +82,7 @@ export function MigElementDetail({
   const baseMaxLength = numBaseline("maxLength", element.maxLength ?? element.length)
   const showLength = element.baseType !== null && LENGTH_BASE_TYPES.has(element.baseType)
   const showInclusive = element.baseType !== null && INCLUSIVE_BASE_TYPES.has(element.baseType)
+  const showDigits = element.baseType !== null && DIGITS_BASE_TYPES.has(element.baseType)
   const showPattern = element.baseType !== null && PATTERN_BASE_TYPES.has(element.baseType)
 
   // Pattern (regex text). Empty means "no pattern" (null = remove the constraint).
@@ -258,6 +262,43 @@ export function MigElementDetail({
             emptyLabel="none"
             onSet={(v) => onSet("maxInclusive", v)}
             onClear={() => onClear("maxInclusive")}
+          />
+        </div>
+      )}
+
+      {showDigits && (
+        <div className="grid grid-cols-2 gap-3">
+          <NumberOverrideField
+            label="Total digits"
+            ariaLabel="Total digits"
+            baseline={numBaseline("totalDigits", element.totalDigits)}
+            overridden={has("totalDigits")}
+            inherited={inheritedHere("totalDigits")}
+            effective={
+              has("totalDigits")
+                ? (override?.totalDigits ?? null)
+                : numBaseline("totalDigits", element.totalDigits)
+            }
+            allowNull
+            emptyLabel="none"
+            onSet={(v) => onSet("totalDigits", v)}
+            onClear={() => onClear("totalDigits")}
+          />
+          <NumberOverrideField
+            label="Fraction digits"
+            ariaLabel="Fraction digits"
+            baseline={numBaseline("fractionDigits", element.fractionDigits)}
+            overridden={has("fractionDigits")}
+            inherited={inheritedHere("fractionDigits")}
+            effective={
+              has("fractionDigits")
+                ? (override?.fractionDigits ?? null)
+                : numBaseline("fractionDigits", element.fractionDigits)
+            }
+            allowNull
+            emptyLabel="none"
+            onSet={(v) => onSet("fractionDigits", v)}
+            onClear={() => onClear("fractionDigits")}
           />
         </div>
       )}

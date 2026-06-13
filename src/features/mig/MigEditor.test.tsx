@@ -501,6 +501,34 @@ describe("MigEditor", () => {
     expect(within(panel).getByTitle(/inherited from a parent mig: 20/i)).toBeInTheDocument()
   })
 
+  it("shows Total/Fraction digits only for digit-bearing types and edits them", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // GrpHdr (Text) has no digits facet.
+    await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
+    expect(
+      within(screen.getByRole("region", { name: /element details/i })).queryByRole("button", {
+        name: "Edit Total digits",
+      }),
+    ).not.toBeInTheDocument()
+
+    // Rate (baseType Rate) does — edit its fraction digits.
+    await user.click(screen.getByRole("treeitem", { name: "Rate" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+    expect(within(panel).getByRole("button", { name: "Edit Total digits" })).toBeInTheDocument()
+    await user.click(within(panel).getByRole("button", { name: "Edit Fraction digits" }))
+    const input = within(panel).getByRole("spinbutton", { name: "Fraction digits" })
+    await user.clear(input)
+    await user.type(input, "2")
+    await user.tab()
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/RateTag"]?.fractionDigits,
+    ).toBe(2)
+  })
+
   it("shows Min/Max length only for length-bearing types and edits them", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)
