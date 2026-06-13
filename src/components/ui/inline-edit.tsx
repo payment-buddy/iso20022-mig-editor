@@ -109,7 +109,7 @@ export function InlineEdit({
   return multiline ? (
     <textarea
       autoFocus
-      rows={3}
+      rows={6}
       value={draft}
       aria-label={ariaLabel}
       placeholder={placeholder}
