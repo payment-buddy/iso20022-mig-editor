@@ -253,40 +253,6 @@ describe("MigCompare", () => {
     expect(within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i })).toBeEnabled()
   })
 
-  it("surfaces loosening diagnostics for an edited MIG", async () => {
-    // ISO Amt allows up to 10 chars; MIG A loosens it to 20.
-    const amt = el("Doc", [el("Amt", [], { maxLength: 10 })])
-    const repo = repoWithVersions(amt, amt)
-    const a = mig("A", { "Doc/Amt": { maxLength: 20 } }, "pacs.008.001.08")
-    const b = mig("B", { "Doc/Amt": { maxLength: 10 } }, "pacs.008.001.08")
-    await renderCompare(a, b, repo)
-
-    // A loosens → its banner shows; B stays within the standard → no banner.
-    const banner = await screen.findByRole("button", { name: /A 1\.0 has 1 issue/i })
-    expect(screen.queryByRole("button", { name: /B 1\.0 has/i })).not.toBeInTheDocument()
-
-    await userEvent.click(banner)
-    const region = screen.getByRole("region", { name: /A 1\.0: consistency diagnostics/i })
-    expect(within(region).getByText(/max length 20 is above 10/i)).toBeInTheDocument()
-  })
-
-  it("flags a loosening introduced by a copy before Save", async () => {
-    const amt = el("Doc", [el("Amt", [], { maxLength: 10 })])
-    const repo = repoWithVersions(amt, amt)
-    const a = mig("A", { "Doc/Amt": { maxLength: 20 } }, "pacs.008.001.08")
-    const b = mig("B", { "Doc/Amt": { maxLength: 10 } }, "pacs.008.001.08")
-    await renderCompare(a, b, repo)
-
-    // B starts clean.
-    expect(screen.queryByRole("button", { name: /B 1\.0 has/i })).not.toBeInTheDocument()
-
-    const card = await screen.findByRole("region", { name: /Amt — changed/i })
-    await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
-
-    // Copying A's loose value into B introduces the same loosening in B's draft.
-    expect(await screen.findByRole("button", { name: /B 1\.0 has 1 issue/i })).toBeInTheDocument()
-  })
-
   it("reports a missing MIG", async () => {
     render(<MigCompare keyA="Ghost:1.0" keyB="AlsoGhost:1.0" repo={emptyRepo} />)
     expect(await screen.findByText(/MIG not found/i)).toBeInTheDocument()

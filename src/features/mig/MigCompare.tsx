@@ -13,19 +13,11 @@ import { elementAtPath } from "@/core/erepository/elementPath"
 import { buildPathOrder } from "@/core/mig/serializeMig"
 import { applyFieldCopy } from "@/core/mig/copyChange"
 import { compareMigs, type FieldChange, type FieldRef, type PathDiff } from "@/core/mig/compareMigs"
-import { effectiveMig } from "@/core/mig/effectiveMig"
-import { getMigKey } from "@/core/mig/migKey"
-import { validateMigConsistency } from "@/core/mig/validateMig"
-import { loadAllMigs, saveMig } from "@/core/storage/migStore"
-import type {
-  ElementOverrides,
-  ERepository,
-  MessageImplementationGuide,
-} from "@/core/types/types"
+import { loadMig, saveMig } from "@/core/storage/migStore"
+import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import { MigDiagnostics } from "./MigDiagnostics"
 
 type Loaded = {
   a: MessageImplementationGuide | null
@@ -53,8 +45,6 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
   // Edits go to the draft and only persist on Save (reference-equal until then).
   const [saved, setSaved] = useState<Loaded>({ a: null, b: null })
   const [draft, setDraft] = useState<Loaded>({ a: null, b: null })
-  // The full set is kept for parent-chain resolution (inherited baseline).
-  const [allMigs, setAllMigs] = useState<MessageImplementationGuide[]>([])
   const [confirmNavOpen, setConfirmNavOpen] = useState(false)
 
   // Reference inequality is enough: only applyFieldCopy produces new objects.
@@ -63,12 +53,9 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
 
   useEffect(() => {
     let active = true
-    loadAllMigs()
-      .then((all) => {
+    Promise.all([loadMig(keyA), loadMig(keyB)])
+      .then(([a, b]) => {
         if (!active) return
-        const a = all.find((m) => getMigKey(m) === keyA) ?? null
-        const b = all.find((m) => getMigKey(m) === keyB) ?? null
-        setAllMigs(all)
         setSaved({ a, b })
         setDraft({ a, b })
         setStatus("ready")
@@ -144,26 +131,6 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
 
   const discard = () => setDraft(saved)
 
-  // Advisory loosening/consistency diagnostics for each edited draft, against its
-  // own message version and inherited (parent-chain) baseline — the same engine
-  // the editor uses. Recomputed live, so a copy that loosens shows up before Save.
-  const inheritedFor = (m: MessageImplementationGuide): ElementOverrides => {
-    const parent = m.parentMIG ? allMigs.find((x) => getMigKey(x) === m.parentMIG) : undefined
-    return parent ? effectiveMig(parent, allMigs).mig.elementOverrides : {}
-  }
-  const diagnosticsA = messageA ? validateMigConsistency(a, inheritedFor(a), messageA) : []
-  const diagnosticsB = messageB ? validateMigConsistency(b, inheritedFor(b), messageB) : []
-
-  // Jump to a flagged element's card if it's still in the diff (a resolved field
-  // drops out, so its card may be gone — then this is a no-op).
-  const scrollToPath = (path: string) => {
-    const elt = document.getElementById(cardDomId(path))
-    if (elt) {
-      elt.scrollIntoView({ block: "nearest" })
-      elt.focus()
-    }
-  }
-
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
       <div className="flex items-start justify-between gap-4">
@@ -234,17 +201,6 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
         </div>
       )}
 
-      <MigDiagnostics
-        subject={`${a.name} ${a.version}`}
-        diagnostics={diagnosticsA}
-        onSelect={scrollToPath}
-      />
-      <MigDiagnostics
-        subject={`${b.name} ${b.version}`}
-        diagnostics={diagnosticsB}
-        onSelect={scrollToPath}
-      />
-
       {diff.paths.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           These two MIGs have identical overrides — nothing to compare.
@@ -254,11 +210,6 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
       )}
     </div>
   )
-}
-
-/** Stable DOM id for an element card, so diagnostics can scroll to it. */
-function cardDomId(path: string): string {
-  return "cmp-" + path.replace(/[^a-zA-Z0-9_-]/g, "_")
 }
 
 function ComparePanel({
@@ -360,7 +311,6 @@ function ElementCard({
   return (
     <section
       ref={ref}
-      id={cardDomId(diff.path)}
       tabIndex={0}
       aria-label={`${diff.name} — ${badge.label}`}
       className="border border-t-0 outline-none first:border-t-0 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-inset"
