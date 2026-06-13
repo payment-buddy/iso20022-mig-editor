@@ -55,7 +55,10 @@ const REPO: ERepository = {
           identifier: "pacs.008.001.10",
           shortCode: "pacs.008",
           rootElement: el("Document", {
-            elements: [el("GrpHdr"), el("CdtTrfTxInf", { elements: [el("Amt")] })],
+            elements: [
+              el("GrpHdr", { baseType: "Text", minLength: 1, maxLength: 35 }),
+              el("CdtTrfTxInf", { elements: [el("Amt")] }),
+            ],
           }),
         },
       ],
@@ -175,6 +178,31 @@ describe("MigEditor", () => {
     const resets = within(panel).getAllByRole("button", { name: /reset to inherited/i })
     await user.click(resets[0])
     expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.minOccurs).toBeUndefined()
+  })
+
+  it("shows Min/Max length only for length-bearing types and edits them", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    // The root (Document) has no base type → no length fields.
+    expect(within(panel).queryByRole("button", { name: "Edit Max length" })).not.toBeInTheDocument()
+
+    // GrpHdr is a Text type → length fields appear. (The panel remounts per
+    // selection, so re-query it after navigating.)
+    await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
+    const grpPanel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(grpPanel).getByRole("button", { name: "Edit Max length" }))
+    const maxLen = within(grpPanel).getByRole("spinbutton", { name: "Max length" })
+    await user.clear(maxLen)
+    await user.type(maxLen, "20")
+    await user.tab()
+
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/GrpHdrTag"]?.maxLength).toBe(
+      20,
+    )
   })
 
   it("offers same-message MIGs as parents and autosaves the choice", async () => {

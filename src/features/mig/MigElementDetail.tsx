@@ -4,11 +4,15 @@ import type { ElementOverride, MessageElement } from "@/core/types/types"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
 
+/** Base types that carry a length facet (FUNCTIONALITY §5.7). */
+const LENGTH_BASE_TYPES = new Set(["Text", "CodeSet", "IdentifierSet", "Binary"])
+
 /**
  * Element detail/edit panel for the MIG Editor (FUNCTIONALITY §5.7). Read-only
  * identity fields plus editable override fields, each showing its inherited
  * baseline with an overridden flag + reset-to-inherited affordance. This slice
- * covers **Definition** and **Min/Max Occurs**; length/inclusive/etc. follow.
+ * covers **Definition**, **Min/Max Occurs**, and **Min/Max Length** (the latter
+ * only for length-bearing base types). Inclusive/digits/etc. follow.
  */
 export function MigElementDetail({
   element,
@@ -28,40 +32,17 @@ export function MigElementDetail({
   // Key-presence, not truthiness: a stored `null` still counts as overridden.
   const has = (field: keyof ElementOverride) => override !== undefined && field in override
 
-  // --- Definition ---
+  // Definition (text).
   const defOverridden = has("definition")
   const defBaseline = element.definition
   const defEffective = defOverridden ? (override?.definition ?? "") : defBaseline
   const commitDefinition = (text: string) =>
     text === defBaseline ? onClear("definition") : onSet("definition", text)
 
-  // --- Min occurs ---
-  const minOverridden = has("minOccurs")
-  const minEffective = minOverridden ? (override?.minOccurs ?? element.minOccurs) : element.minOccurs
-  const commitMin = (text: string) => {
-    const t = text.trim()
-    if (t === "") return
-    const n = Number(t)
-    if (!Number.isInteger(n) || n < 0) return // ignore invalid input
-    if (n === element.minOccurs) onClear("minOccurs")
-    else onSet("minOccurs", n)
-  }
-
-  // --- Max occurs (null = unbounded, which is also the "remove constraint" state) ---
-  const maxOverridden = has("maxOccurs")
-  const maxEffective = maxOverridden ? (override?.maxOccurs ?? null) : element.maxOccurs
-  const commitMax = (text: string) => {
-    const t = text.trim().toLowerCase()
-    let value: number | null
-    if (t === "" || t === "*" || t === "unbounded" || t === "∞") value = null
-    else {
-      const n = Number(t)
-      if (!Number.isInteger(n) || n < 0) return // ignore invalid input
-      value = n
-    }
-    if (value === element.maxOccurs) onClear("maxOccurs")
-    else onSet("maxOccurs", value)
-  }
+  // An exact `length` acts as the baseline for both min and max length.
+  const baseMinLength = element.minLength ?? element.length
+  const baseMaxLength = element.maxLength ?? element.length
+  const showLength = element.baseType !== null && LENGTH_BASE_TYPES.has(element.baseType)
 
   return (
     <DetailPanel label="Element details">
@@ -93,42 +74,117 @@ export function MigElementDetail({
       </OverrideRow>
 
       <div className="grid grid-cols-2 gap-3">
-        <OverrideRow
+        <NumberOverrideField
           label="Min occurs"
-          overridden={minOverridden}
-          baseline={String(element.minOccurs)}
-          onReset={() => onClear("minOccurs")}
-        >
-          <InlineEdit
-            value={String(minEffective)}
-            onCommit={commitMin}
-            ariaLabel="Min occurs"
-            placeholder="0"
-            type="number"
-          />
-        </OverrideRow>
-
-        <OverrideRow
+          ariaLabel="Min occurs"
+          baseline={element.minOccurs}
+          overridden={has("minOccurs")}
+          effective={has("minOccurs") ? (override?.minOccurs ?? element.minOccurs) : element.minOccurs}
+          allowNull={false}
+          emptyLabel="0"
+          onSet={(v) => onSet("minOccurs", v)}
+          onClear={() => onClear("minOccurs")}
+        />
+        <NumberOverrideField
           label="Max occurs"
-          overridden={maxOverridden}
-          baseline={formatMax(element.maxOccurs)}
-          onReset={() => onClear("maxOccurs")}
-        >
-          <InlineEdit
-            value={maxEffective === null ? "" : String(maxEffective)}
-            display={formatMax(maxEffective)}
-            onCommit={commitMax}
-            ariaLabel="Max occurs"
-            placeholder="unbounded"
-            type="number"
-          />
-        </OverrideRow>
+          ariaLabel="Max occurs"
+          baseline={element.maxOccurs}
+          overridden={has("maxOccurs")}
+          effective={has("maxOccurs") ? (override?.maxOccurs ?? null) : element.maxOccurs}
+          allowNull
+          emptyLabel="unbounded"
+          onSet={(v) => onSet("maxOccurs", v)}
+          onClear={() => onClear("maxOccurs")}
+        />
       </div>
+
+      {showLength && (
+        <div className="grid grid-cols-2 gap-3">
+          <NumberOverrideField
+            label="Min length"
+            ariaLabel="Min length"
+            baseline={baseMinLength}
+            overridden={has("minLength")}
+            effective={has("minLength") ? (override?.minLength ?? null) : baseMinLength}
+            allowNull
+            emptyLabel="none"
+            onSet={(v) => onSet("minLength", v)}
+            onClear={() => onClear("minLength")}
+          />
+          <NumberOverrideField
+            label="Max length"
+            ariaLabel="Max length"
+            baseline={baseMaxLength}
+            overridden={has("maxLength")}
+            effective={has("maxLength") ? (override?.maxLength ?? null) : baseMaxLength}
+            allowNull
+            emptyLabel="none"
+            onSet={(v) => onSet("maxLength", v)}
+            onClear={() => onClear("maxLength")}
+          />
+        </div>
+      )}
     </DetailPanel>
   )
 }
 
-const formatMax = (v: number | null): string => (v === null ? "unbounded" : String(v))
+/**
+ * A numeric override field (occurs, length, …). `allowNull` controls whether an
+ * empty input means "no constraint" (`null`) — true for the nullable facets,
+ * false for min-occurs which must stay a number. `emptyLabel` is shown for a
+ * `null` value (e.g. "unbounded", "none") and used as the edit placeholder.
+ */
+function NumberOverrideField({
+  label,
+  ariaLabel,
+  baseline,
+  overridden,
+  effective,
+  allowNull,
+  emptyLabel,
+  onSet,
+  onClear,
+}: {
+  label: string
+  ariaLabel: string
+  baseline: number | null
+  overridden: boolean
+  effective: number | null
+  allowNull: boolean
+  emptyLabel: string
+  onSet: (value: number | null) => void
+  onClear: () => void
+}) {
+  const fmt = (v: number | null) => (v === null ? emptyLabel : String(v))
+
+  const commit = (text: string) => {
+    const t = text.trim()
+    let value: number | null
+    if (t === "") {
+      if (!allowNull) return // ignore: this facet must remain a number
+      value = null
+    } else {
+      const n = Number(t)
+      if (!Number.isInteger(n) || n < 0) return // ignore invalid input
+      value = n
+    }
+    if (value === baseline) onClear()
+    else onSet(value)
+  }
+
+  return (
+    <OverrideRow label={label} overridden={overridden} baseline={fmt(baseline)} onReset={onClear}>
+      <InlineEdit
+        value={effective === null ? "" : String(effective)}
+        display={fmt(effective)}
+        onCommit={commit}
+        ariaLabel={ariaLabel}
+        placeholder={emptyLabel}
+        type="number"
+      />
+    </OverrideRow>
+  )
+}
 
 /**
  * One editable override field: a label with a reset-to-inherited action shown
