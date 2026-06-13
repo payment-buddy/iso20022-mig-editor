@@ -83,6 +83,16 @@ export function MigElementDetail({
     else onSet("allowedValues", values)
   }
 
+  // Examples (simple types only).
+  const showExamples = element.baseType !== null
+  const baseExamples = element.examples
+  const examplesOverridden = has("examples")
+  const effectiveExamples = examplesOverridden ? (override?.examples ?? []) : baseExamples
+  const commitExamples = (values: string[]) => {
+    if (values.length === 0 || arraysEqual(values, baseExamples)) onClear("examples")
+    else onSet("examples", values)
+  }
+
   return (
     <DetailPanel label="Element details">
       <div className="font-medium">{element.name}</div>
@@ -221,6 +231,22 @@ export function MigElementDetail({
             onChange={commitAllowed}
             ariaLabel="Allowed values"
             placeholder="Add an allowed value…"
+          />
+        </OverrideRow>
+      )}
+
+      {showExamples && (
+        <OverrideRow
+          label="Examples"
+          overridden={examplesOverridden}
+          baseline={summarize(baseExamples)}
+          onReset={() => onClear("examples")}
+        >
+          <EditableList
+            values={effectiveExamples}
+            onChange={commitExamples}
+            ariaLabel="Examples"
+            placeholder="Add an example…"
           />
         </OverrideRow>
       )}

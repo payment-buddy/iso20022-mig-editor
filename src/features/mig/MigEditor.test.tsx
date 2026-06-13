@@ -58,7 +58,12 @@ const REPO: ERepository = {
             elements: [
               el("GrpHdr", { baseType: "Text", minLength: 1, maxLength: 35 }),
               el("CdtTrfTxInf", { elements: [el("Amt")] }),
-              el("Rate", { baseType: "Rate", minInclusive: 0, maxInclusive: 100 }),
+              el("Rate", {
+                baseType: "Rate",
+                minInclusive: 0,
+                maxInclusive: 100,
+                examples: ["1.5", "2.0"],
+              }),
               el("Sts", {
                 baseType: "CodeSet",
                 codes: [
@@ -283,12 +288,35 @@ describe("MigEditor", () => {
       "ACTV",
     ])
 
-    // Add a custom value.
-    await user.type(within(panel).getByRole("textbox", { name: /add to allowed values/i }), "PEND")
-    await user.click(within(panel).getByRole("button", { name: "Add" }))
+    // Add a custom value (Enter adds, avoiding the per-list Add buttons).
+    await user.type(
+      within(panel).getByRole("textbox", { name: /add to allowed values/i }),
+      "PEND{Enter}",
+    )
     expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/StsTag"]?.allowedValues).toEqual([
       "ACTV",
       "PEND",
+    ])
+  })
+
+  it("edits examples for simple types", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // The root (Document) is a complex type → no examples editor.
+    const rootPanel = screen.getByRole("region", { name: /element details/i })
+    expect(
+      within(rootPanel).queryByRole("textbox", { name: /add to examples/i }),
+    ).not.toBeInTheDocument()
+
+    // Rate is a simple type → its inherited examples are editable; remove one.
+    await user.click(screen.getByRole("treeitem", { name: "Rate" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(panel).getByRole("button", { name: "Remove 2.0" }))
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/RateTag"]?.examples).toEqual([
+      "1.5",
     ])
   })
 
