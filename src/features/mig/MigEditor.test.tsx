@@ -121,12 +121,13 @@ describe("MigEditor", () => {
     expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.definition).toBe(
       "House rule",
     )
-    expect(within(panel).getByText(/overridden/i)).toBeInTheDocument()
+    // Overridden state is conveyed by a dot whose tooltip names the baseline.
+    expect(within(panel).getByTitle(/overridden/i)).toBeInTheDocument()
 
     // Reset removes the override entirely.
     await user.click(within(panel).getByRole("button", { name: /reset to inherited/i }))
     expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]).toBeUndefined()
-    expect(within(panel).queryByText(/overridden/i)).not.toBeInTheDocument()
+    expect(within(panel).queryByTitle(/overridden/i)).not.toBeInTheDocument()
   })
 
   it("shows a not-found state when the MIG is absent", async () => {

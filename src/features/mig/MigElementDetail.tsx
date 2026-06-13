@@ -79,7 +79,7 @@ export function MigElementDetail({
       <OverrideRow
         label="Definition"
         overridden={defOverridden}
-        baseline={defBaseline || <em>none</em>}
+        baseline={defBaseline || "none"}
         onReset={() => onClear("definition")}
       >
         <InlineEdit
@@ -176,7 +176,7 @@ export function MigElementDetail({
         <OverrideRow
           label="Pattern"
           overridden={patternOverridden}
-          baseline={basePattern ? <code className="text-xs break-all">{basePattern}</code> : <em>none</em>}
+          baseline={basePattern || "none"}
           onReset={() => onClear("pattern")}
         >
           <InlineEdit
@@ -254,8 +254,9 @@ function NumberOverrideField({
 }
 
 /**
- * One editable override field: a label with a reset-to-inherited action shown
- * when overridden, the editor, and an "Overridden / Inherited: …" hint.
+ * One editable override field: a label, a reset-to-inherited action and an
+ * "overridden" dot (its tooltip carries the inherited baseline) shown when
+ * overridden, then the editor.
  */
 function OverrideRow({
   label,
@@ -266,14 +267,25 @@ function OverrideRow({
 }: {
   label: string
   overridden: boolean
-  baseline: ReactNode
+  baseline: string
   onReset: () => void
   children: ReactNode
 }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-2">
-        <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">{label}</div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
+            {label}
+          </span>
+          {overridden && (
+            <span
+              title={`Overridden — inherited: ${baseline}`}
+              aria-label={`Overridden — inherited: ${baseline}`}
+              className="size-1.5 shrink-0 cursor-help rounded-full bg-primary"
+            />
+          )}
+        </div>
         {overridden && (
           <button
             type="button"
@@ -286,12 +298,6 @@ function OverrideRow({
         )}
       </div>
       {children}
-      {overridden && (
-        <p className="mt-1 px-2 text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">Overridden.</span> Inherited:{" "}
-          <span className="whitespace-pre-wrap">{baseline}</span>
-        </p>
-      )}
     </div>
   )
 }
