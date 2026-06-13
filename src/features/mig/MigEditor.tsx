@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Check, DownloadSimple, FileText } from "@phosphor-icons/react"
+import { Check, DownloadSimple, FileText, ShieldCheck } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { effectiveMig } from "@/core/mig/effectiveMig"
 import { getMigKey } from "@/core/mig/migKey"
@@ -33,6 +33,7 @@ import { MigMetadata } from "./MigMetadata"
 import { MigElementDetail } from "./MigElementDetail"
 import { MigConstraintDetail } from "./MigConstraintDetail"
 import { MigDiagnostics } from "./MigDiagnostics"
+import { ValidateInstanceDialog } from "./ValidateInstanceDialog"
 import { downloadMigMarkdown, downloadMigs } from "./downloadMigs"
 
 type Status = "loading" | "missing" | "ready"
@@ -46,6 +47,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   const [status, setStatus] = useState<Status>("loading")
   const [mig, setMig] = useState<MessageImplementationGuide | null>(null)
   const [allMigs, setAllMigs] = useState<MessageImplementationGuide[]>([])
+  const [validateOpen, setValidateOpen] = useState(false)
   const treeRef = useRef<ElementTreeHandle>(null)
 
   useEffect(() => {
@@ -136,6 +138,10 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
           <h1 className="text-base font-semibold tracking-tight">{mig.name}</h1>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setValidateOpen(true)}>
+            <ShieldCheck data-icon="inline-start" aria-hidden />
+            Validate
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -150,6 +156,14 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
           </Button>
         </div>
       </div>
+
+      <ValidateInstanceDialog
+        open={validateOpen}
+        onOpenChange={setValidateOpen}
+        message={resolved.current}
+        effectiveOverrides={effectiveOverrides}
+        onNavigate={(path) => treeRef.current?.select(path)}
+      />
 
       <MigMetadata mig={mig} allMigs={allMigs} onChange={persist} onRename={rename} />
 

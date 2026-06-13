@@ -875,6 +875,27 @@ describe("MigEditor", () => {
     expect(screen.queryByRole("region", { name: /consistency diagnostics/i })).not.toBeInTheDocument()
   })
 
+  it("validates a pasted message instance and navigates from a violation", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    await user.click(screen.getByRole("button", { name: /^validate$/i }))
+    const dialog = await screen.findByRole("dialog")
+    // An empty Document → every required child is missing.
+    await user.type(within(dialog).getByRole("textbox", { name: /message xml/i }), "<DocumentTag></DocumentTag>")
+    await user.click(within(dialog).getByRole("button", { name: /^validate$/i }))
+
+    const results = within(dialog).getByRole("region", { name: /validation results/i })
+    const grpHdr = within(results).getByRole("button", { name: /grphdr.*minimum is 1/i })
+    await user.click(grpHdr)
+
+    // Clicking the violation closes the dialog and selects its element.
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toHaveAttribute("aria-selected", "true")
+  })
+
   it("declares custom property names in metadata and edits per-element values", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)
