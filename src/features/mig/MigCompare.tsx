@@ -14,8 +14,9 @@ import { applyFieldCopy } from "@/core/mig/copyChange"
 import { compareMigs, type FieldChange, type FieldRef, type PathDiff } from "@/core/mig/compareMigs"
 import { loadMig, saveMig } from "@/core/storage/migStore"
 import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
-import { hashFor } from "@/app/routes"
+import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 type Loaded = {
   a: MessageImplementationGuide | null
@@ -43,6 +44,11 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
   // Edits go to the draft and only persist on Save (reference-equal until then).
   const [saved, setSaved] = useState<Loaded>({ a: null, b: null })
   const [draft, setDraft] = useState<Loaded>({ a: null, b: null })
+  const [confirmNavOpen, setConfirmNavOpen] = useState(false)
+
+  // Reference inequality is enough: only applyFieldCopy produces new objects.
+  // Computed before the early returns so the unload guard's deps stay stable.
+  const dirty = draft.a !== saved.a || draft.b !== saved.b
 
   useEffect(() => {
     let active = true
@@ -61,6 +67,19 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
       active = false
     }
   }, [keyA, keyB])
+
+  // Warn on tab close / reload while there are unsaved copies. (In-app navigation
+  // is hash-based and doesn't fire `beforeunload`; the Back link is guarded
+  // separately below.)
+  useEffect(() => {
+    if (!dirty) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ""
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [dirty])
 
   if (status === "loading") return <Notice title="Loading…" />
 
@@ -90,9 +109,6 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
     const next = applyFieldCopy(from, to, path, ref)
     setDraft(dir === "a-to-b" ? { a, b: next } : { a: next, b })
   }
-
-  // Reference inequality is enough: only applyFieldCopy produces new objects.
-  const dirty = draft.a !== saved.a || draft.b !== saved.b
 
   const save = () => {
     const writes: Promise<void>[] = []
@@ -136,13 +152,31 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
             Save
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <a href={hashFor({ name: "home" })}>
+            <a
+              href={hashFor({ name: "home" })}
+              onClick={(e) => {
+                if (dirty) {
+                  e.preventDefault()
+                  setConfirmNavOpen(true)
+                }
+              }}
+            >
               <ArrowLeft data-icon="inline-start" aria-hidden />
               Back
             </a>
           </Button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmNavOpen}
+        onOpenChange={setConfirmNavOpen}
+        title="Discard unsaved changes?"
+        description="You’ve copied changes that haven’t been saved. Leaving this screen will discard them."
+        confirmLabel="Discard & leave"
+        destructive
+        onConfirm={() => navigate({ name: "home" })}
+      />
 
       {!diff.sameMessage && (
         <div

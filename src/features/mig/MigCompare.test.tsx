@@ -28,6 +28,7 @@ async function renderCompare(a: MessageImplementationGuide, b: MessageImplementa
 
 afterEach(async () => {
   cleanup()
+  window.location.hash = ""
   await deleteDatabase()
 })
 
@@ -131,6 +132,35 @@ describe("MigCompare", () => {
     expect(await screen.findByRole("region", { name: /Amt — changed/i })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled()
     expect((await loadMig(getMigKey(b)))?.elementOverrides["Doc/Amt"].maxLength).toBe(12)
+  })
+
+  it("guards the Back link when there are unsaved changes", async () => {
+    window.location.hash = "compare/A%3A1.0/B%3A1.0"
+    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    await renderCompare(a, b)
+
+    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
+
+    await userEvent.click(screen.getByRole("link", { name: /back/i }))
+
+    // Confirm dialog appears and navigation is blocked (still on the compare hash).
+    expect(await screen.findByText(/discard unsaved changes/i)).toBeInTheDocument()
+    expect(window.location.hash).toBe("#compare/A%3A1.0/B%3A1.0")
+
+    await userEvent.click(screen.getByRole("button", { name: /discard & leave/i }))
+    expect(window.location.hash).not.toContain("compare")
+  })
+
+  it("lets the Back link through when there are no unsaved changes", async () => {
+    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    await renderCompare(a, b)
+
+    await screen.findByRole("region", { name: /Amt — changed/i })
+    await userEvent.click(screen.getByRole("link", { name: /back/i }))
+    expect(screen.queryByText(/discard unsaved changes/i)).not.toBeInTheDocument()
   })
 
   it("reports a missing MIG", async () => {
