@@ -12,6 +12,7 @@ import type { MessageImplementationGuide } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
 import { EditableList } from "@/components/ui/editable-list"
 import { InlineEdit } from "@/components/ui/inline-edit"
+import { InlineSelect } from "@/components/ui/inline-select"
 
 /**
  * Editable MIG metadata block (FUNCTIONALITY §5.7): Description (inline
@@ -117,18 +118,12 @@ export function MigMetadata({
       )}
       <Row label="Parent MIG">
         <div className="flex flex-col gap-1">
-          <select
-            aria-label="Parent MIG"
+          <InlineSelect
             value={parentKey}
-            onChange={(e) => setParent(e.target.value)}
-            className="h-8 w-full rounded-md border border-border bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
-          >
-            {options.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            options={options}
+            onCommit={setParent}
+            ariaLabel="Parent MIG"
+          />
           {parentKey && !parentLoaded && (
             <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500">
               <Warning className="size-3.5 shrink-0" aria-hidden />

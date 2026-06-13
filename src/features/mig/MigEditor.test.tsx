@@ -1062,6 +1062,8 @@ describe("MigEditor", () => {
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
 
+    // Parent MIG is view-only until the pencil reveals the select.
+    await user.click(screen.getByRole("button", { name: /edit parent mig/i }))
     await user.selectOptions(screen.getByRole("combobox", { name: "Parent MIG" }), "Base:1.0")
 
     const saved = await loadMig(getMigKey(MIG))
