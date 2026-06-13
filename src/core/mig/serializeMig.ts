@@ -25,10 +25,11 @@ import type {
   MessageImplementationGuide,
 } from "@/core/types/types"
 
+// The lib's defaults already render multi-line strings as block literals (`|`)
+// while keeping single-line strings plain/quoted — exactly MIG_FORMAT.md. We only
+// override line-wrapping, anchors, and indent.
 const STRINGIFY_OPTIONS = {
   lineWidth: 0,
-  defaultStringType: "BLOCK_LITERAL",
-  defaultKeyType: "PLAIN",
   aliasDuplicateObjects: false,
   indent: 2,
 } as const

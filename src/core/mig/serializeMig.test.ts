@@ -159,6 +159,8 @@ describe("serializeMig", () => {
       mig({ elementOverrides: { "Doc/Amt": { definition: `line one\nline two` } } }),
     )
     expect(out).toMatch(/definition: \|/) // block literal marker
+    // Single-line strings stay plain — not forced into block scalars.
+    expect(out).toMatch(/^name: Guide$/m)
     const wrapped = serializeMig(mig({ description: long }))
     // No wrapping: the long value stays on one line.
     expect(wrapped.split("\n").some((l) => l.includes(long))).toBe(true)
