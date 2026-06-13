@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
@@ -13,6 +13,11 @@ import type {
   MessageImplementationGuide,
 } from "@/core/types/types"
 import { MigEditor } from "./MigEditor"
+import { downloadMigs } from "./downloadMigs"
+
+// The DOM download side-effect is exercised separately (downloadMigs.test.ts);
+// here we only assert the editor wires its Download button to it.
+vi.mock("./downloadMigs", () => ({ downloadMigs: vi.fn() }))
 
 function el(name: string, props: Partial<MessageElement> = {}): MessageElement {
   return {
@@ -104,6 +109,20 @@ describe("MigEditor", () => {
     expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toBeInTheDocument()
     // Grandchild stays collapsed until its parent is expanded.
     expect(screen.queryByRole("treeitem", { name: "Amt" })).not.toBeInTheDocument()
+  })
+
+  it("downloads the current MIG as YAML from the header button", async () => {
+    const user = userEvent.setup()
+    vi.mocked(downloadMigs).mockClear()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    await user.click(screen.getByRole("button", { name: /download/i }))
+    expect(downloadMigs).toHaveBeenCalledTimes(1)
+    expect(downloadMigs).toHaveBeenCalledWith([
+      expect.objectContaining({ name: "EPC Guide", version: "1.0" }),
+    ])
   })
 
   it("shows the focused element's read-only fields in the detail panel", async () => {

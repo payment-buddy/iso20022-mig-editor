@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Check } from "@phosphor-icons/react"
+import { Check, DownloadSimple } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { getMigKey } from "@/core/mig/migKey"
 import {
@@ -18,10 +18,12 @@ import type {
   MessageImplementationGuide,
 } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
+import { Button } from "@/components/ui/button"
 import { DetailPanel, ElementTree, Field } from "@/features/repository/ElementTree"
 import { MigMetadata } from "./MigMetadata"
 import { MigElementDetail } from "./MigElementDetail"
 import { MigConstraintDetail } from "./MigConstraintDetail"
+import { downloadMigs } from "./downloadMigs"
 
 type Status = "loading" | "missing" | "ready"
 
@@ -90,11 +92,17 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
-      <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">
-          {resolved.current.name} · {mig.messageIdentifier}
-        </p>
-        <h1 className="text-base font-semibold tracking-tight">{mig.name}</h1>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">
+            {resolved.current.name} · {mig.messageIdentifier}
+          </p>
+          <h1 className="text-base font-semibold tracking-tight">{mig.name}</h1>
+        </div>
+        <Button size="sm" onClick={() => downloadMigs([mig])}>
+          <DownloadSimple data-icon="inline-start" aria-hidden />
+          Download
+        </Button>
       </div>
 
       <MigMetadata mig={mig} allMigs={allMigs} onChange={persist} />
