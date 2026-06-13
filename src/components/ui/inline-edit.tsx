@@ -99,7 +99,7 @@ export function InlineEdit({
       type={type === "number" ? "number" : "text"}
       inputMode={type === "number" ? "numeric" : undefined}
       min={type === "number" ? 0 : undefined}
-      step={type === "number" ? 1 : undefined}
+      step={type === "number" ? "any" : undefined}
       autoFocus
       value={draft}
       aria-label={ariaLabel}

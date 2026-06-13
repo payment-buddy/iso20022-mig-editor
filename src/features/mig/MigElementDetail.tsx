@@ -7,6 +7,9 @@ import { DetailPanel, Field } from "@/features/repository/ElementTree"
 /** Base types that carry a length facet (FUNCTIONALITY §5.7). */
 const LENGTH_BASE_TYPES = new Set(["Text", "CodeSet", "IdentifierSet", "Binary"])
 
+/** Base types that carry an inclusive-range facet (values may be decimals). */
+const INCLUSIVE_BASE_TYPES = new Set(["Year", "Amount", "Quantity", "Rate"])
+
 /**
  * Element detail/edit panel for the MIG Editor (FUNCTIONALITY §5.7). Read-only
  * identity fields plus editable override fields, each showing its inherited
@@ -43,6 +46,7 @@ export function MigElementDetail({
   const baseMinLength = element.minLength ?? element.length
   const baseMaxLength = element.maxLength ?? element.length
   const showLength = element.baseType !== null && LENGTH_BASE_TYPES.has(element.baseType)
+  const showInclusive = element.baseType !== null && INCLUSIVE_BASE_TYPES.has(element.baseType)
 
   return (
     <DetailPanel label="Element details">
@@ -124,6 +128,35 @@ export function MigElementDetail({
           />
         </div>
       )}
+
+      {showInclusive && (
+        <div className="grid grid-cols-2 gap-3">
+          <NumberOverrideField
+            label="Min inclusive"
+            ariaLabel="Min inclusive"
+            baseline={element.minInclusive}
+            overridden={has("minInclusive")}
+            effective={has("minInclusive") ? (override?.minInclusive ?? null) : element.minInclusive}
+            allowNull
+            integer={false}
+            emptyLabel="none"
+            onSet={(v) => onSet("minInclusive", v)}
+            onClear={() => onClear("minInclusive")}
+          />
+          <NumberOverrideField
+            label="Max inclusive"
+            ariaLabel="Max inclusive"
+            baseline={element.maxInclusive}
+            overridden={has("maxInclusive")}
+            effective={has("maxInclusive") ? (override?.maxInclusive ?? null) : element.maxInclusive}
+            allowNull
+            integer={false}
+            emptyLabel="none"
+            onSet={(v) => onSet("maxInclusive", v)}
+            onClear={() => onClear("maxInclusive")}
+          />
+        </div>
+      )}
     </DetailPanel>
   )
 }
@@ -142,6 +175,7 @@ function NumberOverrideField({
   effective,
   allowNull,
   emptyLabel,
+  integer = true,
   onSet,
   onClear,
 }: {
@@ -152,6 +186,8 @@ function NumberOverrideField({
   effective: number | null
   allowNull: boolean
   emptyLabel: string
+  /** Require a whole number (occurs/length) vs. allow decimals (inclusive). */
+  integer?: boolean
   onSet: (value: number | null) => void
   onClear: () => void
 }) {
@@ -165,7 +201,8 @@ function NumberOverrideField({
       value = null
     } else {
       const n = Number(t)
-      if (!Number.isInteger(n) || n < 0) return // ignore invalid input
+      const valid = (integer ? Number.isInteger(n) : Number.isFinite(n)) && n >= 0
+      if (!valid) return // ignore invalid input
       value = n
     }
     if (value === baseline) onClear()

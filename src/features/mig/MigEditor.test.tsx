@@ -58,6 +58,7 @@ const REPO: ERepository = {
             elements: [
               el("GrpHdr", { baseType: "Text", minLength: 1, maxLength: 35 }),
               el("CdtTrfTxInf", { elements: [el("Amt")] }),
+              el("Rate", { baseType: "Rate", minInclusive: 0, maxInclusive: 100 }),
             ],
           }),
         },
@@ -203,6 +204,32 @@ describe("MigEditor", () => {
     expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/GrpHdrTag"]?.maxLength).toBe(
       20,
     )
+  })
+
+  it("shows Min/Max inclusive for numeric types and accepts decimals", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // The root (Document) has no base type → no inclusive fields.
+    const rootPanel = screen.getByRole("region", { name: /element details/i })
+    expect(
+      within(rootPanel).queryByRole("button", { name: "Edit Max inclusive" }),
+    ).not.toBeInTheDocument()
+
+    // Rate is a Rate type → inclusive fields appear and accept a decimal.
+    await user.click(screen.getByRole("treeitem", { name: "Rate" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(panel).getByRole("button", { name: "Edit Max inclusive" }))
+    const maxIncl = within(panel).getByRole("spinbutton", { name: "Max inclusive" })
+    await user.clear(maxIncl)
+    await user.type(maxIncl, "99.99")
+    await user.tab()
+
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/RateTag"]?.maxInclusive,
+    ).toBe(99.99)
   })
 
   it("offers same-message MIGs as parents and autosaves the choice", async () => {
