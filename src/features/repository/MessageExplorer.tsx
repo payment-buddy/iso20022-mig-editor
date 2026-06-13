@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from "react"
-import { CaretRight } from "@phosphor-icons/react"
+import { CaretRight, Plus } from "@phosphor-icons/react"
+import { Button } from "@/components/ui/button"
+import { CreateMigDialog } from "@/features/mig/CreateMigDialog"
 import { resolveMessage, type ResolvedMessage } from "@/core/erepository/resolveMessage"
 import type { ERepository, MessageElement } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
@@ -40,19 +42,32 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
   const { area, current, versions } = resolved
   const root = current.rootElement
   const [picked, setPicked] = useState<Selection | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
   const selected: Selection = picked ?? { element: root, path: root.xmlTag }
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
-      <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">{area.name}</p>
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-base font-semibold tracking-tight">{current.name}</h1>
-          <code className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
-            {current.identifier}
-          </code>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">{area.name}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-base font-semibold tracking-tight">{current.name}</h1>
+            <code className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
+              {current.identifier}
+            </code>
+          </div>
         </div>
+        <Button size="sm" onClick={() => setCreateOpen(true)}>
+          <Plus data-icon="inline-start" aria-hidden />
+          Create MIG
+        </Button>
       </div>
+
+      <CreateMigDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        messageIdentifier={current.identifier}
+      />
 
       {versions.length > 1 && (
         <div className="flex flex-wrap items-center gap-1" aria-label="Versions">

@@ -106,6 +106,12 @@ describe("MessageExplorer", () => {
     expect(within(panel).getByText("DocumentTag/CdtTrfTxInfTag")).toBeInTheDocument()
   })
 
+  it("opens the Create MIG dialog from the header", async () => {
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+    await userEvent.click(screen.getByRole("button", { name: /create mig/i }))
+    expect(screen.getByRole("dialog", { name: /new message implementation guide/i })).toBeInTheDocument()
+  })
+
   it("shows a not-found state for an unknown code", () => {
     render(<MessageExplorer repo={REPO} code="nope.999" />)
     expect(screen.getByRole("heading", { name: /message not found/i })).toBeInTheDocument()
