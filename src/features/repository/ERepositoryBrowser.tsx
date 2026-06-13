@@ -6,7 +6,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react"
-import { ArrowClockwise, CaretRight, MagnifyingGlass } from "@phosphor-icons/react"
+import { ArrowClockwiseIcon, CaretRightIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { groupMessages, type MessageGroup } from "@/core/erepository/messageGroups"
 import { loadAllMigs } from "@/core/storage/migStore"
@@ -225,13 +225,13 @@ export function ERepositoryBrowser({
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-base font-semibold tracking-tight">e-Repository</h1>
         <Button variant="outline" size="sm" onClick={onUpdateRepository}>
-          <ArrowClockwise data-icon="inline-start" aria-hidden />
+          <ArrowClockwiseIcon data-icon="inline-start" aria-hidden />
           Update e-Repository
         </Button>
       </div>
 
       <div className="relative">
-        <MagnifyingGlass
+        <MagnifyingGlassIcon
           className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden
         />
@@ -265,7 +265,7 @@ export function ERepositoryBrowser({
                 onFocus={() => setFocusedId(areaId(area.code))}
                 className="flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1.5 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30"
               >
-                <CaretRight
+                <CaretRightIcon
                   className={cn(
                     "size-3.5 shrink-0 text-muted-foreground transition-transform",
                     areaOpen && "rotate-90",

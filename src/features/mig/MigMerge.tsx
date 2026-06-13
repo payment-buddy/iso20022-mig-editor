@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, ArrowLineLeft, FloppyDisk, GitMerge, UploadSimple, Warning } from "@phosphor-icons/react"
+import { ArrowLeftIcon, ArrowLineLeftIcon, FloppyDiskIcon, GitMergeIcon, UploadSimpleIcon, WarningIcon } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
@@ -116,7 +116,7 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <GitMerge className="size-3.5" aria-hidden />
+            <GitMergeIcon className="size-3.5" aria-hidden />
             Merge into · {draft.messageIdentifier}
           </p>
           <h1 className="text-base font-semibold tracking-tight">
@@ -134,13 +134,13 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
           )}
           {incoming && !familyMismatch && (
             <Button size="sm" disabled={!dirty} onClick={save}>
-              <FloppyDisk data-icon="inline-start" aria-hidden />
+              <FloppyDiskIcon data-icon="inline-start" aria-hidden />
               Save
             </Button>
           )}
           <Button variant="outline" size="sm" asChild>
             <a href={hashFor({ name: "home" })}>
-              <ArrowLeft data-icon="inline-start" aria-hidden />
+              <ArrowLeftIcon data-icon="inline-start" aria-hidden />
               Back
             </a>
           </Button>
@@ -173,7 +173,7 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
             . You’ll copy changes across field by field.
           </p>
           <Button size="sm" onClick={() => inputRef.current?.click()}>
-            <UploadSimple data-icon="inline-start" aria-hidden />
+            <UploadSimpleIcon data-icon="inline-start" aria-hidden />
             Upload MIG to merge
           </Button>
         </div>
@@ -273,7 +273,7 @@ function ElementCard({
                 title={disabled ? "This version has no element at this path" : "Take incoming value"}
                 className="rounded p-0.5 text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-30"
               >
-                <ArrowLineLeft className="size-3.5" aria-hidden />
+                <ArrowLineLeftIcon className="size-3.5" aria-hidden />
               </button>
             </div>
             <Cell label={f.label} value={f.b} accent />
@@ -303,7 +303,7 @@ function Alert({ children }: { children: React.ReactNode }) {
       role="alert"
       className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
     >
-      <Warning className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <WarningIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
       <p>{children}</p>
     </div>
   )

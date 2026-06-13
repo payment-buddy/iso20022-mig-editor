@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react"
-import { CaretRight, Desktop, House, Moon, Sun } from "@phosphor-icons/react"
+import { CaretRightIcon, DesktopIcon, HouseIcon, MoonIcon, SunIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
 import { breadcrumbsFor } from "./breadcrumbs"
@@ -15,7 +15,7 @@ export function AppShell({ route, children }: { route: Route; children: ReactNod
           href={hashFor({ name: "home" })}
           className="flex items-center gap-2 font-semibold tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
         >
-          <House className="size-4 text-muted-foreground" aria-hidden />
+          <HouseIcon className="size-4 text-muted-foreground" aria-hidden />
           ISO 20022 MIG Editor
         </a>
 
@@ -32,7 +32,7 @@ export function AppShell({ route, children }: { route: Route; children: ReactNod
           const isLast = i === crumbs.length - 1
           return (
             <Fragment key={i}>
-              {i > 0 && <CaretRight className="size-3 text-muted-foreground" aria-hidden />}
+              {i > 0 && <CaretRightIcon className="size-3 text-muted-foreground" aria-hidden />}
               {crumb.route && !isLast ? (
                 <a
                   href={hashFor(crumb.route)}
@@ -58,7 +58,7 @@ export function AppShell({ route, children }: { route: Route; children: ReactNod
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   const next = theme === "system" ? "light" : theme === "light" ? "dark" : "system"
-  const Icon = theme === "system" ? Desktop : theme === "light" ? Sun : Moon
+  const Icon = theme === "system" ? DesktopIcon : theme === "light" ? SunIcon : MoonIcon
 
   return (
     <Button

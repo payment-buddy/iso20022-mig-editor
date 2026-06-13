@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Check, Plus } from "@phosphor-icons/react"
+import { CheckIcon, PlusIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { CreateMigDialog } from "@/features/mig/CreateMigDialog"
 import { resolveMessage, type ResolvedMessage } from "@/core/erepository/resolveMessage"
@@ -52,7 +52,7 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
           </div>
         </div>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus data-icon="inline-start" aria-hidden />
+          <PlusIcon data-icon="inline-start" aria-hidden />
           Create MIG
         </Button>
       </div>
@@ -107,7 +107,7 @@ function ConstraintDetail({ constraint, path }: { constraint: Constraint; path: 
   return (
     <DetailPanel label="Constraint details">
       <div className="flex items-center gap-1.5 font-medium">
-        <Check className="size-3.5 text-muted-foreground" aria-hidden />
+        <CheckIcon className="size-3.5 text-muted-foreground" aria-hidden />
         {constraint.name}
       </div>
       <Field label="Kind">Constraint (rule)</Field>

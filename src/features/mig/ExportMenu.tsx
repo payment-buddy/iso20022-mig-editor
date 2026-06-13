@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType } from "react"
-import { CaretDown, Export, FileText, Table } from "@phosphor-icons/react"
+import { CaretDownIcon, ExportIcon, FileTextIcon, TableIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 
 /**
@@ -57,9 +57,9 @@ export function ExportMenu({ onMarkdown, onCsv }: { onMarkdown: () => void; onCs
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <Export data-icon="inline-start" aria-hidden />
+        <ExportIcon data-icon="inline-start" aria-hidden />
         Export
-        <CaretDown className="ml-1 size-3.5 opacity-60" aria-hidden />
+        <CaretDownIcon className="ml-1 size-3.5 opacity-60" aria-hidden />
       </Button>
       {open && (
         <div
@@ -69,8 +69,8 @@ export function ExportMenu({ onMarkdown, onCsv }: { onMarkdown: () => void; onCs
           onKeyDown={onMenuKeyDown}
           className="absolute right-0 z-50 mt-1 min-w-36 rounded-md border border-border bg-background p-1 shadow-lg outline-none"
         >
-          <MenuItem icon={FileText} label="Markdown" onSelect={() => select(onMarkdown)} />
-          <MenuItem icon={Table} label="CSV" onSelect={() => select(onCsv)} />
+          <MenuItem icon={FileTextIcon} label="Markdown" onSelect={() => select(onMarkdown)} />
+          <MenuItem icon={TableIcon} label="CSV" onSelect={() => select(onCsv)} />
         </div>
       )}
     </div>

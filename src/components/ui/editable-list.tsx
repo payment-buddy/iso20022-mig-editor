@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent } from "react"
-import { PencilSimple, Warning, X } from "@phosphor-icons/react"
+import { PencilSimpleIcon, WarningIcon, XIcon } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 
 // Keep focus on the input when a button is clicked, so edit mode survives (blur
@@ -56,7 +56,7 @@ export function EditableList({
                   error ? "bg-amber-500/10 text-amber-700 dark:text-amber-500" : "bg-muted",
                 )}
               >
-                {error && <Warning className="size-3 shrink-0" aria-hidden />}
+                {error && <WarningIcon className="size-3 shrink-0" aria-hidden />}
                 <code>{value}</code>
                 {removable && (
                   <button
@@ -66,7 +66,7 @@ export function EditableList({
                     aria-label={`Remove ${value}`}
                     className="rounded-sm p-0.5 text-current/70 outline-none hover:bg-muted-foreground/10 hover:text-current focus-visible:ring-2 focus-visible:ring-ring/30"
                   >
-                    <X className="size-3" aria-hidden />
+                    <XIcon className="size-3" aria-hidden />
                   </button>
                 )}
               </span>
@@ -89,7 +89,7 @@ export function EditableList({
           aria-label={`Edit ${ariaLabel}`}
           className="mt-0.5 shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 outline-none transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/30"
         >
-          <PencilSimple className="size-3.5" aria-hidden />
+          <PencilSimpleIcon className="size-3.5" aria-hidden />
         </button>
       </div>
     )
@@ -139,7 +139,7 @@ export function EditableList({
       </div>
       {draftError && (
         <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500">
-          <Warning className="size-3 shrink-0" aria-hidden />
+          <WarningIcon className="size-3 shrink-0" aria-hidden />
           {draftError}
         </p>
       )}

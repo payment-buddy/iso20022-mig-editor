@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent } from "react"
-import { PencilSimple } from "@phosphor-icons/react"
+import { PencilSimpleIcon } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 
 export type SelectOption = { value: string; label: string }
@@ -36,7 +36,7 @@ export function InlineSelect({
           aria-label={`Edit ${ariaLabel}`}
           className="mt-0.5 shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 outline-none transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/30"
         >
-          <PencilSimple className="size-3.5" aria-hidden />
+          <PencilSimpleIcon className="size-3.5" aria-hidden />
         </button>
       </div>
     )

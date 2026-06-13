@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Check, Trash, Warning } from "@phosphor-icons/react"
+import { CheckIcon, TrashIcon, WarningIcon } from "@phosphor-icons/react"
 import type { Constraint, MessageElement } from "@/core/types/types"
 import { validateConstraintExpression } from "@/core/mig/expression"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -72,7 +72,7 @@ export function MigConstraintDetail({
   return (
     <DetailPanel label="Constraint details">
       <div className="flex items-center gap-1.5">
-        <Check className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+        <CheckIcon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
         <div className="min-w-0 flex-1 font-medium">
           <InlineEdit
             value={constraint.name}
@@ -114,7 +114,7 @@ export function MigConstraintDetail({
             role="alert"
             className="mt-1 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500"
           >
-            <Warning className="size-3 shrink-0" aria-hidden />
+            <WarningIcon className="size-3 shrink-0" aria-hidden />
             {warning}
           </p>
         ))}
@@ -147,7 +147,7 @@ export function MigConstraintDetail({
           onClick={() => setConfirmOpen(true)}
           className="flex items-center gap-1 rounded-sm text-xs font-medium text-destructive outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/30"
         >
-          <Trash className="size-3.5" aria-hidden />
+          <TrashIcon className="size-3.5" aria-hidden />
           Delete constraint
         </button>
       </div>

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Dialog } from "radix-ui"
-import { CheckCircle, Warning } from "@phosphor-icons/react"
+import { CheckCircleIcon, WarningIcon } from "@phosphor-icons/react"
 import { validateMessageInstance, type InstanceDiagnostic } from "@/core/mig/validateInstance"
 import type { ElementOverrides, MessageDefinition } from "@/core/types/types"
 import { Button } from "@/components/ui/button"
@@ -125,7 +125,7 @@ function Results({ result, onNavigate }: { result: Result; onNavigate: (path: st
   if (result.diagnostics.length === 0) {
     return (
       <p className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-500">
-        <CheckCircle className="size-4 shrink-0" aria-hidden />
+        <CheckCircleIcon className="size-4 shrink-0" aria-hidden />
         No violations — the instance conforms to this MIG.
       </p>
     )
@@ -137,7 +137,7 @@ function Results({ result, onNavigate }: { result: Result; onNavigate: (path: st
       className="rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-500"
     >
       <p className="flex items-center gap-2 px-3 py-2 text-sm font-medium">
-        <Warning className="size-4 shrink-0" aria-hidden />
+        <WarningIcon className="size-4 shrink-0" aria-hidden />
         {n} {n === 1 ? "violation" : "violations"}
       </p>
       <ul aria-label="Violations" className="flex flex-col border-t border-amber-500/30 py-1">

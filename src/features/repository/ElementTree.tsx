@@ -8,7 +8,7 @@ import {
   type ReactNode,
   type Ref,
 } from "react"
-import { CaretRight, Check, MagnifyingGlass } from "@phosphor-icons/react"
+import { CaretRightIcon, CheckIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
 import type { Constraint, ElementOverrides, MessageElement } from "@/core/types/types"
 import { cn } from "@/lib/utils"
 
@@ -478,7 +478,7 @@ export function ElementTree({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <div className="relative min-w-56 flex-1">
-          <MagnifyingGlass
+          <MagnifyingGlassIcon
             className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
@@ -613,10 +613,10 @@ function TreeNode({
             }}
             className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted-foreground/10"
           >
-            <CaretRight className={cn("size-3.5", node.expanded && "rotate-90")} aria-hidden />
+            <CaretRightIcon className={cn("size-3.5", node.expanded && "rotate-90")} aria-hidden />
           </span>
         ) : node.kind === "constraint" ? (
-          <Check className="size-3 shrink-0 text-muted-foreground" aria-hidden />
+          <CheckIcon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
         ) : (
           <span className="inline-block size-4 shrink-0" aria-hidden />
         )}

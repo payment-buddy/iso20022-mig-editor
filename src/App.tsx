@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { SpinnerGap } from "@phosphor-icons/react"
+import { SpinnerGapIcon } from "@phosphor-icons/react"
 import { AppShell } from "@/app/AppShell"
 import { RouteView } from "@/app/RouteView"
 import { useRoute } from "@/app/useRoute"
@@ -37,7 +37,7 @@ export function App() {
   if (gate.phase === "loading") {
     return (
       <div className="flex min-h-svh items-center justify-center">
-        <SpinnerGap className="size-6 animate-spin text-muted-foreground" aria-hidden />
+        <SpinnerGapIcon className="size-6 animate-spin text-muted-foreground" aria-hidden />
         <span className="sr-only">Loading…</span>
       </div>
     )

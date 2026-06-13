@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react"
-import { Warning } from "@phosphor-icons/react"
+import { WarningIcon } from "@phosphor-icons/react"
 import {
   addAnnotation,
   addConstraintAnnotation,
@@ -126,7 +126,7 @@ export function MigMetadata({
           />
           {parentKey && !parentLoaded && (
             <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500">
-              <Warning className="size-3.5 shrink-0" aria-hidden />
+              <WarningIcon className="size-3.5 shrink-0" aria-hidden />
               References “{parentKey}”, which isn’t loaded.
             </p>
           )}

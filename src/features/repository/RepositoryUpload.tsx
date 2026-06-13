@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react"
-import { SpinnerGap, UploadSimple, Warning } from "@phosphor-icons/react"
+import { SpinnerGapIcon, UploadSimpleIcon, WarningIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { parseRepository } from "@/core/erepository/eRepository"
 import { saveERepository } from "@/core/storage/eRepositoryStore"
@@ -117,7 +117,7 @@ export function RepositoryUpload({
 
         {parsing ? (
           <>
-            <SpinnerGap className="size-6 animate-spin text-muted-foreground" aria-hidden />
+            <SpinnerGapIcon className="size-6 animate-spin text-muted-foreground" aria-hidden />
             <p className="text-sm text-muted-foreground" role="status">
               Parsing {fileName ? <span className="font-medium">{fileName}</span> : "file"}…
             </p>
@@ -127,12 +127,12 @@ export function RepositoryUpload({
           </>
         ) : (
           <>
-            <UploadSimple className="size-6 text-muted-foreground" aria-hidden />
+            <UploadSimpleIcon className="size-6 text-muted-foreground" aria-hidden />
             <p className="text-sm text-muted-foreground">
               Drag a file here, or
             </p>
             <Button size="lg" onClick={openPicker}>
-              <UploadSimple data-icon="inline-start" aria-hidden />
+              <UploadSimpleIcon data-icon="inline-start" aria-hidden />
               Choose file
             </Button>
           </>
@@ -144,7 +144,7 @@ export function RepositoryUpload({
           role="alert"
           className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
         >
-          <Warning className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <WarningIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
           <span>{error}</span>
         </div>
       )}

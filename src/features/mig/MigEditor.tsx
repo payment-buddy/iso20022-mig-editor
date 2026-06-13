@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Check, DownloadSimple, ShieldCheck } from "@phosphor-icons/react"
+import { CheckIcon, DownloadSimpleIcon, ShieldCheckIcon } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import { effectiveMig } from "@/core/mig/effectiveMig"
@@ -136,7 +136,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setValidateOpen(true)}>
-            <ShieldCheck data-icon="inline-start" aria-hidden />
+            <ShieldCheckIcon data-icon="inline-start" aria-hidden />
             Validate
           </Button>
           <ExportMenu
@@ -144,7 +144,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
             onCsv={() => downloadMigCsv(mig, allMigs, resolved.current)}
           />
           <Button size="sm" onClick={() => downloadMigs([mig], buildPathOrder(root))}>
-            <DownloadSimple data-icon="inline-start" aria-hidden />
+            <DownloadSimpleIcon data-icon="inline-start" aria-hidden />
             Download
           </Button>
         </div>
@@ -257,7 +257,7 @@ function ConstraintDetail({ constraint, path }: { constraint: Constraint; path: 
   return (
     <DetailPanel label="Constraint details">
       <div className="flex items-center gap-1.5 font-medium">
-        <Check className="size-3.5 text-muted-foreground" aria-hidden />
+        <CheckIcon className="size-3.5 text-muted-foreground" aria-hidden />
         {constraint.name}
       </div>
       <Field label="Path">

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { CaretRight, Warning } from "@phosphor-icons/react"
+import { CaretRightIcon, WarningIcon } from "@phosphor-icons/react"
 import type { Diagnostic } from "@/core/mig/validateMig"
 import { cn } from "@/lib/utils"
 
@@ -36,9 +36,9 @@ export function MigDiagnostics({
         aria-expanded={open}
         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
       >
-        <Warning className="size-4 shrink-0" aria-hidden />
+        <WarningIcon className="size-4 shrink-0" aria-hidden />
         {subject} has {n} {n === 1 ? "issue" : "issues"}
-        <CaretRight className={cn("ml-auto size-3.5 transition-transform", open && "rotate-90")} aria-hidden />
+        <CaretRightIcon className={cn("ml-auto size-3.5 transition-transform", open && "rotate-90")} aria-hidden />
       </button>
 
       {open && (

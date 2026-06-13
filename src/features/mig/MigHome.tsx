@@ -6,13 +6,13 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react"
 import {
-  DownloadSimple,
-  GitDiff,
-  Trash,
-  TreeStructure,
-  UploadSimple,
-  Warning,
-  X,
+  DownloadSimpleIcon,
+  GitDiffIcon,
+  TrashIcon,
+  TreeStructureIcon,
+  UploadSimpleIcon,
+  WarningIcon,
+  XIcon,
 } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -281,12 +281,12 @@ export function MigHome() {
         <h1 className="mr-auto text-base font-semibold tracking-tight">Message Implementation Guides</h1>
         <Button variant="outline" size="sm" asChild>
           <a href={hashFor({ name: "browse" })}>
-            <TreeStructure data-icon="inline-start" aria-hidden />
+            <TreeStructureIcon data-icon="inline-start" aria-hidden />
             Browse e-Repository
           </a>
         </Button>
         <Button size="sm" onClick={() => inputRef.current?.click()}>
-          <UploadSimple data-icon="inline-start" aria-hidden />
+          <UploadSimpleIcon data-icon="inline-start" aria-hidden />
           Upload MIG
         </Button>
         {hiddenFileInput}
@@ -297,7 +297,7 @@ export function MigHome() {
           role="alert"
           className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
         >
-          <Warning className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <WarningIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
           <div className="min-w-0 flex-1">
             <p className="font-medium">Some entries couldn’t be imported:</p>
             <ul className="mt-1 list-disc pl-4">
@@ -314,7 +314,7 @@ export function MigHome() {
             aria-label="Dismiss import errors"
             className="rounded-sm p-0.5 outline-none hover:bg-destructive/15 focus-visible:ring-2 focus-visible:ring-ring/30"
           >
-            <X className="size-3.5" aria-hidden />
+            <XIcon className="size-3.5" aria-hidden />
           </button>
         </div>
       )}
@@ -342,7 +342,7 @@ export function MigHome() {
               disabled={selected.size === 0}
               onClick={() => downloadMigs(selectedMigs)}
             >
-              <DownloadSimple data-icon="inline-start" aria-hidden />
+              <DownloadSimpleIcon data-icon="inline-start" aria-hidden />
               Download
             </Button>
             {/* Wrapper carries the hint: a disabled button doesn't fire hover. */}
@@ -353,7 +353,7 @@ export function MigHome() {
                 disabled={compareDisabled}
                 onClick={onCompare}
               >
-                <GitDiff data-icon="inline-start" aria-hidden />
+                <GitDiffIcon data-icon="inline-start" aria-hidden />
                 Compare
               </Button>
             </span>
@@ -363,7 +363,7 @@ export function MigHome() {
               disabled={selected.size === 0}
               onClick={() => setDeleteOpen(true)}
             >
-              <Trash data-icon="inline-start" aria-hidden />
+              <TrashIcon data-icon="inline-start" aria-hidden />
               Delete
             </Button>
           </div>

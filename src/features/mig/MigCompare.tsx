@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react"
 import {
-  ArrowCounterClockwise,
-  ArrowLeft,
-  ArrowLineLeft,
-  ArrowLineRight,
-  FloppyDisk,
-  GitDiff,
-  Warning,
+  ArrowCounterClockwiseIcon,
+  ArrowLeftIcon,
+  ArrowLineLeftIcon,
+  ArrowLineRightIcon,
+  FloppyDiskIcon,
+  GitDiffIcon,
+  WarningIcon,
 } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
@@ -136,7 +136,7 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <GitDiff className="size-3.5" aria-hidden />
+            <GitDiffIcon className="size-3.5" aria-hidden />
             Compare MIGs
           </p>
           <h1 className="text-base font-semibold tracking-tight">
@@ -153,12 +153,12 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
           )}
           {dirty && (
             <Button variant="outline" size="sm" onClick={discard}>
-              <ArrowCounterClockwise data-icon="inline-start" aria-hidden />
+              <ArrowCounterClockwiseIcon data-icon="inline-start" aria-hidden />
               Discard
             </Button>
           )}
           <Button size="sm" disabled={!dirty} onClick={save}>
-            <FloppyDisk data-icon="inline-start" aria-hidden />
+            <FloppyDiskIcon data-icon="inline-start" aria-hidden />
             Save
           </Button>
           <Button variant="outline" size="sm" asChild>
@@ -171,7 +171,7 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
                 }
               }}
             >
-              <ArrowLeft data-icon="inline-start" aria-hidden />
+              <ArrowLeftIcon data-icon="inline-start" aria-hidden />
               Back
             </a>
           </Button>
@@ -193,7 +193,7 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
           role="alert"
           className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-500"
         >
-          <Warning className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <WarningIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
           <p>
             These MIGs target different messages (<code>{a.messageIdentifier}</code> vs{" "}
             <code>{b.messageIdentifier}</code>). Paths are compared by name only.
@@ -396,7 +396,7 @@ function CopyButton({
   label: string
   onClick: () => void
 }) {
-  const Icon = dir === "right" ? ArrowLineRight : ArrowLineLeft
+  const Icon = dir === "right" ? ArrowLineRightIcon : ArrowLineLeftIcon
   return (
     <button
       type="button"

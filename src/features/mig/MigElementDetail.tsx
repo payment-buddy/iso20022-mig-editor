@@ -1,5 +1,5 @@
 import { type ReactNode } from "react"
-import { ArrowCounterClockwise, Plus, Warning } from "@phosphor-icons/react"
+import { ArrowCounterClockwiseIcon, PlusIcon, WarningIcon } from "@phosphor-icons/react"
 import type { ElementOverride, MessageElement } from "@/core/types/types"
 import {
   createValueValidator,
@@ -434,7 +434,7 @@ export function MigElementDetail({
           onClick={onAddConstraint}
           className="flex items-center gap-1 rounded-sm text-xs font-medium text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/30"
         >
-          <Plus className="size-3.5" aria-hidden />
+          <PlusIcon className="size-3.5" aria-hidden />
           Add constraint
         </button>
       </div>
@@ -578,7 +578,7 @@ function OverrideRow({
             onClick={onReset}
             className="flex items-center gap-1 rounded-sm text-[0.625rem] text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/30"
           >
-            <ArrowCounterClockwise className="size-3" aria-hidden />
+            <ArrowCounterClockwiseIcon className="size-3" aria-hidden />
             Reset to inherited
           </button>
         )}
@@ -589,7 +589,7 @@ function OverrideRow({
           role="alert"
           className="mt-1 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500"
         >
-          <Warning className="size-3 shrink-0" aria-hidden />
+          <WarningIcon className="size-3 shrink-0" aria-hidden />
           {warning}
         </p>
       )}
