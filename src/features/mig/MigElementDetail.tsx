@@ -1,6 +1,7 @@
 import { type ReactNode } from "react"
 import { ArrowCounterClockwise } from "@phosphor-icons/react"
 import type { ElementOverride, MessageElement } from "@/core/types/types"
+import { EditableList } from "@/components/ui/editable-list"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
 
@@ -12,6 +13,12 @@ const INCLUSIVE_BASE_TYPES = new Set(["Year", "Amount", "Quantity", "Rate"])
 
 /** Base types that carry a pattern (regex) facet. */
 const PATTERN_BASE_TYPES = new Set(["Text", "CodeSet", "IdentifierSet", "DateTime", "Quantity"])
+
+/** Base types that carry an enumerated allowed-values facet. */
+const ALLOWED_VALUES_BASE_TYPES = new Set(["Text", "CodeSet"])
+
+const arraysEqual = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((v, i) => v === b[i])
 
 /**
  * Element detail/edit panel for the MIG Editor (FUNCTIONALITY §5.7). Read-only
@@ -60,6 +67,20 @@ export function MigElementDetail({
     const value = text === "" ? null : text
     if (value === basePattern) onClear("pattern")
     else onSet("pattern", value)
+  }
+
+  // Allowed values (enumerated). Baseline is the inherited code set.
+  const showAllowedValues =
+    element.baseType !== null && ALLOWED_VALUES_BASE_TYPES.has(element.baseType)
+  const baseAllowedValues = element.codes.map((c) => c.codeName)
+  const allowedOverridden = has("allowedValues")
+  const effectiveAllowed = allowedOverridden
+    ? (override?.allowedValues ?? [])
+    : baseAllowedValues
+  const commitAllowed = (values: string[]) => {
+    // Empty or back-to-inherited means "no override" (matches the legacy model).
+    if (values.length === 0 || arraysEqual(values, baseAllowedValues)) onClear("allowedValues")
+    else onSet("allowedValues", values)
   }
 
   return (
@@ -187,8 +208,31 @@ export function MigElementDetail({
           />
         </OverrideRow>
       )}
+
+      {showAllowedValues && (
+        <OverrideRow
+          label="Allowed values"
+          overridden={allowedOverridden}
+          baseline={summarize(baseAllowedValues)}
+          onReset={() => onClear("allowedValues")}
+        >
+          <EditableList
+            values={effectiveAllowed}
+            onChange={commitAllowed}
+            ariaLabel="Allowed values"
+            placeholder="Add an allowed value…"
+          />
+        </OverrideRow>
+      )}
     </DetailPanel>
   )
+}
+
+/** A short, tooltip-friendly summary of a value list. */
+function summarize(values: string[]): string {
+  if (values.length === 0) return "none"
+  const head = values.slice(0, 8).join(", ")
+  return values.length > 8 ? `${head}, … (${values.length})` : head
 }
 
 /**

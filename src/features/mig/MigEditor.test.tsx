@@ -59,6 +59,13 @@ const REPO: ERepository = {
               el("GrpHdr", { baseType: "Text", minLength: 1, maxLength: 35 }),
               el("CdtTrfTxInf", { elements: [el("Amt")] }),
               el("Rate", { baseType: "Rate", minInclusive: 0, maxInclusive: 100 }),
+              el("Sts", {
+                baseType: "CodeSet",
+                codes: [
+                  { codeName: "ACTV", definition: "" },
+                  { codeName: "INAC", definition: "" },
+                ],
+              }),
             ],
           }),
         },
@@ -254,6 +261,35 @@ describe("MigEditor", () => {
     expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/GrpHdrTag"]?.pattern).toBe(
       "\\d\\d\\d",
     )
+  })
+
+  it("edits allowed values for code sets", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // The root (Document) has no base type → no allowed-values editor.
+    const rootPanel = screen.getByRole("region", { name: /element details/i })
+    expect(
+      within(rootPanel).queryByRole("textbox", { name: /add to allowed values/i }),
+    ).not.toBeInTheDocument()
+
+    // Sts is a CodeSet → its inherited codes are editable; remove one.
+    await user.click(screen.getByRole("treeitem", { name: "Sts" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(panel).getByRole("button", { name: "Remove INAC" }))
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/StsTag"]?.allowedValues).toEqual([
+      "ACTV",
+    ])
+
+    // Add a custom value.
+    await user.type(within(panel).getByRole("textbox", { name: /add to allowed values/i }), "PEND")
+    await user.click(within(panel).getByRole("button", { name: "Add" }))
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/StsTag"]?.allowedValues).toEqual([
+      "ACTV",
+      "PEND",
+    ])
   })
 
   it("offers same-message MIGs as parents and autosaves the choice", async () => {
