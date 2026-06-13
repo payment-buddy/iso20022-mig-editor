@@ -8,8 +8,8 @@ export const MIG_PROPERTY_ORDER = [
   "parentMIG",
   "version",
   "description",
-  "customElementPropertyNames",
-  "customConstraintPropertyNames",
+  "elementAnnotationNames",
+  "constraintAnnotationNames",
   "elementOverrides",
 ] as const
 
@@ -26,8 +26,8 @@ export const ELEMENT_OVERRIDE_PROPERTY_ORDER = [
   "pattern",
   "allowedValues",
   "examples",
-  "customProperties",
+  "annotations",
   "additionalConstraints",
 ] as const
 
-export const CONSTRAINT_PROPERTY_ORDER = ["name", "definition", "customProperties"] as const
+export const CONSTRAINT_PROPERTY_ORDER = ["name", "definition", "annotations"] as const

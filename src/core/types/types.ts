@@ -3,7 +3,7 @@
 export interface Constraint {
   name: string
   definition: string
-  customProperties?: Record<string, string | null>
+  annotations?: Record<string, string | null>
 }
 
 export interface Code {
@@ -108,7 +108,7 @@ export interface ElementOverride {
   pattern?: string | null
   allowedValues?: string[]
   examples?: string[]
-  customProperties?: Record<string, string>
+  annotations?: Record<string, string>
   additionalConstraints?: Constraint[]
 }
 
@@ -124,7 +124,7 @@ export interface MessageImplementationGuide {
   parentMIG?: string
   version: string
   description?: string
-  customElementPropertyNames?: string[]
-  customConstraintPropertyNames?: string[]
+  elementAnnotationNames?: string[]
+  constraintAnnotationNames?: string[]
   elementOverrides: ElementOverrides
 }

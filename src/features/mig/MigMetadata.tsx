@@ -1,9 +1,6 @@
 import { type ReactNode } from "react"
 import { Warning } from "@phosphor-icons/react"
-import {
-  addCustomElementPropertyName,
-  removeCustomElementPropertyName,
-} from "@/core/mig/customProperties"
+import { addAnnotation, removeAnnotation } from "@/core/mig/annotations"
 import { getMigKey } from "@/core/mig/migKey"
 import { eligibleParents } from "@/core/mig/parentMig"
 import type { MessageImplementationGuide } from "@/core/types/types"
@@ -14,8 +11,8 @@ import { InlineEdit } from "@/components/ui/inline-edit"
 /**
  * Editable MIG metadata block (FUNCTIONALITY §5.7): Description (inline
  * textarea), Parent MIG (eligible-parent dropdown with a link and a not-loaded
- * warning), and the shared Custom element property names (elements then fill
- * values in the detail panel). Name and Version are shown read-only — their
+ * warning), and the shared annotation names (elements then fill values in the
+ * detail panel). Name and Version are shown read-only — their
  * identity-key rename + reference rewrite lands in a follow-up slice.
  */
 export function MigMetadata({
@@ -54,16 +51,16 @@ export function MigMetadata({
     onChange(next)
   }
 
-  // Apply add/remove of custom element property names; removals cascade into
-  // every element override (handled by removeCustomElementPropertyName).
-  const setPropertyNames = (next: string[]) => {
-    const current = mig.customElementPropertyNames ?? []
+  // Apply add/remove of annotation names; removals cascade into every element
+  // override (handled by removeAnnotation).
+  const setAnnotations = (next: string[]) => {
+    const current = mig.elementAnnotationNames ?? []
     let result = mig
     for (const name of current.filter((n) => !next.includes(n))) {
-      result = removeCustomElementPropertyName(result, name)
+      result = removeAnnotation(result, name)
     }
     for (const name of next.filter((n) => !current.includes(n))) {
-      result = addCustomElementPropertyName(result, name)
+      result = addAnnotation(result, name)
     }
     onChange(result)
   }
@@ -115,12 +112,12 @@ export function MigMetadata({
           multiline
         />
       </Row>
-      <Row label="Custom element properties">
+      <Row label="Annotations">
         <EditableList
-          values={mig.customElementPropertyNames ?? []}
-          onChange={setPropertyNames}
-          ariaLabel="Custom element properties"
-          placeholder="Add a property name…"
+          values={mig.elementAnnotationNames ?? []}
+          onChange={setAnnotations}
+          ariaLabel="Annotations"
+          placeholder="Add an annotation name…"
         />
       </Row>
     </section>

@@ -39,7 +39,7 @@ export function MigElementDetail({
   element: MessageElement
   path: string
   override: ElementOverride | undefined
-  /** Declared MIG-level custom element property names (managed in the metadata block). */
+  /** Declared MIG-level annotation names (managed in the metadata block). */
   propertyNames: string[]
   /** Persist one override field. */
   onSet: <K extends keyof ElementOverride>(field: K, value: ElementOverride[K]) => void
@@ -101,13 +101,13 @@ export function MigElementDetail({
   const validateValue = createValueValidator(element, override)
 
   // Custom property values for this element (names are declared MIG-level).
-  const customValues = override?.customProperties ?? {}
+  const customValues = override?.annotations ?? {}
   const setCustomValue = (name: string, value: string) => {
     const next = { ...customValues }
     if (value.trim() === "") delete next[name]
     else next[name] = value
-    if (Object.keys(next).length === 0) onClear("customProperties")
-    else onSet("customProperties", next)
+    if (Object.keys(next).length === 0) onClear("annotations")
+    else onSet("annotations", next)
   }
 
   return (
@@ -273,7 +273,7 @@ export function MigElementDetail({
       {propertyNames.length > 0 && (
         <div className="flex flex-col gap-2">
           <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
-            Custom properties
+            Annotations
           </div>
           {propertyNames.map((name) => (
             <div key={name} className="flex items-start gap-2">
