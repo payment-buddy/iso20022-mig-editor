@@ -1,4 +1,5 @@
 import { ERepositoryBrowser } from "@/features/repository/ERepositoryBrowser"
+import { MessageExplorer } from "@/features/repository/MessageExplorer"
 import { MigHome } from "@/features/mig/MigHome"
 import type { ERepository } from "@/core/types/types"
 import type { Route } from "./routes"
@@ -23,7 +24,7 @@ export function RouteView({
     case "browse":
       return <ERepositoryBrowser repo={repo} onUpdateRepository={onUpdateRepository} />
     case "message":
-      return <Placeholder title={`Message: ${route.code}`} note="Explorer lands in Phase 1." />
+      return <MessageExplorer repo={repo} code={route.code} />
     case "mig":
       return <Placeholder title={`MIG: ${route.key}`} note="Editor lands in Phase 1." />
     case "compare":
