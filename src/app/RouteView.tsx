@@ -1,6 +1,7 @@
 import { ERepositoryBrowser } from "@/features/repository/ERepositoryBrowser"
 import { MessageExplorer } from "@/features/repository/MessageExplorer"
 import { MigHome } from "@/features/mig/MigHome"
+import { MigEditor } from "@/features/mig/MigEditor"
 import type { ERepository } from "@/core/types/types"
 import type { Route } from "./routes"
 
@@ -26,7 +27,8 @@ export function RouteView({
     case "message":
       return <MessageExplorer repo={repo} code={route.code} />
     case "mig":
-      return <Placeholder title={`MIG: ${route.key}`} note="Editor lands in Phase 1." />
+      // Keyed so switching MIGs remounts with a fresh load state.
+      return <MigEditor key={route.key} migKey={route.key} repo={repo} />
     case "compare":
       return (
         <Placeholder
