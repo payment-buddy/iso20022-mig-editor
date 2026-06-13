@@ -5,7 +5,15 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react"
-import { DownloadSimple, GitDiff, Trash, TreeStructure, UploadSimple } from "@phosphor-icons/react"
+import {
+  DownloadSimple,
+  GitDiff,
+  Trash,
+  TreeStructure,
+  UploadSimple,
+  Warning,
+  X,
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { getMigKey } from "@/core/mig/migKey"
@@ -30,6 +38,7 @@ export function MigHome() {
   const [focusedKey, setFocusedKey] = useState<string | null>(null)
   const [anchorKey, setAnchorKey] = useState<string | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [importErrors, setImportErrors] = useState<string[]>([])
 
   const inputRef = useRef<HTMLInputElement>(null)
   const selectAllRef = useRef<HTMLInputElement>(null)
@@ -59,10 +68,13 @@ export function MigHome() {
 
   const handleFiles = useCallback(
     async (files: FileList) => {
+      const problems: string[] = []
       for (const file of Array.from(files)) {
-        const text = await file.text()
-        await Promise.all(parseMigYaml(text).map(saveMig))
+        const { migs, errors } = parseMigYaml(await file.text())
+        await Promise.all(migs.map(saveMig))
+        for (const error of errors) problems.push(`${file.name}: ${error}`)
       }
+      setImportErrors(problems)
       refresh()
     },
     [refresh],
@@ -200,6 +212,33 @@ export function MigHome() {
         </Button>
         {hiddenFileInput}
       </div>
+
+      {importErrors.length > 0 && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          <Warning className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">Some entries couldn’t be imported:</p>
+            <ul className="mt-1 list-disc pl-4">
+              {importErrors.map((error, i) => (
+                <li key={i} className="break-words">
+                  {error}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <button
+            type="button"
+            onClick={() => setImportErrors([])}
+            aria-label="Dismiss import errors"
+            className="rounded-sm p-0.5 outline-none hover:bg-destructive/15 focus-visible:ring-2 focus-visible:ring-ring/30"
+          >
+            <X className="size-3.5" aria-hidden />
+          </button>
+        </div>
+      )}
 
       {migs.length === 0 ? (
         <p className="text-sm text-muted-foreground">

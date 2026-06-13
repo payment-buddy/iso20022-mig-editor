@@ -63,6 +63,25 @@ describe("MigHome", () => {
     expect(await screen.findByRole("link", { name: "B" })).toBeInTheDocument()
   })
 
+  it("rejects a malformed upload and surfaces a readable error", async () => {
+    const user = userEvent.setup()
+    render(<MigHome />)
+    // Missing messageIdentifier → the schema rejects it.
+    const bad = new File(["name: Oops\nversion: '1'\nelementOverrides: {}\n"], "bad.yaml", {
+      type: "text/yaml",
+    })
+    await user.upload(screen.getByLabelText("MIG YAML file"), bad)
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent(/couldn.t be imported/i)
+    expect(alert).toHaveTextContent(/bad\.yaml.*messageIdentifier/i)
+    expect(screen.queryByRole("link", { name: "Oops" })).not.toBeInTheDocument()
+
+    // Dismissible.
+    await user.click(within(alert).getByRole("button", { name: /dismiss import errors/i }))
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  })
+
   it("select-all toggles every row", async () => {
     await renderWith(migObj("A", "1"), migObj("B", "1"))
     await userEvent.click(screen.getByLabelText("Select all"))
