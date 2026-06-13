@@ -2,6 +2,11 @@ import { useState, type KeyboardEvent, type ReactNode } from "react"
 import { PencilSimple } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 
+// A value longer than this (or spanning many lines) is collapsed to a few lines
+// behind a "Show more" toggle. Heuristic — avoids measuring the DOM in an effect.
+const LONG_TEXT_CHARS = 300
+const isLongText = (s: string) => s.length > LONG_TEXT_CHARS || s.split("\n").length > 5
+
 /**
  * Inline-edit text field (FUNCTIONALITY §10 inline-edit model). The value is
  * plain text with a pencil button that appears on hover/focus; clicking it
@@ -32,6 +37,7 @@ export function InlineEdit({
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value)
+  const [expanded, setExpanded] = useState(false)
 
   const start = () => {
     setDraft(value)
@@ -48,16 +54,29 @@ export function InlineEdit({
 
   if (!editing) {
     const showPlaceholder = display == null && !value
+    const collapsible = display == null && isLongText(value)
     return (
       <div className="group flex w-full items-start justify-between gap-2 rounded-md px-2 py-1">
-        <span
-          className={cn(
-            "min-w-0 whitespace-pre-wrap text-sm",
-            showPlaceholder && "text-muted-foreground italic",
+        <div className="min-w-0 text-sm">
+          {collapsible ? (
+            <>
+              <p className={cn("whitespace-pre-wrap", !expanded && "line-clamp-5")}>{value}</p>
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="mt-0.5 rounded-sm text-xs text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/30"
+              >
+                {expanded ? "Show less" : "Show more"}
+              </button>
+            </>
+          ) : (
+            <span
+              className={cn("whitespace-pre-wrap", showPlaceholder && "text-muted-foreground italic")}
+            >
+              {display ?? (value || placeholder)}
+            </span>
           )}
-        >
-          {display ?? (value || placeholder)}
-        </span>
+        </div>
         <button
           type="button"
           onClick={start}
