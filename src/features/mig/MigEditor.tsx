@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Check, DownloadSimple, FileText, ShieldCheck, Table } from "@phosphor-icons/react"
+import { Check, DownloadSimple, ShieldCheck } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import { effectiveMig } from "@/core/mig/effectiveMig"
@@ -29,6 +29,7 @@ import { MigMetadata } from "./MigMetadata"
 import { MigElementDetail } from "./MigElementDetail"
 import { MigConstraintDetail } from "./MigConstraintDetail"
 import { MigDiagnostics } from "./MigDiagnostics"
+import { ExportMenu } from "./ExportMenu"
 import { ValidateInstanceDialog } from "./ValidateInstanceDialog"
 import { downloadMigCsv, downloadMigMarkdown, downloadMigs } from "./downloadMigs"
 
@@ -138,22 +139,10 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
             <ShieldCheck data-icon="inline-start" aria-hidden />
             Validate
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => downloadMigMarkdown(mig, allMigs, resolved.current)}
-          >
-            <FileText data-icon="inline-start" aria-hidden />
-            Markdown
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => downloadMigCsv(mig, allMigs, resolved.current)}
-          >
-            <Table data-icon="inline-start" aria-hidden />
-            CSV
-          </Button>
+          <ExportMenu
+            onMarkdown={() => downloadMigMarkdown(mig, allMigs, resolved.current)}
+            onCsv={() => downloadMigCsv(mig, allMigs, resolved.current)}
+          />
           <Button size="sm" onClick={() => downloadMigs([mig], buildPathOrder(root))}>
             <DownloadSimple data-icon="inline-start" aria-hidden />
             Download

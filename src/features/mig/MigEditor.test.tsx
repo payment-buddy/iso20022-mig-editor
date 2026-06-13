@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
@@ -13,11 +13,23 @@ import type {
   MessageImplementationGuide,
 } from "@/core/types/types"
 import { MigEditor } from "./MigEditor"
-import { downloadMigMarkdown, downloadMigs } from "./downloadMigs"
+import { downloadMigCsv, downloadMigMarkdown, downloadMigs } from "./downloadMigs"
 
 // The DOM download side-effect is exercised separately (downloadMigs.save.test.ts);
 // here we only assert the editor wires its export buttons to it.
-vi.mock("./downloadMigs", () => ({ downloadMigs: vi.fn(), downloadMigMarkdown: vi.fn() }))
+vi.mock("./downloadMigs", () => ({
+  downloadMigs: vi.fn(),
+  downloadMigMarkdown: vi.fn(),
+  downloadMigCsv: vi.fn(),
+}))
+
+// radix DropdownMenu (the Export menu) uses pointer-capture + scrollIntoView,
+// which jsdom doesn't implement.
+beforeAll(() => {
+  Element.prototype.hasPointerCapture = () => false
+  Element.prototype.releasePointerCapture = () => {}
+  Element.prototype.scrollIntoView = () => {}
+})
 
 function el(name: string, props: Partial<MessageElement> = {}): MessageElement {
   return {
@@ -127,17 +139,35 @@ describe("MigEditor", () => {
     )
   })
 
-  it("exports a Markdown report from the header button", async () => {
+  it("exports a Markdown report from the Export menu", async () => {
     const user = userEvent.setup()
     vi.mocked(downloadMigMarkdown).mockClear()
     await saveMig(MIG)
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
 
-    await user.click(screen.getByRole("button", { name: /markdown/i }))
+    await user.click(screen.getByRole("button", { name: /export/i }))
+    await user.click(await screen.findByRole("menuitem", { name: /markdown/i }))
     expect(downloadMigMarkdown).toHaveBeenCalledTimes(1)
     // Called with the MIG, the loaded MIGs (for the parent chain), and its message.
     expect(downloadMigMarkdown).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "EPC Guide" }),
+      expect.any(Array),
+      expect.objectContaining({ identifier: "pacs.008.001.10" }),
+    )
+  })
+
+  it("exports a CSV from the Export menu", async () => {
+    const user = userEvent.setup()
+    vi.mocked(downloadMigCsv).mockClear()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    await user.click(screen.getByRole("button", { name: /export/i }))
+    await user.click(await screen.findByRole("menuitem", { name: /csv/i }))
+    expect(downloadMigCsv).toHaveBeenCalledTimes(1)
+    expect(downloadMigCsv).toHaveBeenCalledWith(
       expect.objectContaining({ name: "EPC Guide" }),
       expect.any(Array),
       expect.objectContaining({ identifier: "pacs.008.001.10" }),
