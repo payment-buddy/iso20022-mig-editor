@@ -5,6 +5,7 @@
 // Advisory only (all warnings). Pure.
 
 import { looseningWarning, patternWarning } from "./fieldValidation"
+import { elementAtPath } from "@/core/erepository/elementPath"
 import type {
   ElementOverride,
   ElementOverrides,
@@ -19,19 +20,6 @@ export type Diagnostic = {
   /** Field label, e.g. "Max length". */
   field: string
   message: string
-}
-
-/** Resolve an element by its xmlPath (slash-joined xmlTags). */
-function elementAt(root: MessageElement, path: string): MessageElement | null {
-  const segments = path.split("/")
-  if (segments[0] !== root.xmlTag) return null
-  let current = root
-  for (let i = 1; i < segments.length; i++) {
-    const next = current.elements.find((c) => c.xmlTag === segments[i])
-    if (!next) return null
-    current = next
-  }
-  return current
 }
 
 /** Per-field diagnostics for one element vs its inherited/ISO baseline. */
@@ -141,7 +129,7 @@ export function validateMigConsistency(
 ): Diagnostic[] {
   const out: Diagnostic[] = []
   for (const [path, own] of Object.entries(mig.elementOverrides)) {
-    const element = elementAt(message.rootElement, path)
+    const element = elementAtPath(message.rootElement, path)
     if (!element) continue
     for (const { field, message: msg } of elementDiagnostics(element, inherited[path], own)) {
       out.push({ path, elementName: element.name, field, message: msg })

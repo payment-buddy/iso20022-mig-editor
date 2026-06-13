@@ -9,6 +9,7 @@ import {
   Warning,
 } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
+import { elementAtPath } from "@/core/erepository/elementPath"
 import { buildPathOrder } from "@/core/mig/serializeMig"
 import { applyFieldCopy } from "@/core/mig/copyChange"
 import { compareMigs, type FieldChange, type FieldRef, type PathDiff } from "@/core/mig/compareMigs"
@@ -94,12 +95,21 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
     )
   }
 
-  // Schema order from whichever MIG's message resolves (same when they match).
-  const resolved =
-    resolveMessage(repo, a.messageIdentifier) ?? resolveMessage(repo, b.messageIdentifier)
-  const order = resolved ? buildPathOrder(resolved.current.rootElement) : undefined
+  // Resolve each MIG's own message version. They share a family but may differ in
+  // flavour/version, so an element present in one can be absent in the other.
+  const messageA = resolveMessage(repo, a.messageIdentifier)?.current
+  const messageB = resolveMessage(repo, b.messageIdentifier)?.current
+  const order = messageA || messageB ? buildPathOrder((messageA ?? messageB)!.rootElement) : undefined
 
   const diff = compareMigs(a, b, order)
+
+  // A copy may only target a path that exists in the *target* MIG's message
+  // version — otherwise it would create an orphan override. When the target's
+  // message isn't in the loaded e-Repository we can't check, so we allow it.
+  const canCopy = (dir: CopyDir, path: string): boolean => {
+    const target = dir === "a-to-b" ? messageB : messageA
+    return !target || elementAtPath(target.rootElement, path) !== null
+  }
 
   // Copy one field from one MIG into the other — applied to the draft only. The
   // edited field then matches and drops out of the recomputed diff; persistence
@@ -196,7 +206,7 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
           These two MIGs have identical overrides — nothing to compare.
         </p>
       ) : (
-        <ComparePanel diff={diff} copy={copy} />
+        <ComparePanel diff={diff} copy={copy} canCopy={canCopy} />
       )}
     </div>
   )
@@ -205,9 +215,11 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
 function ComparePanel({
   diff,
   copy,
+  canCopy,
 }: {
   diff: ReturnType<typeof compareMigs>
   copy: CopyFn
+  canCopy: (dir: CopyDir, path: string) => boolean
 }) {
   const cardRefs = useRef<(HTMLElement | null)[]>([])
 
@@ -258,6 +270,7 @@ function ComparePanel({
             key={p.path}
             diff={p}
             copy={copy}
+            canCopy={canCopy}
             aLabel={aLabel}
             bLabel={bLabel}
             ref={(el) => {
@@ -279,17 +292,22 @@ const KIND_BADGE: Record<PathDiff["kind"], { label: string; className: string }>
 function ElementCard({
   diff,
   copy,
+  canCopy,
   aLabel,
   bLabel,
   ref,
 }: {
   diff: PathDiff
   copy: CopyFn
+  canCopy: (dir: CopyDir, path: string) => boolean
   aLabel: string
   bLabel: string
   ref: (el: HTMLElement | null) => void
 }) {
   const badge = KIND_BADGE[diff.kind]
+  // Path existence is per-element, not per-field — compute once for the card.
+  const canToB = canCopy("a-to-b", diff.path)
+  const canToA = canCopy("b-to-a", diff.path)
   return (
     <section
       ref={ref}
@@ -310,6 +328,8 @@ function ElementCard({
             key={f.label}
             field={f}
             onCopy={(dir) => copy(diff.path, f.ref, dir)}
+            canToA={canToA}
+            canToB={canToB}
             aLabel={aLabel}
             bLabel={bLabel}
           />
@@ -323,11 +343,15 @@ function ElementCard({
 function FieldRow({
   field,
   onCopy,
+  canToA,
+  canToB,
   aLabel,
   bLabel,
 }: {
   field: FieldChange
   onCopy: (dir: CopyDir) => void
+  canToA: boolean
+  canToB: boolean
   aLabel: string
   bLabel: string
 }) {
@@ -337,12 +361,22 @@ function FieldRow({
       <div className="flex items-center justify-center gap-0.5 border-x bg-muted/10 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
         <CopyButton
           dir="right"
-          label={`Copy ${field.label} to ${bLabel}`}
+          disabled={!canToB}
+          label={
+            canToB
+              ? `Copy ${field.label} to ${bLabel}`
+              : `Can’t copy: ${bLabel} has no element at this path`
+          }
           onClick={() => onCopy("a-to-b")}
         />
         <CopyButton
           dir="left"
-          label={`Copy ${field.label} to ${aLabel}`}
+          disabled={!canToA}
+          label={
+            canToA
+              ? `Copy ${field.label} to ${aLabel}`
+              : `Can’t copy: ${aLabel} has no element at this path`
+          }
           onClick={() => onCopy("b-to-a")}
         />
       </div>
@@ -353,10 +387,12 @@ function FieldRow({
 
 function CopyButton({
   dir,
+  disabled,
   label,
   onClick,
 }: {
   dir: "left" | "right"
+  disabled: boolean
   label: string
   onClick: () => void
 }) {
@@ -365,9 +401,10 @@ function CopyButton({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-label={label}
       title={label}
-      className="rounded p-0.5 text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/40"
+      className="rounded p-0.5 text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-30"
     >
       <Icon className="size-3.5" aria-hidden />
     </button>

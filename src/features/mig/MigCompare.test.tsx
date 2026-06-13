@@ -7,7 +7,12 @@ import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
 import { getMigKey } from "@/core/mig/migKey"
-import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
+import type {
+  ERepository,
+  MessageDefinition,
+  MessageElement,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 import { MigCompare } from "./MigCompare"
 
 const emptyRepo: ERepository = { businessAreas: [] }
@@ -20,10 +25,62 @@ function mig(
   return { name, version: "1.0", messageIdentifier, elementOverrides: overrides }
 }
 
-async function renderCompare(a: MessageImplementationGuide, b: MessageImplementationGuide) {
+function el(xmlTag: string, elements: MessageElement[] = []): MessageElement {
+  return {
+    id: xmlTag,
+    name: xmlTag,
+    xmlTag,
+    isAttribute: false,
+    definition: "",
+    minOccurs: 1,
+    maxOccurs: 1,
+    typeId: "",
+    type: "",
+    baseType: null,
+    minInclusive: null,
+    maxInclusive: null,
+    totalDigits: null,
+    fractionDigits: null,
+    length: null,
+    minLength: null,
+    maxLength: null,
+    pattern: null,
+    baseValue: null,
+    codes: [],
+    constraints: [],
+    examples: [],
+    elements,
+  }
+}
+
+/** A repo with one area holding two pacs.008 versions with different element trees. */
+function repoWithVersions(v08: MessageElement, v09: MessageElement): ERepository {
+  const def = (identifier: string, root: MessageElement): MessageDefinition => ({
+    name: identifier,
+    identifier,
+    shortCode: "pacs.008",
+    rootElement: root,
+  })
+  return {
+    businessAreas: [
+      {
+        name: "Payments",
+        code: "pacs",
+        definition: "",
+        messages: [def("pacs.008.001.08", v08), def("pacs.008.001.09", v09)],
+      },
+    ],
+  }
+}
+
+async function renderCompare(
+  a: MessageImplementationGuide,
+  b: MessageImplementationGuide,
+  repo: ERepository = emptyRepo,
+) {
   await saveMig(a)
   await saveMig(b)
-  render(<MigCompare keyA={getMigKey(a)} keyB={getMigKey(b)} repo={emptyRepo} />)
+  render(<MigCompare keyA={getMigKey(a)} keyB={getMigKey(b)} repo={repo} />)
 }
 
 afterEach(async () => {
@@ -161,6 +218,34 @@ describe("MigCompare", () => {
     await screen.findByRole("region", { name: /Amt — changed/i })
     await userEvent.click(screen.getByRole("link", { name: /back/i }))
     expect(screen.queryByText(/discard unsaved changes/i)).not.toBeInTheDocument()
+  })
+
+  it("disables copying toward a version whose message lacks the element", async () => {
+    // .08 has Doc/Extra; .09 does not.
+    const repo = repoWithVersions(
+      el("Doc", [el("Amt"), el("Extra")]),
+      el("Doc", [el("Amt")]),
+    )
+    const a = mig("A", { "Doc/Extra": { maxLength: 5 } }, "pacs.008.001.08")
+    const b = mig("B", {}, "pacs.008.001.09")
+    await renderCompare(a, b, repo)
+
+    const card = await screen.findByRole("region", { name: /Extra — only in A/i })
+    // → B (pacs.008.001.09) has no Doc/Extra, so copying there is blocked…
+    expect(within(card).getByRole("button", { name: /Can.t copy: B 1\.0/i })).toBeDisabled()
+    // …but copying back into A (which has the element) is allowed.
+    expect(within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i })).toBeEnabled()
+  })
+
+  it("allows copying in both directions when both versions have the element", async () => {
+    const repo = repoWithVersions(el("Doc", [el("Amt")]), el("Doc", [el("Amt")]))
+    const a = mig("A", { "Doc/Amt": { maxLength: 18 } }, "pacs.008.001.08")
+    const b = mig("B", { "Doc/Amt": { maxLength: 12 } }, "pacs.008.001.09")
+    await renderCompare(a, b, repo)
+
+    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    expect(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i })).toBeEnabled()
+    expect(within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i })).toBeEnabled()
   })
 
   it("reports a missing MIG", async () => {

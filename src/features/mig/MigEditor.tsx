@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Check, DownloadSimple, FileText, ShieldCheck } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
+import { elementAtPath } from "@/core/erepository/elementPath"
 import { effectiveMig } from "@/core/mig/effectiveMig"
 import { getMigKey } from "@/core/mig/migKey"
 import { renameMig } from "@/core/mig/renameMig"
@@ -15,12 +16,7 @@ import {
   updateConstraint,
 } from "@/core/mig/overrides"
 import { deleteMig, loadAllMigs, saveMig } from "@/core/storage/migStore"
-import type {
-  Constraint,
-  ERepository,
-  MessageElement,
-  MessageImplementationGuide,
-} from "@/core/types/types"
+import type { Constraint, ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
 import {
@@ -215,7 +211,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
               return <ConstraintDetail constraint={sel.constraint} path={sel.path} />
             }
             const elementPath = sel.parentPath
-            const owner = elementAt(root, elementPath)
+            const owner = elementAtPath(root, elementPath)
             const current = sel.constraint.name
             const takenNames = [
               ...(owner?.constraints ?? []).map((c) => c.name),
@@ -256,19 +252,6 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
       />
     </div>
   )
-}
-
-/** Resolve an element by its xmlPath (slash-joined xmlTags), starting at `root`. */
-function elementAt(root: MessageElement, path: string): MessageElement | null {
-  const segments = path.split("/")
-  if (segments[0] !== root.xmlTag) return null
-  let current = root
-  for (let i = 1; i < segments.length; i++) {
-    const next = current.elements.find((c) => c.xmlTag === segments[i])
-    if (!next) return null
-    current = next
-  }
-  return current
 }
 
 /** Read-only detail for a standard, spec-inherited constraint. */
