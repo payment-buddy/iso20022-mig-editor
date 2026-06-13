@@ -320,6 +320,26 @@ describe("MigEditor", () => {
     ])
   })
 
+  it("flags allowed values that violate the length facet", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // GrpHdr is Text with maxLength 35.
+    await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+    const input = within(panel).getByRole("textbox", { name: /add to allowed values/i })
+
+    await user.type(input, "x".repeat(40))
+    // Live warning while typing the (too-long) draft value.
+    expect(within(panel).getByText(/longer than max length 35/i)).toBeInTheDocument()
+
+    await user.keyboard("{Enter}")
+    // Once added, the offending chip carries the warning as a tooltip.
+    expect(within(panel).getByTitle(/longer than max length 35/i)).toBeInTheDocument()
+  })
+
   it("offers same-message MIGs as parents and autosaves the choice", async () => {
     const user = userEvent.setup()
     const base: MessageImplementationGuide = { ...MIG, name: "Base", description: undefined }

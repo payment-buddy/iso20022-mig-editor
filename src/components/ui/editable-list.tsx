@@ -1,10 +1,12 @@
 import { useState, type KeyboardEvent } from "react"
-import { X } from "@phosphor-icons/react"
+import { Warning, X } from "@phosphor-icons/react"
+import { cn } from "@/lib/utils"
 
 /**
  * A simple editable list of string values: removable chips plus an input to
- * append. Whole-list changes are reported via `onChange`. Duplicates and blank
- * entries are ignored; `validate` can reject further additions.
+ * append. Whole-list changes are reported via `onChange`. Duplicate and blank
+ * entries are ignored. `validate` returns an advisory error message for a value
+ * (or `null`); offending entries are flagged but not blocked.
  */
 export function EditableList({
   values,
@@ -17,13 +19,14 @@ export function EditableList({
   onChange: (next: string[]) => void
   ariaLabel: string
   placeholder?: string
-  validate?: (value: string) => boolean
+  validate?: (value: string) => string | null
 }) {
   const [draft, setDraft] = useState("")
+  const draftError = validate && draft.trim() ? validate(draft.trim()) : null
 
   const add = () => {
     const value = draft.trim()
-    if (!value || values.includes(value) || (validate && !validate(value))) {
+    if (!value || values.includes(value)) {
       setDraft("")
       return
     }
@@ -44,21 +47,33 @@ export function EditableList({
     <div className="flex flex-col gap-1.5">
       {values.length > 0 && (
         <ul aria-label={ariaLabel} className="flex max-h-40 flex-wrap gap-1 overflow-auto">
-          {values.map((value, i) => (
-            <li key={`${value}-${i}`}>
-              <span className="inline-flex items-center gap-1 rounded-sm bg-muted py-0.5 pr-0.5 pl-1.5 text-xs">
-                <code>{value}</code>
-                <button
-                  type="button"
-                  onClick={() => remove(i)}
-                  aria-label={`Remove ${value}`}
-                  className="rounded-sm p-0.5 text-muted-foreground outline-none hover:bg-muted-foreground/10 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/30"
+          {values.map((value, i) => {
+            const error = validate ? validate(value) : null
+            return (
+              <li key={`${value}-${i}`}>
+                <span
+                  title={error ?? undefined}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-sm py-0.5 pr-0.5 pl-1.5 text-xs",
+                    error
+                      ? "bg-amber-500/10 text-amber-700 dark:text-amber-500"
+                      : "bg-muted",
+                  )}
                 >
-                  <X className="size-3" aria-hidden />
-                </button>
-              </span>
-            </li>
-          ))}
+                  {error && <Warning className="size-3 shrink-0" aria-hidden />}
+                  <code>{value}</code>
+                  <button
+                    type="button"
+                    onClick={() => remove(i)}
+                    aria-label={`Remove ${value}`}
+                    className="rounded-sm p-0.5 text-current/70 outline-none hover:bg-muted-foreground/10 hover:text-current focus-visible:ring-2 focus-visible:ring-ring/30"
+                  >
+                    <X className="size-3" aria-hidden />
+                  </button>
+                </span>
+              </li>
+            )
+          })}
         </ul>
       )}
       <div className="flex gap-1.5">
@@ -79,6 +94,12 @@ export function EditableList({
           Add
         </button>
       </div>
+      {draftError && (
+        <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500">
+          <Warning className="size-3 shrink-0" aria-hidden />
+          {draftError}
+        </p>
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { type ReactNode } from "react"
 import { ArrowCounterClockwise } from "@phosphor-icons/react"
 import type { ElementOverride, MessageElement } from "@/core/types/types"
+import { createValueValidator } from "@/core/mig/fieldValidation"
 import { EditableList } from "@/components/ui/editable-list"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
@@ -92,6 +93,9 @@ export function MigElementDetail({
     if (values.length === 0 || arraysEqual(values, baseExamples)) onClear("examples")
     else onSet("examples", values)
   }
+
+  // Allowed values and examples are validated against the effective length/pattern.
+  const validateValue = createValueValidator(element, override)
 
   return (
     <DetailPanel label="Element details">
@@ -231,6 +235,7 @@ export function MigElementDetail({
             onChange={commitAllowed}
             ariaLabel="Allowed values"
             placeholder="Add an allowed value…"
+            validate={validateValue}
           />
         </OverrideRow>
       )}
@@ -247,6 +252,7 @@ export function MigElementDetail({
             onChange={commitExamples}
             ariaLabel="Examples"
             placeholder="Add an example…"
+            validate={validateValue}
           />
         </OverrideRow>
       )}
