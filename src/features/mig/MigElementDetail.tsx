@@ -10,6 +10,9 @@ const LENGTH_BASE_TYPES = new Set(["Text", "CodeSet", "IdentifierSet", "Binary"]
 /** Base types that carry an inclusive-range facet (values may be decimals). */
 const INCLUSIVE_BASE_TYPES = new Set(["Year", "Amount", "Quantity", "Rate"])
 
+/** Base types that carry a pattern (regex) facet. */
+const PATTERN_BASE_TYPES = new Set(["Text", "CodeSet", "IdentifierSet", "DateTime", "Quantity"])
+
 /**
  * Element detail/edit panel for the MIG Editor (FUNCTIONALITY §5.7). Read-only
  * identity fields plus editable override fields, each showing its inherited
@@ -47,6 +50,17 @@ export function MigElementDetail({
   const baseMaxLength = element.maxLength ?? element.length
   const showLength = element.baseType !== null && LENGTH_BASE_TYPES.has(element.baseType)
   const showInclusive = element.baseType !== null && INCLUSIVE_BASE_TYPES.has(element.baseType)
+  const showPattern = element.baseType !== null && PATTERN_BASE_TYPES.has(element.baseType)
+
+  // Pattern (regex text). Empty means "no pattern" (null = remove the constraint).
+  const patternOverridden = has("pattern")
+  const basePattern = element.pattern
+  const patternEffective = patternOverridden ? (override?.pattern ?? "") : (basePattern ?? "")
+  const commitPattern = (text: string) => {
+    const value = text === "" ? null : text
+    if (value === basePattern) onClear("pattern")
+    else onSet("pattern", value)
+  }
 
   return (
     <DetailPanel label="Element details">
@@ -156,6 +170,22 @@ export function MigElementDetail({
             onClear={() => onClear("maxInclusive")}
           />
         </div>
+      )}
+
+      {showPattern && (
+        <OverrideRow
+          label="Pattern"
+          overridden={patternOverridden}
+          baseline={basePattern ? <code className="text-xs break-all">{basePattern}</code> : <em>none</em>}
+          onReset={() => onClear("pattern")}
+        >
+          <InlineEdit
+            value={patternEffective}
+            onCommit={commitPattern}
+            ariaLabel="Pattern"
+            placeholder="No pattern"
+          />
+        </OverrideRow>
       )}
     </DetailPanel>
   )

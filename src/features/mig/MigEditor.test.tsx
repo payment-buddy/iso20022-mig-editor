@@ -232,6 +232,29 @@ describe("MigEditor", () => {
     ).toBe(99.99)
   })
 
+  it("edits a pattern override for pattern-bearing types", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // The root (Document) has no base type → no pattern field.
+    const rootPanel = screen.getByRole("region", { name: /element details/i })
+    expect(within(rootPanel).queryByRole("button", { name: "Edit Pattern" })).not.toBeInTheDocument()
+
+    // GrpHdr is a Text type → pattern field appears.
+    await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+    await user.click(within(panel).getByRole("button", { name: "Edit Pattern" }))
+    // Note: userEvent treats { and [ as special, so use a brace-free regex.
+    await user.type(within(panel).getByRole("textbox", { name: "Pattern" }), "\\d\\d\\d")
+    await user.tab()
+
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/GrpHdrTag"]?.pattern).toBe(
+      "\\d\\d\\d",
+    )
+  })
+
   it("offers same-message MIGs as parents and autosaves the choice", async () => {
     const user = userEvent.setup()
     const base: MessageImplementationGuide = { ...MIG, name: "Base", description: undefined }
