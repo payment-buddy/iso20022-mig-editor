@@ -52,6 +52,8 @@ type FlatNode = {
       constraint: Constraint
       origin: ConstraintOrigin
       disabled: boolean
+      /** This MIG re-enabled a rule an ancestor disabled (own `disabled: false`). */
+      reEnabled: boolean
       /** Provenance tint for the constraint node (independent of the element). */
       overrideOrigin: OverrideOrigin
     }
@@ -168,12 +170,20 @@ function constraintsAt(
   constraint: Constraint
   origin: ConstraintOrigin
   disabled: boolean
+  /** This MIG explicitly switched a rule back on (own `disabled: false`) that an
+   * ancestor had disabled — otherwise invisible behind the "own" tint. */
+  reEnabled: boolean
   colour: OverrideOrigin
 }[] {
   const ownOv = ownOverrides?.[path]
   const effOv = effectiveOverrides?.[path]
   const disabled = (name: string) =>
     effOv?.constraintOverrides?.[name]?.disabled ?? false
+  // An explicit own `disabled: false` is only ever stored to re-enable a rule an
+  // ancestor turned off (the smart toggle clears, rather than stores false, when
+  // the inherited baseline is already enabled).
+  const reEnabled = (name: string) =>
+    ownOv?.constraintOverrides?.[name]?.disabled === false
   const colourOf = (name: string, origin: ConstraintOrigin): OverrideOrigin => {
     if (origin === "own" || ownOv?.constraintOverrides?.[name] !== undefined)
       return "own"
@@ -191,6 +201,7 @@ function constraintsAt(
       constraint,
       origin,
       disabled: disabled(constraint.name),
+      reEnabled: reEnabled(constraint.name),
       colour: colourOf(constraint.name, origin),
     }
   })
@@ -208,6 +219,7 @@ function constraintsAt(
         constraint,
         origin,
         disabled: enabled === false || disabled(name),
+        reEnabled: reEnabled(name),
         colour: colourOf(name, origin),
       }
     }
@@ -358,12 +370,13 @@ function flattenTree(
     for (const child of childEls) {
       walk(child, `${path}/${child.xmlTag}`, level + 1, path, excluded)
     }
-    for (const { constraint, origin, disabled, colour } of childCons) {
+    for (const { constraint, origin, disabled, reEnabled, colour } of childCons) {
       out.push({
         kind: "constraint",
         constraint,
         origin,
         disabled,
+        reEnabled,
         overrideOrigin: colour,
         path: `${path}/${constraint.name}`,
         level: level + 1,
@@ -891,6 +904,11 @@ function TreeNode({
         {node.kind === "constraint" && node.disabled && (
           <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
             disabled
+          </span>
+        )}
+        {node.kind === "constraint" && node.reEnabled && (
+          <span className="rounded-sm bg-provenance-own/10 px-1 text-[0.625rem] text-provenance-own">
+            enabled
           </span>
         )}
       </div>

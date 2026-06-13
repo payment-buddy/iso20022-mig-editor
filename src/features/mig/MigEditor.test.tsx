@@ -990,6 +990,14 @@ describe("MigEditor", () => {
       (await loadMig(getMigKey(child)))?.elementOverrides["/DocumentTag"]
         ?.constraintOverrides
     ).toEqual({ StdRule: { disabled: false } })
+
+    // The re-enable shows an "enabled" badge in place of "disabled" (the override
+    // has no field change, so this is the only signal for the green tint).
+    expect(within(panel).queryByText("disabled")).not.toBeInTheDocument()
+    expect(within(panel).getByText("enabled")).toBeInTheDocument()
+    // …and the tree node badges the re-enabled rule too.
+    const node = screen.getByRole("treeitem", { name: /constraint stdrule/i })
+    expect(within(node).getByText("enabled")).toBeInTheDocument()
   })
 
   it("re-enabling an own-disabled standard rule clears the override (no separate reset)", async () => {

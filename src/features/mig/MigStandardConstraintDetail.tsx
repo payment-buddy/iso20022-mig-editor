@@ -131,6 +131,10 @@ export function MigStandardConstraintDetail({
       : { label: "Disable", icon: ProhibitIcon, onSelect: toggleDisabled },
   ]
 
+  // This MIG explicitly turned a rule back on that an ancestor disabled — the one
+  // override with no visible field change, so it gets its own badge.
+  const reEnabled = override?.disabled === false
+
   return (
     <DetailPanel label="Constraint details">
       <div className="flex items-center gap-1.5 font-medium">
@@ -142,6 +146,11 @@ export function MigStandardConstraintDetail({
         {disabledEffective && (
           <span className="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
             disabled
+          </span>
+        )}
+        {reEnabled && (
+          <span className="shrink-0 rounded-sm bg-provenance-own/10 px-1.5 py-0.5 text-[0.625rem] font-medium tracking-wide text-provenance-own uppercase">
+            enabled
           </span>
         )}
         <DotsMenu label="Constraint actions" items={actions} />
