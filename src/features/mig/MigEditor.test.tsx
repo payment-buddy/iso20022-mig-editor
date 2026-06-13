@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
@@ -22,14 +22,6 @@ vi.mock("./downloadMigs", () => ({
   downloadMigMarkdown: vi.fn(),
   downloadMigCsv: vi.fn(),
 }))
-
-// radix DropdownMenu (the Export menu) uses pointer-capture + scrollIntoView,
-// which jsdom doesn't implement.
-beforeAll(() => {
-  Element.prototype.hasPointerCapture = () => false
-  Element.prototype.releasePointerCapture = () => {}
-  Element.prototype.scrollIntoView = () => {}
-})
 
 function el(name: string, props: Partial<MessageElement> = {}): MessageElement {
   return {

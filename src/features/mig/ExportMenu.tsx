@@ -1,37 +1,101 @@
-import { DropdownMenu } from "radix-ui"
+import { useEffect, useRef, useState, type ComponentType } from "react"
 import { CaretDown, Export, FileText, Table } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 
-const ITEM =
-  "flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-muted"
-
-/** Header "Export" menu grouping the secondary report exports (Markdown, CSV). */
+/**
+ * Header "Export" menu grouping the secondary report exports (Markdown, CSV). A
+ * hand-rolled popover (no dropdown-library dependency): closes on select, Escape,
+ * or an outside click; ↑/↓/Home/End move between items.
+ */
 export function ExportMenu({ onMarkdown, onCsv }: { onMarkdown: () => void; onCsv: () => void }) {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false)
+    }
+    document.addEventListener("pointerdown", onPointerDown)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open])
+
+  // Focus the first item when the menu opens (keyboard-first).
+  useEffect(() => {
+    if (open) menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus()
+  }, [open])
+
+  const select = (run: () => void) => {
+    setOpen(false)
+    run()
+  }
+
+  const onMenuKeyDown = (e: React.KeyboardEvent) => {
+    const items = Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [])
+    const i = items.indexOf(document.activeElement as HTMLButtonElement)
+    const to =
+      e.key === "ArrowDown" ? i + 1 : e.key === "ArrowUp" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : null
+    if (to === null) return
+    e.preventDefault()
+    items[Math.max(0, Math.min(items.length - 1, to))]?.focus()
+  }
+
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <Button variant="outline" size="sm">
-          <Export data-icon="inline-start" aria-hidden />
-          Export
-          <CaretDown className="ml-1 size-3.5 opacity-60" aria-hidden />
-        </Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content
-          align="end"
-          sideOffset={4}
-          className="z-50 min-w-36 rounded-md border border-border bg-background p-1 shadow-lg outline-none"
+    <div ref={rootRef} className="relative">
+      <Button
+        variant="outline"
+        size="sm"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <Export data-icon="inline-start" aria-hidden />
+        Export
+        <CaretDown className="ml-1 size-3.5 opacity-60" aria-hidden />
+      </Button>
+      {open && (
+        <div
+          ref={menuRef}
+          role="menu"
+          aria-label="Export"
+          onKeyDown={onMenuKeyDown}
+          className="absolute right-0 z-50 mt-1 min-w-36 rounded-md border border-border bg-background p-1 shadow-lg outline-none"
         >
-          <DropdownMenu.Item className={ITEM} onSelect={onMarkdown}>
-            <FileText className="size-4" aria-hidden />
-            Markdown
-          </DropdownMenu.Item>
-          <DropdownMenu.Item className={ITEM} onSelect={onCsv}>
-            <Table className="size-4" aria-hidden />
-            CSV
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+          <MenuItem icon={FileText} label="Markdown" onSelect={() => select(onMarkdown)} />
+          <MenuItem icon={Table} label="CSV" onSelect={() => select(onCsv)} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MenuItem({
+  icon: Icon,
+  label,
+  onSelect,
+}: {
+  icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>
+  label: string
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      tabIndex={-1}
+      onClick={onSelect}
+      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-muted focus:bg-muted"
+    >
+      <Icon className="size-4" aria-hidden />
+      {label}
+    </button>
   )
 }
