@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 import type { ElementOverride, MessageElement } from "@/core/types/types"
-import { createValueValidator, fractionDigitsWarning } from "./fieldValidation"
+import {
+  createValueValidator,
+  looseningWarning,
+  patternWarning,
+  rangeWarning,
+} from "./fieldValidation"
 
 function el(props: Partial<MessageElement> = {}): MessageElement {
   return {
@@ -76,15 +81,38 @@ describe("createValueValidator", () => {
   })
 })
 
-describe("fractionDigitsWarning", () => {
-  it("warns only when the value exceeds the baseline", () => {
-    expect(fractionDigitsWarning(2, 5)).toMatch(/looser/i)
-    expect(fractionDigitsWarning(2, 2)).toBeNull()
-    expect(fractionDigitsWarning(2, 1)).toBeNull()
+describe("looseningWarning", () => {
+  it("warns when a min facet drops below the baseline", () => {
+    expect(looseningWarning("min occurs", 1, 0, "min")).toMatch(/below 1/i)
+    expect(looseningWarning("min occurs", 1, 1, "min")).toBeNull()
+    expect(looseningWarning("min occurs", 1, 2, "min")).toBeNull() // raising a min tightens
   })
 
-  it("is silent when either side is unconstrained (raising/adding a limit only tightens)", () => {
-    expect(fractionDigitsWarning(null, 5)).toBeNull()
-    expect(fractionDigitsWarning(2, null)).toBeNull()
+  it("warns when a max facet rises above the baseline", () => {
+    expect(looseningWarning("max length", 35, 50, "max")).toMatch(/above 35/i)
+    expect(looseningWarning("max length", 35, 20, "max")).toBeNull() // lowering a max tightens
+  })
+
+  it("is silent when either side is unconstrained", () => {
+    expect(looseningWarning("max length", null, 50, "max")).toBeNull()
+    expect(looseningWarning("max length", 35, null, "max")).toBeNull()
+  })
+})
+
+describe("rangeWarning", () => {
+  it("warns when max is below min, otherwise silent", () => {
+    expect(rangeWarning("Length", 5, 3)).toMatch(/max 3 is below min 5/i)
+    expect(rangeWarning("Length", 3, 5)).toBeNull()
+    expect(rangeWarning("Length", 5, 5)).toBeNull()
+    expect(rangeWarning("Length", null, 3)).toBeNull()
+  })
+})
+
+describe("patternWarning", () => {
+  it("flags an unparseable regular expression", () => {
+    expect(patternWarning("[A-Z")).toMatch(/invalid pattern/i)
+    expect(patternWarning("[A-Z]+")).toBeNull()
+    expect(patternWarning("")).toBeNull()
+    expect(patternWarning(null)).toBeNull()
   })
 })

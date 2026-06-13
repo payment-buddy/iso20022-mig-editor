@@ -1,7 +1,12 @@
 import { type ReactNode } from "react"
 import { ArrowCounterClockwise, Plus, Warning } from "@phosphor-icons/react"
 import type { ElementOverride, MessageElement } from "@/core/types/types"
-import { createValueValidator, fractionDigitsWarning } from "@/core/mig/fieldValidation"
+import {
+  createValueValidator,
+  looseningWarning,
+  patternWarning,
+  rangeWarning,
+} from "@/core/mig/fieldValidation"
 import { EditableList } from "@/components/ui/editable-list"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
@@ -69,6 +74,19 @@ export function MigElementDetail({
     const v = inherited?.[field]
     return inh(field) && (typeof v === "number" || v === null) ? v : iso
   }
+  // Per-field state for a numeric facet: baseline (inherited-or-ISO), own-override
+  // and inherited flags, and the effective value in force.
+  const numField = (field: keyof ElementOverride, iso: number | null) => {
+    const baseline = numBaseline(field, iso)
+    const overridden = has(field)
+    const raw = override?.[field]
+    return {
+      baseline,
+      overridden,
+      inherited: inheritedHere(field),
+      effective: overridden ? (typeof raw === "number" ? raw : null) : baseline,
+    }
+  }
 
   // Definition (text). Inherited-or-ISO baseline.
   const defOverridden = has("definition")
@@ -77,9 +95,53 @@ export function MigElementDetail({
   const commitDefinition = (text: string) =>
     text === defBaseline ? onClear("definition") : onSet("definition", text)
 
-  // An exact `length` acts as the ISO baseline for both min and max length.
-  const baseMinLength = numBaseline("minLength", element.minLength ?? element.length)
-  const baseMaxLength = numBaseline("maxLength", element.maxLength ?? element.length)
+  // Numeric facets (occurs / length / inclusive / digits). An exact `length`
+  // acts as the ISO baseline for both min and max length.
+  const minOccurs = numField("minOccurs", element.minOccurs)
+  const maxOccurs = numField("maxOccurs", element.maxOccurs)
+  const minLength = numField("minLength", element.minLength ?? element.length)
+  const maxLength = numField("maxLength", element.maxLength ?? element.length)
+  const minInclusive = numField("minInclusive", element.minInclusive)
+  const maxInclusive = numField("maxInclusive", element.maxInclusive)
+  const totalDigits = numField("totalDigits", element.totalDigits)
+  const fractionDigits = numField("fractionDigits", element.fractionDigits)
+
+  // Loosening / range warnings (advisory, FUNCTIONALITY §5.7).
+  const minOccursWarn = looseningWarning("min occurs", minOccurs.baseline, minOccurs.effective, "min")
+  // `maxOccurs: 0` is intentional exclusion, so only flag a non-zero max below min.
+  const maxOccursWarn =
+    maxOccurs.effective !== null &&
+    maxOccurs.effective > 0 &&
+    minOccurs.effective !== null &&
+    maxOccurs.effective < minOccurs.effective
+      ? `Occurs: max ${maxOccurs.effective} is below min ${minOccurs.effective}.`
+      : looseningWarning("max occurs", maxOccurs.baseline, maxOccurs.effective, "max")
+  const minLengthWarn = looseningWarning("min length", minLength.baseline, minLength.effective, "min")
+  const maxLengthWarn =
+    rangeWarning("Length", minLength.effective, maxLength.effective) ??
+    looseningWarning("max length", maxLength.baseline, maxLength.effective, "max")
+  const minInclusiveWarn = looseningWarning(
+    "min inclusive",
+    minInclusive.baseline,
+    minInclusive.effective,
+    "min",
+  )
+  const maxInclusiveWarn =
+    rangeWarning("Inclusive", minInclusive.effective, maxInclusive.effective) ??
+    looseningWarning("max inclusive", maxInclusive.baseline, maxInclusive.effective, "max")
+  const totalDigitsWarn = looseningWarning(
+    "total digits",
+    totalDigits.baseline,
+    totalDigits.effective,
+    "max",
+  )
+  const fractionDigitsWarn = looseningWarning(
+    "fraction digits",
+    fractionDigits.baseline,
+    fractionDigits.effective,
+    "max",
+  )
+
   const showLength = element.baseType !== null && LENGTH_BASE_TYPES.has(element.baseType)
   const showInclusive = element.baseType !== null && INCLUSIVE_BASE_TYPES.has(element.baseType)
   const showDigits = element.baseType !== null && DIGITS_BASE_TYPES.has(element.baseType)
@@ -89,6 +151,7 @@ export function MigElementDetail({
   const patternOverridden = has("pattern")
   const basePattern = inh("pattern") ? (inherited?.pattern ?? null) : element.pattern
   const patternEffective = patternOverridden ? (override?.pattern ?? "") : (basePattern ?? "")
+  const patternWarn = patternWarning(patternEffective || null)
   const commitPattern = (text: string) => {
     const value = text === "" ? null : text
     if (value === basePattern) onClear("pattern")
@@ -169,14 +232,11 @@ export function MigElementDetail({
         <NumberOverrideField
           label="Min occurs"
           ariaLabel="Min occurs"
-          baseline={numBaseline("minOccurs", element.minOccurs)}
-          overridden={has("minOccurs")}
-          inherited={inheritedHere("minOccurs")}
-          effective={
-            has("minOccurs")
-              ? (override?.minOccurs ?? element.minOccurs)
-              : numBaseline("minOccurs", element.minOccurs)
-          }
+          baseline={minOccurs.baseline}
+          overridden={minOccurs.overridden}
+          inherited={minOccurs.inherited}
+          warning={minOccursWarn}
+          effective={minOccurs.effective}
           allowNull={false}
           emptyLabel="0"
           onSet={(v) => onSet("minOccurs", v)}
@@ -185,12 +245,11 @@ export function MigElementDetail({
         <NumberOverrideField
           label="Max occurs"
           ariaLabel="Max occurs"
-          baseline={numBaseline("maxOccurs", element.maxOccurs)}
-          overridden={has("maxOccurs")}
-          inherited={inheritedHere("maxOccurs")}
-          effective={
-            has("maxOccurs") ? (override?.maxOccurs ?? null) : numBaseline("maxOccurs", element.maxOccurs)
-          }
+          baseline={maxOccurs.baseline}
+          overridden={maxOccurs.overridden}
+          inherited={maxOccurs.inherited}
+          warning={maxOccursWarn}
+          effective={maxOccurs.effective}
           allowNull
           emptyLabel="unbounded"
           onSet={(v) => onSet("maxOccurs", v)}
@@ -203,10 +262,11 @@ export function MigElementDetail({
           <NumberOverrideField
             label="Min length"
             ariaLabel="Min length"
-            baseline={baseMinLength}
-            overridden={has("minLength")}
-            inherited={inheritedHere("minLength")}
-            effective={has("minLength") ? (override?.minLength ?? null) : baseMinLength}
+            baseline={minLength.baseline}
+            overridden={minLength.overridden}
+            inherited={minLength.inherited}
+            warning={minLengthWarn}
+            effective={minLength.effective}
             allowNull
             emptyLabel="none"
             onSet={(v) => onSet("minLength", v)}
@@ -215,10 +275,11 @@ export function MigElementDetail({
           <NumberOverrideField
             label="Max length"
             ariaLabel="Max length"
-            baseline={baseMaxLength}
-            overridden={has("maxLength")}
-            inherited={inheritedHere("maxLength")}
-            effective={has("maxLength") ? (override?.maxLength ?? null) : baseMaxLength}
+            baseline={maxLength.baseline}
+            overridden={maxLength.overridden}
+            inherited={maxLength.inherited}
+            warning={maxLengthWarn}
+            effective={maxLength.effective}
             allowNull
             emptyLabel="none"
             onSet={(v) => onSet("maxLength", v)}
@@ -232,14 +293,11 @@ export function MigElementDetail({
           <NumberOverrideField
             label="Min inclusive"
             ariaLabel="Min inclusive"
-            baseline={numBaseline("minInclusive", element.minInclusive)}
-            overridden={has("minInclusive")}
-            inherited={inheritedHere("minInclusive")}
-            effective={
-              has("minInclusive")
-                ? (override?.minInclusive ?? null)
-                : numBaseline("minInclusive", element.minInclusive)
-            }
+            baseline={minInclusive.baseline}
+            overridden={minInclusive.overridden}
+            inherited={minInclusive.inherited}
+            warning={minInclusiveWarn}
+            effective={minInclusive.effective}
             allowNull
             integer={false}
             emptyLabel="none"
@@ -249,14 +307,11 @@ export function MigElementDetail({
           <NumberOverrideField
             label="Max inclusive"
             ariaLabel="Max inclusive"
-            baseline={numBaseline("maxInclusive", element.maxInclusive)}
-            overridden={has("maxInclusive")}
-            inherited={inheritedHere("maxInclusive")}
-            effective={
-              has("maxInclusive")
-                ? (override?.maxInclusive ?? null)
-                : numBaseline("maxInclusive", element.maxInclusive)
-            }
+            baseline={maxInclusive.baseline}
+            overridden={maxInclusive.overridden}
+            inherited={maxInclusive.inherited}
+            warning={maxInclusiveWarn}
+            effective={maxInclusive.effective}
             allowNull
             integer={false}
             emptyLabel="none"
@@ -271,14 +326,11 @@ export function MigElementDetail({
           <NumberOverrideField
             label="Total digits"
             ariaLabel="Total digits"
-            baseline={numBaseline("totalDigits", element.totalDigits)}
-            overridden={has("totalDigits")}
-            inherited={inheritedHere("totalDigits")}
-            effective={
-              has("totalDigits")
-                ? (override?.totalDigits ?? null)
-                : numBaseline("totalDigits", element.totalDigits)
-            }
+            baseline={totalDigits.baseline}
+            overridden={totalDigits.overridden}
+            inherited={totalDigits.inherited}
+            warning={totalDigitsWarn}
+            effective={totalDigits.effective}
             allowNull
             emptyLabel="none"
             onSet={(v) => onSet("totalDigits", v)}
@@ -287,20 +339,11 @@ export function MigElementDetail({
           <NumberOverrideField
             label="Fraction digits"
             ariaLabel="Fraction digits"
-            baseline={numBaseline("fractionDigits", element.fractionDigits)}
-            overridden={has("fractionDigits")}
-            inherited={inheritedHere("fractionDigits")}
-            warning={fractionDigitsWarning(
-              numBaseline("fractionDigits", element.fractionDigits),
-              has("fractionDigits")
-                ? (override?.fractionDigits ?? null)
-                : numBaseline("fractionDigits", element.fractionDigits),
-            )}
-            effective={
-              has("fractionDigits")
-                ? (override?.fractionDigits ?? null)
-                : numBaseline("fractionDigits", element.fractionDigits)
-            }
+            baseline={fractionDigits.baseline}
+            overridden={fractionDigits.overridden}
+            inherited={fractionDigits.inherited}
+            warning={fractionDigitsWarn}
+            effective={fractionDigits.effective}
             allowNull
             emptyLabel="none"
             onSet={(v) => onSet("fractionDigits", v)}
@@ -314,6 +357,7 @@ export function MigElementDetail({
           label="Pattern"
           overridden={patternOverridden}
           inherited={inheritedHere("pattern")}
+          warning={patternWarn}
           baseline={basePattern || "none"}
           onReset={() => onClear("pattern")}
         >

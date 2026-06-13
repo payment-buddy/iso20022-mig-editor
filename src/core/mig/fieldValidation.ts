@@ -32,16 +32,45 @@ export function createValueValidator(
   }
 }
 
+/** Which direction loosens a numeric facet: a `min` dropped, or a `max` raised. */
+export type FacetDirection = "min" | "max"
+
 /**
- * Advisory warning when an effective `fractionDigits` is **higher** than its
- * baseline (the inherited/original limit) — allowing more decimal places
- * *loosens* the constraint (FUNCTIONALITY §5.7). `null` when within the baseline,
- * or when either side is unconstrained (raising or adding a limit only tightens).
+ * Advisory warning when a numeric facet override loosens its baseline (the
+ * inherited/original limit): a `min` facet below it, or a `max` facet above it
+ * (FUNCTIONALITY §5.7). `null` within the baseline, or when either side is
+ * unconstrained (raising or adding a limit only tightens).
  */
-export function fractionDigitsWarning(
+export function looseningWarning(
+  label: string,
   baseline: number | null,
   value: number | null,
+  dir: FacetDirection,
 ): string | null {
-  if (baseline === null || value === null || value <= baseline) return null
-  return `Looser than the original: ${value} fraction digits allows more than ${baseline}.`
+  if (baseline === null || value === null) return null
+  if (dir === "min" ? value < baseline : value > baseline) {
+    return `Looser than the original: ${label} ${value} is ${dir === "min" ? "below" : "above"} ${baseline}.`
+  }
+  return null
+}
+
+/** Warning when a `max` is below the `min` of the same facet (an empty range). */
+export function rangeWarning(
+  label: string,
+  min: number | null,
+  max: number | null,
+): string | null {
+  if (min === null || max === null || max >= min) return null
+  return `${label}: max ${max} is below min ${min}.`
+}
+
+/** Warning when a pattern override isn't a valid regular expression (FUNCTIONALITY §5.7). */
+export function patternWarning(pattern: string | null): string | null {
+  if (pattern == null || pattern === "") return null
+  try {
+    new RegExp(`^(?:${pattern})$`)
+    return null
+  } catch {
+    return "Invalid pattern — not a valid regular expression."
+  }
 }

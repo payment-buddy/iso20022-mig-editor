@@ -568,6 +568,38 @@ describe("MigEditor", () => {
     expect(within(panel).getByRole("alert")).toHaveTextContent(/looser than the original/i)
   })
 
+  it("warns when min occurs drops below the original", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    expect(within(panel).queryByRole("alert")).not.toBeInTheDocument()
+    await user.click(within(panel).getByRole("button", { name: "Edit Min occurs" }))
+    const input = within(panel).getByRole("spinbutton", { name: "Min occurs" })
+    await user.clear(input)
+    await user.type(input, "0")
+    await user.tab()
+    expect(within(panel).getByRole("alert")).toHaveTextContent(/min occurs 0 is below 1/i)
+  })
+
+  it("flags a pattern that isn't a valid regular expression", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    await user.click(within(panel).getByRole("button", { name: "Edit Pattern" }))
+    // An unbalanced group — invalid regex (brackets are special to user-event).
+    await user.type(within(panel).getByRole("textbox", { name: "Pattern" }), "(")
+    await user.tab()
+    expect(within(panel).getByRole("alert")).toHaveTextContent(/invalid pattern/i)
+  })
+
   it("shows Min/Max length only for length-bearing types and edits them", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)
