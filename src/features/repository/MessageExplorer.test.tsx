@@ -83,13 +83,15 @@ describe("MessageExplorer", () => {
   it("expands a node and reveals nested elements via its caret", async () => {
     render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
     // root expanded by default
-    expect(screen.getByText("GrpHdr")).toBeInTheDocument()
-    expect(screen.getByText("CdtTrfTxInf")).toBeInTheDocument()
+    expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toBeInTheDocument()
+    expect(screen.getByRole("treeitem", { name: "CdtTrfTxInf" })).toBeInTheDocument()
     // grandchild hidden until its parent is expanded
-    expect(screen.queryByText("Amt")).not.toBeInTheDocument()
+    expect(screen.queryByRole("treeitem", { name: "Amt" })).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole("button", { name: /expand CdtTrfTxInf/i }))
-    expect(screen.getByText("Amt")).toBeInTheDocument()
+    // Caret toggle (mouse): click the caret inside the node.
+    const node = screen.getByRole("treeitem", { name: "CdtTrfTxInf" })
+    await userEvent.click(node.querySelector("[role='presentation']") as HTMLElement)
+    expect(screen.getByRole("treeitem", { name: "Amt" })).toBeInTheDocument()
   })
 
   it("shows the root element in the detail panel by default", () => {
@@ -99,9 +101,9 @@ describe("MessageExplorer", () => {
     expect(within(panel).getByText("The credit transfer message.")).toBeInTheDocument()
   })
 
-  it("shows the clicked element's path in the detail panel", async () => {
+  it("shows the clicked element's path in the detail panel (selection follows focus)", async () => {
     render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
-    await userEvent.click(screen.getByRole("button", { name: "CdtTrfTxInf" }))
+    await userEvent.click(screen.getByRole("treeitem", { name: "CdtTrfTxInf" }))
 
     const panel = screen.getByRole("region", { name: /element details/i })
     expect(within(panel).getByText("DocumentTag/CdtTrfTxInfTag")).toBeInTheDocument()
@@ -109,23 +111,86 @@ describe("MessageExplorer", () => {
 
   it("toggles tree labels between element names and XML tags", async () => {
     render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
-    const primaryOf = (name: string) =>
-      screen.getByRole("button", { name }).querySelector("span")?.textContent
-
-    expect(primaryOf("GrpHdr")).toBe("GrpHdr")
+    expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toBeInTheDocument()
     await userEvent.click(screen.getByLabelText("Show XML tags"))
-    expect(primaryOf("GrpHdr")).toBe("GrpHdrTag")
+    expect(screen.getByRole("treeitem", { name: "GrpHdrTag" })).toBeInTheDocument()
   })
 
   it("lists element constraints as nodes and shows their detail", async () => {
     render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
     // root constraint is visible (root expanded by default)
-    const node = screen.getByRole("button", { name: /constraint SupplementaryDataRule/i })
+    const node = screen.getByRole("treeitem", { name: /constraint SupplementaryDataRule/i })
     await userEvent.click(node)
 
     const panel = screen.getByRole("region", { name: /constraint details/i })
     expect(within(panel).getByText("Must not be empty.")).toBeInTheDocument()
     expect(within(panel).getByText("DocumentTag/SupplementaryDataRule")).toBeInTheDocument()
+  })
+
+  it("navigates the tree with arrow keys, expanding and selecting (selection follows focus)", async () => {
+    const user = userEvent.setup()
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    // Focus the root (Document); it is the tree's single tab-stop.
+    await user.click(screen.getByRole("treeitem", { name: "Document" }))
+    expect(screen.getByRole("treeitem", { name: "Document" })).toHaveFocus()
+
+    // ↓ moves to the first child and the detail panel follows.
+    await user.keyboard("{ArrowDown}")
+    expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toHaveFocus()
+    expect(within(panel).getByText("DocumentTag/GrpHdrTag")).toBeInTheDocument()
+
+    // ↓ to CdtTrfTxInf, → expands it, → again steps into its first child.
+    await user.keyboard("{ArrowDown}")
+    expect(screen.getByRole("treeitem", { name: "CdtTrfTxInf" })).toHaveFocus()
+    await user.keyboard("{ArrowRight}")
+    expect(screen.getByRole("treeitem", { name: "CdtTrfTxInf" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    )
+    await user.keyboard("{ArrowRight}")
+    expect(screen.getByRole("treeitem", { name: "Amt" })).toHaveFocus()
+
+    // ← from a leaf returns to the parent; ← again collapses it.
+    await user.keyboard("{ArrowLeft}")
+    expect(screen.getByRole("treeitem", { name: "CdtTrfTxInf" })).toHaveFocus()
+    await user.keyboard("{ArrowLeft}")
+    expect(screen.queryByRole("treeitem", { name: "Amt" })).not.toBeInTheDocument()
+  })
+
+  it("toggles expansion with Space and jumps with Home/End", async () => {
+    const user = userEvent.setup()
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+
+    const root = screen.getByRole("treeitem", { name: "Document" })
+    await user.click(root)
+    expect(root).toHaveFocus()
+
+    // Space collapses the root, hiding its children.
+    await user.keyboard(" ")
+    expect(root).toHaveAttribute("aria-expanded", "false")
+    expect(screen.queryByRole("treeitem", { name: "GrpHdr" })).not.toBeInTheDocument()
+
+    // Space again re-expands; End jumps to the last visible node.
+    await user.keyboard(" ")
+    await user.keyboard("{End}")
+    expect(screen.getByRole("treeitem", { name: /constraint SupplementaryDataRule/i })).toHaveFocus()
+
+    // Home returns to the root.
+    await user.keyboard("{Home}")
+    expect(root).toHaveFocus()
+  })
+
+  it("expands an entire subtree with '*'", async () => {
+    const user = userEvent.setup()
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+
+    await user.click(screen.getByRole("treeitem", { name: "Document" }))
+    // Deep grandchild hidden until the whole subtree is expanded.
+    expect(screen.queryByRole("treeitem", { name: "Amt" })).not.toBeInTheDocument()
+    await user.keyboard("*")
+    expect(screen.getByRole("treeitem", { name: "Amt" })).toBeInTheDocument()
   })
 
   it("opens the Create MIG dialog from the header", async () => {

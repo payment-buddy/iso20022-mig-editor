@@ -1,4 +1,10 @@
-import { useState, type ReactNode } from "react"
+import {
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+} from "react"
 import { CaretRight, Check, Plus } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { CreateMigDialog } from "@/features/mig/CreateMigDialog"
@@ -7,9 +13,56 @@ import type { Constraint, ERepository, MessageElement } from "@/core/types/types
 import { hashFor } from "@/app/routes"
 import { cn } from "@/lib/utils"
 
-type Selection =
-  | { kind: "element"; element: MessageElement; path: string }
-  | { kind: "constraint"; constraint: Constraint; path: string }
+/** Number of rows ↕ a PageUp/PageDown jumps. */
+const PAGE = 10
+
+// Flattened, in-order list of the currently visible tree nodes — drives the
+// roving tabindex and arrow-key navigation (collapsed subtrees are omitted).
+type FlatNode = {
+  path: string
+  level: number
+  parentPath: string | null
+  hasChildren: boolean
+  expanded: boolean
+} & (
+  | { kind: "element"; element: MessageElement }
+  | { kind: "constraint"; constraint: Constraint }
+)
+
+/** Walk the element tree, emitting only nodes whose ancestors are all expanded. */
+function flattenTree(root: MessageElement, expanded: Set<string>): FlatNode[] {
+  const out: FlatNode[] = []
+  const walk = (el: MessageElement, path: string, level: number, parentPath: string | null) => {
+    const hasChildren = el.elements.length > 0 || el.constraints.length > 0
+    const isOpen = expanded.has(path)
+    out.push({ kind: "element", element: el, path, level, parentPath, hasChildren, expanded: isOpen })
+    if (!hasChildren || !isOpen) return
+    for (const child of el.elements) {
+      walk(child, `${path}/${child.xmlTag}`, level + 1, path)
+    }
+    for (const c of el.constraints) {
+      out.push({
+        kind: "constraint",
+        constraint: c,
+        path: `${path}/${c.name}`,
+        level: level + 1,
+        parentPath: path,
+        hasChildren: false,
+        expanded: false,
+      })
+    }
+  }
+  walk(root, root.xmlTag, 0, null)
+  return out
+}
+
+/** Collect every expandable path at or under `el` (for the `*` subtree-expand key). */
+function collectExpandable(el: MessageElement, path: string, into: Set<string>): void {
+  if (el.elements.length > 0 || el.constraints.length > 0) into.add(path)
+  for (const child of el.elements) {
+    collectExpandable(child, `${path}/${child.xmlTag}`, into)
+  }
+}
 
 /** Read-only message explorer (FUNCTIONALITY §5.4, bare minimum) with a detail panel. */
 export function MessageExplorer({ repo, code }: { repo: ERepository; code: string }) {
@@ -40,10 +93,116 @@ export function MessageExplorer({ repo, code }: { repo: ERepository; code: strin
 function MessageView({ resolved }: { resolved: ResolvedMessage }) {
   const { area, current, versions } = resolved
   const root = current.rootElement
-  const [picked, setPicked] = useState<Selection | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [showXmlTags, setShowXmlTags] = useState(false)
-  const selected: Selection = picked ?? { kind: "element", element: root, path: root.xmlTag }
+  // Root is expanded by default; expansion is keyed by xmlPath so the keyboard
+  // handler can drive it centrally (each node no longer owns its open state).
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set([root.xmlTag]))
+  const [focusedPath, setFocusedPath] = useState<string | null>(null)
+
+  const nodeRefs = useRef(new Map<string, HTMLElement>())
+
+  const flatNodes = useMemo(() => flattenTree(root, expanded), [root, expanded])
+
+  // The single tab-stop; falls back to the root if the focused node vanished
+  // (e.g. its parent was collapsed). Selection follows focus, so this also
+  // drives the detail panel.
+  const activeId =
+    focusedPath && flatNodes.some((n) => n.path === focusedPath)
+      ? focusedPath
+      : (flatNodes[0]?.path ?? null)
+  const active = flatNodes.find((n) => n.path === activeId) ?? flatNodes[0]
+
+  const open = (path: string) => setExpanded((prev) => new Set(prev).add(path))
+  const collapse = (path: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      next.delete(path)
+      return next
+    })
+  const toggle = (path: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(path)) next.delete(path)
+      else next.add(path)
+      return next
+    })
+
+  const focusNode = (path: string) => {
+    setFocusedPath(path)
+    nodeRefs.current.get(path)?.focus()
+  }
+
+  const onKeyDown = (e: ReactKeyboardEvent<HTMLUListElement>) => {
+    if (!active) return
+    const idx = flatNodes.findIndex((n) => n.path === active.path)
+    if (idx < 0) return
+    const node = flatNodes[idx]
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault()
+        if (idx < flatNodes.length - 1) focusNode(flatNodes[idx + 1].path)
+        break
+      case "ArrowUp":
+        e.preventDefault()
+        if (idx > 0) focusNode(flatNodes[idx - 1].path)
+        break
+      case "Home":
+        e.preventDefault()
+        focusNode(flatNodes[0].path)
+        break
+      case "End":
+        e.preventDefault()
+        focusNode(flatNodes[flatNodes.length - 1].path)
+        break
+      case "PageDown":
+        e.preventDefault()
+        focusNode(flatNodes[Math.min(idx + PAGE, flatNodes.length - 1)].path)
+        break
+      case "PageUp":
+        e.preventDefault()
+        focusNode(flatNodes[Math.max(idx - PAGE, 0)].path)
+        break
+      case "ArrowRight":
+        e.preventDefault()
+        if (node.hasChildren && !node.expanded) open(node.path)
+        else if (node.hasChildren && idx < flatNodes.length - 1) focusNode(flatNodes[idx + 1].path)
+        break
+      case "ArrowLeft":
+        e.preventDefault()
+        if (node.hasChildren && node.expanded) collapse(node.path)
+        else if (node.parentPath) focusNode(node.parentPath)
+        break
+      case " ":
+        e.preventDefault()
+        if (node.hasChildren) toggle(node.path)
+        break
+      case "+":
+        e.preventDefault()
+        if (node.hasChildren) open(node.path)
+        break
+      case "-":
+        e.preventDefault()
+        if (node.hasChildren) collapse(node.path)
+        break
+      case "*":
+        e.preventDefault()
+        if (node.kind === "element" && node.hasChildren) {
+          setExpanded((prev) => {
+            const next = new Set(prev)
+            collectExpandable(node.element, node.path, next)
+            return next
+          })
+        }
+        break
+    }
+  }
+
+  const setRef = (path: string) => (el: HTMLElement | null) => {
+    if (el) nodeRefs.current.set(path, el)
+    else nodeRefs.current.delete(path)
+  }
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
@@ -103,20 +262,29 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
       </label>
 
       <div className="grid gap-4 md:grid-cols-[3fr_4fr]">
-        <ul className="flex flex-col text-sm">
-          <ElementNode
-            element={root}
-            level={0}
-            path={root.xmlTag}
-            selectedPath={selected.path}
-            showXmlTags={showXmlTags}
-            onSelect={setPicked}
-          />
+        <ul
+          role="tree"
+          aria-label={`${current.name} structure`}
+          className="flex flex-col text-sm"
+          onKeyDown={onKeyDown}
+        >
+          {flatNodes.map((node) => (
+            <TreeNode
+              key={node.path}
+              node={node}
+              active={node.path === activeId}
+              showXmlTags={showXmlTags}
+              onFocus={() => setFocusedPath(node.path)}
+              onSelect={() => focusNode(node.path)}
+              onToggle={() => toggle(node.path)}
+              setRef={setRef(node.path)}
+            />
+          ))}
         </ul>
-        {selected.kind === "element" ? (
-          <ElementDetail element={selected.element} path={selected.path} />
+        {active?.kind === "constraint" ? (
+          <ConstraintDetail constraint={active.constraint} path={active.path} />
         ) : (
-          <ConstraintDetail constraint={selected.constraint} path={selected.path} />
+          active && <ElementDetail element={active.element} path={active.path} />
         )}
       </div>
     </div>
@@ -127,120 +295,79 @@ function cardinality(e: MessageElement): string {
   return `[${e.minOccurs}..${e.maxOccurs ?? "*"}]`
 }
 
-function ElementNode({
-  element,
-  level,
-  path,
-  selectedPath,
+/**
+ * A single visible tree row (`role="treeitem"`) — the whole row is the focus
+ * target (roving tabindex). Selection follows focus, so `active` doubles as the
+ * selected state. The caret is a mouse affordance; keyboard users expand via
+ * Space / arrows on the focused row.
+ */
+function TreeNode({
+  node,
+  active,
   showXmlTags,
+  onFocus,
   onSelect,
+  onToggle,
+  setRef,
 }: {
-  element: MessageElement
-  level: number
-  path: string
-  selectedPath: string | null
+  node: FlatNode
+  active: boolean
   showXmlTags: boolean
-  onSelect: (sel: Selection) => void
+  onFocus: () => void
+  onSelect: () => void
+  onToggle: () => void
+  setRef: (el: HTMLElement | null) => void
 }) {
-  const hasChildren = element.elements.length > 0 || element.constraints.length > 0
-  const [open, setOpen] = useState(level === 0)
-  const isSelected = path === selectedPath
+  const label =
+    node.kind === "element"
+      ? showXmlTags
+        ? node.element.xmlTag
+        : node.element.name
+      : node.constraint.name
 
   return (
-    <li>
-      <div className="flex items-center gap-1" style={{ paddingLeft: level === 0 ? 0 : level * 16 }}>
-        {hasChildren ? (
-          <button
-            type="button"
-            onClick={() => setOpen((o) => !o)}
-            aria-expanded={open}
-            aria-label={`${open ? "Collapse" : "Expand"} ${element.name}`}
-            className="rounded-sm p-0.5 text-muted-foreground outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30"
+    <li role="none">
+      <div
+        role="treeitem"
+        aria-level={node.level + 1}
+        aria-expanded={node.hasChildren ? node.expanded : undefined}
+        aria-selected={active}
+        aria-label={node.kind === "constraint" ? `Constraint ${label}` : label}
+        tabIndex={active ? 0 : -1}
+        ref={setRef}
+        onFocus={onFocus}
+        onClick={onSelect}
+        style={{ paddingLeft: node.level === 0 ? 4 : node.level * 16 + 4 }}
+        className={cn(
+          "flex cursor-pointer items-center gap-1.5 rounded-md py-1 pr-1.5 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30",
+          active && "bg-muted",
+        )}
+      >
+        {node.hasChildren ? (
+          <span
+            role="presentation"
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggle()
+            }}
+            className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted-foreground/10"
           >
-            <CaretRight className={cn("size-3.5", open && "rotate-90")} aria-hidden />
-          </button>
+            <CaretRight className={cn("size-3.5", node.expanded && "rotate-90")} aria-hidden />
+          </span>
+        ) : node.kind === "constraint" ? (
+          <Check className="size-3 shrink-0 text-muted-foreground" aria-hidden />
         ) : (
           <span className="inline-block size-4 shrink-0" aria-hidden />
         )}
-        <button
-          type="button"
-          onClick={() => onSelect({ kind: "element", element, path })}
-          aria-label={element.name}
-          aria-current={isSelected ? "true" : undefined}
-          className={cn(
-            "flex flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30",
-            isSelected && "bg-muted",
-          )}
-        >
-          <span className="font-medium">{showXmlTags ? element.xmlTag : element.name}</span>
-          <span className="text-xs text-muted-foreground">{cardinality(element)}</span>
-          {element.isChoice && (
-            <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
-              choice
-            </span>
-          )}
-        </button>
-      </div>
-      {hasChildren && open && (
-        <ul className="flex flex-col">
-          {element.elements.map((child) => (
-            <ElementNode
-              key={child.id}
-              element={child}
-              level={level + 1}
-              path={`${path}/${child.xmlTag}`}
-              selectedPath={selectedPath}
-              showXmlTags={showXmlTags}
-              onSelect={onSelect}
-            />
-          ))}
-          {element.constraints.map((constraint) => (
-            <ConstraintNode
-              key={constraint.name}
-              constraint={constraint}
-              level={level + 1}
-              path={`${path}/${constraint.name}`}
-              selectedPath={selectedPath}
-              onSelect={onSelect}
-            />
-          ))}
-        </ul>
-      )}
-    </li>
-  )
-}
-
-function ConstraintNode({
-  constraint,
-  level,
-  path,
-  selectedPath,
-  onSelect,
-}: {
-  constraint: Constraint
-  level: number
-  path: string
-  selectedPath: string | null
-  onSelect: (sel: Selection) => void
-}) {
-  const isSelected = path === selectedPath
-  return (
-    <li>
-      <div className="flex items-center gap-1" style={{ paddingLeft: level * 16 }}>
-        <span className="inline-block size-4 shrink-0" aria-hidden />
-        <button
-          type="button"
-          onClick={() => onSelect({ kind: "constraint", constraint, path })}
-          aria-label={`Constraint ${constraint.name}`}
-          aria-current={isSelected ? "true" : undefined}
-          className={cn(
-            "flex flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30",
-            isSelected && "bg-muted",
-          )}
-        >
-          <Check className="size-3 shrink-0 text-muted-foreground" aria-hidden />
-          <span>{constraint.name}</span>
-        </button>
+        <span className={cn(node.kind === "element" && "font-medium")}>{label}</span>
+        {node.kind === "element" && (
+          <span className="text-xs text-muted-foreground">{cardinality(node.element)}</span>
+        )}
+        {node.kind === "element" && node.element.isChoice && (
+          <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
+            choice
+          </span>
+        )}
       </div>
     </li>
   )
