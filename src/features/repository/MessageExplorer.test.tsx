@@ -56,6 +56,7 @@ const REPO: ERepository = {
             elements: [
               el("GrpHdr"),
               el("CdtTrfTxInf", { elements: [el("Amt")] }),
+              el("Reserved", { maxOccurs: 0 }),
             ],
           }),
         ),
@@ -232,6 +233,27 @@ describe("MessageExplorer", () => {
     await user.click(screen.getByRole("treeitem", { name: "Document" }))
     await user.keyboard("/")
     expect(screen.getByLabelText("Filter elements and constraints")).toHaveFocus()
+  })
+
+  it("hides maxOccurs:0 elements when 'Hide excluded' is toggled on", async () => {
+    const user = userEvent.setup()
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.10" />)
+
+    // Excluded elements show by default, marked, and the toggle counts them.
+    const reserved = screen.getByRole("treeitem", { name: "Reserved" })
+    expect(within(reserved).getByText("excluded")).toBeInTheDocument()
+    const toggle = screen.getByLabelText(/hide excluded \(1\)/i)
+
+    await user.click(toggle)
+    expect(screen.queryByRole("treeitem", { name: "Reserved" })).not.toBeInTheDocument()
+
+    await user.click(toggle)
+    expect(screen.getByRole("treeitem", { name: "Reserved" })).toBeInTheDocument()
+  })
+
+  it("disables 'Hide excluded' when nothing is excluded", () => {
+    render(<MessageExplorer repo={REPO} code="pacs.008.001.08" />)
+    expect(screen.getByLabelText(/hide excluded \(0\)/i)).toBeDisabled()
   })
 
   it("opens the Create MIG dialog from the header", async () => {

@@ -25,10 +25,23 @@ type FlatNode = {
   parentPath: string | null
   hasChildren: boolean
   expanded: boolean
+  /** Effective `maxOccurs:0` on this node or an ancestor — styled as excluded. */
+  excluded: boolean
 } & (
   | { kind: "element"; element: MessageElement }
   | { kind: "constraint"; constraint: Constraint }
 )
+
+/** Count elements explicitly excluded (own `maxOccurs:0`) anywhere in the tree. */
+function countExcluded(root: MessageElement): number {
+  let n = 0
+  const walk = (el: MessageElement) => {
+    if (el.maxOccurs === 0) n++
+    for (const child of el.elements) walk(child)
+  }
+  walk(root)
+  return n
+}
 
 /**
  * A computed filter: `keep` is every path to render (matches + their
@@ -72,28 +85,51 @@ function buildFilter(root: MessageElement, q: string): TreeFilter {
 /**
  * Walk the element tree, emitting only nodes whose ancestors are all expanded.
  * When `filter` is set, prune to its `keep` set and force its `expand` paths
- * open (a node also stays open if the user expanded it).
+ * open (a node also stays open if the user expanded it). When `hideExcluded` is
+ * set, drop `maxOccurs:0` elements (and their subtrees) entirely.
  */
 function flattenTree(
   root: MessageElement,
   expanded: Set<string>,
   filter: TreeFilter | null,
+  hideExcluded: boolean,
 ): FlatNode[] {
   const out: FlatNode[] = []
-  const walk = (el: MessageElement, path: string, level: number, parentPath: string | null) => {
+  const walk = (
+    el: MessageElement,
+    path: string,
+    level: number,
+    parentPath: string | null,
+    ancestorExcluded: boolean,
+  ) => {
     if (filter && !filter.keep.has(path)) return
-    const childEls = filter
-      ? el.elements.filter((c) => filter.keep.has(`${path}/${c.xmlTag}`))
-      : el.elements
+    const excluded = ancestorExcluded || el.maxOccurs === 0
+    if (hideExcluded && excluded) return
+
+    // Children are visible unless filtered out or (when hiding) excluded.
+    const childEls = el.elements.filter((c) => {
+      if (filter && !filter.keep.has(`${path}/${c.xmlTag}`)) return false
+      if (hideExcluded && c.maxOccurs === 0) return false
+      return true
+    })
     const childCons = filter
       ? el.constraints.filter((c) => filter.keep.has(`${path}/${c.name}`))
       : el.constraints
     const hasChildren = childEls.length > 0 || childCons.length > 0
     const isOpen = filter ? filter.expand.has(path) || expanded.has(path) : expanded.has(path)
-    out.push({ kind: "element", element: el, path, level, parentPath, hasChildren, expanded: isOpen })
+    out.push({
+      kind: "element",
+      element: el,
+      path,
+      level,
+      parentPath,
+      hasChildren,
+      expanded: isOpen,
+      excluded,
+    })
     if (!hasChildren || !isOpen) return
     for (const child of childEls) {
-      walk(child, `${path}/${child.xmlTag}`, level + 1, path)
+      walk(child, `${path}/${child.xmlTag}`, level + 1, path, excluded)
     }
     for (const c of childCons) {
       out.push({
@@ -104,10 +140,11 @@ function flattenTree(
         parentPath: path,
         hasChildren: false,
         expanded: false,
+        excluded,
       })
     }
   }
-  walk(root, root.xmlTag, 0, null)
+  walk(root, root.xmlTag, 0, null, false)
   return out
 }
 
@@ -155,15 +192,17 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set([root.xmlTag]))
   const [focusedPath, setFocusedPath] = useState<string | null>(null)
   const [filter, setFilter] = useState("")
+  const [hideExcluded, setHideExcluded] = useState(false)
 
   const nodeRefs = useRef(new Map<string, HTMLElement>())
   const filterRef = useRef<HTMLInputElement>(null)
 
+  const excludedCount = useMemo(() => countExcluded(root), [root])
   const q = filter.trim().toLowerCase()
   const treeFilter = useMemo(() => (q ? buildFilter(root, q) : null), [root, q])
   const flatNodes = useMemo(
-    () => flattenTree(root, expanded, treeFilter),
-    [root, expanded, treeFilter],
+    () => flattenTree(root, expanded, treeFilter, hideExcluded),
+    [root, expanded, treeFilter, hideExcluded],
   )
   const noMatches = treeFilter !== null && flatNodes.length === 0
 
@@ -369,6 +408,20 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
           />
           Show XML tags
         </label>
+        <label
+          className={cn(
+            "flex w-fit items-center gap-1.5 text-xs text-muted-foreground",
+            excludedCount === 0 && "opacity-50",
+          )}
+        >
+          <input
+            type="checkbox"
+            checked={hideExcluded}
+            disabled={excludedCount === 0}
+            onChange={(e) => setHideExcluded(e.target.checked)}
+          />
+          Hide excluded ({excludedCount})
+        </label>
       </div>
 
       <div className="grid gap-4 md:grid-cols-[3fr_4fr]">
@@ -475,9 +528,21 @@ function TreeNode({
         ) : (
           <span className="inline-block size-4 shrink-0" aria-hidden />
         )}
-        <span className={cn(node.kind === "element" && "font-medium")}>{label}</span>
+        <span
+          className={cn(
+            node.kind === "element" && "font-medium",
+            node.excluded && "text-muted-foreground line-through",
+          )}
+        >
+          {label}
+        </span>
         {node.kind === "element" && (
           <span className="text-xs text-muted-foreground">{cardinality(node.element)}</span>
+        )}
+        {node.excluded && (
+          <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
+            excluded
+          </span>
         )}
         {node.kind === "element" && node.element.isChoice && (
           <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
