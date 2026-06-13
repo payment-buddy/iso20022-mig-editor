@@ -49,10 +49,7 @@ export function MigMetadata({
   }
 
   return (
-    <section
-      aria-label="MIG metadata"
-      className="flex flex-col gap-3 rounded-lg border border-border p-4"
-    >
+    <section aria-label="MIG metadata" className="flex flex-col gap-3">
       <Row label="Name">
         <span title="Renaming the MIG lands in a later slice.">{mig.name}</span>
       </Row>
