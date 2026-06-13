@@ -17,9 +17,9 @@ export function breadcrumbsFor(route: Route): Crumb[] {
     case "home":
       return [{ label: "Home" }]
     case "browse":
-      return [home, { label: "Browse" }]
+      return [home, { label: "e-Repository" }]
     case "message":
-      return [home, { label: "Browse", route: { name: "browse" } }, { label: route.code }]
+      return [home, { label: "e-Repository", route: { name: "browse" } }, { label: route.code }]
     case "mig":
       return [home, { label: route.key }]
     case "compare":

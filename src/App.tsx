@@ -57,11 +57,12 @@ export function App() {
   }
 
   return (
-    <AppShell
-      route={route}
-      onUpdateRepository={() => setGate({ phase: "updating", current: gate.repo })}
-    >
-      <RouteView route={route} repo={gate.repo} />
+    <AppShell route={route}>
+      <RouteView
+        route={route}
+        repo={gate.repo}
+        onUpdateRepository={() => setGate({ phase: "updating", current: gate.repo })}
+      />
     </AppShell>
   )
 }

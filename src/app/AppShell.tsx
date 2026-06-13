@@ -1,27 +1,11 @@
 import { Fragment, type ReactNode } from "react"
-import {
-  ArrowClockwise,
-  CaretRight,
-  Desktop,
-  House,
-  MagnifyingGlass,
-  Moon,
-  Sun,
-} from "@phosphor-icons/react"
+import { CaretRight, Desktop, House, MagnifyingGlass, Moon, Sun } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
 import { breadcrumbsFor } from "./breadcrumbs"
 import { hashFor, type Route } from "./routes"
 
-export function AppShell({
-  route,
-  onUpdateRepository,
-  children,
-}: {
-  route: Route
-  onUpdateRepository: () => void
-  children: ReactNode
-}) {
+export function AppShell({ route, children }: { route: Route; children: ReactNode }) {
   const crumbs = breadcrumbsFor(route)
 
   return (
@@ -49,10 +33,6 @@ export function AppShell({
             </kbd>
           </Button>
           <ThemeToggle />
-          <Button variant="outline" size="sm" onClick={onUpdateRepository}>
-            <ArrowClockwise data-icon="inline-start" aria-hidden />
-            Update e-Repository
-          </Button>
         </div>
       </header>
 

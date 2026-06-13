@@ -150,7 +150,7 @@ export function RepositoryUpload({
       )}
 
       <p className="text-xs text-muted-foreground">
-        The file is stored locally in your browser (IndexedDB) and persists across sessions. It is
+        The file is stored locally in your browser and persists across sessions. It is
         never uploaded anywhere. Export your MIGs as YAML regularly — clearing browser data deletes
         them.
       </p>

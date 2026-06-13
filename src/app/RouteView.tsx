@@ -1,3 +1,4 @@
+import { ERepositoryBrowser } from "@/features/repository/ERepositoryBrowser"
 import type { ERepository } from "@/core/types/types"
 import { hashFor, type Route } from "./routes"
 
@@ -6,12 +7,20 @@ import { hashFor, type Route } from "./routes"
  * until their phases land (MIG list, browser, explorer, editor, compare); the
  * routing, breadcrumbs, and links are fully wired now.
  */
-export function RouteView({ route, repo }: { route: Route; repo: ERepository }) {
+export function RouteView({
+  route,
+  repo,
+  onUpdateRepository,
+}: {
+  route: Route
+  repo: ERepository
+  onUpdateRepository: () => void
+}) {
   switch (route.name) {
     case "home":
       return <HomePlaceholder repo={repo} />
     case "browse":
-      return <Placeholder title="Business Area Browser" note="Lands in Phase 1." />
+      return <ERepositoryBrowser repo={repo} onUpdateRepository={onUpdateRepository} />
     case "message":
       return <Placeholder title={`Message: ${route.code}`} note="Explorer lands in Phase 1." />
     case "mig":

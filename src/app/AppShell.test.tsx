@@ -20,10 +20,10 @@ beforeAll(() => {
   )
 })
 
-function renderShell(route: Route, onUpdate = vi.fn()) {
+function renderShell(route: Route) {
   return render(
     <ThemeProvider>
-      <AppShell route={route} onUpdateRepository={onUpdate}>
+      <AppShell route={route}>
         <div>content</div>
       </AppShell>
     </ThemeProvider>,
@@ -46,17 +46,20 @@ describe("AppShell", () => {
     renderShell({ name: "message", code: "pacs.008.001.08" })
     const nav = screen.getByRole("navigation", { name: /breadcrumb/i })
     expect(within(nav).getByRole("link", { name: "Home" })).toHaveAttribute("href", "#")
-    expect(within(nav).getByRole("link", { name: "Browse" })).toHaveAttribute("href", "#browse")
+    expect(within(nav).getByRole("link", { name: "e-Repository" })).toHaveAttribute(
+      "href",
+      "#browse",
+    )
     const current = within(nav).getByText("pacs.008.001.08")
     expect(current).toHaveAttribute("aria-current", "page")
     expect(current.tagName).toBe("SPAN") // last crumb is not a link
   })
 
-  it("invokes onUpdateRepository from the header action", async () => {
-    const onUpdate = vi.fn()
-    renderShell({ name: "home" }, onUpdate)
-    await userEvent.click(screen.getByRole("button", { name: /update e-repository/i }))
-    expect(onUpdate).toHaveBeenCalledOnce()
+  it("does not render the update-repository action (it lives on the browser page)", () => {
+    renderShell({ name: "home" })
+    expect(
+      screen.queryByRole("button", { name: /update e-repository/i }),
+    ).not.toBeInTheDocument()
   })
 
   it("cycles the theme toggle system → light", async () => {
