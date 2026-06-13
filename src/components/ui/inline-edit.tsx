@@ -3,9 +3,11 @@ import { PencilSimple } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 
 /**
- * Click-to-edit text field (FUNCTIONALITY §10 inline-edit model): shows the
- * value until Click/Enter, then an input/textarea. Commits on blur, cancels on
- * Esc; single-line also commits on Enter (multiline keeps Enter for newlines).
+ * Inline-edit text field (FUNCTIONALITY §10 inline-edit model). The value is
+ * plain text with a pencil button that appears on hover/focus; clicking it
+ * switches to an input/textarea (an explicit affordance, so the field can't be
+ * edited by accident). Commits on blur, cancels on Esc; single-line also commits
+ * on Enter (multiline keeps Enter for newlines).
  */
 export function InlineEdit({
   value,
@@ -38,20 +40,24 @@ export function InlineEdit({
 
   if (!editing) {
     return (
-      <button
-        type="button"
-        onClick={start}
-        aria-label={`Edit ${ariaLabel}`}
-        className="group flex w-full items-start justify-between gap-2 rounded-md px-2 py-1 text-left text-sm outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30"
-      >
-        <span className={cn("whitespace-pre-wrap", !value && "text-muted-foreground italic")}>
+      <div className="group flex w-full items-start justify-between gap-2 rounded-md px-2 py-1">
+        <span
+          className={cn(
+            "min-w-0 whitespace-pre-wrap text-sm",
+            !value && "text-muted-foreground italic",
+          )}
+        >
           {value || placeholder}
         </span>
-        <PencilSimple
-          className="mt-0.5 size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-          aria-hidden
-        />
-      </button>
+        <button
+          type="button"
+          onClick={start}
+          aria-label={`Edit ${ariaLabel}`}
+          className="mt-0.5 shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 outline-none transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/30"
+        >
+          <PencilSimple className="size-3.5" aria-hidden />
+        </button>
+      </div>
     )
   }
 

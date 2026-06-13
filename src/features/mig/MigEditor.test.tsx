@@ -141,9 +141,7 @@ describe("MigEditor", () => {
     await user.tab() // blur commits
 
     // Reflected in the UI and persisted to storage.
-    expect(screen.getByRole("button", { name: "Edit Description" })).toHaveTextContent(
-      "Domestic credit transfers",
-    )
+    expect(screen.getByText("Domestic credit transfers")).toBeInTheDocument()
     const saved = await loadMig(getMigKey(MIG))
     expect(saved?.description).toBe("Domestic credit transfers")
   })
