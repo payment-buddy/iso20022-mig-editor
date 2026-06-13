@@ -13,11 +13,11 @@ import type {
   MessageImplementationGuide,
 } from "@/core/types/types"
 import { MigEditor } from "./MigEditor"
-import { downloadMigs } from "./downloadMigs"
+import { downloadMigMarkdown, downloadMigs } from "./downloadMigs"
 
-// The DOM download side-effect is exercised separately (downloadMigs.test.ts);
-// here we only assert the editor wires its Download button to it.
-vi.mock("./downloadMigs", () => ({ downloadMigs: vi.fn() }))
+// The DOM download side-effect is exercised separately (downloadMigs.save.test.ts);
+// here we only assert the editor wires its export buttons to it.
+vi.mock("./downloadMigs", () => ({ downloadMigs: vi.fn(), downloadMigMarkdown: vi.fn() }))
 
 function el(name: string, props: Partial<MessageElement> = {}): MessageElement {
   return {
@@ -124,6 +124,23 @@ describe("MigEditor", () => {
     expect(downloadMigs).toHaveBeenCalledWith(
       [expect.objectContaining({ name: "EPC Guide", version: "1.0" })],
       expect.any(Map),
+    )
+  })
+
+  it("exports a Markdown report from the header button", async () => {
+    const user = userEvent.setup()
+    vi.mocked(downloadMigMarkdown).mockClear()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    await user.click(screen.getByRole("button", { name: /markdown/i }))
+    expect(downloadMigMarkdown).toHaveBeenCalledTimes(1)
+    // Called with the MIG, the loaded MIGs (for the parent chain), and its message.
+    expect(downloadMigMarkdown).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "EPC Guide" }),
+      expect.any(Array),
+      expect.objectContaining({ identifier: "pacs.008.001.10" }),
     )
   })
 

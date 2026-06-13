@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Check, DownloadSimple } from "@phosphor-icons/react"
+import { Check, DownloadSimple, FileText } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { getMigKey } from "@/core/mig/migKey"
 import { buildPathOrder } from "@/core/mig/serializeMig"
@@ -24,7 +24,7 @@ import { DetailPanel, ElementTree, Field } from "@/features/repository/ElementTr
 import { MigMetadata } from "./MigMetadata"
 import { MigElementDetail } from "./MigElementDetail"
 import { MigConstraintDetail } from "./MigConstraintDetail"
-import { downloadMigs } from "./downloadMigs"
+import { downloadMigMarkdown, downloadMigs } from "./downloadMigs"
 
 type Status = "loading" | "missing" | "ready"
 
@@ -100,10 +100,20 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
           </p>
           <h1 className="text-base font-semibold tracking-tight">{mig.name}</h1>
         </div>
-        <Button size="sm" onClick={() => downloadMigs([mig], buildPathOrder(root))}>
-          <DownloadSimple data-icon="inline-start" aria-hidden />
-          Download
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => downloadMigMarkdown(mig, allMigs, resolved.current)}
+          >
+            <FileText data-icon="inline-start" aria-hidden />
+            Markdown
+          </Button>
+          <Button size="sm" onClick={() => downloadMigs([mig], buildPathOrder(root))}>
+            <DownloadSimple data-icon="inline-start" aria-hidden />
+            Download
+          </Button>
+        </div>
       </div>
 
       <MigMetadata mig={mig} allMigs={allMigs} onChange={persist} />
