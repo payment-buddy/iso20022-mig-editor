@@ -65,9 +65,9 @@ describe("serializeMig", () => {
     expect(topKeys(out)).toEqual([
       "formatVersion",
       "name",
+      "version",
       "messageIdentifier",
       "parentMIG",
-      "version",
       "description",
       "elementAnnotationNames",
       "constraintAnnotationNames",

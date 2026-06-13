@@ -4,9 +4,9 @@
 
 export const MIG_PROPERTY_ORDER = [
   "name",
+  "version",
   "messageIdentifier",
   "parentMIG",
-  "version",
   "description",
   "elementAnnotationNames",
   "constraintAnnotationNames",
