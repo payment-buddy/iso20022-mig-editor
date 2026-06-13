@@ -201,6 +201,25 @@ describe("MigEditor", () => {
     expect(saved?.description).toBe("Domestic credit transfers")
   })
 
+  it("warns (but does not block) when max occurs is below min occurs", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    // Raise min occurs above the (ISO 1) max occurs → advisory warning, not blocked.
+    await user.click(within(panel).getByRole("button", { name: "Edit Min occurs" }))
+    const input = within(panel).getByRole("spinbutton", { name: "Min occurs" })
+    await user.clear(input)
+    await user.type(input, "2")
+    await user.tab()
+
+    expect(within(panel).getByRole("alert")).toHaveTextContent(/max 1 is below min 2/i)
+    // The value is still accepted (advisory, non-blocking).
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.minOccurs).toBe(2)
+  })
+
   it("edits Min/Max occurs overrides (unbounded = null)", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

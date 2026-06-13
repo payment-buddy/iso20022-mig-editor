@@ -91,7 +91,13 @@ describe("validateMigConsistency", () => {
       field: "Max length",
       message: expect.stringMatching(/length: max 5 is below min 10/i),
     })
-    expect(run({ "Doc/GrpHdr": { maxOccurs: 0 } })).toEqual([]) // exclusion is valid
+    // Max occurs below min occurs is flagged…
+    expect(run({ "Doc/GrpHdr": { minOccurs: 2, maxOccurs: 1 } })[0]).toMatchObject({
+      field: "Max occurs",
+      message: expect.stringMatching(/occurs: max 1 is below min 2/i),
+    })
+    // …but maxOccurs 0 is intentional exclusion, not an empty range.
+    expect(run({ "Doc/GrpHdr": { maxOccurs: 0 } })).toEqual([])
   })
 
   it("flags an invalid pattern and a non-subset allowed-values list", () => {
