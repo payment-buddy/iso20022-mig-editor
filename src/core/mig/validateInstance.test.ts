@@ -153,4 +153,28 @@ describe("validateMessageInstance", () => {
       expect.objectContaining({ path: "Doc", message: expect.stringMatching(/unexpected element <Bogus>/i) }),
     )
   })
+
+  describe("MIG-added constraint expressions", () => {
+    const constraint = (expression: string): ElementOverrides => ({
+      Doc: { additionalConstraints: [{ name: "AmtRule", definition: "", expression }] },
+    })
+
+    it("flags a constraint whose expression is false for the instance", () => {
+      // Amt is 500, so "Amt > 600" fails on the Doc context node.
+      const d = run(valid(), constraint("Amt > 600"))
+      expect(d).toContainEqual(
+        expect.objectContaining({ path: "Doc", message: 'Constraint "AmtRule" is not satisfied.' }),
+      )
+    })
+
+    it("passes a satisfied expression", () => {
+      expect(run(valid(), constraint("Amt > 100 and Sts = 'ACTV'"))).toEqual([])
+    })
+
+    it("skips a constraint with no expression, a syntax error, or an unsupported function", () => {
+      expect(run(valid(), { Doc: { additionalConstraints: [{ name: "X", definition: "" }] } })).toEqual([])
+      expect(run(valid(), constraint("Amt >"))).toEqual([]) // syntax error → skipped
+      expect(run(valid(), constraint("contains(Sts, 'A')"))).toEqual([]) // indeterminate → skipped
+    })
+  })
 })

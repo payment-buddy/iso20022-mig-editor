@@ -1,10 +1,12 @@
 // Message-instance validation (IMPLEMENTATION_PLAN Phase 6). Walk a parsed
 // message XML against the ISO message definition + the effective MIG, reporting
 // cardinality / exclusion / code / length / pattern / inclusive-range / digit
-// violations with their schema xmlPath (for tree navigation). Pure — the DOM
-// parsing lives in a separate adapter (features/mig/parseMessageXml).
+// violations — plus MIG-added constraint expressions — with their schema xmlPath
+// (for tree navigation). Pure — the DOM parsing lives in a separate adapter
+// (features/mig/parseMessageXml).
 
 import { createValueValidator } from "./fieldValidation"
+import { evaluateExpression, parseExpression } from "./expression"
 import type {
   ElementOverride,
   ElementOverrides,
@@ -84,6 +86,23 @@ function walk(
   if (el.baseType !== null) {
     for (const message of leafErrors(el, overrides[path], node.text.trim())) {
       out.push({ path, elementName: el.name, message })
+    }
+  }
+
+  // MIG-added constraint expressions: a boolean predicate over this element,
+  // with paths relative to it. A syntax error (surfaced in the editor) or an
+  // indeterminate result (unsupported function, bad regex) is skipped here.
+  for (const constraint of overrides[path]?.additionalConstraints ?? []) {
+    if (!constraint.expression) continue
+    const parsed = parseExpression(constraint.expression)
+    if (!parsed.ok) continue
+    const result = evaluateExpression(parsed.ast, node)
+    if (result.ok && !result.value) {
+      out.push({
+        path,
+        elementName: el.name,
+        message: `Constraint "${constraint.name}" is not satisfied.`,
+      })
     }
   }
 

@@ -20,6 +20,7 @@ export type {
 export { kindOf } from "./ast"
 export { parseExpression, type ExprError, type ParseResult } from "./parser"
 export { collectPaths, pathText, validateExpressionPaths } from "./paths"
+export { evaluateExpression, type EvalNode, type EvalResult } from "./evaluate"
 
 import { parseExpression } from "./parser"
 import { validateExpressionPaths } from "./paths"
