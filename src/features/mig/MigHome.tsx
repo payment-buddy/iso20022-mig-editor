@@ -5,7 +5,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react"
-import { GitDiff, Trash, TreeStructure, UploadSimple } from "@phosphor-icons/react"
+import { DownloadSimple, GitDiff, Trash, TreeStructure, UploadSimple } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { getMigKey } from "@/core/mig/migKey"
@@ -13,6 +13,7 @@ import { deleteMig, loadAllMigs, saveMig } from "@/core/storage/migStore"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { parseMigYaml } from "./parseMigYaml"
+import { downloadMigs } from "./downloadMigs"
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 
@@ -217,6 +218,15 @@ export function MigHome() {
             <span className="mr-auto text-xs text-muted-foreground" aria-live="polite">
               {selected.size > 0 ? `${selected.size} selected` : `${migs.length} MIGs`}
             </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selected.size === 0}
+              onClick={() => downloadMigs(selectedMigs)}
+            >
+              <DownloadSimple data-icon="inline-start" aria-hidden />
+              Download
+            </Button>
             <Button variant="outline" size="sm" disabled={compareDisabled} onClick={onCompare}>
               <GitDiff data-icon="inline-start" aria-hidden />
               Compare
