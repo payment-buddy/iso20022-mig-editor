@@ -5,13 +5,34 @@ import { afterEach, describe, expect, it } from "vitest"
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
-import { saveMig } from "@/core/storage/migStore"
+import { loadAllMigs, loadMig, saveMig } from "@/core/storage/migStore"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { MigHome } from "./MigHome"
 
-function migFile(name: string, version: string): File {
-  const yaml = `name: ${name}\nversion: '${version}'\nmessageIdentifier: pacs.008.001.08\nelementOverrides: {}\n`
-  return new File([yaml], `${name}.yaml`, { type: "text/yaml" })
+function migYaml(name: string, version: string, description?: string): string {
+  return (
+    `name: ${name}\nversion: '${version}'\nmessageIdentifier: pacs.008.001.08\n` +
+    `elementOverrides: {}\n` +
+    (description ? `description: ${description}\n` : "")
+  )
+}
+
+function migFile(name: string, version: string, description?: string): File {
+  return new File([migYaml(name, version, description)], `${name}.yaml`, { type: "text/yaml" })
+}
+
+/** A single file holding an array of MIGs. */
+function migArrayFile(entries: [string, string, string?][]): File {
+  const yaml = entries
+    .map((e) =>
+      migYaml(...e)
+        .split("\n")
+        .filter(Boolean)
+        .map((line, i) => (i === 0 ? `- ${line}` : `  ${line}`))
+        .join("\n"),
+    )
+    .join("\n")
+  return new File([yaml + "\n"], "batch.yaml", { type: "text/yaml" })
 }
 
 function migObj(
@@ -84,6 +105,63 @@ describe("MigHome", () => {
     // Dismissible.
     await user.click(within(alert).getByRole("button", { name: /dismiss import errors/i }))
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  })
+
+  it("prompts to resolve a duplicate import", async () => {
+    await renderWith(migObj("EPC", "1.0"))
+    await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0"))
+
+    const dialog = await screen.findByRole("alertdialog")
+    expect(within(dialog).getByText(/already exists/i)).toBeInTheDocument()
+    expect(within(dialog).getByText("EPC 1.0")).toBeInTheDocument()
+  })
+
+  it("Overwrite replaces the stored MIG with the incoming one", async () => {
+    await renderWith(migObj("EPC", "1.0")) // no description
+    await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0", "updated"))
+
+    await userEvent.click(await screen.findByRole("button", { name: /overwrite/i }))
+    await waitFor(async () => expect((await loadMig("EPC:1.0"))?.description).toBe("updated"))
+  })
+
+  it("Skip keeps the stored duplicate and imports only the new ones", async () => {
+    await renderWith(migObj("EPC", "1.0"))
+    await userEvent.upload(
+      screen.getByLabelText("MIG YAML file"),
+      migArrayFile([
+        ["EPC", "1.0", "updated"],
+        ["NEW", "1.0"],
+      ]),
+    )
+
+    await userEvent.click(await screen.findByRole("button", { name: /^skip$/i }))
+
+    // The new one lands; the existing duplicate is untouched.
+    expect(await screen.findByRole("link", { name: "NEW" })).toBeInTheDocument()
+    await waitFor(async () => expect((await loadMig("EPC:1.0"))?.description).toBeUndefined())
+  })
+
+  it("Upload as new keeps the original and adds a version-bumped copy", async () => {
+    await renderWith(migObj("EPC", "1.0"))
+    await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0", "updated"))
+
+    await userEvent.click(await screen.findByRole("button", { name: /upload as new/i }))
+
+    // Two EPC rows: the untouched original and the re-versioned import.
+    await waitFor(() => expect(screen.getAllByRole("link", { name: "EPC" })).toHaveLength(2))
+    expect((await loadMig("EPC:1.0"))?.description).toBeUndefined()
+    const bumped = (await loadAllMigs()).find((m) => m.version.startsWith("1.0-"))
+    expect(bumped?.description).toBe("updated")
+  })
+
+  it("Cancel aborts the import, changing nothing", async () => {
+    await renderWith(migObj("EPC", "1.0"))
+    await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0", "updated"))
+
+    await userEvent.click(await screen.findByRole("button", { name: /cancel/i }))
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
+    expect((await loadMig("EPC:1.0"))?.description).toBeUndefined()
+    expect((await loadAllMigs())).toHaveLength(1)
   })
 
   it("select-all toggles every row", async () => {

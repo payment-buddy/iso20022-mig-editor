@@ -18,11 +18,23 @@ import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { getMigKey } from "@/core/mig/migKey"
 import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
+import {
+  duplicateKeysOf,
+  migsForResolution,
+  type DuplicateResolution,
+} from "@/core/mig/importDuplicates"
 import { deleteMig, loadAllMigs, saveMig } from "@/core/storage/migStore"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { parseMigYaml } from "./parseMigYaml"
+import { ImportDuplicateDialog } from "./ImportDuplicateDialog"
 import { downloadMigs } from "./downloadMigs"
+
+type PendingImport = {
+  incoming: MessageImplementationGuide[]
+  duplicateKeys: Set<string>
+  errors: string[]
+}
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 
@@ -40,6 +52,7 @@ export function MigHome() {
   const [anchorKey, setAnchorKey] = useState<string | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [importErrors, setImportErrors] = useState<string[]>([])
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
   const selectAllRef = useRef<HTMLInputElement>(null)
@@ -67,19 +80,45 @@ export function MigHome() {
     }
   }, [selected, migs.length])
 
-  const handleFiles = useCallback(
-    async (files: FileList) => {
-      const problems: string[] = []
-      for (const file of Array.from(files)) {
-        const { migs, errors } = parseMigYaml(await file.text())
-        await Promise.all(migs.map(saveMig))
-        for (const error of errors) problems.push(`${file.name}: ${error}`)
-      }
-      setImportErrors(problems)
-      refresh()
+  const commitImport = useCallback(
+    (toSave: MessageImplementationGuide[], problems: string[]) => {
+      Promise.all(toSave.map(saveMig))
+        .then(() => {
+          setImportErrors(problems)
+          refresh()
+        })
+        .catch((err) => console.error("Failed to import MIGs:", err))
     },
     [refresh],
   )
+
+  const handleFiles = useCallback(
+    async (files: FileList) => {
+      const incoming: MessageImplementationGuide[] = []
+      const problems: string[] = []
+      for (const file of Array.from(files)) {
+        const { migs: parsed, errors } = parseMigYaml(await file.text())
+        incoming.push(...parsed)
+        for (const error of errors) problems.push(`${file.name}: ${error}`)
+      }
+      // Defer the import to the user when any incoming MIG collides with a stored
+      // one; otherwise save straight away.
+      const duplicateKeys = duplicateKeysOf(incoming, migs.map(getMigKey))
+      if (duplicateKeys.size > 0) {
+        setPendingImport({ incoming, duplicateKeys, errors: problems })
+        return
+      }
+      commitImport(incoming, problems)
+    },
+    [migs, commitImport],
+  )
+
+  const resolvePendingImport = (resolution: DuplicateResolution) => {
+    if (!pendingImport) return
+    const { incoming, duplicateKeys, errors } = pendingImport
+    setPendingImport(null)
+    commitImport(migsForResolution(incoming, duplicateKeys, resolution, Date.now()), errors)
+  }
 
   const focusRow = (key: string) => {
     setFocusedKey(key)
@@ -386,6 +425,21 @@ export function MigHome() {
         confirmLabel="Delete"
         destructive
         onConfirm={confirmDelete}
+      />
+
+      <ImportDuplicateDialog
+        open={pendingImport !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingImport(null)
+        }}
+        duplicates={
+          pendingImport
+            ? pendingImport.incoming
+                .filter((m) => pendingImport.duplicateKeys.has(getMigKey(m)))
+                .map((m) => `${m.name} ${m.version}`)
+            : []
+        }
+        onResolve={resolvePendingImport}
       />
     </div>
   )
