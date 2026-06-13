@@ -3,8 +3,9 @@ import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it } from "vitest"
 import { cleanup, render, screen, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
-import { saveMig } from "@/core/storage/migStore"
+import { loadMig, saveMig } from "@/core/storage/migStore"
 import { getMigKey } from "@/core/mig/migKey"
 import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { MigCompare } from "./MigCompare"
@@ -65,6 +66,33 @@ describe("MigCompare", () => {
     const b = mig("B", { "Doc/Amt": { maxLength: 12 } }, "pacs.009.001.08")
     await renderCompare(a, b)
     expect(await screen.findByText(/target different messages/i)).toBeInTheDocument()
+  })
+
+  it("copies a field from A to B, persists it, and resolves the difference", async () => {
+    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    await renderCompare(a, b)
+
+    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
+
+    // The two MIGs now agree on that field → nothing left to compare.
+    expect(await screen.findByText(/identical overrides/i)).toBeInTheDocument()
+    const storedB = await loadMig(getMigKey(b))
+    expect(storedB?.elementOverrides["Doc/Amt"].maxLength).toBe(18)
+  })
+
+  it("copies a field from B to A in the other direction", async () => {
+    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    await renderCompare(a, b)
+
+    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i }))
+
+    expect(await screen.findByText(/identical overrides/i)).toBeInTheDocument()
+    const storedA = await loadMig(getMigKey(a))
+    expect(storedA?.elementOverrides["Doc/Amt"].maxLength).toBe(12)
   })
 
   it("reports a missing MIG", async () => {

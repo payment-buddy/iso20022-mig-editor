@@ -29,18 +29,19 @@ describe("compareMigs", () => {
     expect(paths).toHaveLength(1)
     expect(paths[0]).toMatchObject({ path: "Doc/Amt", name: "Amt", kind: "changed" })
     expect(paths[0].fields).toEqual([
-      { label: "Max length", kind: "changed", a: "18", b: "12" },
+      { label: "Max length", kind: "changed", a: "18", b: "12", ref: { type: "field", field: "maxLength" } },
     ])
   })
 
   it("classifies a field present in only one MIG as added/removed", () => {
     const a = mig({ "Doc/Amt": { maxLength: 18 } })
     const b = mig({ "Doc/Amt": { maxLength: 18, minLength: 1 } })
+    const ref = { type: "field", field: "minLength" } as const
     const fields = compareMigs(a, b).paths[0].fields
-    expect(fields).toEqual([{ label: "Min length", kind: "added", a: null, b: "1" }])
+    expect(fields).toEqual([{ label: "Min length", kind: "added", a: null, b: "1", ref }])
 
     const reversed = compareMigs(b, a).paths[0].fields
-    expect(reversed).toEqual([{ label: "Min length", kind: "removed", a: "1", b: null }])
+    expect(reversed).toEqual([{ label: "Min length", kind: "removed", a: "1", b: null, ref }])
   })
 
   it("distinguishes absent (inherit) from null (cleared)", () => {
@@ -48,7 +49,9 @@ describe("compareMigs", () => {
     const a = mig({ "Doc/Amt": {} })
     const b = mig({ "Doc/Amt": { pattern: null } })
     const fields = compareMigs(a, b).paths[0].fields
-    expect(fields).toEqual([{ label: "Pattern", kind: "added", a: null, b: "cleared" }])
+    expect(fields).toEqual([
+      { label: "Pattern", kind: "added", a: null, b: "cleared", ref: { type: "field", field: "pattern" } },
+    ])
   })
 
   it("does not flag a field both MIGs clear to null", () => {
@@ -71,8 +74,20 @@ describe("compareMigs", () => {
     const a = mig({ "Doc/Amt": { annotations: { Usage: "Required", Note: "x" } } })
     const b = mig({ "Doc/Amt": { annotations: { Usage: "Optional" } } })
     const fields = compareMigs(a, b).paths[0].fields
-    expect(fields).toContainEqual({ label: "Usage", kind: "changed", a: "Required", b: "Optional" })
-    expect(fields).toContainEqual({ label: "Note", kind: "removed", a: "x", b: null })
+    expect(fields).toContainEqual({
+      label: "Usage",
+      kind: "changed",
+      a: "Required",
+      b: "Optional",
+      ref: { type: "annotation", name: "Usage" },
+    })
+    expect(fields).toContainEqual({
+      label: "Note",
+      kind: "removed",
+      a: "x",
+      b: null,
+      ref: { type: "annotation", name: "Note" },
+    })
   })
 
   it("diffs additional constraints per name and ignores identical ones", () => {
@@ -115,7 +130,7 @@ describe("compareMigs", () => {
     expect(paths).toHaveLength(1)
     expect(paths[0]).toMatchObject({ path: "Doc/Ccy", kind: "added" })
     expect(paths[0].fields).toEqual([
-      { label: "Allowed values", kind: "added", a: null, b: "EUR" },
+      { label: "Allowed values", kind: "added", a: null, b: "EUR", ref: { type: "field", field: "allowedValues" } },
     ])
   })
 
@@ -142,7 +157,7 @@ describe("compareMigs", () => {
     const b = mig({ "Doc/Amt": { definition: null } })
     const fields = compareMigs(a, b).paths[0].fields
     expect(fields).toEqual([
-      { label: "Definition", kind: "changed", a: "(empty)", b: "cleared" },
+      { label: "Definition", kind: "changed", a: "(empty)", b: "cleared", ref: { type: "field", field: "definition" } },
     ])
   })
 })

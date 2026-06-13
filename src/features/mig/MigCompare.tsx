@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, GitDiff, Warning } from "@phosphor-icons/react"
+import { ArrowLeft, ArrowLineLeft, ArrowLineRight, GitDiff, Warning } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { buildPathOrder } from "@/core/mig/serializeMig"
-import { compareMigs, type FieldChange, type PathDiff } from "@/core/mig/compareMigs"
-import { loadMig } from "@/core/storage/migStore"
+import { applyFieldCopy } from "@/core/mig/copyChange"
+import { compareMigs, type FieldChange, type FieldRef, type PathDiff } from "@/core/mig/compareMigs"
+import { loadMig, saveMig } from "@/core/storage/migStore"
 import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
 import { Button } from "@/components/ui/button"
@@ -13,11 +14,20 @@ type Loaded = {
   b: MessageImplementationGuide | null
 }
 
+type CopyDir = "a-to-b" | "b-to-a"
+type CopyFn = (path: string, ref: FieldRef, dir: CopyDir) => void
+
+// Shared 3-column template so the A/B headers line up with the field rows; the
+// middle column is the gutter that holds the copy buttons.
+const COLS = "grid grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)]"
+
 /**
  * Compare two MIGs (FUNCTIONALITY §5.8). Loads both by key, resolves the message
  * for schema-order alignment, and renders a side-by-side diff of their *declared*
- * overrides — showing only elements (and fields) that differ. Keyboard: j/k or
- * ↑/↓ step between changed elements.
+ * overrides — showing only elements (and fields) that differ. Each field can be
+ * copied across to the other MIG (hover-revealed buttons); the copy persists and
+ * the now-matching field drops out of the diff. Keyboard: j/k or ↑/↓ step between
+ * changed elements.
  */
 export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; repo: ERepository }) {
   const [status, setStatus] = useState<"loading" | "ready">("loading")
@@ -60,6 +70,15 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
 
   const diff = compareMigs(a, b, order)
 
+  // Copy one field from one MIG into the other, persist, and reflect locally. The
+  // edited field then matches and drops out of the recomputed diff.
+  const copy: CopyFn = (path, ref, dir) => {
+    const [from, to] = dir === "a-to-b" ? [a, b] : [b, a]
+    const next = applyFieldCopy(from, to, path, ref)
+    setLoaded(dir === "a-to-b" ? { a, b: next } : { a: next, b })
+    saveMig(next).catch((err) => console.error("Failed to save MIG:", err))
+  }
+
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
       <div className="flex items-start justify-between gap-4">
@@ -100,13 +119,19 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
           These two MIGs have identical overrides — nothing to compare.
         </p>
       ) : (
-        <ComparePanel diff={diff} />
+        <ComparePanel diff={diff} copy={copy} />
       )}
     </div>
   )
 }
 
-function ComparePanel({ diff }: { diff: ReturnType<typeof compareMigs> }) {
+function ComparePanel({
+  diff,
+  copy,
+}: {
+  diff: ReturnType<typeof compareMigs>
+  copy: CopyFn
+}) {
   const cardRefs = useRef<(HTMLElement | null)[]>([])
 
   // j/k and ↑/↓ step focus between changed elements.
@@ -122,6 +147,9 @@ function ComparePanel({ diff }: { diff: ReturnType<typeof compareMigs> }) {
     next?.scrollIntoView({ block: "nearest" })
   }
 
+  const aLabel = `${diff.a.name} ${diff.a.version}`
+  const bLabel = `${diff.b.name} ${diff.b.version}`
+
   return (
     <div className="flex flex-col gap-3" onKeyDown={onKeyDown}>
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
@@ -132,16 +160,17 @@ function ComparePanel({ diff }: { diff: ReturnType<typeof compareMigs> }) {
         </span>
         <span className="hidden sm:inline">
           <kbd className="rounded border px-1">j</kbd>/<kbd className="rounded border px-1">k</kbd>{" "}
-          to step between changes
+          to step · hover a row to copy across
         </span>
       </div>
 
-      {/* Column headers: MIG A (left) vs MIG B (right). */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-t-md border border-b-0 bg-border text-xs font-medium">
-        <div className="bg-background px-3 py-1.5 truncate">
+      {/* Column headers: MIG A (left) vs MIG B (right), aligned with field rows. */}
+      <div className={`${COLS} overflow-hidden rounded-t-md border border-b-0 text-xs font-medium`}>
+        <div className="truncate px-3 py-1.5">
           {diff.a.name} <span className="text-muted-foreground">{diff.a.version}</span>
         </div>
-        <div className="bg-background px-3 py-1.5 truncate">
+        <div className="border-x bg-muted/20" />
+        <div className="truncate px-3 py-1.5">
           {diff.b.name} <span className="text-muted-foreground">{diff.b.version}</span>
         </div>
       </div>
@@ -151,6 +180,9 @@ function ComparePanel({ diff }: { diff: ReturnType<typeof compareMigs> }) {
           <ElementCard
             key={p.path}
             diff={p}
+            copy={copy}
+            aLabel={aLabel}
+            bLabel={bLabel}
             ref={(el) => {
               cardRefs.current[i] = el
             }}
@@ -169,9 +201,15 @@ const KIND_BADGE: Record<PathDiff["kind"], { label: string; className: string }>
 
 function ElementCard({
   diff,
+  copy,
+  aLabel,
+  bLabel,
   ref,
 }: {
   diff: PathDiff
+  copy: CopyFn
+  aLabel: string
+  bLabel: string
   ref: (el: HTMLElement | null) => void
 }) {
   const badge = KIND_BADGE[diff.kind]
@@ -189,22 +227,73 @@ function ElementCard({
           {badge.label}
         </span>
       </header>
-      <div className="grid grid-cols-2 gap-px bg-border">
+      <div className="flex flex-col divide-y">
         {diff.fields.map((f) => (
-          <FieldRow key={f.label} field={f} />
+          <FieldRow
+            key={f.label}
+            field={f}
+            onCopy={(dir) => copy(diff.path, f.ref, dir)}
+            aLabel={aLabel}
+            bLabel={bLabel}
+          />
         ))}
       </div>
     </section>
   )
 }
 
-/** One field rendered across both columns (A on the left, B on the right). */
-function FieldRow({ field }: { field: FieldChange }) {
+/** One field across both columns, with a hover-revealed copy gutter between them. */
+function FieldRow({
+  field,
+  onCopy,
+  aLabel,
+  bLabel,
+}: {
+  field: FieldChange
+  onCopy: (dir: CopyDir) => void
+  aLabel: string
+  bLabel: string
+}) {
   return (
-    <>
+    <div className={`group ${COLS}`}>
       <Cell label={field.label} value={field.a} side="a" kind={field.kind} />
+      <div className="flex items-center justify-center gap-0.5 border-x bg-muted/10 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <CopyButton
+          dir="right"
+          label={`Copy ${field.label} to ${bLabel}`}
+          onClick={() => onCopy("a-to-b")}
+        />
+        <CopyButton
+          dir="left"
+          label={`Copy ${field.label} to ${aLabel}`}
+          onClick={() => onCopy("b-to-a")}
+        />
+      </div>
       <Cell label={field.label} value={field.b} side="b" kind={field.kind} />
-    </>
+    </div>
+  )
+}
+
+function CopyButton({
+  dir,
+  label,
+  onClick,
+}: {
+  dir: "left" | "right"
+  label: string
+  onClick: () => void
+}) {
+  const Icon = dir === "right" ? ArrowLineRight : ArrowLineLeft
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="rounded p-0.5 text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/40"
+    >
+      <Icon className="size-3.5" aria-hidden />
+    </button>
   )
 }
 
@@ -233,7 +322,7 @@ function Cell({
           : "bg-amber-500/10"
 
   return (
-    <div className={`bg-background px-3 py-1.5 text-sm ${tint}`}>
+    <div className={`px-3 py-1.5 text-sm ${tint}`}>
       <span className="text-xs text-muted-foreground">{label}</span>
       <div className="break-words">
         {value === null ? (

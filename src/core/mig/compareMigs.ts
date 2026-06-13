@@ -18,6 +18,16 @@ import type {
 
 export type FieldChangeKind = "added" | "removed" | "changed"
 
+/**
+ * Where a change lives in the override — enough for `applyFieldCopy` to write the
+ * source's value into the target. A plain override field, one annotation entry,
+ * or one additional constraint (the latter two are diffed per name).
+ */
+export type FieldRef =
+  | { type: "field"; field: keyof ElementOverride }
+  | { type: "annotation"; name: string }
+  | { type: "constraint"; name: string }
+
 export type FieldChange = {
   /** Display label, e.g. "Max length", an annotation name, or a constraint name. */
   label: string
@@ -26,6 +36,8 @@ export type FieldChange = {
   a: string | null
   /** Rendered value in MIG B, or `null` when B doesn't set this field (inherits). */
   b: string | null
+  /** What this change touches — lets the UI copy it between MIGs. */
+  ref: FieldRef
 }
 
 export type PathChangeKind = "added" | "removed" | "changed"
@@ -106,14 +118,17 @@ function sameConstraint(a: Constraint, b: Constraint): boolean {
 // the rendered strings — two different values can render to the same summary).
 function pair(
   label: string,
+  ref: FieldRef,
   inA: boolean,
   inB: boolean,
   a: string | null,
   b: string | null,
 ): FieldChange | null {
   if (!inA && !inB) return null
-  if (inA && inB) return { label, kind: "changed", a, b }
-  return inA ? { label, kind: "removed", a, b: null } : { label, kind: "added", a: null, b }
+  if (inA && inB) return { label, kind: "changed", a, b, ref }
+  return inA
+    ? { label, kind: "removed", a, b: null, ref }
+    : { label, kind: "added", a: null, b, ref }
 }
 
 /** Field-level changes between two declared overrides (either may be `{}`). */
@@ -134,6 +149,7 @@ function diffOverride(ovA: ElementOverride, ovB: ElementOverride): FieldChange[]
     push(
       pair(
         label,
+        { type: "field", field: key },
         inA,
         inB,
         inA ? renderScalar(key, rawA) : null,
@@ -151,7 +167,16 @@ function diffOverride(ovA: ElementOverride, ovB: ElementOverride): FieldChange[]
     const valA = ovA[key] ?? []
     const valB = ovB[key] ?? []
     if (inA && inB && sameSet(valA, valB)) continue
-    push(pair(label, inA, inB, inA ? summarize(valA) : null, inB ? summarize(valB) : null))
+    push(
+      pair(
+        label,
+        { type: "field", field: key },
+        inA,
+        inB,
+        inA ? summarize(valA) : null,
+        inB ? summarize(valB) : null,
+      ),
+    )
   }
 
   const annA = ovA.annotations ?? {}
@@ -160,7 +185,16 @@ function diffOverride(ovA: ElementOverride, ovB: ElementOverride): FieldChange[]
     const inA = name in annA
     const inB = name in annB
     if (inA && inB && annA[name] === annB[name]) continue
-    push(pair(name, inA, inB, inA ? annA[name] : null, inB ? annB[name] : null))
+    push(
+      pair(
+        name,
+        { type: "annotation", name },
+        inA,
+        inB,
+        inA ? annA[name] : null,
+        inB ? annB[name] : null,
+      ),
+    )
   }
 
   const consA = ovA.additionalConstraints ?? []
@@ -172,6 +206,7 @@ function diffOverride(ovA: ElementOverride, ovB: ElementOverride): FieldChange[]
     push(
       pair(
         `Constraint “${name}”`,
+        { type: "constraint", name },
         !!ca,
         !!cb,
         ca ? renderConstraint(ca) : null,
