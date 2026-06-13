@@ -78,7 +78,7 @@ export function EditableList({
 
   if (!editing) {
     return (
-      <div className="group flex w-full items-start justify-between gap-2 rounded-md px-2 py-1">
+      <div className="group flex w-full items-start justify-between gap-2 rounded-md border border-transparent px-2 py-1 transition-colors hover:border-border focus-within:border-border">
         <div className="min-w-0">
           {chips(false) ?? <span className="text-sm text-muted-foreground italic">{placeholder}</span>}
         </div>

@@ -56,7 +56,7 @@ export function InlineEdit({
     const showPlaceholder = display == null && !value
     const collapsible = display == null && isLongText(value)
     return (
-      <div className="group flex w-full items-start justify-between gap-2 rounded-md px-2 py-1">
+      <div className="group flex w-full items-start justify-between gap-2 rounded-md border border-transparent px-2 py-1 transition-colors hover:border-border focus-within:border-border">
         <div className="min-w-0 text-sm">
           {collapsible ? (
             <>
