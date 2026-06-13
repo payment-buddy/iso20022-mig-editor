@@ -7,9 +7,11 @@ export type Route =
   | { name: "message"; code: string } // read-only explorer (#<shortCode|identifier>)
   | { name: "mig"; key: string } // editor (#mig/<name:version>)
   | { name: "compare"; a: string; b: string } // compare two MIGs
+  | { name: "merge"; key: string } // merge an uploaded MIG into this one (#merge/<name:version>)
 
 const MIG_PREFIX = "mig/"
 const COMPARE_PREFIX = "compare/"
+const MERGE_PREFIX = "merge/"
 
 /** Parse a raw `location.hash` (with or without the leading `#`) into a Route. */
 export function parseHash(hash: string): Route {
@@ -35,6 +37,11 @@ export function parseHash(hash: string): Route {
     return { name: "home" }
   }
 
+  if (raw.startsWith(MERGE_PREFIX)) {
+    const key = decodeURIComponent(raw.slice(MERGE_PREFIX.length))
+    return key ? { name: "merge", key } : { name: "home" }
+  }
+
   // Anything else is a message short-code or identifier; the page resolves it
   // against the e-Repository.
   return { name: "message", code: decodeURIComponent(raw) }
@@ -53,6 +60,8 @@ export function hashFor(route: Route): string {
       return "#" + MIG_PREFIX + encodeURIComponent(route.key)
     case "compare":
       return "#" + COMPARE_PREFIX + encodeURIComponent(route.a) + "/" + encodeURIComponent(route.b)
+    case "merge":
+      return "#" + MERGE_PREFIX + encodeURIComponent(route.key)
   }
 }
 

@@ -8,6 +8,7 @@ import {
 import {
   DownloadSimple,
   GitDiff,
+  GitMerge,
   Trash,
   TreeStructure,
   UploadSimple,
@@ -233,6 +234,13 @@ export function MigHome() {
     })
   }
 
+  // Merge takes a single target MIG; the incoming MIG is uploaded on the merge screen.
+  const mergeDisabled = selectedMigs.length !== 1
+  const onMerge = () => {
+    if (selectedMigs.length !== 1) return
+    navigate({ name: "merge", key: getMigKey(selectedMigs[0]) })
+  }
+
   const hiddenFileInput = (
     <input
       ref={inputRef}
@@ -328,6 +336,15 @@ export function MigHome() {
               >
                 <GitDiff data-icon="inline-start" aria-hidden />
                 Compare
+              </Button>
+            </span>
+            <span
+              title={mergeDisabled ? "Select one MIG to merge another into" : undefined}
+              className="inline-flex"
+            >
+              <Button variant="outline" size="sm" disabled={mergeDisabled} onClick={onMerge}>
+                <GitMerge data-icon="inline-start" aria-hidden />
+                Merge
               </Button>
             </span>
             <Button

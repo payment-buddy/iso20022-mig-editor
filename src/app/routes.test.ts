@@ -23,10 +23,15 @@ describe("parseHash", () => {
     expect(parseHash("#compare/A%3A1/B%3A2")).toEqual({ name: "compare", a: "A:1", b: "B:2" })
   })
 
-  it("falls back to home for malformed mig / compare", () => {
+  it("parses a merge target key", () => {
+    expect(parseHash("#merge/EPC%3A1.0")).toEqual({ name: "merge", key: "EPC:1.0" })
+  })
+
+  it("falls back to home for malformed mig / compare / merge", () => {
     expect(parseHash("#mig/")).toEqual({ name: "home" })
     expect(parseHash("#compare/only-one")).toEqual({ name: "home" })
     expect(parseHash("#compare/a/b/c")).toEqual({ name: "home" })
+    expect(parseHash("#merge/")).toEqual({ name: "home" })
   })
 
   it("treats anything else as a message code", () => {
@@ -45,6 +50,7 @@ describe("hashFor", () => {
     expect(hashFor({ name: "message", code: "pacs.008.001.08" })).toBe("#pacs.008.001.08")
     expect(hashFor({ name: "mig", key: "EPC-SCTInst:2023" })).toBe("#mig/EPC-SCTInst%3A2023")
     expect(hashFor({ name: "compare", a: "A:1", b: "B:2" })).toBe("#compare/A%3A1/B%3A2")
+    expect(hashFor({ name: "merge", key: "EPC:1.0" })).toBe("#merge/EPC%3A1.0")
   })
 })
 
@@ -55,6 +61,7 @@ describe("round-trip", () => {
     { name: "message", code: "pacs.008.001.08" },
     { name: "mig", key: "EPC-SCTInst:2023" },
     { name: "compare", a: "EPC:1.0", b: "CSM:2.0" },
+    { name: "merge", key: "EPC:1.0" },
   ]
 
   it("parseHash(hashFor(route)) === route", () => {

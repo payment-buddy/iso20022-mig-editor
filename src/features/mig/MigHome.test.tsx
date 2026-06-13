@@ -242,6 +242,21 @@ describe("MigHome", () => {
     expect(compare()).toBeEnabled()
   })
 
+  it("Merge is enabled only with exactly one selected and routes to the merge screen", async () => {
+    await renderWith(migObj("A", "1"), migObj("B", "1"))
+    const merge = () => screen.getByRole("button", { name: /^merge$/i })
+
+    expect(merge()).toBeDisabled()
+    await userEvent.click(within(rowFor("A")).getByRole("checkbox"))
+    expect(merge()).toBeEnabled()
+    await userEvent.click(within(rowFor("B")).getByRole("checkbox"))
+    expect(merge()).toBeDisabled() // two selected
+
+    await userEvent.click(within(rowFor("B")).getByRole("checkbox")) // back to one (A)
+    await userEvent.click(merge())
+    expect(window.location.hash).toBe("#merge/A%3A1")
+  })
+
   it("deletes the selection after confirming", async () => {
     await renderWith(migObj("A", "1"), migObj("B", "1"))
     await userEvent.click(within(rowFor("A")).getByRole("checkbox"))

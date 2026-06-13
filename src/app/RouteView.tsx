@@ -3,6 +3,7 @@ import { MessageExplorer } from "@/features/repository/MessageExplorer"
 import { MigHome } from "@/features/mig/MigHome"
 import { MigEditor } from "@/features/mig/MigEditor"
 import { MigCompare } from "@/features/mig/MigCompare"
+import { MigMerge } from "@/features/mig/MigMerge"
 import type { ERepository } from "@/core/types/types"
 import type { Route } from "./routes"
 
@@ -28,5 +29,7 @@ export function RouteView({
       return <MigEditor key={route.key} migKey={route.key} repo={repo} />
     case "compare":
       return <MigCompare keyA={route.a} keyB={route.b} repo={repo} />
+    case "merge":
+      return <MigMerge key={route.key} targetKey={route.key} repo={repo} />
   }
 }
