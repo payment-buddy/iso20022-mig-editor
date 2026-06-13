@@ -268,9 +268,7 @@ function buildFilter(
   const expand = new Set<string>()
   const visit = (el: MessageElement, path: string): boolean => {
     const textMatch =
-      q === "" ||
-      treeFilterMatch(el.name, q) ||
-      treeFilterMatch(el.xmlTag, q)
+      q === "" || treeFilterMatch(el.name, q) || treeFilterMatch(el.xmlTag, q)
     const changeMatch =
       !changesOnly ||
       elementOverrideOrigin(path, ownOverrides, effectiveOverrides) !== null
@@ -370,7 +368,13 @@ function flattenTree(
     for (const child of childEls) {
       walk(child, `${path}/${child.xmlTag}`, level + 1, path, excluded)
     }
-    for (const { constraint, origin, disabled, reEnabled, colour } of childCons) {
+    for (const {
+      constraint,
+      origin,
+      disabled,
+      reEnabled,
+      colour,
+    } of childCons) {
       out.push({
         kind: "constraint",
         constraint,
@@ -671,8 +675,8 @@ export function ElementTree({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div className="relative min-w-56 flex-1">
+      <div className="grid items-center gap-x-4 gap-y-2 md:grid-cols-[3fr_4fr]">
+        <div className="relative">
           <MagnifyingGlassIcon
             className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
@@ -688,57 +692,59 @@ export function ElementTree({
             className="h-8 w-full rounded-md border border-border bg-transparent pr-2 pl-8 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
           />
         </div>
-        <label className="flex w-fit items-center gap-1.5 text-xs text-muted-foreground">
-          <input
-            type="checkbox"
-            checked={showXmlTags}
-            onChange={(e) => setShowXmlTags(e.target.checked)}
-          />
-          Show XML tags
-        </label>
-        <label
-          className={cn(
-            "flex w-fit items-center gap-1.5 text-xs text-muted-foreground",
-            excludedCount === 0 && "opacity-50"
-          )}
-        >
-          <input
-            type="checkbox"
-            checked={hideExcluded}
-            disabled={excludedCount === 0}
-            onChange={(e) => setHideExcluded(e.target.checked)}
-          />
-          Hide excluded ({excludedCount})
-        </label>
-        {hasOverrides && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <label className="flex w-fit items-center gap-1.5 text-xs text-muted-foreground">
             <input
               type="checkbox"
-              checked={changesOnly}
-              onChange={(e) => {
-                // The changes-only view force-expands ancestors via the filter,
-                // not the `expanded` set. Fold the selected node's ancestors in
-                // first so it stays visible — and thus selected — once the
-                // filter's force-expansion goes away.
-                if (focusedPath) expandAncestors(focusedPath)
-                setChangesOnly(e.target.checked)
-              }}
+              checked={showXmlTags}
+              onChange={(e) => setShowXmlTags(e.target.checked)}
             />
-            Only changes
+            Show XML tags
           </label>
-        )}
-        {hasOverrides && (
-          <div className="flex w-fit items-center gap-3 text-xs text-muted-foreground sm:ml-auto sm:border-l sm:border-border sm:pl-4">
-            <span className="flex items-center gap-1">
-              <ProvenanceMarker provenance="own" className="size-2" />
-              Overridden here
-            </span>
-            <span className="flex items-center gap-1">
-              <ProvenanceMarker provenance="inherited" className="size-2" />
-              Inherited
-            </span>
-          </div>
-        )}
+          <label
+            className={cn(
+              "flex w-fit items-center gap-1.5 text-xs text-muted-foreground",
+              excludedCount === 0 && "opacity-50"
+            )}
+          >
+            <input
+              type="checkbox"
+              checked={hideExcluded}
+              disabled={excludedCount === 0}
+              onChange={(e) => setHideExcluded(e.target.checked)}
+            />
+            Hide excluded ({excludedCount})
+          </label>
+          {hasOverrides && (
+            <label className="flex w-fit items-center gap-1.5 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={changesOnly}
+                onChange={(e) => {
+                  // The changes-only view force-expands ancestors via the filter,
+                  // not the `expanded` set. Fold the selected node's ancestors in
+                  // first so it stays visible — and thus selected — once the
+                  // filter's force-expansion goes away.
+                  if (focusedPath) expandAncestors(focusedPath)
+                  setChangesOnly(e.target.checked)
+                }}
+              />
+              Only changes
+            </label>
+          )}
+          {hasOverrides && (
+            <div className="flex w-fit items-center gap-3 text-xs text-muted-foreground sm:ml-auto sm:border-l sm:border-border sm:pl-4">
+              <span className="flex items-center gap-1">
+                <ProvenanceMarker provenance="own" className="size-2" />
+                Overridden here
+              </span>
+              <span className="flex items-center gap-1">
+                <ProvenanceMarker provenance="inherited" className="size-2" />
+                Inherited
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-[3fr_4fr]">
