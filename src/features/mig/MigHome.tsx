@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { getMigKey } from "@/core/mig/migKey"
+import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
 import { deleteMig, loadAllMigs, saveMig } from "@/core/storage/migStore"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
@@ -171,7 +172,19 @@ export function MigHome() {
     refresh()
   }
 
-  const compareDisabled = selected.size !== 2
+  // Compare needs exactly two MIGs of the same message family (same short code) —
+  // a cross-message diff is meaningless. Same family covers different versions.
+  const sameFamily =
+    selectedMigs.length === 2 &&
+    shortCodeForIdentifier(selectedMigs[0].messageIdentifier) ===
+      shortCodeForIdentifier(selectedMigs[1].messageIdentifier)
+  const compareDisabled = !sameFamily
+  const compareHint =
+    selectedMigs.length !== 2
+      ? "Select exactly two MIGs to compare"
+      : !sameFamily
+        ? "Select two MIGs of the same message to compare"
+        : undefined
   const onCompare = () => {
     if (selectedMigs.length !== 2) return
     navigate({
@@ -199,7 +212,7 @@ export function MigHome() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="mr-auto text-base font-semibold tracking-tight">Your MIGs</h1>
+        <h1 className="mr-auto text-base font-semibold tracking-tight">Message Implementation Guides</h1>
         <Button variant="outline" size="sm" asChild>
           <a href={hashFor({ name: "browse" })}>
             <TreeStructure data-icon="inline-start" aria-hidden />
@@ -266,10 +279,18 @@ export function MigHome() {
               <DownloadSimple data-icon="inline-start" aria-hidden />
               Download
             </Button>
-            <Button variant="outline" size="sm" disabled={compareDisabled} onClick={onCompare}>
-              <GitDiff data-icon="inline-start" aria-hidden />
-              Compare
-            </Button>
+            {/* Wrapper carries the hint: a disabled button doesn't fire hover. */}
+            <span title={compareHint} className="inline-flex">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={compareDisabled}
+                onClick={onCompare}
+              >
+                <GitDiff data-icon="inline-start" aria-hidden />
+                Compare
+              </Button>
+            </span>
             <Button
               variant="destructive"
               size="sm"

@@ -145,11 +145,16 @@ describe("compareMigs", () => {
     expect(paths).toEqual(["Doc/Z", "Doc/A", "Doc/Orphan"])
   })
 
-  it("flags when the two MIGs target different messages", () => {
+  it("treats same-family (same short code) MIGs as the same message", () => {
+    const v8 = mig({}, { messageIdentifier: "pacs.008.001.08" })
+    const v9 = mig({}, { messageIdentifier: "pacs.008.001.09" })
+    expect(compareMigs(v8, v9).sameMessage).toBe(true)
+  })
+
+  it("flags a cross-family comparison (different short code)", () => {
     const a = mig({}, { messageIdentifier: "pacs.008.001.08" })
     const b = mig({}, { messageIdentifier: "pacs.009.001.08" })
     expect(compareMigs(a, b).sameMessage).toBe(false)
-    expect(compareMigs(a, a).sameMessage).toBe(true)
   })
 
   it("renders definition edge cases (empty vs cleared)", () => {

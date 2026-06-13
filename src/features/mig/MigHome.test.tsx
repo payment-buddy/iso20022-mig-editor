@@ -14,8 +14,12 @@ function migFile(name: string, version: string): File {
   return new File([yaml], `${name}.yaml`, { type: "text/yaml" })
 }
 
-function migObj(name: string, version: string): MessageImplementationGuide {
-  return { name, version, messageIdentifier: "pacs.008.001.08", elementOverrides: {} }
+function migObj(
+  name: string,
+  version: string,
+  messageIdentifier = "pacs.008.001.08",
+): MessageImplementationGuide {
+  return { name, version, messageIdentifier, elementOverrides: {} }
 }
 
 /** Seed storage, then mount and wait for the rows to load. */
@@ -122,13 +126,40 @@ describe("MigHome", () => {
     expect(window.location.hash).toBe("#mig/A%3A1")
   })
 
-  it("Compare is enabled only with exactly two selected", async () => {
+  it("Compare is enabled only with exactly two same-family MIGs selected", async () => {
     await renderWith(migObj("A", "1"), migObj("B", "1"), migObj("C", "1"))
     const compare = () => screen.getByRole("button", { name: /compare/i })
 
     expect(compare()).toBeDisabled()
     await userEvent.click(within(rowFor("A")).getByRole("checkbox"))
     expect(compare()).toBeDisabled()
+    await userEvent.click(within(rowFor("B")).getByRole("checkbox"))
+    expect(compare()).toBeEnabled() // A, B both pacs.008
+    await userEvent.click(within(rowFor("C")).getByRole("checkbox"))
+    expect(compare()).toBeDisabled() // three selected
+  })
+
+  it("Compare stays disabled for two MIGs of different message families", async () => {
+    await renderWith(
+      migObj("A", "1", "pacs.008.001.08"),
+      migObj("B", "1", "pacs.009.001.08"),
+    )
+    const compare = () => screen.getByRole("button", { name: /compare/i })
+
+    await userEvent.click(within(rowFor("A")).getByRole("checkbox"))
+    await userEvent.click(within(rowFor("B")).getByRole("checkbox"))
+    expect(screen.getByText("2 selected")).toBeInTheDocument()
+    expect(compare()).toBeDisabled()
+  })
+
+  it("Compare is enabled for two versions of the same family", async () => {
+    await renderWith(
+      migObj("A", "1", "pacs.008.001.08"),
+      migObj("B", "1", "pacs.008.001.09"),
+    )
+    const compare = () => screen.getByRole("button", { name: /compare/i })
+
+    await userEvent.click(within(rowFor("A")).getByRole("checkbox"))
     await userEvent.click(within(rowFor("B")).getByRole("checkbox"))
     expect(compare()).toBeEnabled()
   })

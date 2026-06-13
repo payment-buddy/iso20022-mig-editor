@@ -10,6 +10,7 @@
 // that distinction via key-presence — a field absent in one MIG (`a`/`b` = null
 // in a FieldChange) reads as "inherits", a stored `null` renders as "cleared".
 
+import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
 import type {
   Constraint,
   ElementOverride,
@@ -54,7 +55,11 @@ export type PathDiff = {
 export type MigComparison = {
   a: { name: string; version: string }
   b: { name: string; version: string }
-  /** The two MIGs target the same message — schema-order alignment is meaningful. */
+  /**
+   * The two MIGs target the same message family (same short code, any
+   * flavour/version) — so schema-order alignment is meaningful. False only for
+   * a cross-family comparison (reachable by direct URL; the list won't offer it).
+   */
   sameMessage: boolean
   /** Only the paths that differ, in schema order when a path-order map is given. */
   paths: PathDiff[]
@@ -252,7 +257,8 @@ export function compareMigs(
   return {
     a: { name: a.name, version: a.version },
     b: { name: b.name, version: b.version },
-    sameMessage: a.messageIdentifier === b.messageIdentifier,
+    sameMessage:
+      shortCodeForIdentifier(a.messageIdentifier) === shortCodeForIdentifier(b.messageIdentifier),
     paths,
   }
 }
