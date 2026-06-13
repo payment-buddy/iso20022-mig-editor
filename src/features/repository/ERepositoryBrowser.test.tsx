@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
+import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { deleteDatabase } from "@/core/storage/db"
+import { saveMig } from "@/core/storage/migStore"
 import type { BusinessArea, ERepository, MessageDefinition } from "@/core/types/types"
 import { ERepositoryBrowser } from "./ERepositoryBrowser"
 
@@ -25,7 +28,10 @@ const REPO: ERepository = {
   ],
 }
 
-afterEach(cleanup)
+afterEach(async () => {
+  cleanup()
+  await deleteDatabase()
+})
 
 describe("ERepositoryBrowser", () => {
   it("lists business areas collapsed, then reveals messages on click", async () => {
@@ -89,6 +95,25 @@ describe("ERepositoryBrowser", () => {
 
     const pacs008 = screen.getByRole("treeitem", { name: /pacs\.008/ })
     expect(within(pacs008).getByText("MIG")).toBeInTheDocument()
+  })
+
+  it("loads MIG'd identifiers from storage and flags them when no prop is given", async () => {
+    await saveMig({
+      name: "EPC",
+      version: "1.0",
+      messageIdentifier: "pacs.008.001.10",
+      elementOverrides: {},
+    })
+
+    render(<ERepositoryBrowser repo={REPO} onUpdateRepository={vi.fn()} />)
+    await userEvent.click(screen.getByText("Payments Clearing"))
+
+    const pacs008 = screen.getByRole("treeitem", { name: /pacs\.008/ })
+    expect(await within(pacs008).findByText("MIG")).toBeInTheDocument()
+    // a group without a MIG is not flagged
+    expect(
+      within(screen.getByRole("treeitem", { name: /pacs\.002/ })).queryByText("MIG"),
+    ).not.toBeInTheDocument()
   })
 
   it("invokes onUpdateRepository from the page header action", async () => {

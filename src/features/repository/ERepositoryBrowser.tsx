@@ -9,6 +9,7 @@ import {
 import { ArrowClockwise, CaretRight, MagnifyingGlass } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { groupMessages, type MessageGroup } from "@/core/erepository/messageGroups"
+import { loadAllMigs } from "@/core/storage/migStore"
 import type { BusinessArea, ERepository } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
 import { cn } from "@/lib/utils"
@@ -35,20 +36,41 @@ function matches(text: string, q: string) {
 export function ERepositoryBrowser({
   repo,
   onUpdateRepository,
-  migMessageIds = new Set(),
+  migMessageIds,
 }: {
   repo: ERepository
   /** Re-upload a newer e-Repository file (page header action). */
   onUpdateRepository: () => void
-  /** Message identifiers that already have a MIG; a group is flagged if any version is present. */
+  /**
+   * Message identifiers that already have a MIG; a group is flagged if any
+   * version is present. When omitted, the browser loads them from storage.
+   */
   migMessageIds?: Set<string>
 }) {
   const [filter, setFilter] = useState("")
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
   const [focusedId, setFocusedId] = useState<string | null>(null)
+  const [loadedMigIds, setLoadedMigIds] = useState<Set<string>>(() => new Set())
 
   const filterRef = useRef<HTMLInputElement>(null)
   const nodeRefs = useRef(new Map<string, HTMLElement>())
+
+  // Load MIG'd message identifiers from storage unless the caller supplied them.
+  const usingProvidedMigIds = migMessageIds !== undefined
+  useEffect(() => {
+    if (usingProvidedMigIds) return
+    let active = true
+    loadAllMigs()
+      .then((migs) => {
+        if (active) setLoadedMigIds(new Set(migs.map((m) => m.messageIdentifier)))
+      })
+      .catch((err) => console.error("Failed to load MIGs for badges:", err))
+    return () => {
+      active = false
+    }
+  }, [usingProvidedMigIds])
+
+  const migIds = migMessageIds ?? loadedMigIds
 
   // Group each area's messages once per repo.
   const areaGroups = useMemo(
@@ -260,7 +282,7 @@ export function ERepositoryBrowser({
 
               <Disclosure collapsed={!areaOpen && !filtering} onReveal={() => open(area.code)}>
                 {groups.map((g) => {
-                  const hasMig = g.versions.some((v) => migMessageIds.has(v.identifier))
+                  const hasMig = g.versions.some((v) => migIds.has(v.identifier))
                   const id = groupId(area.code, g.shortCode)
                   return (
                     <li role="none" key={g.shortCode}>
