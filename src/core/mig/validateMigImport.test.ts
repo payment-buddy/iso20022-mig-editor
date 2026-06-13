@@ -26,6 +26,18 @@ describe("validateMigImport", () => {
     expect(validateMigImport(mig)).toEqual({ ok: true, mig })
   })
 
+  it("accepts a disabled added constraint (`enabled: false`)", () => {
+    const mig = {
+      ...base,
+      elementOverrides: {
+        "/Doc/Amt": {
+          additionalConstraints: { R: { definition: "", enabled: false } },
+        },
+      },
+    }
+    expect(validateMigImport(mig)).toEqual({ ok: true, mig })
+  })
+
   it("accepts constraintOverrides with a tri-state expression", () => {
     const mig = {
       ...base,

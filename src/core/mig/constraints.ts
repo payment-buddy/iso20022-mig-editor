@@ -13,7 +13,10 @@ export interface ResolvedConstraint {
   constraint: Constraint
   /** Where the base constraint comes from. */
   source: "standard" | "additional"
-  /** The rule is switched off by a `constraintOverrides` entry. */
+  /**
+   * The rule is switched off — for a standard/inherited constraint via its
+   * `constraintOverrides` entry, for a MIG-added one via its own `enabled: false`.
+   */
   disabled: boolean
 }
 
@@ -82,11 +85,17 @@ export function resolveConstraints(
     })
   )
   const additional = Object.entries(override?.additionalConstraints ?? {}).map(
-    ([name, ac]): ResolvedConstraint => ({
-      constraint: overlay({ name, ...ac }, override),
-      source: "additional",
-      disabled: disabled(name),
-    })
+    ([name, ac]): ResolvedConstraint => {
+      // `enabled` is the rule's own off switch, not a constraint field — keep it
+      // out of the resolved `Constraint`. The legacy `constraintOverrides` disable
+      // is still honoured for MIGs saved before the flag moved here.
+      const { enabled, ...base } = ac
+      return {
+        constraint: overlay({ name, ...base }, override),
+        source: "additional",
+        disabled: enabled === false || disabled(name),
+      }
+    }
   )
   return [...standard, ...additional]
 }

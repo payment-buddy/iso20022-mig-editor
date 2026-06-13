@@ -118,6 +118,9 @@ export function updateConstraint(
 
   const merged: AdditionalConstraint = { ...map[name], ...fields }
   if (merged.expression === "") delete merged.expression
+  // `enabled` is tri-state-ish: absent = enabled (the default), `false` = disabled.
+  // Never persist `true` — drop it so re-enabling returns to the minimal form.
+  if (merged.enabled !== false) delete merged.enabled
   if (merged.annotations && Object.keys(merged.annotations).length === 0)
     delete merged.annotations
 

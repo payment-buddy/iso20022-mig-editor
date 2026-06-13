@@ -320,11 +320,7 @@ function diffOrphan(path: string, ov: ElementOverride): ElementDiff {
     // No ISO element to overlay onto for an orphan path — only added rules.
     constraints: Object.entries(ov.additionalConstraints ?? {}).map(
       ([name, ac]) =>
-        toConstraintInfo(
-          { name, ...ac },
-          "added",
-          ov.constraintOverrides?.[name]?.disabled ?? false
-        )
+        toConstraintInfo({ name, ...ac }, "added", ac.enabled === false)
     ),
   }
 }

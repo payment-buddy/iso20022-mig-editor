@@ -553,9 +553,9 @@ export function MigEditor({
                 takenNames={takenNames}
                 annotationNames={mig.constraintAnnotationNames ?? []}
                 disabled={
-                  mig.elementOverrides[elementPath]?.constraintOverrides?.[
+                  mig.elementOverrides[elementPath]?.additionalConstraints?.[
                     current
-                  ]?.disabled ?? false
+                  ]?.enabled === false
                 }
                 onRename={(name) => {
                   persist(updateConstraint(mig, elementPath, current, { name }))
@@ -578,21 +578,12 @@ export function MigEditor({
                   )
                 }
                 onToggleDisabled={(value) =>
+                  // The off switch lives on the added constraint itself; enabling
+                  // sets `enabled: true`, which `updateConstraint` prunes away.
                   persist(
-                    value
-                      ? setConstraintOverrideField(
-                          mig,
-                          elementPath,
-                          current,
-                          "disabled",
-                          true
-                        )
-                      : clearConstraintOverrideField(
-                          mig,
-                          elementPath,
-                          current,
-                          "disabled"
-                        )
+                    updateConstraint(mig, elementPath, current, {
+                      enabled: !value,
+                    })
                   )
                 }
                 onDelete={() => {

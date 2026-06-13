@@ -81,6 +81,7 @@ additionalConstraints:    # map; MIG-added constraints, keyed by constraint name
   <constraint name>:
     definition
     expression            # optional; formal rule expression (omitted when empty)
+    enabled               # optional bool; false skips the rule during validation (absent = active)
     annotations           # map; constraint custom properties (see §4.1)
 constraintOverrides:      # map; overlays on standard/inherited constraints, keyed by constraint name
   <constraint name>:
@@ -92,8 +93,11 @@ constraintOverrides:      # map; overlays on standard/inherited constraints, key
 
 - **Exclusion** stays as **`maxOccurs: 0`** (no separate `excluded` flag).
 - `additionalConstraints` entries are keyed by constraint name (sorted) and carry the field order
-  `definition, expression, annotations` — mirroring `constraintOverrides`, the name lives in the map key, not a field.
-  `expression` is an optional formal rule expression, omitted when empty.
+  `definition, expression, enabled, annotations` — mirroring `constraintOverrides`, the name lives in the map key, not a
+  field. `expression` is an optional formal rule expression, omitted when empty. `enabled` is an optional **bool**: a MIG
+  disables one of its **own** added rules with `enabled: false` (kept in the file but not enforced) — the off switch sits
+  on the constraint itself, not in a `constraintOverrides` entry (that map is only for standard/inherited rules). `true`
+  is the default and never written.
 - `constraintOverrides` overlay fields onto a **standard (ISO) or inherited** constraint of the same name (it does not
   create one): `definition` and `expression` are tri-state (§5), plus a `disabled` **bool** (`true` skips the rule
   during validation; absent = active) and an `annotations` overlay (tri-state per name, like an `ElementOverride`'s — it

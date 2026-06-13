@@ -649,6 +649,35 @@ describe("MigEditor", () => {
     })
   })
 
+  it("disables an added constraint via its own `enabled: false` flag", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    const elementPanel = screen.getByRole("region", {
+      name: /element details/i,
+    })
+    await user.click(
+      within(elementPanel).getByRole("button", { name: /add constraint/i })
+    )
+    const panel = await screen.findByRole("region", {
+      name: /constraint details/i,
+    })
+    await user.click(
+      within(panel).getByRole("checkbox", { name: /disable this rule/i })
+    )
+
+    // The off switch lands on the added constraint, not in constraintOverrides.
+    const saved = (await loadMig(getMigKey(MIG)))?.elementOverrides[
+      "/DocumentTag"
+    ]
+    expect(saved?.additionalConstraints).toEqual({
+      "New constraint": { definition: "", enabled: false },
+    })
+    expect(saved?.constraintOverrides).toBeUndefined()
+  })
+
   it("renames an added constraint, keeping it selected in the tree", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

@@ -160,6 +160,13 @@ export interface AdditionalConstraint {
   definition: string
   /** Optional formal rule expression in this app's path DSL (omitted when empty). */
   expression?: string
+  /**
+   * Switch the rule off (kept in the MIG but not enforced). Absent = enabled;
+   * an explicit `false` disables it. We never persist `true` (absent is the
+   * default), so the flag lives on the added constraint itself rather than in a
+   * `constraintOverrides` entry — that map is for standard/inherited rules.
+   */
+  enabled?: boolean
   annotations?: Record<string, string | null>
 }
 

@@ -9,6 +9,7 @@ import type { MessageImplementationGuide } from "@/core/types/types"
 const additionalConstraint = z.object({
   definition: z.string(),
   expression: z.string().optional(),
+  enabled: z.boolean().optional(),
   annotations: z.record(z.string(), z.string().nullable()).optional(),
 })
 

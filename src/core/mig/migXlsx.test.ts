@@ -219,8 +219,9 @@ describe("buildMigExportRows — element rows", () => {
   it("marks a disabled added constraint gray with muted text, like an ISO one", () => {
     const m = mig("M", {
       "/Doc/GrpHdr/MsgId": {
-        additionalConstraints: { MyRule: { definition: "custom" } },
-        constraintOverrides: { MyRule: { disabled: true } },
+        additionalConstraints: {
+          MyRule: { definition: "custom", enabled: false },
+        },
       },
     })
     const { columns, rows } = buildMigExportRows(m, [], MESSAGE)

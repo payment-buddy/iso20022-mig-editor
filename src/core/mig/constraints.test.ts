@@ -110,4 +110,28 @@ describe("resolveConstraints", () => {
       ["Off", true],
     ])
   })
+
+  it("disables an added constraint via its own `enabled: false` flag", () => {
+    const [r] = resolveConstraints(el([]), {
+      additionalConstraints: { Extra: { definition: "d", enabled: false } },
+    })
+    expect(r.disabled).toBe(true)
+    // The off switch is not a constraint field — it must not leak through.
+    expect("enabled" in r.constraint).toBe(false)
+  })
+
+  it("treats an added constraint with no `enabled` flag as active", () => {
+    const [r] = resolveConstraints(el([]), {
+      additionalConstraints: { Extra: { definition: "d" } },
+    })
+    expect(r.disabled).toBe(false)
+  })
+
+  it("still honours a legacy constraintOverrides disable on an added constraint", () => {
+    const [r] = resolveConstraints(el([]), {
+      additionalConstraints: { Extra: { definition: "d" } },
+      constraintOverrides: { Extra: { disabled: true } },
+    })
+    expect(r.disabled).toBe(true)
+  })
 })

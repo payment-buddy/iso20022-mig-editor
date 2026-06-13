@@ -305,7 +305,18 @@ describe("validateMessageInstance", () => {
       ).toEqual([])
     })
 
-    it("skips a disabled rule even when its expression would fail", () => {
+    it("skips a disabled added rule even when its expression would fail", () => {
+      const overrides = {
+        "/Doc": {
+          additionalConstraints: {
+            R: { definition: "", expression: "Amt > 600", enabled: false },
+          },
+        },
+      }
+      expect(run(valid(), overrides)).toEqual([])
+    })
+
+    it("still honours a legacy constraintOverrides disable on an added rule", () => {
       const overrides = {
         "/Doc": {
           additionalConstraints: {

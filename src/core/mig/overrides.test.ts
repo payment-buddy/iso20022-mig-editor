@@ -199,6 +199,20 @@ describe("updateConstraint", () => {
     })
   })
 
+  it("disables a rule with `enabled: false`, and prunes the flag on re-enable", () => {
+    const off = updateConstraint(withConstraints("A"), "/Doc/Amt", "A", {
+      enabled: false,
+    })
+    expect(off.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      A: { definition: "", enabled: false },
+    })
+    // Re-enabling returns to the minimal form (absent = the enabled default).
+    const on = updateConstraint(off, "/Doc/Amt", "A", { enabled: true })
+    expect(on.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual({
+      A: { definition: "" },
+    })
+  })
+
   it("is a no-op when the rename collides with a sibling", () => {
     const before = withConstraints("A", "B")
     expect(updateConstraint(before, "/Doc/Amt", "A", { name: "B" })).toBe(

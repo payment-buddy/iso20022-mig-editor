@@ -35,6 +35,7 @@ export const ELEMENT_OVERRIDE_PROPERTY_ORDER = [
 export const ADDITIONAL_CONSTRAINT_PROPERTY_ORDER = [
   "definition",
   "expression",
+  "enabled",
   "annotations",
 ] as const
 

@@ -110,6 +110,7 @@ describe("serializeMig", () => {
               Alpha: {
                 definition: "a",
                 expression: "x > 0",
+                enabled: false,
                 annotations: { Severity: "high" },
               },
             },
@@ -124,14 +125,14 @@ describe("serializeMig", () => {
     )
     // Constraints sorted by name key (Alpha before Zebra).
     expect(out.indexOf("Alpha")).toBeLessThan(out.indexOf("Zebra"))
-    // Constraint field order under the name key: definition, expression, annotations.
+    // Constraint field order under the name key: definition, expression, enabled, annotations.
     const alpha = out.slice(out.indexOf("Alpha"))
     expect(alpha.indexOf("definition")).toBeLessThan(
       alpha.indexOf("expression")
     )
-    expect(alpha.indexOf("expression")).toBeLessThan(
-      alpha.indexOf("annotations")
-    )
+    expect(alpha.indexOf("expression")).toBeLessThan(alpha.indexOf("enabled"))
+    expect(alpha.indexOf("enabled")).toBeLessThan(alpha.indexOf("annotations"))
+    expect(alpha).toContain("enabled: false")
   })
 
   it("serializes constraintOverrides (after additionalConstraints, name-sorted, null kept, empties pruned)", () => {
