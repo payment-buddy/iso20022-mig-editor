@@ -65,27 +65,14 @@ Run a single test file with `npx vitest path/to/file.test.ts`.
 ## Tech stack
 
 React 19 · TypeScript · Vite · Tailwind CSS v4 · shadcn/ui (Radix) · Phosphor
-icons · IndexedDB · Vitest. There is no global test config: tests run on Vitest's
-default `node` environment, and component tests opt into jsdom (and IndexedDB
-tests into `fake-indexeddb`) per file.
+icons · IndexedDB · Vitest.
 
 ## Architecture
 
-The codebase is layered, with a hard rule that `core/` is pure TypeScript with no
-React so the domain logic stays unit-testable in isolation.
-
-- **`src/core/`** — the data model (`types/`), e-Repository parsing
-  (`erepository/`), all MIG logic (`mig/` — merge, diff, validate, YAML
-  serialization, revisions, and Markdown/CSV export), the
-  constraint-expression DSL (`mig/expression/`), and IndexedDB persistence
-  (`storage/`).
-- **`src/app/`** — the hash-based router, app shell, and load/recovery gating.
-- **`src/features/`** — UI for the repository browser and the MIG editor.
-- **`src/components/`** — shadcn/ui components.
-
-See [CLAUDE.md](./CLAUDE.md) for a deeper tour of the model invariants (MIG
-identity, tri-state overrides, parent-chain inheritance, the serialization
-contract) before making changes.
+See [CLAUDE.md](./CLAUDE.md) before making changes — it is the source of truth
+for the architecture and module map, the model invariants (MIG identity,
+tri-state overrides, parent-chain inheritance, the serialization contract), code
+conventions, the test setup, and the git workflow.
 
 ## License
 

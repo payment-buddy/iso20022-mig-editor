@@ -1,6 +1,8 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) and other AI coding
+agents when working with code in this repository. It is the single source of
+truth for architecture, commands, conventions, and the git workflow.
 
 ## What this is
 
@@ -73,7 +75,9 @@ in `features/`, `app/`, and `components/`. Path alias `@/` → `src/`.
 - **MIGs inherit via a `parentMIG` chain.** The *effective* overlay is the chain
   merged ancestor→leaf (leaf wins per field; composites like annotations and
   `additionalConstraints` accumulate). `effectiveMig()` flattens it; this is a
-  computed view for diffing/reporting and is **not** stored.
+  computed view for diffing/reporting and is **not** stored. The motivating case
+  is a chain of community rulebooks that each tighten the previous one (e.g. EPC
+  rulebook → CSM rules → bank community rules).
 
 - **`elementOverrides` is keyed by `xmlPath`** (slash-joined element path into the
   message tree), not by element id.
@@ -99,11 +103,44 @@ whole app on a state machine — load repo → `upload` / `ready` / `updating` /
 
 - Prettier: no semicolons, double quotes, 2-space, width 80, `es5` trailing
   commas. `cn`/`cva` are registered as Tailwind functions for class sorting.
-- TS is strict with `noUnusedLocals`/`noUnusedParameters` and
-  `verbatimModuleSyntax` (use `import type` for type-only imports).
+- TS is strict (`strict: true`, target ES2022) with `noUnusedLocals`,
+  `noUnusedParameters`, `noFallthroughCasesInSwitch`,
+  `noUncheckedSideEffectImports`, and `verbatimModuleSyntax` (use `import type` —
+  inline `type` specifiers are fine, e.g. `import { useState, type FormEvent }`).
+- Import from `@/...` (the `src` alias), not deep relative paths; group external
+  packages before internal modules.
 - Add shadcn components with `npx shadcn@latest add <name>` (config in
   `components.json`; style `radix-mira`, base color neutral, Phosphor icons).
 - Keep `core/` free of React/DOM imports so logic stays unit-testable in isolation.
+
+### Naming
+
+- **Components**: PascalCase (`CreateMigDialog`, `ElementDetailEdit`).
+- **Types/interfaces**: PascalCase, descriptive (`MessageImplementationGuide`,
+  `ElementOverride`).
+- **Functions/variables**: camelCase (`parseRepository`, `effectiveMig`).
+- **Event handlers**: `handle` prefix (`handleParsed`, `handleMigDownload`).
+- **Booleans**: `is`/`has`/`can` prefixes where natural (`isChoice`, `isTextType`).
+
+### React patterns
+
+- Functional components only; prefer early returns for null/loading states.
+- Use `useCallback` for handlers passed as props.
+- Use `void` for intentionally unhandled promises (e.g. `void saveMig(mig)`).
+- No external state library — local `useState` plus prop drilling.
+
+### Error handling
+
+- `try/catch` around async work; log with `console.error()` plus context.
+- Surface user-facing error states in components; degrade gracefully on
+  IndexedDB failures (the app has a dedicated recovery screen).
+
+### Testing conventions
+
+- Test files co-located next to source (`serializeMig.test.ts`).
+- Descriptive test names; group with `describe`; prefer `async/await` over
+  `.then()` chains.
+- Opt into environments per file (see [Commands](#commands)).
 
 ## Git workflow
 
