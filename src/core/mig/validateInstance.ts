@@ -119,7 +119,9 @@ function walk(
         })
       }
     } else {
-      if (count < minOccurs) {
+      // In a choice, exactly one branch is chosen, so the non-chosen branches
+      // aren't "missing" — the choice rule below covers presence instead.
+      if (!el.isChoice && count < minOccurs) {
         out.push({
           path: childPath,
           elementName: child.name,
@@ -135,6 +137,25 @@ function walk(
       }
     }
     for (const inst of instances) walk(child, inst, childPath, overrides, out)
+  }
+
+  // Choice (one-of): a present choice element must contain exactly one branch.
+  if (el.isChoice) {
+    const branches = el.elements.filter((c) => !c.isAttribute)
+    const present = branches.filter((b) => node.children.some((c) => c.localName === b.xmlTag))
+    if (present.length === 0) {
+      out.push({
+        path,
+        elementName: el.name,
+        message: `This choice requires one of: ${branches.map((b) => b.name).join(", ")}.`,
+      })
+    } else if (present.length > 1) {
+      out.push({
+        path,
+        elementName: el.name,
+        message: `Only one branch may be present, but found: ${present.map((b) => b.name).join(", ")}.`,
+      })
+    }
   }
 
   // Elements present in the instance that the message definition doesn't declare.

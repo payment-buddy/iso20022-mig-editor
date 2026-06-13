@@ -47,6 +47,12 @@ const MESSAGE: MessageDefinition = {
       el("GrpHdr", { baseType: "Text", maxLength: 35 }),
       el("Amt", { baseType: "Amount", minInclusive: 0, maxInclusive: 1000 }),
       el("Sts", { baseType: "CodeSet", minOccurs: 0, codes: codes("ACTV", "INAC") }),
+      // Optional choice: exactly one of OrgId / PrvtId (each mandatory within the branch).
+      el("Pty", {
+        isChoice: true,
+        minOccurs: 0,
+        elements: [el("OrgId", { baseType: "Text" }), el("PrvtId", { baseType: "Text" })],
+      }),
     ],
   }),
 }
@@ -108,6 +114,36 @@ describe("validateMessageInstance", () => {
     })
     expect(d).toContainEqual(
       expect.objectContaining({ path: "Doc/GrpHdr", message: expect.stringMatching(/max length 5/i) }),
+    )
+  })
+
+  it("accepts a choice with exactly one branch, without flagging the other as missing", () => {
+    const doc = node("Doc", {
+      children: [leaf("GrpHdr", "x"), leaf("Amt", "500"), node("Pty", { children: [leaf("OrgId", "ID")] })],
+    })
+    // OrgId chosen; PrvtId absent is fine (not "minimum is 1").
+    expect(run(doc)).toEqual([])
+  })
+
+  it("flags a choice with more than one branch", () => {
+    const doc = node("Doc", {
+      children: [
+        leaf("GrpHdr", "x"),
+        leaf("Amt", "500"),
+        node("Pty", { children: [leaf("OrgId", "ID"), leaf("PrvtId", "ID")] }),
+      ],
+    })
+    expect(run(doc)).toContainEqual(
+      expect.objectContaining({ path: "Doc/Pty", message: expect.stringMatching(/only one branch.*OrgId, PrvtId/i) }),
+    )
+  })
+
+  it("flags a choice with no branch present", () => {
+    const doc = node("Doc", {
+      children: [leaf("GrpHdr", "x"), leaf("Amt", "500"), node("Pty")],
+    })
+    expect(run(doc)).toContainEqual(
+      expect.objectContaining({ path: "Doc/Pty", message: expect.stringMatching(/requires one of: OrgId, PrvtId/i) }),
     )
   })
 
