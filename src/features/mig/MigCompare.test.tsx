@@ -235,7 +235,7 @@ describe("MigCompare", () => {
     const b = mig("B", {}, "pacs.008.001.09")
     await renderCompare(a, b, repo)
 
-    const card = await screen.findByRole("region", { name: /Extra — only in A/i })
+    const card = await screen.findByRole("region", { name: "Extra" })
     // → B (pacs.008.001.09) has no Doc/Extra, so copying there is blocked…
     expect(within(card).getByRole("button", { name: /Can.t copy: B 1\.0/i })).toBeDisabled()
     // …but copying back into A (which has the element) is allowed.

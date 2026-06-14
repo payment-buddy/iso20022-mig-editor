@@ -283,9 +283,11 @@ function ComparePanel({
   )
 }
 
+// Only "changed" carries a header badge; an added/removed element is conveyed by
+// its per-field cells (one side blank), so no "only in A/B" label is shown.
 const KIND_BADGE: Record<PathDiff["kind"], { label: string; className: string }> = {
-  added: { label: "only in B", className: "text-emerald-700 dark:text-emerald-400" },
-  removed: { label: "only in A", className: "text-destructive" },
+  added: { label: "", className: "text-emerald-700 dark:text-emerald-400" },
+  removed: { label: "", className: "text-destructive" },
   changed: { label: "changed", className: "text-amber-700 dark:text-amber-500" },
 }
 
@@ -312,15 +314,17 @@ function ElementCard({
     <section
       ref={ref}
       tabIndex={0}
-      aria-label={`${diff.name} — ${badge.label}`}
+      aria-label={badge.label ? `${diff.name} — ${badge.label}` : diff.name}
       className="border border-t-0 outline-none first:border-t-0 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-inset"
     >
       <header className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <span className="font-medium">{diff.name}</span>
         <code className="truncate text-xs text-muted-foreground">{diff.path}</code>
-        <span className={`ml-auto shrink-0 text-xs font-medium ${badge.className}`}>
-          {badge.label}
-        </span>
+        {badge.label && (
+          <span className={`ml-auto shrink-0 text-xs font-medium ${badge.className}`}>
+            {badge.label}
+          </span>
+        )}
       </header>
       <div className="flex flex-col divide-y">
         {diff.fields.map((f) => (
