@@ -517,6 +517,19 @@ export function MigHome() {
               })}
             </tbody>
           </table>
+
+          <p className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+            <WarningIcon className="size-3.5 shrink-0" aria-hidden />
+            MIGs are stored only in this browser.
+            <button
+              type="button"
+              onClick={() => void downloadMigs(migs)}
+              className="rounded-sm text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/30"
+            >
+              Back up all
+            </button>
+            regularly — clearing browser data deletes them.
+          </p>
         </>
       )}
 

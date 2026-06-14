@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
@@ -12,6 +12,11 @@ import { formatLocalDateTime } from "@/lib/datetime"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { MigHome } from "./MigHome"
 import { takePendingMerge } from "./pendingMerge"
+import { downloadMigs } from "./downloadMigs"
+
+// The download side-effect is exercised separately; here we assert the back-up
+// affordance wires to it (and avoids jsdom's missing URL.createObjectURL).
+vi.mock("./downloadMigs", () => ({ downloadMigs: vi.fn() }))
 
 function migYaml(
   name: string,
@@ -322,6 +327,16 @@ describe("MigHome", () => {
 
     const dialog = await screen.findByRole("alertdialog")
     expect(within(dialog).queryByRole("button", { name: /merge/i })).not.toBeInTheDocument()
+  })
+
+  it("backs up all stored MIGs from the local-only footer", async () => {
+    vi.mocked(downloadMigs).mockClear()
+    await renderWith(migObj("A", "1"), migObj("B", "1"))
+
+    await userEvent.click(screen.getByRole("button", { name: /back up all/i }))
+
+    expect(downloadMigs).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(downloadMigs).mock.calls[0][0]).toHaveLength(2)
   })
 
   it("moves the selection to the trash after confirming (and bumps the Trash count)", async () => {
