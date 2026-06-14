@@ -20,6 +20,7 @@ import type {
   MessageElement,
 } from "@/core/types/types"
 import { rootPath } from "@/core/erepository/elementPath"
+import { constraintAnnotations } from "@/core/mig/constraints"
 import { cn } from "@/lib/utils"
 import { ProvenanceMarker } from "@/components/ProvenanceMarker"
 import { treeFilterMatch } from "./treeFilterMatch"
@@ -261,12 +262,29 @@ function countExcluded(
  */
 type TreeFilter = { keep: Set<string>; expand: Set<string> }
 
+/** True when any annotation value matches the (non-empty) query. Lets the text
+ * filter find elements/constraints by the contents of their MIG annotations,
+ * not just by name/tag. Null values (cleared overrides) never match. */
+function annotationMatch(
+  annotations: Record<string, string | null> | undefined,
+  q: string
+): boolean {
+  if (!annotations) return false
+  for (const value of Object.values(annotations)) {
+    if (value != null && treeFilterMatch(value, q)) return true
+  }
+  return false
+}
+
 /**
  * Compute the kept/expanded paths for the active filters: a text query and/or
  * "changes only" (elements/constraints the MIG overrides — own or inherited). A
  * node "matches" when it satisfies every active filter; an element is kept when
  * it or any descendant matches, and ancestors of a match are kept and
  * auto-expanded so the match — and the structure leading to it — stays visible.
+ * The text query matches an element's name/tag or any of its annotation values,
+ * and a constraint's name or its *effective* annotation values (base overlaid by
+ * the `constraintOverrides` entry, so a child sees what it actually shows).
  * `q` is the raw, trimmed filter text (empty = no text filter); `treeFilterMatch`
  * handles case folding and CamelHumps matching.
  */
@@ -281,7 +299,10 @@ function buildFilter(
   const expand = new Set<string>()
   const visit = (el: MessageElement, path: string): boolean => {
     const textMatch =
-      q === "" || treeFilterMatch(el.name, q) || treeFilterMatch(el.xmlTag, q)
+      q === "" ||
+      treeFilterMatch(el.name, q) ||
+      treeFilterMatch(el.xmlTag, q) ||
+      annotationMatch(effectiveOverrides?.[path]?.annotations, q)
     const changeMatch =
       !changesOnly ||
       elementOverrideOrigin(path, ownOverrides, effectiveOverrides) !== null
@@ -297,7 +318,12 @@ function buildFilter(
       effectiveOverrides
     )) {
       const conMatch =
-        (q === "" || treeFilterMatch(constraint.name, q)) &&
+        (q === "" ||
+          treeFilterMatch(constraint.name, q) ||
+          annotationMatch(
+            constraintAnnotations(constraint, effectiveOverrides?.[path]),
+            q
+          )) &&
         (!changesOnly || colour !== null)
       if (conMatch) {
         keep.add(`${path}/${constraint.name}`)
