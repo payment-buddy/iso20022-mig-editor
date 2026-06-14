@@ -33,7 +33,7 @@ type FlatNode = {
       minOccurs: number
       maxOccurs: number | null
     }
-  | { kind: "constraint"; constraint: Constraint; /** MIG-specific (vs. standard). */ added: boolean }
+  | { kind: "constraint"; constraint: Constraint; origin: ConstraintOrigin }
 )
 
 /** The focused/selected node, handed to the detail-panel renderer (selection follows focus). */
@@ -45,8 +45,8 @@ export type SelectedNode =
       path: string
       /** xmlPath of the owning element. */
       parentPath: string
-      /** MIG-specific (vs. a standard, read-only constraint). */
-      added: boolean
+      /** Standard (ISO), this MIG's own, or an inherited (parent-MIG) constraint. */
+      origin: ConstraintOrigin
     }
 
 /** Imperative tree actions handed to the detail-panel renderer. */
@@ -90,20 +90,31 @@ function effectiveOccurs(
   }
 }
 
+/** Where a constraint shown in the tree comes from. */
+export type ConstraintOrigin = "standard" | "own" | "inherited"
+
 /**
- * An element's constraints as shown in the tree: the standard (spec-inherited)
- * ones followed by the MIG-specific ones from this path's override, each tagged
- * with whether it was `added` by the MIG.
+ * An element's constraints as shown in the tree: the standard (ISO) ones, then
+ * the additional ones from the **effective** override (so a parent MIG's added
+ * constraints are visible too), each tagged with its origin — `own` when this
+ * MIG declares it, otherwise `inherited`.
  */
 function constraintsAt(
   path: string,
   el: MessageElement,
-  overrides: ElementOverrides | undefined,
-): { constraint: Constraint; added: boolean }[] {
-  const standard = el.constraints.map((constraint) => ({ constraint, added: false }))
-  const additional = (overrides?.[path]?.additionalConstraints ?? []).map((constraint) => ({
+  ownOverrides: ElementOverrides | undefined,
+  effectiveOverrides: ElementOverrides | undefined,
+): { constraint: Constraint; origin: ConstraintOrigin }[] {
+  const standard = el.constraints.map((constraint) => ({
     constraint,
-    added: true,
+    origin: "standard" as const,
+  }))
+  const ownNames = new Set(
+    (ownOverrides?.[path]?.additionalConstraints ?? []).map((c) => c.name),
+  )
+  const additional = (effectiveOverrides?.[path]?.additionalConstraints ?? []).map((constraint) => ({
+    constraint,
+    origin: ownNames.has(constraint.name) ? ("own" as const) : ("inherited" as const),
   }))
   return [...standard, ...additional]
 }
@@ -148,7 +159,7 @@ function buildFilter(
     for (const child of el.elements) {
       if (visit(child, `${path}/${child.xmlTag}`)) descMatch = true
     }
-    for (const { constraint } of constraintsAt(path, el, overrides)) {
+    for (const { constraint } of constraintsAt(path, el, overrides, overrides)) {
       if (matchesQuery(constraint.name, q)) {
         keep.add(`${path}/${constraint.name}`)
         descMatch = true
@@ -196,7 +207,7 @@ function flattenTree(
       if (hideExcluded && isOwnExcluded(`${path}/${c.xmlTag}`, c, effectiveOverrides)) return false
       return true
     })
-    const cons = constraintsAt(path, el, ownOverrides)
+    const cons = constraintsAt(path, el, ownOverrides, effectiveOverrides)
     const childCons = filter
       ? cons.filter((c) => filter.keep.has(`${path}/${c.constraint.name}`))
       : cons
@@ -217,11 +228,11 @@ function flattenTree(
     for (const child of childEls) {
       walk(child, `${path}/${child.xmlTag}`, level + 1, path, excluded)
     }
-    for (const { constraint, added } of childCons) {
+    for (const { constraint, origin } of childCons) {
       out.push({
         kind: "constraint",
         constraint,
-        added,
+        origin,
         path: `${path}/${constraint.name}`,
         level: level + 1,
         parentPath: path,
@@ -250,7 +261,7 @@ function toSelected(node: FlatNode): SelectedNode {
         constraint: node.constraint,
         path: node.path,
         parentPath: node.parentPath ?? "",
-        added: node.added,
+        origin: node.origin,
       }
     : { kind: "element", element: node.element, path: node.path }
 }
@@ -306,8 +317,8 @@ export function ElementTree({
   const excludedCount = useMemo(() => countExcluded(root, effective), [root, effective])
   const q = filter.trim().toLowerCase()
   const treeFilter = useMemo(
-    () => (q ? buildFilter(root, q, elementOverrides) : null),
-    [root, q, elementOverrides],
+    () => (q ? buildFilter(root, q, effective) : null),
+    [root, q, effective],
   )
   const flatNodes = useMemo(
     () => flattenTree(root, expanded, treeFilter, hideExcluded, elementOverrides, effective),
@@ -643,8 +654,13 @@ function TreeNode({
             choice
           </span>
         )}
-        {node.kind === "constraint" && node.added && (
+        {node.kind === "constraint" && node.origin === "own" && (
           <span className="rounded-sm bg-primary/10 px-1 text-[0.625rem] text-primary">added</span>
+        )}
+        {node.kind === "constraint" && node.origin === "inherited" && (
+          <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
+            inherited
+          </span>
         )}
       </div>
     </li>

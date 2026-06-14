@@ -529,6 +529,39 @@ describe("MigEditor", () => {
     ).toEqual({ StdRule: { expression: "Amt > 0" } })
   })
 
+  it("shows an inherited (parent-MIG) constraint and overlays an expression on it", async () => {
+    const user = userEvent.setup()
+    const parent: MessageImplementationGuide = {
+      name: "Base",
+      version: "1.0",
+      messageIdentifier: "pacs.008.001.10",
+      elementOverrides: {
+        DocumentTag: { additionalConstraints: [{ name: "InhRule", definition: "Inherited rule" }] },
+      },
+    }
+    const child: MessageImplementationGuide = { ...MIG, parentMIG: getMigKey(parent) }
+    await saveMig(parent)
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // The inherited constraint is visible (it isn't in this MIG's own overrides).
+    await user.click(screen.getByRole("treeitem", { name: /constraint inhrule/i }))
+    const panel = screen.getByRole("region", { name: /constraint details/i })
+    // It uses the overlay panel: no rename/delete, but an editable expression.
+    expect(within(panel).queryByRole("button", { name: "Edit Constraint name" })).not.toBeInTheDocument()
+    expect(within(panel).queryByRole("button", { name: /delete constraint/i })).not.toBeInTheDocument()
+
+    await user.click(within(panel).getByRole("button", { name: "Edit Constraint expression" }))
+    await user.type(within(panel).getByRole("textbox", { name: "Constraint expression" }), "Amt > 0")
+    await user.tab()
+
+    // The overlay lands on the child MIG, keyed by the inherited rule's name.
+    expect(
+      (await loadMig(getMigKey(child)))?.elementOverrides["DocumentTag"]?.constraintOverrides,
+    ).toEqual({ InhRule: { expression: "Amt > 0" } })
+  })
+
   it("deletes an added constraint after confirming, cancelling is a no-op", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

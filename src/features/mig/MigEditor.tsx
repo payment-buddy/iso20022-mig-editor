@@ -203,10 +203,10 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
             )
           }
           if (sel?.kind === "constraint") {
-            // Standard (ISO) / inherited constraints: name + definition read-only,
-            // but the MIG can overlay an expression. MIG-added ones are fully
-            // editable below.
-            if (!sel.added) {
+            // Standard (ISO) and inherited (parent-MIG) constraints: name is
+            // read-only, but the MIG can overlay definition/expression. This
+            // MIG's own added constraints are fully editable below.
+            if (sel.origin !== "own") {
               const elementPath = sel.parentPath
               const name = sel.constraint.name
               return (
