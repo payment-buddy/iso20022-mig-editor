@@ -20,6 +20,13 @@ export function AppShell({ route, children }: { route: Route; children: ReactNod
 
   return (
     <div className="flex min-h-svh flex-col">
+      {/* Keyboard users can jump past the header/breadcrumbs to the page content. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:border focus:border-border focus:bg-background focus:px-3 focus:py-1.5 focus:text-sm focus:shadow-lg focus:ring-2 focus:ring-ring/40"
+      >
+        Skip to main content
+      </a>
       <header className="sticky top-0 z-10 flex h-12 items-center gap-3 border-b border-border bg-background px-4">
         <a
           href={hashFor({ name: "home" })}
@@ -71,7 +78,9 @@ export function AppShell({ route, children }: { route: Route; children: ReactNod
         })}
       </nav>
 
-      <main className="min-h-0 flex-1">{children}</main>
+      <main id="main-content" tabIndex={-1} className="min-h-0 flex-1 outline-none">
+        {children}
+      </main>
     </div>
   )
 }

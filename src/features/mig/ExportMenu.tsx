@@ -12,13 +12,21 @@ export function ExportMenu({ onMarkdown, onCsv }: { onMarkdown: () => void; onCs
   const rootRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
+  // Return focus to the trigger when the menu closes by keyboard or selection
+  // (so focus isn't dropped to the body).
+  const focusTrigger = () =>
+    rootRef.current?.querySelector<HTMLButtonElement>("button[aria-haspopup]")?.focus()
+
   useEffect(() => {
     if (!open) return
     const onPointerDown = (e: PointerEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
     }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false)
+      if (e.key === "Escape") {
+        setOpen(false)
+        focusTrigger()
+      }
     }
     document.addEventListener("pointerdown", onPointerDown)
     document.addEventListener("keydown", onKey)
@@ -35,6 +43,7 @@ export function ExportMenu({ onMarkdown, onCsv }: { onMarkdown: () => void; onCs
 
   const select = (run: () => void) => {
     setOpen(false)
+    focusTrigger()
     run()
   }
 

@@ -163,7 +163,11 @@ function RevisionRow({
         selected ? "border-border bg-muted/60" : "border-transparent hover:bg-muted/40",
       )}
     >
-      <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left outline-none">
+      <button
+        type="button"
+        onClick={onSelect}
+        className="min-w-0 flex-1 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+      >
         <div className="text-xs font-medium">{formatLocalDateTime(rev.at)}</div>
         <div className="truncate text-xs text-muted-foreground">{rev.summary}</div>
       </button>

@@ -42,6 +42,15 @@ describe("AppShell", () => {
     expect(screen.getByText("content")).toBeInTheDocument()
   })
 
+  it("offers a skip-to-content link targeting the main landmark", () => {
+    renderShell({ name: "home" })
+    expect(screen.getByRole("link", { name: /skip to main content/i })).toHaveAttribute(
+      "href",
+      "#main-content",
+    )
+    expect(screen.getByRole("main")).toHaveAttribute("id", "main-content")
+  })
+
   it("derives a linked breadcrumb trail with the current page non-linked", () => {
     renderShell({ name: "message", code: "pacs.008.001.08" })
     const nav = screen.getByRole("navigation", { name: /breadcrumb/i })
