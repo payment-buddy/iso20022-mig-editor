@@ -6,6 +6,7 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
+import { loadRevisions } from "@/core/storage/revisionStore"
 import { getMigKey } from "@/core/mig/migKey"
 import type {
   ERepository,
@@ -1340,6 +1341,32 @@ describe("MigEditor", () => {
     expect(await loadMig("EPC Guide:1.0")).toBeNull()
     expect((await loadMig("Child:1"))?.parentMIG).toBe("Header Renamed:1.0")
     expect(window.location.hash).toBe("#mig/Header%20Renamed%3A1.0")
+  })
+
+  it("snapshots an edit into history and moves it on rename", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // Edit the description — a pending revision burst.
+    await user.click(screen.getByRole("button", { name: "Edit Description" }))
+    await user.type(screen.getByRole("textbox", { name: "Description" }), "hello")
+    await user.tab()
+
+    // Rename via the header → flushes the burst, then moves the history.
+    await user.click(screen.getByRole("button", { name: "Edit MIG name" }))
+    const input = screen.getByRole("textbox", { name: "MIG name" })
+    await user.clear(input)
+    await user.type(input, "Renamed")
+    await user.tab()
+
+    await waitFor(async () => {
+      const revs = await loadRevisions("Renamed:1.0")
+      // Baseline (as opened) + the description edit, now under the new key.
+      expect(revs.map((r) => r.summary)).toEqual(["Initial", "description"])
+    })
+    expect(await loadRevisions("EPC Guide:1.0")).toEqual([])
   })
 
   it("surfaces a header rename collision inline", async () => {

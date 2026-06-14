@@ -24,6 +24,7 @@ import {
   type DuplicateResolution,
 } from "@/core/mig/importDuplicates"
 import { deleteMig, loadAllMigs, saveMig } from "@/core/storage/migStore"
+import { deleteRevisions } from "@/core/storage/revisionStore"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { parseMigYaml } from "./parseMigYaml"
@@ -233,7 +234,12 @@ export function MigHome() {
 
   const confirmDelete = async () => {
     setDeleteOpen(false)
-    await Promise.all(deleteTargets.map(deleteMig))
+    await Promise.all(
+      deleteTargets.map(async (key) => {
+        await deleteMig(key)
+        await deleteRevisions(key) // drop the MIG's revision history too
+      }),
+    )
     setSelected(new Set())
     refresh()
   }

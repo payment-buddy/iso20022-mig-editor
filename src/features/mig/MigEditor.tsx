@@ -18,6 +18,7 @@ import {
   updateConstraint,
 } from "@/core/mig/overrides"
 import { deleteMig, loadAllMigs, saveMig } from "@/core/storage/migStore"
+import { renameRevisions } from "@/core/storage/revisionStore"
 import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
@@ -30,6 +31,7 @@ import { MigMetadata } from "./MigMetadata"
 import { MigElementDetail } from "./MigElementDetail"
 import { MigConstraintDetail } from "./MigConstraintDetail"
 import { MigStandardConstraintDetail } from "./MigStandardConstraintDetail"
+import { useRevisionSnapshots } from "./useRevisionSnapshots"
 import { MigDiagnostics } from "./MigDiagnostics"
 import { ExportMenu } from "./ExportMenu"
 import { ValidateInstanceDialog } from "./ValidateInstanceDialog"
@@ -70,6 +72,10 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
     }
   }, [migKey])
 
+  // Auto-snapshot edits into the MIG's revision history (debounced; flushes on
+  // unmount). `flushRevisions` lets the rename flow commit before it re-keys.
+  const flushRevisions = useRevisionSnapshots(migKey, mig)
+
   // Autosave: persist the edited MIG (same identity key) and reflect it locally.
   const persist = (next: MessageImplementationGuide) => {
     setMig(next)
@@ -78,15 +84,17 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   }
 
   // Rename (name and/or version) → a new identity key: write under the new key,
-  // repoint child MIGs' parentMIG, drop the old key, and route to the new one.
-  // Returns an error message to show, or `null` on success/no-op.
+  // repoint child MIGs' parentMIG, drop the old key, move the revision history,
+  // and route to the new one. Returns an error message, or `null` on success/no-op.
   const rename = async (name: string, version: string): Promise<string | null> => {
     const result = renameMig(allMigs, migKey, name, version)
     if (!result.ok) return result.error
     if (!result.changed) return null
+    await flushRevisions() // commit any pending burst under the old key first
     await saveMig(result.renamed)
     await Promise.all(result.reparented.map(saveMig))
     await deleteMig(result.oldKey)
+    await renameRevisions(result.oldKey, result.newKey)
     navigate({ name: "mig", key: result.newKey })
     return null
   }
