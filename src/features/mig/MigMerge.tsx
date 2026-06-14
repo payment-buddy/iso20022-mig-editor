@@ -130,9 +130,12 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="flex items-center gap-2 text-base font-semibold tracking-tight">
-          <GitMergeIcon className="size-5 text-muted-foreground" aria-hidden />
-          Merge MIGs
+        <h1 className="flex min-w-0 items-center gap-2 text-base font-semibold tracking-tight">
+          <GitMergeIcon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="truncate">
+            Merge {draft.name}{" "}
+            <span className="font-medium text-muted-foreground">{draft.version}</span>
+          </span>
         </h1>
         <div className="flex shrink-0 items-center gap-2">
           {dirty && (
@@ -199,7 +202,7 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
           nothing to merge.
         </p>
       ) : (
-        <MergePanel diff={diff} incoming={incoming} canTake={canTake} onTake={take} />
+        <MergePanel diff={diff} canTake={canTake} onTake={take} />
       )}
     </div>
   )
@@ -207,12 +210,10 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
 
 function MergePanel({
   diff,
-  incoming,
   canTake,
   onTake,
 }: {
   diff: ReturnType<typeof compareMigs>
-  incoming: MessageImplementationGuide
   canTake: (path: string) => boolean
   onTake: (path: string, field: FieldChange) => void
 }) {
@@ -228,15 +229,9 @@ function MergePanel({
       {/* Column headers: current (target, left) vs incoming (right) sit above the
           table like a label for each column. */}
       <div className={`${COLS} -mb-1 text-sm font-semibold tracking-tight`}>
-        <div className="truncate pb-1.5">
-          Current · {diff.a.name}{" "}
-          <span className="text-sm font-medium text-muted-foreground">{diff.a.version}</span>
-        </div>
+        <div className="truncate pb-1.5">Current</div>
         <div />
-        <div className="truncate pb-1.5">
-          Incoming · {incoming.name}{" "}
-          <span className="text-sm font-medium text-muted-foreground">{incoming.version}</span>
-        </div>
+        <div className="truncate pb-1.5">Incoming</div>
       </div>
 
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
