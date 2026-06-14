@@ -123,15 +123,15 @@ const RULE_COLUMNS = ["Provenance", "Rule", "Definition"]
 const COLUMN_WIDTHS: Record<string, number> = {
   Level: 6,
   Choice: 7,
-  Name: 22,
-  "XML tag": 14,
-  Path: 28,
-  Multiplicity: 12,
+  Name: 30,
+  "XML tag": 16,
+  Path: 33,
+  Multiplicity: 10,
   Type: 22,
   Annotations: 30,
-  Provenance: 16,
-  Rule: 18,
-  Definition: 40,
+  Provenance: 9,
+  Rule: 27,
+  Definition: 46,
 }
 const DEFAULT_WIDTH = 20
 
