@@ -217,6 +217,14 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                   path={sel.path}
                   override={mig.elementOverrides[elementPath]?.constraintOverrides?.[name]}
                   inherited={inheritedOverrides[elementPath]?.constraintOverrides?.[name]}
+                  onSetDefinition={(definition) =>
+                    persist(
+                      setConstraintOverrideField(mig, elementPath, name, "definition", definition),
+                    )
+                  }
+                  onClearDefinition={() =>
+                    persist(clearConstraintOverrideField(mig, elementPath, name, "definition"))
+                  }
                   onSetExpression={(expression) =>
                     persist(
                       setConstraintOverrideField(mig, elementPath, name, "expression", expression),

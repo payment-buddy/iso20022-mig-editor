@@ -52,6 +52,17 @@ describe("resolveConstraints", () => {
     expect(r.constraint.expression).toBe("Amt > 0")
   })
 
+  it("overlays the definition (null blanks it)", () => {
+    const [set] = resolveConstraints(el([constraint("Std")]), {
+      constraintOverrides: { Std: { definition: "Refined" } },
+    })
+    expect(set.constraint.definition).toBe("Refined")
+    const [blank] = resolveConstraints(el([constraint("Std")]), {
+      constraintOverrides: { Std: { definition: null } },
+    })
+    expect(blank.constraint.definition).toBe("")
+  })
+
   it("clears the inherited expression when the overlay sets null", () => {
     const override: ElementOverride = { constraintOverrides: { Std: { expression: null } } }
     const [r] = resolveConstraints(el([constraint("Std", { expression: "old" })]), override)

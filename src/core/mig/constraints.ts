@@ -16,6 +16,8 @@ function overlay(base: Constraint, override: ElementOverride | undefined): Const
   const co = override?.constraintOverrides?.[base.name]
   if (!co) return base
   const out: Constraint = { ...base }
+  // Definition is a required string on Constraint; a `null` overlay blanks it.
+  if ("definition" in co) out.definition = co.definition ?? ""
   if ("expression" in co) {
     if (co.expression == null) delete out.expression
     else out.expression = co.expression

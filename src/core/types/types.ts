@@ -122,6 +122,7 @@ export interface ElementOverride {
  * `null` = clear, value = set).
  */
 export interface ConstraintOverride {
+  definition?: string | null
   expression?: string | null
 }
 

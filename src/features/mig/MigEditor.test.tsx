@@ -514,11 +514,9 @@ describe("MigEditor", () => {
 
     const panel = screen.getByRole("region", { name: /constraint details/i })
     expect(within(panel).getByText("StdRule")).toBeInTheDocument()
-    // Name and definition stay read-only; there is no delete on a standard rule.
+    // Name stays read-only and a standard rule can't be deleted (definition and
+    // expression are overlay-editable below).
     expect(within(panel).queryByRole("button", { name: "Edit Constraint name" })).not.toBeInTheDocument()
-    expect(
-      within(panel).queryByRole("button", { name: "Edit Constraint definition" }),
-    ).not.toBeInTheDocument()
     expect(within(panel).queryByRole("button", { name: /delete constraint/i })).not.toBeInTheDocument()
 
     // The expression, however, can be overlaid — stored under constraintOverrides.
