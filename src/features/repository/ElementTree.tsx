@@ -698,8 +698,12 @@ function TreeNode({
         onClick={onSelect}
         style={{ paddingLeft: node.level === 0 ? 4 : node.level * 16 + 4 }}
         className={cn(
-          "flex cursor-pointer items-center gap-1.5 rounded-md py-1 pr-1.5 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30",
-          active && "bg-muted",
+          "flex cursor-pointer items-center gap-1.5 rounded-md py-1 pr-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
+          // Selected: a stronger, still-neutral fill (keeps the override-tint text
+          // readable) with a ring; hover (only when not selected): a faint fill.
+          active
+            ? "bg-muted-foreground/20 ring-1 ring-inset ring-border"
+            : "hover:bg-muted",
         )}
       >
         {node.hasChildren ? (
