@@ -7,6 +7,7 @@ import {
 import { compareMigs, type MigComparison } from "@/core/mig/compareMigs"
 import { appendRevision, type Revision } from "@/core/mig/revisions"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
+import { elementAtPath } from "@/core/erepository/elementPath"
 import { buildPathOrder } from "@/core/mig/serializeMig"
 import { loadMig, saveMig } from "@/core/storage/migStore"
 import { loadRevisions, saveRevisions } from "@/core/storage/revisionStore"
@@ -49,11 +50,14 @@ export function MigHistory({ migKey, repo }: { migKey: string; repo: ERepository
     }
   }, [migKey])
 
-  // Schema (document) order for the diff — resolve the MIG's message once.
-  const order = useMemo(() => {
-    if (!mig) return undefined
-    const message = resolveMessage(repo, mig.messageIdentifier)?.current
-    return message ? buildPathOrder(message.rootElement) : undefined
+  // Schema (document) order + element-name lookup for the diff — resolve the
+  // MIG's message once.
+  const { order, nameFor } = useMemo(() => {
+    const root = mig ? resolveMessage(repo, mig.messageIdentifier)?.current?.rootElement : undefined
+    return {
+      order: root ? buildPathOrder(root) : undefined,
+      nameFor: root ? (path: string) => elementAtPath(root, path)?.name : undefined,
+    }
   }, [repo, mig])
 
   if (status === "loading") return <Notice title="Loading…" />
@@ -72,7 +76,7 @@ export function MigHistory({ migKey, repo }: { migKey: string; repo: ERepository
   const selectedIndex = revisions.findIndex((r) => r.id === selectedId)
   const selected = selectedIndex >= 0 ? revisions[selectedIndex] : null
   const previous = selectedIndex > 0 ? revisions[selectedIndex - 1] : null
-  const diff = selected && previous ? compareMigs(previous.mig, selected.mig, order) : null
+  const diff = selected && previous ? compareMigs(previous.mig, selected.mig, order, nameFor) : null
 
   const revert = async (rev: Revision) => {
     // Restore the revision's content but keep the current identity (no re-key).
@@ -193,7 +197,7 @@ function DiffView({ diff }: { diff: MigComparison }) {
         <section key={p.path} className="rounded-md border border-border">
           <header className="flex items-center gap-2 border-b border-border bg-muted/40 px-3 py-1.5">
             <span className="font-medium">{p.name}</span>
-            <code className="truncate text-xs text-muted-foreground">{p.path}</code>
+            <code className="truncate text-[0.625rem] text-muted-foreground">{p.path}</code>
           </header>
           <div className="flex flex-col divide-y divide-border">
             {p.fields.map((f) => (

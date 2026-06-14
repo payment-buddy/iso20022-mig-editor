@@ -45,7 +45,7 @@ export type PathChangeKind = "added" | "removed" | "changed"
 
 export type PathDiff = {
   path: string
-  /** Leaf element name (last path segment / xmlTag). */
+  /** Display name — the element's human name when resolvable, else its xmlTag. */
   name: string
   /** `added` = overridden only in B, `removed` = only in A, `changed` = in both but differs. */
   kind: PathChangeKind
@@ -233,6 +233,8 @@ export function compareMigs(
   a: MigInput,
   b: MigInput,
   order?: Map<string, number>,
+  /** Resolve a path to its element's human name (falls back to the xmlTag). */
+  nameFor?: (path: string) => string | undefined,
 ): MigComparison {
   const overA = a.elementOverrides
   const overB = b.elementOverrides
@@ -245,7 +247,7 @@ export function compareMigs(
     if (fields.length === 0) continue // both present and identical
     paths.push({
       path,
-      name: path.slice(path.lastIndexOf("/") + 1),
+      name: nameFor?.(path) ?? path.slice(path.lastIndexOf("/") + 1),
       kind: inA && inB ? "changed" : inA ? "removed" : "added",
       fields,
     })

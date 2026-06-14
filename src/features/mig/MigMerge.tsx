@@ -86,13 +86,15 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
 
   const message = resolveMessage(repo, draft.messageIdentifier)?.current
   const order = message ? buildPathOrder(message.rootElement) : undefined
+  const nameFor = (path: string) =>
+    message ? elementAtPath(message.rootElement, path)?.name : undefined
 
   const familyMismatch =
     incoming != null &&
     shortCodeForIdentifier(incoming.messageIdentifier) !==
       shortCodeForIdentifier(draft.messageIdentifier)
 
-  const diff = incoming && !familyMismatch ? compareMigs(draft, incoming, order) : null
+  const diff = incoming && !familyMismatch ? compareMigs(draft, incoming, order, nameFor) : null
   const dirty = draft !== saved
 
   // Taking writes into the current draft, so the path must exist in the current
@@ -265,7 +267,7 @@ function ElementCard({
     <section aria-label={`${diff.name} — ${KIND_BADGE[diff.kind]}`} className="border border-t-0">
       <header className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <span className="font-medium">{diff.name}</span>
-        <code className="truncate text-xs text-muted-foreground">{diff.path}</code>
+        <code className="truncate text-[0.625rem] text-muted-foreground">{diff.path}</code>
         <span className="ml-auto shrink-0 text-xs font-medium text-muted-foreground">
           {disabled ? "not in current version" : KIND_BADGE[diff.kind]}
         </span>

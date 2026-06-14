@@ -100,8 +100,13 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
   const messageA = resolveMessage(repo, a.messageIdentifier)?.current
   const messageB = resolveMessage(repo, b.messageIdentifier)?.current
   const order = messageA || messageB ? buildPathOrder((messageA ?? messageB)!.rootElement) : undefined
+  // Element name from whichever version has the path (versions can differ).
+  const nameFor = (path: string) =>
+    (messageA && elementAtPath(messageA.rootElement, path)?.name) ||
+    (messageB && elementAtPath(messageB.rootElement, path)?.name) ||
+    undefined
 
-  const diff = compareMigs(a, b, order)
+  const diff = compareMigs(a, b, order, nameFor)
 
   // A copy may only target a path that exists in the *target* MIG's message
   // version — otherwise it would create an orphan override. When the target's
@@ -319,7 +324,7 @@ function ElementCard({
     >
       <header className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <span className="font-medium">{diff.name}</span>
-        <code className="truncate text-xs text-muted-foreground">{diff.path}</code>
+        <code className="truncate text-[0.625rem] text-muted-foreground">{diff.path}</code>
         {badge.label && (
           <span className={`ml-auto shrink-0 text-xs font-medium ${badge.className}`}>
             {badge.label}

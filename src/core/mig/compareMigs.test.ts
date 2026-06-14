@@ -22,6 +22,16 @@ describe("compareMigs", () => {
     expect(compareMigs(a, b).paths).toEqual([])
   })
 
+  it("uses the resolved element name when a resolver is given, else the xmlTag", () => {
+    const a = mig({ "Doc/GrpHdr": { maxLength: 5 } })
+    const b = mig({ "Doc/GrpHdr": { maxLength: 9 } })
+    expect(compareMigs(a, b).paths[0].name).toBe("GrpHdr") // xmlTag fallback
+    const named = compareMigs(a, b, undefined, (p) =>
+      p === "Doc/GrpHdr" ? "Group Header" : undefined,
+    )
+    expect(named.paths[0].name).toBe("Group Header")
+  })
+
   it("classifies a changed scalar with both rendered values", () => {
     const a = mig({ "Doc/Amt": { maxLength: 18 } })
     const b = mig({ "Doc/Amt": { maxLength: 12 } })
