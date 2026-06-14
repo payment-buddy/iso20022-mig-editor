@@ -6,10 +6,12 @@ export type Route =
   | { name: "browse" } // business-area / message browser
   | { name: "message"; code: string } // read-only explorer (#<shortCode|identifier>)
   | { name: "mig"; key: string } // editor (#mig/<name:version>)
+  | { name: "history"; key: string } // revision history (#history/<name:version>)
   | { name: "compare"; a: string; b: string } // compare two MIGs
   | { name: "merge"; key: string } // merge an uploaded MIG into this one (#merge/<name:version>)
 
 const MIG_PREFIX = "mig/"
+const HISTORY_PREFIX = "history/"
 const COMPARE_PREFIX = "compare/"
 const MERGE_PREFIX = "merge/"
 
@@ -23,6 +25,11 @@ export function parseHash(hash: string): Route {
   if (raw.startsWith(MIG_PREFIX)) {
     const key = decodeURIComponent(raw.slice(MIG_PREFIX.length))
     return key ? { name: "mig", key } : { name: "home" }
+  }
+
+  if (raw.startsWith(HISTORY_PREFIX)) {
+    const key = decodeURIComponent(raw.slice(HISTORY_PREFIX.length))
+    return key ? { name: "history", key } : { name: "home" }
   }
 
   if (raw.startsWith(COMPARE_PREFIX)) {
@@ -58,6 +65,8 @@ export function hashFor(route: Route): string {
       return "#" + encodeURIComponent(route.code)
     case "mig":
       return "#" + MIG_PREFIX + encodeURIComponent(route.key)
+    case "history":
+      return "#" + HISTORY_PREFIX + encodeURIComponent(route.key)
     case "compare":
       return "#" + COMPARE_PREFIX + encodeURIComponent(route.a) + "/" + encodeURIComponent(route.b)
     case "merge":

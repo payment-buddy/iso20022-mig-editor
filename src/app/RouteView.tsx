@@ -2,6 +2,7 @@ import { ERepositoryBrowser } from "@/features/repository/ERepositoryBrowser"
 import { MessageExplorer } from "@/features/repository/MessageExplorer"
 import { MigHome } from "@/features/mig/MigHome"
 import { MigEditor } from "@/features/mig/MigEditor"
+import { MigHistory } from "@/features/mig/MigHistory"
 import { MigCompare } from "@/features/mig/MigCompare"
 import { MigMerge } from "@/features/mig/MigMerge"
 import type { ERepository } from "@/core/types/types"
@@ -27,6 +28,8 @@ export function RouteView({
     case "mig":
       // Keyed so switching MIGs remounts with a fresh load state.
       return <MigEditor key={route.key} migKey={route.key} repo={repo} />
+    case "history":
+      return <MigHistory key={route.key} migKey={route.key} />
     case "compare":
       return <MigCompare keyA={route.a} keyB={route.b} repo={repo} />
     case "merge":

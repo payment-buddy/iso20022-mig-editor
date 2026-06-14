@@ -4,6 +4,12 @@
 import type { Revision } from "@/core/mig/revisions"
 import { STORE_REVISION, withStore } from "./db"
 
+/** The keys of every MIG that has stored revisions (for a "has history" hint). */
+export async function loadRevisionKeys(): Promise<string[]> {
+  const keys = await withStore<IDBValidKey[]>(STORE_REVISION, (s) => s.getAllKeys())
+  return keys.map(String)
+}
+
 /** Load a MIG's revisions (oldest → newest), or `[]` if none. */
 export async function loadRevisions(key: string): Promise<Revision[]> {
   const result = await withStore<Revision[] | undefined>(STORE_REVISION, (s) => s.get(key))

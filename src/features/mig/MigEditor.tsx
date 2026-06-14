@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react"
-import { DownloadSimpleIcon, ShieldCheckIcon } from "@phosphor-icons/react"
+import {
+  ClockCounterClockwiseIcon,
+  DownloadSimpleIcon,
+  ShieldCheckIcon,
+} from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import { effectiveMig } from "@/core/mig/effectiveMig"
@@ -161,6 +165,12 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
           {renameError && <p className="px-2 text-xs text-destructive">{renameError}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <a href={hashFor({ name: "history", key: migKey })}>
+              <ClockCounterClockwiseIcon data-icon="inline-start" aria-hidden />
+              History
+            </a>
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setValidateOpen(true)}>
             <ShieldCheckIcon data-icon="inline-start" aria-hidden />
             Validate

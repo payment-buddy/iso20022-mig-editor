@@ -22,6 +22,8 @@ export function breadcrumbsFor(route: Route): Crumb[] {
       return [home, { label: "e-Repository", route: { name: "browse" } }, { label: route.code }]
     case "mig":
       return [home, { label: route.key }]
+    case "history":
+      return [home, { label: route.key, route: { name: "mig", key: route.key } }, { label: "History" }]
     case "compare":
       return [home, { label: `Compare: ${route.a} ↔ ${route.b}` }]
     case "merge":

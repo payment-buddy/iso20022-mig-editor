@@ -27,11 +27,16 @@ describe("parseHash", () => {
     expect(parseHash("#merge/EPC%3A1.0")).toEqual({ name: "merge", key: "EPC:1.0" })
   })
 
-  it("falls back to home for malformed mig / compare / merge", () => {
+  it("parses a history target key", () => {
+    expect(parseHash("#history/EPC%3A1.0")).toEqual({ name: "history", key: "EPC:1.0" })
+  })
+
+  it("falls back to home for malformed mig / compare / merge / history", () => {
     expect(parseHash("#mig/")).toEqual({ name: "home" })
     expect(parseHash("#compare/only-one")).toEqual({ name: "home" })
     expect(parseHash("#compare/a/b/c")).toEqual({ name: "home" })
     expect(parseHash("#merge/")).toEqual({ name: "home" })
+    expect(parseHash("#history/")).toEqual({ name: "home" })
   })
 
   it("treats anything else as a message code", () => {
@@ -51,6 +56,7 @@ describe("hashFor", () => {
     expect(hashFor({ name: "mig", key: "EPC-SCTInst:2023" })).toBe("#mig/EPC-SCTInst%3A2023")
     expect(hashFor({ name: "compare", a: "A:1", b: "B:2" })).toBe("#compare/A%3A1/B%3A2")
     expect(hashFor({ name: "merge", key: "EPC:1.0" })).toBe("#merge/EPC%3A1.0")
+    expect(hashFor({ name: "history", key: "EPC:1.0" })).toBe("#history/EPC%3A1.0")
   })
 })
 

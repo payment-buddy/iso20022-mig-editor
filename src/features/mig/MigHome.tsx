@@ -6,6 +6,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react"
 import {
+  ClockCounterClockwiseIcon,
   DownloadSimpleIcon,
   GitDiffIcon,
   TrashIcon,
@@ -24,7 +25,7 @@ import {
   type DuplicateResolution,
 } from "@/core/mig/importDuplicates"
 import { deleteMig, loadAllMigs, saveMig } from "@/core/storage/migStore"
-import { deleteRevisions } from "@/core/storage/revisionStore"
+import { deleteRevisions, loadRevisionKeys } from "@/core/storage/revisionStore"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { parseMigYaml } from "./parseMigYaml"
@@ -49,6 +50,7 @@ function keysBetween(keys: string[], a: string, b: string): string[] {
 
 export function MigHome() {
   const [migs, setMigs] = useState<MessageImplementationGuide[]>([])
+  const [revisionKeys, setRevisionKeys] = useState<Set<string>>(() => new Set())
   const [selected, setSelected] = useState<Set<string>>(() => new Set())
   const [focusedKey, setFocusedKey] = useState<string | null>(null)
   const [anchorKey, setAnchorKey] = useState<string | null>(null)
@@ -65,10 +67,11 @@ export function MigHome() {
   const selectedMigs = migs.filter((m) => selected.has(getMigKey(m)))
 
   const refresh = useCallback(() => {
-    loadAllMigs()
-      .then((loaded) => {
+    Promise.all([loadAllMigs(), loadRevisionKeys()])
+      .then(([loaded, revKeys]) => {
         loaded.sort((a, b) => getMigKey(a).localeCompare(getMigKey(b)))
         setMigs(loaded)
+        setRevisionKeys(new Set(revKeys))
       })
       .catch((err) => console.error("Failed to load MIGs:", err))
   }, [])
@@ -437,6 +440,17 @@ export function MigHome() {
                       >
                         {mig.name}
                       </a>
+                      {revisionKeys.has(key) && (
+                        <a
+                          href={hashFor({ name: "history", key })}
+                          tabIndex={-1}
+                          title="Revision history"
+                          aria-label={`Revision history for ${mig.name} ${mig.version}`}
+                          className="ml-1.5 align-middle text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/30"
+                        >
+                          <ClockCounterClockwiseIcon className="inline size-3.5" aria-hidden />
+                        </a>
+                      )}
                     </td>
                     <td className="border-b border-border px-2 py-1.5">{mig.version}</td>
                     <td className="border-b border-border px-2 py-1.5 text-muted-foreground">
