@@ -63,6 +63,23 @@ describe("parseHash", () => {
       code: "FIToFICstmrCdtTrf",
     })
   })
+
+  it("parses a deep-linked select path on message and mig routes", () => {
+    expect(
+      parseHash("#pacs.008.001.08?path=%2FDocument%2FFIToFICstmrCdtTrf")
+    ).toEqual({
+      name: "message",
+      code: "pacs.008.001.08",
+      path: "/Document/FIToFICstmrCdtTrf",
+    })
+    expect(
+      parseHash("#mig/EPC%3A1.0?path=%2FDocument%2FGrpHdr%2FMsgId")
+    ).toEqual({
+      name: "mig",
+      key: "EPC:1.0",
+      path: "/Document/GrpHdr/MsgId",
+    })
+  })
 })
 
 describe("hashFor", () => {
@@ -84,6 +101,19 @@ describe("hashFor", () => {
       "#history/EPC%3A1.0"
     )
   })
+
+  it("appends an encoded ?path= for deep-linked routes", () => {
+    expect(
+      hashFor({
+        name: "message",
+        code: "pacs.008.001.08",
+        path: "/Document/GrpHdr",
+      })
+    ).toBe("#pacs.008.001.08?path=%2FDocument%2FGrpHdr")
+    expect(
+      hashFor({ name: "mig", key: "EPC:1.0", path: "/Document/GrpHdr" })
+    ).toBe("#mig/EPC%3A1.0?path=%2FDocument%2FGrpHdr")
+  })
 })
 
 describe("round-trip", () => {
@@ -95,6 +125,12 @@ describe("round-trip", () => {
     { name: "mig", key: "EPC-SCTInst:2023" },
     { name: "compare", a: "EPC:1.0", b: "CSM:2.0" },
     { name: "merge", key: "EPC:1.0" },
+    {
+      name: "message",
+      code: "pacs.008.001.08",
+      path: "/Document/GrpHdr/MsgId",
+    },
+    { name: "mig", key: "EPC:1.0", path: "/Document/GrpHdr/MsgId" },
   ]
 
   it("parseHash(hashFor(route)) === route", () => {

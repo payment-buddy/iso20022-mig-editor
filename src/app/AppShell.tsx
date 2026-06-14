@@ -13,7 +13,14 @@ import { hashFor } from "./routes"
 /** Project source — opened from the header GitHub link. */
 const GITHUB_URL = "https://github.com/payment-buddy/iso20022-mig-editor"
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  headerExtra,
+}: {
+  children: ReactNode
+  /** Extra controls for the header's right cluster (e.g. global search). */
+  headerExtra?: ReactNode
+}) {
   return (
     <div className="flex min-h-svh flex-col">
       {/* Keyboard users can jump past the header to the page content. */}
@@ -33,6 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </a>
 
         <div className="ml-auto flex items-center gap-2">
+          {headerExtra}
           <Button
             variant="ghost"
             size="icon"

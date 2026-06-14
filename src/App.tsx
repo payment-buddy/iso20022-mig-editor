@@ -4,6 +4,7 @@ import { AppShell } from "@/app/AppShell"
 import { RecoveryScreen } from "@/app/RecoveryScreen"
 import { RouteView } from "@/app/RouteView"
 import { useRoute } from "@/app/useRoute"
+import { GlobalSearch } from "@/features/search/GlobalSearch"
 import { RepositoryUpload } from "@/features/repository/RepositoryUpload"
 import { loadERepository } from "@/core/storage/eRepositoryStore"
 import type { ERepository } from "@/core/types/types"
@@ -68,7 +69,7 @@ export function App() {
   }
 
   return (
-    <AppShell>
+    <AppShell headerExtra={<GlobalSearch repo={gate.repo} />}>
       <RouteView
         route={route}
         repo={gate.repo}

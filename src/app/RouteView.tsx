@@ -30,10 +30,23 @@ export function RouteView({
         />
       )
     case "message":
-      return <MessageExplorer repo={repo} code={route.code} />
+      return (
+        <MessageExplorer
+          repo={repo}
+          code={route.code}
+          selectPath={route.path}
+        />
+      )
     case "mig":
       // Keyed so switching MIGs remounts with a fresh load state.
-      return <MigEditor key={route.key} migKey={route.key} repo={repo} />
+      return (
+        <MigEditor
+          key={route.key}
+          migKey={route.key}
+          repo={repo}
+          selectPath={route.path}
+        />
+      )
     case "history":
       return <MigHistory key={route.key} migKey={route.key} repo={repo} />
     case "compare":

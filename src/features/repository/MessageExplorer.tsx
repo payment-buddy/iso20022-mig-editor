@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { CheckIcon, ExportIcon, PlusIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { CreateMigDialog } from "@/features/mig/CreateMigDialog"
@@ -14,15 +14,23 @@ import type {
 import { hashFor } from "@/app/routes"
 import { cn } from "@/lib/utils"
 import { downloadMessageYaml } from "./downloadMessage"
-import { DetailPanel, ElementTree, Field } from "./ElementTree"
+import {
+  DetailPanel,
+  ElementTree,
+  Field,
+  type ElementTreeHandle,
+} from "./ElementTree"
 
 /** Read-only message explorer (bare minimum) with a detail panel. */
 export function MessageExplorer({
   repo,
   code,
+  selectPath,
 }: {
   repo: ERepository
   code: string
+  /** xmlPath to select on mount — a deep link from global search. */
+  selectPath?: string
 }) {
   const resolved = resolveMessage(repo, code)
 
@@ -47,13 +55,32 @@ export function MessageExplorer({
   }
 
   // Keyed by identifier so navigating to another message/version resets the tree.
-  return <MessageView key={resolved.current.identifier} resolved={resolved} />
+  return (
+    <MessageView
+      key={resolved.current.identifier}
+      resolved={resolved}
+      selectPath={selectPath}
+    />
+  )
 }
 
-function MessageView({ resolved }: { resolved: ResolvedMessage }) {
+function MessageView({
+  resolved,
+  selectPath,
+}: {
+  resolved: ResolvedMessage
+  selectPath?: string
+}) {
   const { area, current, versions } = resolved
   const root = current.rootElement
   const [createOpen, setCreateOpen] = useState(false)
+  const treeRef = useRef<ElementTreeHandle>(null)
+
+  // Select the deep-linked element once the tree is mounted, and whenever the
+  // target path changes (e.g. clicking another result for the same message).
+  useEffect(() => {
+    if (selectPath) treeRef.current?.select(selectPath)
+  }, [selectPath])
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6 xl:max-w-6xl">
@@ -123,6 +150,7 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
       )}
 
       <ElementTree
+        ref={treeRef}
         root={root}
         ariaLabel={`${current.name} structure`}
         renderDetail={(sel) =>

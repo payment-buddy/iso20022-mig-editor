@@ -77,9 +77,12 @@ function isTextEditing(target: EventTarget | null): boolean {
 export function MigEditor({
   migKey,
   repo,
+  selectPath,
 }: {
   migKey: string
   repo: ERepository
+  /** xmlPath (or constraint-node path) to select once loaded — a search deep link. */
+  selectPath?: string
 }) {
   const [status, setStatus] = useState<Status>("loading")
   const [mig, setMig] = useState<MessageImplementationGuide | null>(null)
@@ -120,6 +123,12 @@ export function MigEditor({
   // Auto-snapshot edits into the MIG's revision history (debounced; flushes on
   // unmount). `flushRevisions` lets the rename flow commit before it re-keys.
   const flushRevisions = useRevisionSnapshots(migKey, mig)
+
+  // Select the deep-linked element/constraint once the tree exists (status
+  // becomes "ready"), and whenever the target changes for the same MIG.
+  useEffect(() => {
+    if (selectPath && status === "ready") treeRef.current?.select(selectPath)
+  }, [selectPath, status])
 
   // Apply a MIG state: reflect it locally and autosave (no history side effects).
   const applyMig = (next: MessageImplementationGuide) => {
