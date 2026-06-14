@@ -54,7 +54,7 @@ export function MigTrash() {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6">
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6 xl:max-w-4xl">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="mr-auto text-base font-semibold tracking-tight">Trash</h1>
         {items.length > 0 && (

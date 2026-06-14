@@ -135,7 +135,7 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
   const discard = () => setDraft(saved)
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6 xl:max-w-6xl">
       <div className="flex items-center justify-between gap-4">
         <h1 className="flex items-center gap-2 text-base font-semibold tracking-tight">
           <GitDiffIcon className="size-5 text-muted-foreground" aria-hidden />

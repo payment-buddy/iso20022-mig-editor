@@ -128,7 +128,7 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
   const discard = () => setDraft(saved)
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6 xl:max-w-6xl">
       <div className="flex items-center justify-between gap-4">
         <h1 className="flex min-w-0 items-center gap-2 text-base font-semibold tracking-tight">
           <GitMergeIcon className="size-5 shrink-0 text-muted-foreground" aria-hidden />

@@ -56,7 +56,7 @@ export function Cell({
 /** Full-screen status message (loading / not-found) used before the diff renders. */
 export function Notice({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-2 p-6">
+    <div className="mx-auto flex max-w-3xl flex-col gap-2 p-6 xl:max-w-4xl">
       <h1 className="text-base font-semibold tracking-tight">{title}</h1>
       {children && <p className="text-sm text-muted-foreground">{children}</p>}
     </div>

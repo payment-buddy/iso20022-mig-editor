@@ -221,7 +221,7 @@ export function ERepositoryBrowser({
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6">
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6 xl:max-w-4xl">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-base font-semibold tracking-tight">e-Repository</h1>
         <Button variant="outline" size="sm" onClick={onUpdateRepository}>

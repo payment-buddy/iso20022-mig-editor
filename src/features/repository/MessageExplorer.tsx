@@ -15,7 +15,7 @@ export function MessageExplorer({ repo, code }: { repo: ERepository; code: strin
 
   if (!resolved) {
     return (
-      <div className="mx-auto flex max-w-3xl flex-col gap-2 p-6">
+      <div className="mx-auto flex max-w-3xl flex-col gap-2 p-6 xl:max-w-4xl">
         <h1 className="text-base font-semibold tracking-tight">Message not found</h1>
         <p className="text-sm text-muted-foreground">
           No message matches “{code}”. Try the{" "}
@@ -41,7 +41,7 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
   const [createOpen, setCreateOpen] = useState(false)
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6 xl:max-w-6xl">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-0.5">
           <p className="text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">

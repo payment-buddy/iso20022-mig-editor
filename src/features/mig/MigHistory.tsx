@@ -87,7 +87,7 @@ export function MigHistory({ migKey, repo }: { migKey: string; repo: ERepository
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6 xl:max-w-6xl">
       <div className="space-y-0.5">
         <p className="flex items-center gap-1.5 text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
           <ClockCounterClockwiseIcon className="size-3.5" aria-hidden />
@@ -224,7 +224,7 @@ function DiffView({ diff }: { diff: MigComparison }) {
 
 function Notice({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-2 p-6">
+    <div className="mx-auto flex max-w-3xl flex-col gap-2 p-6 xl:max-w-4xl">
       <h1 className="text-base font-semibold tracking-tight">{title}</h1>
       {children && <p className="text-sm text-muted-foreground">{children}</p>}
     </div>
