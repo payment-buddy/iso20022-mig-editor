@@ -1,5 +1,11 @@
 import { type ReactNode } from "react"
-import { DesktopIcon, GithubLogoIcon, HouseIcon, MoonIcon, SunIcon } from "@phosphor-icons/react"
+import {
+  DesktopIcon,
+  GithubLogoIcon,
+  HouseIcon,
+  MoonIcon,
+  SunIcon,
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
 import { hashFor } from "./routes"
@@ -42,7 +48,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main id="main-content" tabIndex={-1} className="min-h-0 flex-1 outline-none">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="min-h-0 flex-1 outline-none"
+      >
         {children}
       </main>
     </div>
@@ -51,8 +61,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
-  const next = theme === "system" ? "light" : theme === "light" ? "dark" : "system"
-  const Icon = theme === "system" ? DesktopIcon : theme === "light" ? SunIcon : MoonIcon
+  const next =
+    theme === "system" ? "light" : theme === "light" ? "dark" : "system"
+  const Icon =
+    theme === "system" ? DesktopIcon : theme === "light" ? SunIcon : MoonIcon
 
   return (
     <Button

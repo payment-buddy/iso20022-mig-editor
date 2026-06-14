@@ -21,8 +21,13 @@ describe("migMarkdown", () => {
   it("renders a header, message line, inherits and description", () => {
     const md = migMarkdown(
       diff({
-        mig: { name: "EPC", version: "1.0", description: "Bank profile.", parents: ["Base:1"] },
-      }),
+        mig: {
+          name: "EPC",
+          version: "1.0",
+          description: "Bank profile.",
+          parents: ["Base:1"],
+        },
+      })
     )
     expect(md).toContain("# EPC 1.0")
     expect(md).toContain("**Message:** CreditTransfer (`pacs.008.001.08`)")
@@ -40,7 +45,14 @@ describe("migMarkdown", () => {
             name: "GrpHdr",
             excluded: false,
             orphan: false,
-            changes: [{ label: "Max length", kind: "tightened", baseline: "35", value: "20" }],
+            changes: [
+              {
+                label: "Max length",
+                kind: "tightened",
+                baseline: "35",
+                value: "20",
+              },
+            ],
             constraints: [
               {
                 name: "R",
@@ -52,7 +64,7 @@ describe("migMarkdown", () => {
             ],
           },
         ],
-      }),
+      })
     )
     expect(md).toContain("### GrpHdr")
     expect(md).toContain("`/Doc/GrpHdr`")
@@ -74,12 +86,24 @@ describe("migMarkdown", () => {
             orphan: false,
             changes: [],
             constraints: [
-              { name: "Refined", definition: "d", expression: "x > 0", annotations: [], source: "standard" },
-              { name: "Off", definition: "d", annotations: [], source: "standard", disabled: true },
+              {
+                name: "Refined",
+                definition: "d",
+                expression: "x > 0",
+                annotations: [],
+                source: "standard",
+              },
+              {
+                name: "Off",
+                definition: "d",
+                annotations: [],
+                source: "standard",
+                disabled: true,
+              },
             ],
           },
         ],
-      }),
+      })
     )
     expect(md).toContain("- **Refined** _(overridden)_ — d")
     expect(md).toContain("- **Off** _(disabled)_ — d")
@@ -89,28 +113,44 @@ describe("migMarkdown", () => {
     const md = migMarkdown(
       diff({
         elements: [
-          { path: "/Doc/Amt", name: "Amt", excluded: true, orphan: false, changes: [], constraints: [] },
+          {
+            path: "/Doc/Amt",
+            name: "Amt",
+            excluded: true,
+            orphan: false,
+            changes: [],
+            constraints: [],
+          },
         ],
-      }),
+      })
     )
     expect(md).toContain("### Amt")
-    expect(md).toContain("**Excluded** — removed from the message (`maxOccurs: 0`).")
+    expect(md).toContain(
+      "**Excluded** — removed from the message (`maxOccurs: 0`)."
+    )
     expect(md).not.toContain("| Field |")
   })
 
   it("shows warning banners for loosenings and an unloaded parent", () => {
     const md = migMarkdown(diff({ loosenings: 2, missingParent: "EPC:2023" }))
-    expect(md).toContain("> ⚠️ 2 field(s) are **looser** than the ISO standard.")
+    expect(md).toContain(
+      "> ⚠️ 2 field(s) are **looser** than the ISO standard."
+    )
     expect(md).toContain("> ⚠️ Parent `EPC:2023` is not loaded")
   })
 
   it("states when a MIG makes no changes", () => {
-    expect(migMarkdown(diff())).toContain("_This MIG makes no changes to the ISO message._")
+    expect(migMarkdown(diff())).toContain(
+      "_This MIG makes no changes to the ISO message._"
+    )
   })
 })
 
 describe("buildMigMarkdown", () => {
-  const el = (name: string, props: Partial<MessageElement> = {}): MessageElement => ({
+  const el = (
+    name: string,
+    props: Partial<MessageElement> = {}
+  ): MessageElement => ({
     id: name,
     name,
     xmlTag: name,
@@ -141,7 +181,9 @@ describe("buildMigMarkdown", () => {
     name: "CreditTransfer",
     identifier: "pacs.008.001.08",
     shortCode: "pacs.008",
-    rootElement: el("Doc", { elements: [el("GrpHdr", { baseType: "Text", maxLength: 35 })] }),
+    rootElement: el("Doc", {
+      elements: [el("GrpHdr", { baseType: "Text", maxLength: 35 })],
+    }),
   }
 
   it("names the file and renders the effective diff end-to-end", () => {

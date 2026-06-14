@@ -33,7 +33,9 @@ export function ImportDuplicateDialog({
             {n === 1 ? "A MIG already exists" : `${n} MIGs already exist`}
           </AlertDialog.Title>
           <AlertDialog.Description className="mt-1 text-sm text-muted-foreground">
-            {n === 1 ? "This MIG is already stored:" : "These MIGs are already stored:"}
+            {n === 1
+              ? "This MIG is already stored:"
+              : "These MIGs are already stored:"}
           </AlertDialog.Description>
           <ul className="mt-2 max-h-40 list-disc overflow-auto pl-5 text-sm">
             {duplicates.map((label) => (
@@ -41,12 +43,18 @@ export function ImportDuplicateDialog({
             ))}
           </ul>
           <p className="mt-2 text-sm text-muted-foreground">
-            {onMerge ? "Skip, merge changes, upload as a new version, or overwrite?" : null}
-            {!onMerge ? "Skip them, upload as a new version, or overwrite the stored ones?" : null}
+            {onMerge
+              ? "Skip, merge changes, upload as a new version, or overwrite?"
+              : null}
+            {!onMerge
+              ? "Skip them, upload as a new version, or overwrite the stored ones?"
+              : null}
           </p>
 
           <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-            <AlertDialog.Cancel className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+            <AlertDialog.Cancel
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+            >
               Cancel
             </AlertDialog.Cancel>
             <AlertDialog.Action
@@ -57,7 +65,9 @@ export function ImportDuplicateDialog({
             </AlertDialog.Action>
             {onMerge && (
               <AlertDialog.Action
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" })
+                )}
                 onClick={onMerge}
               >
                 Merge…
@@ -70,7 +80,9 @@ export function ImportDuplicateDialog({
               Upload as new
             </AlertDialog.Action>
             <AlertDialog.Action
-              className={cn(buttonVariants({ variant: "destructive", size: "sm" }))}
+              className={cn(
+                buttonVariants({ variant: "destructive", size: "sm" })
+              )}
               onClick={() => onResolve("overwrite")}
             >
               Overwrite

@@ -24,15 +24,25 @@ describe("parseHash", () => {
   })
 
   it("parses a compare pair", () => {
-    expect(parseHash("#compare/A%3A1/B%3A2")).toEqual({ name: "compare", a: "A:1", b: "B:2" })
+    expect(parseHash("#compare/A%3A1/B%3A2")).toEqual({
+      name: "compare",
+      a: "A:1",
+      b: "B:2",
+    })
   })
 
   it("parses a merge target key", () => {
-    expect(parseHash("#merge/EPC%3A1.0")).toEqual({ name: "merge", key: "EPC:1.0" })
+    expect(parseHash("#merge/EPC%3A1.0")).toEqual({
+      name: "merge",
+      key: "EPC:1.0",
+    })
   })
 
   it("parses a history target key", () => {
-    expect(parseHash("#history/EPC%3A1.0")).toEqual({ name: "history", key: "EPC:1.0" })
+    expect(parseHash("#history/EPC%3A1.0")).toEqual({
+      name: "history",
+      key: "EPC:1.0",
+    })
   })
 
   it("falls back to home for malformed mig / compare / merge / history", () => {
@@ -44,7 +54,10 @@ describe("parseHash", () => {
   })
 
   it("treats anything else as a message code", () => {
-    expect(parseHash("#pacs.008.001.08")).toEqual({ name: "message", code: "pacs.008.001.08" })
+    expect(parseHash("#pacs.008.001.08")).toEqual({
+      name: "message",
+      code: "pacs.008.001.08",
+    })
     expect(parseHash("#FIToFICstmrCdtTrf")).toEqual({
       name: "message",
       code: "FIToFICstmrCdtTrf",
@@ -57,11 +70,19 @@ describe("hashFor", () => {
     expect(hashFor({ name: "home" })).toBe("#")
     expect(hashFor({ name: "browse" })).toBe("#browse")
     expect(hashFor({ name: "trash" })).toBe("#trash")
-    expect(hashFor({ name: "message", code: "pacs.008.001.08" })).toBe("#pacs.008.001.08")
-    expect(hashFor({ name: "mig", key: "EPC-SCTInst:2023" })).toBe("#mig/EPC-SCTInst%3A2023")
-    expect(hashFor({ name: "compare", a: "A:1", b: "B:2" })).toBe("#compare/A%3A1/B%3A2")
+    expect(hashFor({ name: "message", code: "pacs.008.001.08" })).toBe(
+      "#pacs.008.001.08"
+    )
+    expect(hashFor({ name: "mig", key: "EPC-SCTInst:2023" })).toBe(
+      "#mig/EPC-SCTInst%3A2023"
+    )
+    expect(hashFor({ name: "compare", a: "A:1", b: "B:2" })).toBe(
+      "#compare/A%3A1/B%3A2"
+    )
     expect(hashFor({ name: "merge", key: "EPC:1.0" })).toBe("#merge/EPC%3A1.0")
-    expect(hashFor({ name: "history", key: "EPC:1.0" })).toBe("#history/EPC%3A1.0")
+    expect(hashFor({ name: "history", key: "EPC:1.0" })).toBe(
+      "#history/EPC%3A1.0"
+    )
   })
 })
 

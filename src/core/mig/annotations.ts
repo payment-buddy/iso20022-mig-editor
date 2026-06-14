@@ -1,4 +1,7 @@
-import type { ElementOverrides, MessageImplementationGuide } from "@/core/types/types"
+import type {
+  ElementOverrides,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 
 // Annotations are MIG-level custom properties. Elements and constraints carry
 // independent sets: their names are declared once and shared
@@ -10,7 +13,7 @@ import type { ElementOverrides, MessageImplementationGuide } from "@/core/types/
 /** Declare a new annotation name (trimmed, de-duplicated). */
 export function addAnnotation(
   mig: MessageImplementationGuide,
-  name: string,
+  name: string
 ): MessageImplementationGuide {
   const trimmed = name.trim()
   const names = mig.elementAnnotationNames ?? []
@@ -25,7 +28,7 @@ export function addAnnotation(
  */
 export function removeAnnotation(
   mig: MessageImplementationGuide,
-  name: string,
+  name: string
 ): MessageImplementationGuide {
   const names = (mig.elementAnnotationNames ?? []).filter((n) => n !== name)
 
@@ -51,7 +54,7 @@ export function removeAnnotation(
 /** Declare a new constraint-annotation name (trimmed, de-duplicated). */
 export function addConstraintAnnotation(
   mig: MessageImplementationGuide,
-  name: string,
+  name: string
 ): MessageImplementationGuide {
   const trimmed = name.trim()
   const names = mig.constraintAnnotationNames ?? []
@@ -67,7 +70,7 @@ export function addConstraintAnnotation(
  */
 export function removeConstraintAnnotation(
   mig: MessageImplementationGuide,
-  name: string,
+  name: string
 ): MessageImplementationGuide {
   const names = (mig.constraintAnnotationNames ?? []).filter((n) => n !== name)
 

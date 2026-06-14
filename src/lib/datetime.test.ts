@@ -4,7 +4,7 @@ import { formatLocalDateTime } from "./datetime"
 describe("formatLocalDateTime", () => {
   it("formats as local YYYY-MM-DD HH:mm:ss with a space separator", () => {
     expect(formatLocalDateTime(1_700_000_000_000)).toMatch(
-      /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/,
+      /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
     )
   })
 

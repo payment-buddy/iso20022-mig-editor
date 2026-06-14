@@ -31,15 +31,20 @@ export function InlineSelect({
   if (!editing) {
     const label = options.find((o) => o.value === value)?.label ?? value
     return (
-      <div className="group flex w-full items-start justify-between gap-2 rounded-md border border-transparent px-2 py-1 transition-colors hover:border-border focus-within:border-border">
-        <span className={cn("min-w-0 text-sm", !value && "text-muted-foreground italic")}>
+      <div className="group flex w-full items-start justify-between gap-2 rounded-md border border-transparent px-2 py-1 transition-colors focus-within:border-border hover:border-border">
+        <span
+          className={cn(
+            "min-w-0 text-sm",
+            !value && "text-muted-foreground italic"
+          )}
+        >
           {value ? (renderValue ? renderValue(label) : label) : "<none>"}
         </span>
         <button
           type="button"
           onClick={() => setEditing(true)}
           aria-label={`Edit ${ariaLabel}`}
-          className="mt-0.5 shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 outline-none transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/30"
+          className="mt-0.5 shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity outline-none group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/30"
         >
           <PencilSimpleIcon className="size-3.5" aria-hidden />
         </button>

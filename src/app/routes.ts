@@ -72,7 +72,13 @@ export function hashFor(route: Route): string {
     case "history":
       return "#" + HISTORY_PREFIX + encodeURIComponent(route.key)
     case "compare":
-      return "#" + COMPARE_PREFIX + encodeURIComponent(route.a) + "/" + encodeURIComponent(route.b)
+      return (
+        "#" +
+        COMPARE_PREFIX +
+        encodeURIComponent(route.a) +
+        "/" +
+        encodeURIComponent(route.b)
+      )
     case "merge":
       return "#" + MERGE_PREFIX + encodeURIComponent(route.key)
   }

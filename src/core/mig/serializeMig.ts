@@ -61,7 +61,7 @@ const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 /** Order an annotations map by declared names first, then alphabetically. Null = omit. */
 function canonicalAnnotations(
   map: Record<string, string | null>,
-  declared: string[] | undefined,
+  declared: string[] | undefined
 ): Record<string, string | null> | null {
   const keys = Object.keys(map)
   if (keys.length === 0) return null
@@ -77,7 +77,10 @@ function canonicalAnnotations(
 }
 
 /** One additional constraint with keys in canonical order (empty annotations dropped). */
-function canonicalConstraint(c: Constraint, declared: string[] | undefined): Record<string, unknown> {
+function canonicalConstraint(
+  c: Constraint,
+  declared: string[] | undefined
+): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const key of CONSTRAINT_PROPERTY_ORDER) {
     if (!(key in c)) continue
@@ -93,7 +96,9 @@ function canonicalConstraint(c: Constraint, declared: string[] | undefined): Rec
 }
 
 /** One constraint override with keys in canonical order; preserves `null`, drops empties. */
-function canonicalConstraintOverride(co: ConstraintOverride): Record<string, unknown> | null {
+function canonicalConstraintOverride(
+  co: ConstraintOverride
+): Record<string, unknown> | null {
   const out: Record<string, unknown> = {}
   for (const key of CONSTRAINT_OVERRIDE_PROPERTY_ORDER) {
     if (!(key in co)) continue
@@ -104,7 +109,7 @@ function canonicalConstraintOverride(co: ConstraintOverride): Record<string, unk
 
 /** A `constraintOverrides` map, keyed by name (sorted); empty entries/map dropped. */
 function canonicalConstraintOverrides(
-  map: Record<string, ConstraintOverride>,
+  map: Record<string, ConstraintOverride>
 ): Record<string, unknown> | null {
   const out: Record<string, unknown> = {}
   for (const name of Object.keys(map).sort(byString)) {
@@ -117,13 +122,16 @@ function canonicalConstraintOverrides(
 /** One element override with keys in canonical order; preserves `null`, drops empties. */
 function canonicalOverride(
   override: ElementOverride,
-  mig: MessageImplementationGuide,
+  mig: MessageImplementationGuide
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const key of ELEMENT_OVERRIDE_PROPERTY_ORDER) {
     if (!(key in override)) continue
     if (key === "annotations") {
-      const a = canonicalAnnotations(override.annotations ?? {}, mig.elementAnnotationNames)
+      const a = canonicalAnnotations(
+        override.annotations ?? {},
+        mig.elementAnnotationNames
+      )
       if (a) out.annotations = a
       continue
     }
@@ -137,7 +145,9 @@ function canonicalOverride(
       continue
     }
     if (key === "constraintOverrides") {
-      const co = canonicalConstraintOverrides(override.constraintOverrides ?? {})
+      const co = canonicalConstraintOverrides(
+        override.constraintOverrides ?? {}
+      )
       if (co) out.constraintOverrides = co
       continue
     }
@@ -152,12 +162,12 @@ function canonicalOverride(
 /** Element overrides, schema-ordered by `pathOrder` (unknown paths last), empties dropped. */
 function canonicalOverrides(
   mig: MessageImplementationGuide,
-  pathOrder: Map<string, number> | undefined,
+  pathOrder: Map<string, number> | undefined
 ): Record<string, unknown> {
   const ordinal = (p: string) => pathOrder?.get(p) ?? UNKNOWN
   const out: Record<string, unknown> = {}
   for (const [path, override] of Object.entries(mig.elementOverrides).sort(
-    ([a], [b]) => ordinal(a) - ordinal(b) || byString(a, b),
+    ([a], [b]) => ordinal(a) - ordinal(b) || byString(a, b)
   )) {
     const co = canonicalOverride(override, mig)
     if (Object.keys(co).length > 0) out[path] = co
@@ -168,7 +178,7 @@ function canonicalOverrides(
 /** Build the canonical, ordered plain object for one MIG (`formatVersion` first). */
 function canonicalMig(
   mig: MessageImplementationGuide,
-  pathOrder: Map<string, number> | undefined,
+  pathOrder: Map<string, number> | undefined
 ): Record<string, unknown> {
   const out: Record<string, unknown> = { formatVersion: 1 }
   for (const key of MIG_PROPERTY_ORDER) {
@@ -193,9 +203,11 @@ const withTrailingNewline = (s: string) => s.replace(/\n*$/, "\n")
  */
 export function serializeMig(
   mig: MessageImplementationGuide,
-  pathOrder?: Map<string, number>,
+  pathOrder?: Map<string, number>
 ): string {
-  return withTrailingNewline(stringify(canonicalMig(mig, pathOrder), STRINGIFY_OPTIONS))
+  return withTrailingNewline(
+    stringify(canonicalMig(mig, pathOrder), STRINGIFY_OPTIONS)
+  )
 }
 
 /** Serialize many MIGs as a single YAML array (backup/bulk form). */
@@ -203,7 +215,7 @@ export function serializeMigs(migs: MessageImplementationGuide[]): string {
   return withTrailingNewline(
     stringify(
       migs.map((m) => canonicalMig(m, undefined)),
-      STRINGIFY_OPTIONS,
-    ),
+      STRINGIFY_OPTIONS
+    )
   )
 }

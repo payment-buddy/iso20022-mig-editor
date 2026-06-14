@@ -21,13 +21,18 @@ export function useDiffCardNav() {
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     const dir =
-      e.key === "j" || e.key === "ArrowDown" ? 1 : e.key === "k" || e.key === "ArrowUp" ? -1 : 0
+      e.key === "j" || e.key === "ArrowDown"
+        ? 1
+        : e.key === "k" || e.key === "ArrowUp"
+          ? -1
+          : 0
     if (dir === 0) return
     e.preventDefault()
     const cards = cardRefs.current.filter(Boolean) as HTMLElement[]
     if (cards.length === 0) return
     const at = cards.findIndex((c) => c === document.activeElement)
-    const next = cards[Math.max(0, Math.min(cards.length - 1, (at < 0 ? -1 : at) + dir))]
+    const next =
+      cards[Math.max(0, Math.min(cards.length - 1, (at < 0 ? -1 : at) + dir))]
     next?.focus()
     next?.scrollIntoView({ block: "nearest" })
   }

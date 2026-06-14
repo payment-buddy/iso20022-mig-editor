@@ -40,8 +40,14 @@ export type InstanceDiagnostic = {
 /** Effective cardinality of `el` at a path, given its (merged) override. */
 function effOccurs(override: ElementOverride | undefined, el: MessageElement) {
   return {
-    minOccurs: override && "minOccurs" in override ? (override.minOccurs ?? 0) : el.minOccurs,
-    maxOccurs: override && "maxOccurs" in override ? (override.maxOccurs ?? null) : el.maxOccurs,
+    minOccurs:
+      override && "minOccurs" in override
+        ? (override.minOccurs ?? 0)
+        : el.minOccurs,
+    maxOccurs:
+      override && "maxOccurs" in override
+        ? (override.maxOccurs ?? null)
+        : el.maxOccurs,
   }
 }
 
@@ -49,7 +55,7 @@ function effOccurs(override: ElementOverride | undefined, el: MessageElement) {
 function leafErrors(
   el: MessageElement,
   override: ElementOverride | undefined,
-  value: string,
+  value: string
 ): string[] {
   const errors: string[] = []
 
@@ -67,13 +73,21 @@ function leafErrors(
   }
 
   // Inclusive range.
-  const minIncl = override && "minInclusive" in override ? override.minInclusive : el.minInclusive
-  const maxIncl = override && "maxInclusive" in override ? override.maxInclusive : el.maxInclusive
+  const minIncl =
+    override && "minInclusive" in override
+      ? override.minInclusive
+      : el.minInclusive
+  const maxIncl =
+    override && "maxInclusive" in override
+      ? override.maxInclusive
+      : el.maxInclusive
   if (minIncl != null || maxIncl != null) {
     const n = Number(value)
     if (Number.isFinite(n)) {
-      if (minIncl != null && n < minIncl) errors.push(`${value} is below the minimum ${minIncl}.`)
-      if (maxIncl != null && n > maxIncl) errors.push(`${value} is above the maximum ${maxIncl}.`)
+      if (minIncl != null && n < minIncl)
+        errors.push(`${value} is below the minimum ${minIncl}.`)
+      if (maxIncl != null && n > maxIncl)
+        errors.push(`${value} is above the maximum ${maxIncl}.`)
     }
   }
 
@@ -85,7 +99,7 @@ function walk(
   node: InstanceNode,
   path: string,
   overrides: ElementOverrides,
-  out: InstanceDiagnostic[],
+  out: InstanceDiagnostic[]
 ) {
   // Leaf value (simple types carry a value; complex containers don't).
   if (el.baseType !== null) {
@@ -99,7 +113,10 @@ function walk(
   // overlaid expression as well as MIG-added ones — `resolveConstraints` applies
   // any `constraintOverrides`. A syntax error (surfaced in the editor) or an
   // indeterminate result (unsupported function, bad regex) is skipped here.
-  for (const { constraint, disabled } of resolveConstraints(el, overrides[path])) {
+  for (const { constraint, disabled } of resolveConstraints(
+    el,
+    overrides[path]
+  )) {
     if (disabled || !constraint.expression) continue
     const parsed = parseExpression(constraint.expression)
     if (!parsed.ok) continue
@@ -125,11 +142,23 @@ function walk(
     if (child.isAttribute) {
       const present = child.xmlTag in node.attributes
       if (maxOccurs === 0 && present) {
-        out.push({ path: childPath, elementName: child.name, message: "Excluded by the MIG but present." })
+        out.push({
+          path: childPath,
+          elementName: child.name,
+          message: "Excluded by the MIG but present.",
+        })
       } else if (!present && minOccurs >= 1) {
-        out.push({ path: childPath, elementName: child.name, message: "Required attribute is missing." })
+        out.push({
+          path: childPath,
+          elementName: child.name,
+          message: "Required attribute is missing.",
+        })
       } else if (present && child.baseType !== null) {
-        for (const message of leafErrors(child, override, node.attributes[child.xmlTag])) {
+        for (const message of leafErrors(
+          child,
+          override,
+          node.attributes[child.xmlTag]
+        )) {
           out.push({ path: childPath, elementName: child.name, message })
         }
       }
@@ -171,7 +200,9 @@ function walk(
   // Choice (one-of): a present choice element must contain exactly one branch.
   if (el.isChoice) {
     const branches = el.elements.filter((c) => !c.isAttribute)
-    const present = branches.filter((b) => node.children.some((c) => c.localName === b.xmlTag))
+    const present = branches.filter((b) =>
+      node.children.some((c) => c.localName === b.xmlTag)
+    )
     if (present.length === 0) {
       out.push({
         path,
@@ -190,7 +221,11 @@ function walk(
   // Elements present in the instance that the message definition doesn't declare.
   for (const child of node.children) {
     if (!elementTags.has(child.localName)) {
-      out.push({ path, elementName: el.name, message: `Unexpected element <${child.localName}>.` })
+      out.push({
+        path,
+        elementName: el.name,
+        message: `Unexpected element <${child.localName}>.`,
+      })
     }
   }
 }
@@ -203,7 +238,7 @@ function walk(
 export function validateMessageInstance(
   root: InstanceNode,
   message: MessageDefinition,
-  effectiveOverrides: ElementOverrides,
+  effectiveOverrides: ElementOverrides
 ): InstanceDiagnostic[] {
   const out: InstanceDiagnostic[] = []
   const rootEl = message.rootElement

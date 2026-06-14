@@ -38,4 +38,8 @@ export const CONSTRAINT_PROPERTY_ORDER = [
   "annotations",
 ] as const
 
-export const CONSTRAINT_OVERRIDE_PROPERTY_ORDER = ["definition", "expression", "disabled"] as const
+export const CONSTRAINT_OVERRIDE_PROPERTY_ORDER = [
+  "definition",
+  "expression",
+  "disabled",
+] as const

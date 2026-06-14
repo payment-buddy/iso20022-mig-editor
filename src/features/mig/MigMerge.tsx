@@ -1,15 +1,29 @@
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeftIcon, CaretDoubleLeftIcon, FloppyDiskIcon, GitMergeIcon, UploadSimpleIcon, WarningIcon } from "@phosphor-icons/react"
+import {
+  ArrowLeftIcon,
+  CaretDoubleLeftIcon,
+  FloppyDiskIcon,
+  GitMergeIcon,
+  UploadSimpleIcon,
+  WarningIcon,
+} from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
 import { buildPathOrder } from "@/core/mig/serializeMig"
-import { compareMigs, type FieldChange, type PathDiff } from "@/core/mig/compareMigs"
+import {
+  compareMigs,
+  type FieldChange,
+  type PathDiff,
+} from "@/core/mig/compareMigs"
 import { applyFieldCopy } from "@/core/mig/copyChange"
 import { appendRevision } from "@/core/mig/revisions"
 import { loadMig, saveMig } from "@/core/storage/migStore"
 import { loadRevisions, saveRevisions } from "@/core/storage/revisionStore"
-import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
+import type {
+  ERepository,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
 import { parseMigYaml } from "./parseMigYaml"
@@ -26,15 +40,21 @@ import { COLS, Cell, Home, Notice } from "./diffView"
  * the incoming upload is throwaway. Reached from the import-duplicate "Merge"
  * action (which hands the parsed MIG over) or by uploading on this screen.
  */
-export function MigMerge({ targetKey, repo }: { targetKey: string; repo: ERepository }) {
+export function MigMerge({
+  targetKey,
+  repo,
+}: {
+  targetKey: string
+  repo: ERepository
+}) {
   const [status, setStatus] = useState<"loading" | "ready">("loading")
   const [saved, setSaved] = useState<MessageImplementationGuide | null>(null)
   const [draft, setDraft] = useState<MessageImplementationGuide | null>(null)
   // Pick up an incoming MIG handed off from the import-duplicate "Merge" action,
   // so it isn't re-uploaded. `peek` (not `take`) keeps the initializer pure under
   // StrictMode's double-invoke; the effect below clears the one-shot afterwards.
-  const [incoming, setIncoming] = useState<MessageImplementationGuide | null>(() =>
-    peekPendingMerge(targetKey),
+  const [incoming, setIncoming] = useState<MessageImplementationGuide | null>(
+    () => peekPendingMerge(targetKey)
   )
   const [uploadError, setUploadError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -67,7 +87,8 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
   if (!saved || !draft) {
     return (
       <Notice title="MIG not found">
-        No MIG is stored under “{targetKey}”. Return to <Home /> to pick one to merge into.
+        No MIG is stored under “{targetKey}”. Return to <Home /> to pick one to
+        merge into.
       </Notice>
     )
   }
@@ -76,10 +97,17 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
     const { migs, errors } = parseMigYaml(await file.text())
     if (errors.length > 0) return setUpload(null, errors[0])
     if (migs.length === 0) return setUpload(null, "No MIG found in the file.")
-    if (migs.length > 1) return setUpload(null, "The file holds several MIGs; upload a single MIG to merge.")
+    if (migs.length > 1)
+      return setUpload(
+        null,
+        "The file holds several MIGs; upload a single MIG to merge."
+      )
     setUpload(migs[0], null)
   }
-  const setUpload = (mig: MessageImplementationGuide | null, error: string | null) => {
+  const setUpload = (
+    mig: MessageImplementationGuide | null,
+    error: string | null
+  ) => {
     setIncoming(mig)
     setUploadError(error)
   }
@@ -94,12 +122,16 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
     shortCodeForIdentifier(incoming.messageIdentifier) !==
       shortCodeForIdentifier(draft.messageIdentifier)
 
-  const diff = incoming && !familyMismatch ? compareMigs(draft, incoming, order, nameFor) : null
+  const diff =
+    incoming && !familyMismatch
+      ? compareMigs(draft, incoming, order, nameFor)
+      : null
   const dirty = draft !== saved
 
   // Taking writes into the current draft, so the path must exist in the current
   // MIG's message version — otherwise the merge would create an orphan override.
-  const canTake = (path: string) => !message || elementAtPath(message.rootElement, path) !== null
+  const canTake = (path: string) =>
+    !message || elementAtPath(message.rootElement, path) !== null
 
   // Copy one incoming field into the current draft. The field then matches and
   // drops out of the recomputed diff; persistence waits for Save.
@@ -117,8 +149,14 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
       if (draft !== saved) {
         const now = Date.now()
         const existing = await loadRevisions(targetKey)
-        const seeded = existing.length === 0 ? appendRevision(existing, saved, now) : existing
-        await saveRevisions(targetKey, appendRevision(seeded, draft, now, "Merged"))
+        const seeded =
+          existing.length === 0
+            ? appendRevision(existing, saved, now)
+            : existing
+        await saveRevisions(
+          targetKey,
+          appendRevision(seeded, draft, now, "Merged")
+        )
       }
       navigate({ name: "mig", key: targetKey })
     } catch (err) {
@@ -131,15 +169,22 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6 xl:max-w-6xl">
       <div className="flex items-center justify-between gap-4">
         <h1 className="flex min-w-0 items-center gap-2 text-base font-semibold tracking-tight">
-          <GitMergeIcon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+          <GitMergeIcon
+            className="size-5 shrink-0 text-muted-foreground"
+            aria-hidden
+          />
           <span className="truncate">
             Merge {draft.name}{" "}
-            <span className="font-medium text-muted-foreground">{draft.version}</span>
+            <span className="font-medium text-muted-foreground">
+              {draft.version}
+            </span>
           </span>
         </h1>
         <div className="flex shrink-0 items-center gap-2">
           {dirty && (
-            <span className="text-xs text-amber-700 dark:text-amber-500">Unsaved merge</span>
+            <span className="text-xs text-amber-700 dark:text-amber-500">
+              Unsaved merge
+            </span>
           )}
           {dirty && (
             <Button variant="outline" size="sm" onClick={discard}>
@@ -173,9 +218,7 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
         }}
       />
 
-      {uploadError && (
-        <Alert>{uploadError}</Alert>
-      )}
+      {uploadError && <Alert>{uploadError}</Alert>}
 
       {!incoming ? (
         <div className="flex flex-col items-start gap-2 rounded-md border border-dashed border-border p-6">
@@ -193,13 +236,14 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
         </div>
       ) : familyMismatch ? (
         <Alert>
-          That MIG targets {incoming.messageIdentifier}, a different message family than{" "}
-          {draft.messageIdentifier}. Upload a MIG of the same family to merge.
+          That MIG targets {incoming.messageIdentifier}, a different message
+          family than {draft.messageIdentifier}. Upload a MIG of the same family
+          to merge.
         </Alert>
       ) : !diff || diff.paths.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          The uploaded MIG ({incoming.name} {incoming.version}) has no differences from this one —
-          nothing to merge.
+          The uploaded MIG ({incoming.name} {incoming.version}) has no
+          differences from this one — nothing to merge.
         </p>
       ) : (
         <MergePanel diff={diff} canTake={canTake} onTake={take} />
@@ -236,11 +280,14 @@ function MergePanel({
 
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
         <span>
-          {diff.paths.length === 1 ? "1 element differs" : `${diff.paths.length} elements differ`}
+          {diff.paths.length === 1
+            ? "1 element differs"
+            : `${diff.paths.length} elements differ`}
         </span>
         <span className="hidden sm:inline">
-          <kbd className="rounded border px-1">j</kbd>/<kbd className="rounded border px-1">k</kbd>{" "}
-          to step · hover a row to take the incoming value
+          <kbd className="rounded border px-1">j</kbd>/
+          <kbd className="rounded border px-1">k</kbd> to step · hover a row to
+          take the incoming value
         </span>
       </div>
 
@@ -281,7 +328,10 @@ function ElementCard({
     >
       <header className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <span className="text-sm font-medium">{diff.name}</span>
-        <code title={diff.path} className="truncate text-[0.625rem] text-muted-foreground">
+        <code
+          title={diff.path}
+          className="truncate text-[0.625rem] text-muted-foreground"
+        >
           {diff.path}
         </code>
         {disabled && (
@@ -294,7 +344,7 @@ function ElementCard({
         {diff.fields.map((f) => (
           <div key={f.label} className={`group ${COLS}`}>
             <Cell label={f.label} value={f.a} side="a" kind={f.kind} />
-            <div className="flex items-center justify-center border-x bg-muted/10 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 group-focus-visible/card:opacity-100">
+            <div className="flex items-center justify-center border-x bg-muted/10 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible/card:opacity-100 focus-within:opacity-100">
               <button
                 type="button"
                 onClick={() => onTake(diff.path, f)}
@@ -304,7 +354,11 @@ function ElementCard({
                     ? `Can’t take ${f.label}: this version has no element at this path`
                     : `Take incoming ${f.label}`
                 }
-                title={disabled ? "This version has no element at this path" : "Take incoming value"}
+                title={
+                  disabled
+                    ? "This version has no element at this path"
+                    : "Take incoming value"
+                }
                 className="rounded p-0.5 text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-30"
               >
                 <CaretDoubleLeftIcon className="size-3.5" aria-hidden />
@@ -329,4 +383,3 @@ function Alert({ children }: { children: React.ReactNode }) {
     </div>
   )
 }
-

@@ -27,7 +27,9 @@ afterEach(async () => {
 describe("trashStore", () => {
   it("moves a MIG and its history into the trash, out of the active stores", async () => {
     await saveMig(mig("A"))
-    await saveRevisions("A:1.0", [{ id: "r0", at: 1, mig: mig("A"), summary: "Initial" }])
+    await saveRevisions("A:1.0", [
+      { id: "r0", at: 1, mig: mig("A"), summary: "Initial" },
+    ])
 
     await trashMig("A:1.0", 1700)
 
@@ -43,7 +45,9 @@ describe("trashStore", () => {
 
   it("restores a trashed MIG with its history, removing it from the trash", async () => {
     await saveMig(mig("A"))
-    await saveRevisions("A:1.0", [{ id: "r0", at: 1, mig: mig("A"), summary: "Initial" }])
+    await saveRevisions("A:1.0", [
+      { id: "r0", at: 1, mig: mig("A"), summary: "Initial" },
+    ])
     await trashMig("A:1.0", 1700)
 
     await restoreFromTrash("A:1.0")

@@ -23,7 +23,12 @@ export function RouteView({
     case "home":
       return <MigHome />
     case "browse":
-      return <ERepositoryBrowser repo={repo} onUpdateRepository={onUpdateRepository} />
+      return (
+        <ERepositoryBrowser
+          repo={repo}
+          onUpdateRepository={onUpdateRepository}
+        />
+      )
     case "message":
       return <MessageExplorer repo={repo} code={route.code} />
     case "mig":

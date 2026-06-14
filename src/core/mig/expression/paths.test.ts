@@ -6,7 +6,7 @@ import { collectPaths, pathText, validateExpressionPaths } from "./paths"
 function el(
   xmlTag: string,
   elements: MessageElement[] = [],
-  isAttribute = false,
+  isAttribute = false
 ): MessageElement {
   return {
     id: xmlTag,
@@ -53,7 +53,9 @@ function check(src: string, against: MessageElement = owner): string[] {
 
 describe("collectPaths / pathText", () => {
   it("collects every path in source order", () => {
-    const r = parseExpression("not(SchmeNm/Prtry = 'LGID' or matches(Id, '[0-9]+'))")
+    const r = parseExpression(
+      "not(SchmeNm/Prtry = 'LGID' or matches(Id, '[0-9]+'))"
+    )
     if (!r.ok) throw new Error("parse failed")
     expect(collectPaths(r.ast).map(pathText)).toEqual(["SchmeNm/Prtry", "Id"])
   })
@@ -70,7 +72,9 @@ describe("validateExpressionPaths", () => {
     expect(check("Id = 'X'")).toEqual([])
     expect(check("SchmeNm/Prtry = 'LGID'")).toEqual([])
     expect(check("Amt/@Ccy = 'EUR'")).toEqual([])
-    expect(check("not(SchmeNm/Prtry = 'LGID' or matches(Id, '[0-9]+'))")).toEqual([])
+    expect(
+      check("not(SchmeNm/Prtry = 'LGID' or matches(Id, '[0-9]+'))")
+    ).toEqual([])
   })
 
   it("flags an unknown first step", () => {
@@ -78,11 +82,15 @@ describe("validateExpressionPaths", () => {
   })
 
   it("flags an unknown nested step, naming the path", () => {
-    expect(check("SchmeNm/Xyz = 1")).toEqual(['Unknown element "Xyz" in path "SchmeNm/Xyz"'])
+    expect(check("SchmeNm/Xyz = 1")).toEqual([
+      'Unknown element "Xyz" in path "SchmeNm/Xyz"',
+    ])
   })
 
   it("hints when an element is referenced as an attribute", () => {
-    expect(check("SchmeNm/@Prtry = 1")[0]).toMatch(/is an element, not an attribute/)
+    expect(check("SchmeNm/@Prtry = 1")[0]).toMatch(
+      /is an element, not an attribute/
+    )
   })
 
   it("hints when an attribute is referenced without @", () => {
@@ -90,7 +98,9 @@ describe("validateExpressionPaths", () => {
   })
 
   it("flags an unknown attribute", () => {
-    expect(check("Amt/@Nope = 1")).toEqual(['Unknown attribute "@Nope" in path "Amt/@Nope"'])
+    expect(check("Amt/@Nope = 1")).toEqual([
+      'Unknown attribute "@Nope" in path "Amt/@Nope"',
+    ])
   })
 
   it("rejects steps after an attribute (leaf)", () => {

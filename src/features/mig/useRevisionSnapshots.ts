@@ -15,11 +15,14 @@ const DEBOUNCE_MS = 1500
  */
 export function useRevisionSnapshots(
   migKey: string,
-  mig: MessageImplementationGuide | null,
+  mig: MessageImplementationGuide | null
 ): () => Promise<void> {
   const revisionsRef = useRef<Awaited<ReturnType<typeof loadRevisions>>>([])
   const loadedRef = useRef(false)
-  const baselineRef = useRef<{ mig: MessageImplementationGuide; at: number } | null>(null)
+  const baselineRef = useRef<{
+    mig: MessageImplementationGuide
+    at: number
+  } | null>(null)
   const lastRef = useRef<MessageImplementationGuide | null>(null)
   const latestRef = useRef<MessageImplementationGuide | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -32,7 +35,10 @@ export function useRevisionSnapshots(
       revisionsRef.current = revs
       loadedRef.current = true
       // Baseline only matters when there's no prior history.
-      lastRef.current = revs.length > 0 ? revs[revs.length - 1].mig : (baselineRef.current?.mig ?? null)
+      lastRef.current =
+        revs.length > 0
+          ? revs[revs.length - 1].mig
+          : (baselineRef.current?.mig ?? null)
     })
     return () => {
       active = false
@@ -51,13 +57,20 @@ export function useRevisionSnapshots(
     // burst, or a value set back to its inherited baseline (which auto-clears the
     // override), lands here semantically identical to the last snapshot. Skip it
     // so the history never gains an empty "No changes" revision.
-    if (lastRef.current && summarizeChange(lastRef.current, next) === "No changes") {
+    if (
+      lastRef.current &&
+      summarizeChange(lastRef.current, next) === "No changes"
+    ) {
       lastRef.current = next
       return
     }
     let revs = revisionsRef.current
     if (revs.length === 0 && baselineRef.current) {
-      revs = appendRevision(revs, baselineRef.current.mig, baselineRef.current.at)
+      revs = appendRevision(
+        revs,
+        baselineRef.current.mig,
+        baselineRef.current.at
+      )
     }
     revs = appendRevision(revs, next, Date.now())
     revisionsRef.current = revs
@@ -71,7 +84,8 @@ export function useRevisionSnapshots(
     latestRef.current = mig
     if (!baselineRef.current) {
       baselineRef.current = { mig, at: Date.now() }
-      if (loadedRef.current && revisionsRef.current.length === 0) lastRef.current = mig
+      if (loadedRef.current && revisionsRef.current.length === 0)
+        lastRef.current = mig
       return // baseline — don't snapshot the as-loaded state
     }
     if (timerRef.current) clearTimeout(timerRef.current)

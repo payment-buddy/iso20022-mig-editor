@@ -15,7 +15,7 @@ export function setOverrideField<K extends keyof ElementOverride>(
   mig: MessageImplementationGuide,
   path: string,
   field: K,
-  value: ElementOverride[K],
+  value: ElementOverride[K]
 ): MessageImplementationGuide {
   const prev = mig.elementOverrides[path] ?? {}
   return {
@@ -34,7 +34,7 @@ export function setOverrideField<K extends keyof ElementOverride>(
 export function clearOverrideField(
   mig: MessageImplementationGuide,
   path: string,
-  field: keyof ElementOverride,
+  field: keyof ElementOverride
 ): MessageImplementationGuide {
   const prev = mig.elementOverrides[path]
   if (!prev || !(field in prev)) return mig
@@ -74,7 +74,7 @@ export function nextConstraintName(existing: Iterable<string>): string {
 export function addConstraint(
   mig: MessageImplementationGuide,
   path: string,
-  constraint: Constraint,
+  constraint: Constraint
 ): MessageImplementationGuide {
   const prev = mig.elementOverrides[path] ?? {}
   const existing = prev.additionalConstraints ?? []
@@ -101,7 +101,9 @@ export function updateConstraint(
   mig: MessageImplementationGuide,
   path: string,
   name: string,
-  changes: Partial<Pick<Constraint, "name" | "definition" | "expression" | "annotations">>,
+  changes: Partial<
+    Pick<Constraint, "name" | "definition" | "expression" | "annotations">
+  >
 ): MessageImplementationGuide {
   const prev = mig.elementOverrides[path]
   const list = prev?.additionalConstraints
@@ -110,11 +112,16 @@ export function updateConstraint(
   if (idx < 0) return mig
 
   const nextName = changes.name ?? list[idx].name
-  if (nextName !== name && list.some((c, i) => i !== idx && c.name === nextName)) return mig
+  if (
+    nextName !== name &&
+    list.some((c, i) => i !== idx && c.name === nextName)
+  )
+    return mig
 
   const merged: Constraint = { ...list[idx], ...changes }
   if (merged.expression === "") delete merged.expression
-  if (merged.annotations && Object.keys(merged.annotations).length === 0) delete merged.annotations
+  if (merged.annotations && Object.keys(merged.annotations).length === 0)
+    delete merged.annotations
   const additionalConstraints = list.map((c, i) => (i === idx ? merged : c))
   return {
     ...mig,
@@ -134,7 +141,7 @@ export function updateConstraint(
 export function removeConstraint(
   mig: MessageImplementationGuide,
   path: string,
-  name: string,
+  name: string
 ): MessageImplementationGuide {
   const prev = mig.elementOverrides[path]
   const list = prev?.additionalConstraints
@@ -162,7 +169,7 @@ export function setConstraintOverrideField<K extends keyof ConstraintOverride>(
   path: string,
   name: string,
   field: K,
-  value: ConstraintOverride[K],
+  value: ConstraintOverride[K]
 ): MessageImplementationGuide {
   const prev = mig.elementOverrides[path] ?? {}
   const map = prev.constraintOverrides ?? {}
@@ -172,7 +179,10 @@ export function setConstraintOverrideField<K extends keyof ConstraintOverride>(
       ...mig.elementOverrides,
       [path]: {
         ...prev,
-        constraintOverrides: { ...map, [name]: { ...map[name], [field]: value } },
+        constraintOverrides: {
+          ...map,
+          [name]: { ...map[name], [field]: value },
+        },
       },
     },
   }
@@ -187,7 +197,7 @@ export function clearConstraintOverrideField(
   mig: MessageImplementationGuide,
   path: string,
   name: string,
-  field: keyof ConstraintOverride,
+  field: keyof ConstraintOverride
 ): MessageImplementationGuide {
   const prev = mig.elementOverrides[path]
   const entry = prev?.constraintOverrides?.[name]

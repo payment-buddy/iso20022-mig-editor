@@ -27,11 +27,13 @@ const sameNames = (a: string[] = [], b: string[] = []) =>
  */
 export function summarizeChange(
   prev: MessageImplementationGuide,
-  next: MessageImplementationGuide,
+  next: MessageImplementationGuide
 ): string {
   const parts: string[] = []
-  if (prev.name !== next.name || prev.version !== next.version) parts.push("renamed")
-  if ((prev.description ?? "") !== (next.description ?? "")) parts.push("description")
+  if (prev.name !== next.name || prev.version !== next.version)
+    parts.push("renamed")
+  if ((prev.description ?? "") !== (next.description ?? ""))
+    parts.push("description")
   if ((prev.parentMIG ?? "") !== (next.parentMIG ?? "")) parts.push("parent")
   if (
     !sameNames(prev.elementAnnotationNames, next.elementAnnotationNames) ||
@@ -60,7 +62,7 @@ export function appendRevision(
   revisions: Revision[],
   mig: MessageImplementationGuide,
   now: number,
-  summary?: string,
+  summary?: string
 ): Revision[] {
   const prev = revisions[revisions.length - 1]
   const rev: Revision = {

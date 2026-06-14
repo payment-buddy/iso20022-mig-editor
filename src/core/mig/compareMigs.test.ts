@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest"
-import type { ElementOverrides, MessageImplementationGuide } from "@/core/types/types"
+import type {
+  ElementOverrides,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 import { compareMigs } from "./compareMigs"
 
 function mig(
   overrides: ElementOverrides,
-  props: Partial<MessageImplementationGuide> = {},
+  props: Partial<MessageImplementationGuide> = {}
 ): MessageImplementationGuide {
   return {
     name: "Test",
@@ -27,7 +30,7 @@ describe("compareMigs", () => {
     const b = mig({ "/Doc/GrpHdr": { maxLength: 9 } })
     expect(compareMigs(a, b).paths[0].name).toBe("GrpHdr") // xmlTag fallback
     const named = compareMigs(a, b, undefined, (p) =>
-      p === "/Doc/GrpHdr" ? "Group Header" : undefined,
+      p === "/Doc/GrpHdr" ? "Group Header" : undefined
     )
     expect(named.paths[0].name).toBe("Group Header")
   })
@@ -37,9 +40,19 @@ describe("compareMigs", () => {
     const b = mig({ "/Doc/Amt": { maxLength: 12 } })
     const { paths } = compareMigs(a, b)
     expect(paths).toHaveLength(1)
-    expect(paths[0]).toMatchObject({ path: "/Doc/Amt", name: "Amt", kind: "changed" })
+    expect(paths[0]).toMatchObject({
+      path: "/Doc/Amt",
+      name: "Amt",
+      kind: "changed",
+    })
     expect(paths[0].fields).toEqual([
-      { label: "Max length", kind: "changed", a: "18", b: "12", ref: { type: "field", field: "maxLength" } },
+      {
+        label: "Max length",
+        kind: "changed",
+        a: "18",
+        b: "12",
+        ref: { type: "field", field: "maxLength" },
+      },
     ])
   })
 
@@ -48,10 +61,14 @@ describe("compareMigs", () => {
     const b = mig({ "/Doc/Amt": { maxLength: 18, minLength: 1 } })
     const ref = { type: "field", field: "minLength" } as const
     const fields = compareMigs(a, b).paths[0].fields
-    expect(fields).toEqual([{ label: "Min length", kind: "added", a: null, b: "1", ref }])
+    expect(fields).toEqual([
+      { label: "Min length", kind: "added", a: null, b: "1", ref },
+    ])
 
     const reversed = compareMigs(b, a).paths[0].fields
-    expect(reversed).toEqual([{ label: "Min length", kind: "removed", a: "1", b: null, ref }])
+    expect(reversed).toEqual([
+      { label: "Min length", kind: "removed", a: "1", b: null, ref },
+    ])
   })
 
   it("distinguishes absent (inherit) from null (cleared)", () => {
@@ -60,7 +77,13 @@ describe("compareMigs", () => {
     const b = mig({ "/Doc/Amt": { pattern: null } })
     const fields = compareMigs(a, b).paths[0].fields
     expect(fields).toEqual([
-      { label: "Pattern", kind: "added", a: null, b: "cleared", ref: { type: "field", field: "pattern" } },
+      {
+        label: "Pattern",
+        kind: "added",
+        a: null,
+        b: "cleared",
+        ref: { type: "field", field: "pattern" },
+      },
     ])
   })
 
@@ -77,11 +100,16 @@ describe("compareMigs", () => {
 
     const c = mig({ "/Doc/Ccy": { allowedValues: ["USD", "EUR", "GBP"] } })
     const fields = compareMigs(a, c).paths[0].fields
-    expect(fields[0]).toMatchObject({ label: "Allowed values", kind: "changed" })
+    expect(fields[0]).toMatchObject({
+      label: "Allowed values",
+      kind: "changed",
+    })
   })
 
   it("diffs annotations per name", () => {
-    const a = mig({ "/Doc/Amt": { annotations: { Usage: "Required", Note: "x" } } })
+    const a = mig({
+      "/Doc/Amt": { annotations: { Usage: "Required", Note: "x" } },
+    })
     const b = mig({ "/Doc/Amt": { annotations: { Usage: "Optional" } } })
     const fields = compareMigs(a, b).paths[0].fields
     expect(fields).toContainEqual({
@@ -119,34 +147,65 @@ describe("compareMigs", () => {
     })
     const fields = compareMigs(a, b).paths[0].fields
     expect(fields).toHaveLength(1)
-    expect(fields[0]).toMatchObject({ label: "Constraint “R1”", kind: "changed" })
+    expect(fields[0]).toMatchObject({
+      label: "Constraint “R1”",
+      kind: "changed",
+    })
   })
 
   it("flags a constraint that differs only by annotation", () => {
     const a = mig({
-      "/Doc/Amt": { additionalConstraints: [{ name: "R1", definition: "d", annotations: { S: "1" } }] },
+      "/Doc/Amt": {
+        additionalConstraints: [
+          { name: "R1", definition: "d", annotations: { S: "1" } },
+        ],
+      },
     })
     const b = mig({
-      "/Doc/Amt": { additionalConstraints: [{ name: "R1", definition: "d", annotations: { S: "2" } }] },
+      "/Doc/Amt": {
+        additionalConstraints: [
+          { name: "R1", definition: "d", annotations: { S: "2" } },
+        ],
+      },
     })
     const fields = compareMigs(a, b).paths[0].fields
-    expect(fields[0]).toMatchObject({ label: "Constraint “R1”", kind: "changed" })
+    expect(fields[0]).toMatchObject({
+      label: "Constraint “R1”",
+      kind: "changed",
+    })
   })
 
   it("reports a path present in only one MIG", () => {
     const a = mig({ "/Doc/Amt": { maxLength: 18 } })
-    const b = mig({ "/Doc/Amt": { maxLength: 18 }, "/Doc/Ccy": { allowedValues: ["EUR"] } })
+    const b = mig({
+      "/Doc/Amt": { maxLength: 18 },
+      "/Doc/Ccy": { allowedValues: ["EUR"] },
+    })
     const { paths } = compareMigs(a, b)
     expect(paths).toHaveLength(1)
     expect(paths[0]).toMatchObject({ path: "/Doc/Ccy", kind: "added" })
     expect(paths[0].fields).toEqual([
-      { label: "Allowed values", kind: "added", a: null, b: "EUR", ref: { type: "field", field: "allowedValues" } },
+      {
+        label: "Allowed values",
+        kind: "added",
+        a: null,
+        b: "EUR",
+        ref: { type: "field", field: "allowedValues" },
+      },
     ])
   })
 
   it("orders paths by the supplied schema-order map, unknowns last alphabetically", () => {
-    const a = mig({ "/Doc/Z": { maxLength: 1 }, "/Doc/A": { maxLength: 1 }, "/Doc/Orphan": { maxLength: 1 } })
-    const b = mig({ "/Doc/Z": { maxLength: 2 }, "/Doc/A": { maxLength: 2 }, "/Doc/Orphan": { maxLength: 2 } })
+    const a = mig({
+      "/Doc/Z": { maxLength: 1 },
+      "/Doc/A": { maxLength: 1 },
+      "/Doc/Orphan": { maxLength: 1 },
+    })
+    const b = mig({
+      "/Doc/Z": { maxLength: 2 },
+      "/Doc/A": { maxLength: 2 },
+      "/Doc/Orphan": { maxLength: 2 },
+    })
     const order = new Map([
       ["/Doc/Z", 0],
       ["/Doc/A", 1],
@@ -172,7 +231,13 @@ describe("compareMigs", () => {
     const b = mig({ "/Doc/Amt": { definition: null } })
     const fields = compareMigs(a, b).paths[0].fields
     expect(fields).toEqual([
-      { label: "Definition", kind: "changed", a: "(empty)", b: "cleared", ref: { type: "field", field: "definition" } },
+      {
+        label: "Definition",
+        kind: "changed",
+        a: "(empty)",
+        b: "cleared",
+        ref: { type: "field", field: "definition" },
+      },
     ])
   })
 })

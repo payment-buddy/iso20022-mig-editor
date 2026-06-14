@@ -5,12 +5,17 @@ import type { ElementOverride, MessageElement } from "@/core/types/types"
  * integer zeros and trailing fraction zeros don't count), or `null` if the value
  * isn't a plain decimal — in which case the digit facets simply don't apply.
  */
-function digitCounts(value: string): { total: number; fraction: number } | null {
+function digitCounts(
+  value: string
+): { total: number; fraction: number } | null {
   const m = /^[+-]?(\d*)(?:\.(\d*))?$/.exec(value.trim())
   if (!m || (m[1] === "" && (m[2] ?? "") === "")) return null
   const intDigits = (m[1] ?? "").replace(/^0+/, "")
   const fracDigits = (m[2] ?? "").replace(/0+$/, "")
-  return { total: intDigits.length + fracDigits.length, fraction: fracDigits.length }
+  return {
+    total: intDigits.length + fracDigits.length,
+    fraction: fracDigits.length,
+  }
 }
 
 const plural = (n: number) => (n === 1 ? "" : "s")
@@ -25,23 +30,35 @@ const plural = (n: number) => (n === 1 ? "" : "s")
  */
 export function createValueValidator(
   element: MessageElement,
-  override: ElementOverride | undefined,
+  override: ElementOverride | undefined
 ): (value: string) => string | null {
-  const has = (field: keyof ElementOverride) => override !== undefined && field in override
+  const has = (field: keyof ElementOverride) =>
+    override !== undefined && field in override
 
   // An exact `length` acts as both min and max when the dedicated facets are unset.
-  const minLength = has("minLength") ? override!.minLength : (element.minLength ?? element.length)
-  const maxLength = has("maxLength") ? override!.maxLength : (element.maxLength ?? element.length)
+  const minLength = has("minLength")
+    ? override!.minLength
+    : (element.minLength ?? element.length)
+  const maxLength = has("maxLength")
+    ? override!.maxLength
+    : (element.maxLength ?? element.length)
   const pattern = has("pattern") ? override!.pattern : element.pattern
-  const totalDigits = has("totalDigits") ? override!.totalDigits : element.totalDigits
-  const fractionDigits = has("fractionDigits") ? override!.fractionDigits : element.fractionDigits
+  const totalDigits = has("totalDigits")
+    ? override!.totalDigits
+    : element.totalDigits
+  const fractionDigits = has("fractionDigits")
+    ? override!.fractionDigits
+    : element.fractionDigits
 
   return (value: string): string | null => {
-    if (minLength != null && value.length < minLength) return `Shorter than min length ${minLength}`
-    if (maxLength != null && value.length > maxLength) return `Longer than max length ${maxLength}`
+    if (minLength != null && value.length < minLength)
+      return `Shorter than min length ${minLength}`
+    if (maxLength != null && value.length > maxLength)
+      return `Longer than max length ${maxLength}`
     if (pattern != null && pattern !== "") {
       try {
-        if (!new RegExp(`^(?:${pattern})$`).test(value)) return `Does not match pattern ${pattern}`
+        if (!new RegExp(`^(?:${pattern})$`).test(value))
+          return `Does not match pattern ${pattern}`
       } catch {
         return null // Unparseable pattern — can't validate, so don't flag.
       }
@@ -74,7 +91,7 @@ export function looseningWarning(
   label: string,
   baseline: number | null,
   value: number | null,
-  dir: FacetDirection,
+  dir: FacetDirection
 ): string | null {
   if (baseline === null || value === null) return null
   if (dir === "min" ? value < baseline : value > baseline) {
@@ -87,7 +104,7 @@ export function looseningWarning(
 export function rangeWarning(
   label: string,
   min: number | null,
-  max: number | null,
+  max: number | null
 ): string | null {
   if (min === null || max === null || max >= min) return null
   return `${label}: max ${max} is below min ${min}.`

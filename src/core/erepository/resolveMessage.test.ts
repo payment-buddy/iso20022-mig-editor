@@ -2,8 +2,17 @@ import { describe, expect, it } from "vitest"
 import type { ERepository, MessageDefinition } from "@/core/types/types"
 import { resolveMessage } from "./resolveMessage"
 
-function msg(name: string, shortCode: string, identifier: string): MessageDefinition {
-  return { name, shortCode, identifier, rootElement: {} as MessageDefinition["rootElement"] }
+function msg(
+  name: string,
+  shortCode: string,
+  identifier: string
+): MessageDefinition {
+  return {
+    name,
+    shortCode,
+    identifier,
+    rootElement: {} as MessageDefinition["rootElement"],
+  }
 }
 
 const REPO: ERepository = {
@@ -25,7 +34,10 @@ describe("resolveMessage", () => {
   it("resolves an exact identifier to that version", () => {
     const r = resolveMessage(REPO, "pacs.008.001.08")!
     expect(r.current.identifier).toBe("pacs.008.001.08")
-    expect(r.versions.map((v) => v.identifier)).toEqual(["pacs.008.001.08", "pacs.008.001.10"])
+    expect(r.versions.map((v) => v.identifier)).toEqual([
+      "pacs.008.001.08",
+      "pacs.008.001.10",
+    ])
   })
 
   it("resolves a shortCode to the latest version", () => {

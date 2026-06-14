@@ -8,8 +8,17 @@ import {
   type ReactNode,
   type Ref,
 } from "react"
-import { CaretRightIcon, CheckIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
-import type { Constraint, ElementOverride, ElementOverrides, MessageElement } from "@/core/types/types"
+import {
+  CaretRightIcon,
+  CheckIcon,
+  MagnifyingGlassIcon,
+} from "@phosphor-icons/react"
+import type {
+  Constraint,
+  ElementOverride,
+  ElementOverrides,
+  MessageElement,
+} from "@/core/types/types"
 import { rootPath } from "@/core/erepository/elementPath"
 import { cn } from "@/lib/utils"
 import { ProvenanceMarker } from "@/components/ProvenanceMarker"
@@ -84,10 +93,11 @@ export type ElementTreeHandle = TreeActions
 function isOwnExcluded(
   path: string,
   el: MessageElement,
-  overrides: ElementOverrides | undefined,
+  overrides: ElementOverrides | undefined
 ): boolean {
   const override = overrides?.[path]
-  const maxOccurs = override && "maxOccurs" in override ? override.maxOccurs : el.maxOccurs
+  const maxOccurs =
+    override && "maxOccurs" in override ? override.maxOccurs : el.maxOccurs
   return maxOccurs === 0
 }
 
@@ -95,12 +105,18 @@ function isOwnExcluded(
 function effectiveOccurs(
   path: string,
   el: MessageElement,
-  overrides: ElementOverrides | undefined,
+  overrides: ElementOverrides | undefined
 ): { minOccurs: number; maxOccurs: number | null } {
   const override = overrides?.[path]
   return {
-    minOccurs: override && "minOccurs" in override ? (override.minOccurs ?? 0) : el.minOccurs,
-    maxOccurs: override && "maxOccurs" in override ? (override.maxOccurs ?? null) : el.maxOccurs,
+    minOccurs:
+      override && "minOccurs" in override
+        ? (override.minOccurs ?? 0)
+        : el.minOccurs,
+    maxOccurs:
+      override && "maxOccurs" in override
+        ? (override.maxOccurs ?? null)
+        : el.maxOccurs,
   }
 }
 
@@ -116,14 +132,19 @@ const CONSTRAINT_ONLY_KEYS = new Set<keyof ElementOverride>([
 
 /** Whether an override touches at least one element field (not just constraints). */
 function hasElementFieldOverride(ov: ElementOverride | undefined): boolean {
-  return ov !== undefined && Object.keys(ov).some((k) => !CONSTRAINT_ONLY_KEYS.has(k as keyof ElementOverride))
+  return (
+    ov !== undefined &&
+    Object.keys(ov).some(
+      (k) => !CONSTRAINT_ONLY_KEYS.has(k as keyof ElementOverride)
+    )
+  )
 }
 
 /** Element colour provenance: this MIG's own element-field override, else a parent's. */
 function elementOverrideOrigin(
   path: string,
   ownOverrides: ElementOverrides | undefined,
-  effectiveOverrides: ElementOverrides | undefined,
+  effectiveOverrides: ElementOverrides | undefined
 ): OverrideOrigin {
   if (hasElementFieldOverride(ownOverrides?.[path])) return "own"
   if (hasElementFieldOverride(effectiveOverrides?.[path])) return "inherited"
@@ -141,30 +162,58 @@ function constraintsAt(
   path: string,
   el: MessageElement,
   ownOverrides: ElementOverrides | undefined,
-  effectiveOverrides: ElementOverrides | undefined,
-): { constraint: Constraint; origin: ConstraintOrigin; disabled: boolean; colour: OverrideOrigin }[] {
+  effectiveOverrides: ElementOverrides | undefined
+): {
+  constraint: Constraint
+  origin: ConstraintOrigin
+  disabled: boolean
+  colour: OverrideOrigin
+}[] {
   const ownOv = ownOverrides?.[path]
   const effOv = effectiveOverrides?.[path]
-  const disabled = (name: string) => effOv?.constraintOverrides?.[name]?.disabled ?? false
+  const disabled = (name: string) =>
+    effOv?.constraintOverrides?.[name]?.disabled ?? false
   const colourOf = (name: string, origin: ConstraintOrigin): OverrideOrigin => {
-    if (origin === "own" || ownOv?.constraintOverrides?.[name] !== undefined) return "own"
-    if (origin === "inherited" || effOv?.constraintOverrides?.[name] !== undefined) return "inherited"
+    if (origin === "own" || ownOv?.constraintOverrides?.[name] !== undefined)
+      return "own"
+    if (
+      origin === "inherited" ||
+      effOv?.constraintOverrides?.[name] !== undefined
+    )
+      return "inherited"
     return null
   }
-  const ownNames = new Set((ownOv?.additionalConstraints ?? []).map((c) => c.name))
+  const ownNames = new Set(
+    (ownOv?.additionalConstraints ?? []).map((c) => c.name)
+  )
   const standard = el.constraints.map((constraint) => {
     const origin = "standard" as const
-    return { constraint, origin, disabled: disabled(constraint.name), colour: colourOf(constraint.name, origin) }
+    return {
+      constraint,
+      origin,
+      disabled: disabled(constraint.name),
+      colour: colourOf(constraint.name, origin),
+    }
   })
   const additional = (effOv?.additionalConstraints ?? []).map((constraint) => {
-    const origin = ownNames.has(constraint.name) ? ("own" as const) : ("inherited" as const)
-    return { constraint, origin, disabled: disabled(constraint.name), colour: colourOf(constraint.name, origin) }
+    const origin = ownNames.has(constraint.name)
+      ? ("own" as const)
+      : ("inherited" as const)
+    return {
+      constraint,
+      origin,
+      disabled: disabled(constraint.name),
+      colour: colourOf(constraint.name, origin),
+    }
   })
   return [...standard, ...additional]
 }
 
 /** Count elements excluded in their own right (effective `maxOccurs:0`) tree-wide. */
-function countExcluded(root: MessageElement, overrides: ElementOverrides | undefined): number {
+function countExcluded(
+  root: MessageElement,
+  overrides: ElementOverrides | undefined
+): number {
   let n = 0
   const walk = (el: MessageElement, path: string) => {
     if (isOwnExcluded(path, el, overrides)) n++
@@ -198,21 +247,30 @@ function buildFilter(
   q: string,
   changesOnly: boolean,
   ownOverrides: ElementOverrides | undefined,
-  effectiveOverrides: ElementOverrides | undefined,
+  effectiveOverrides: ElementOverrides | undefined
 ): TreeFilter {
   const keep = new Set<string>()
   const expand = new Set<string>()
   const visit = (el: MessageElement, path: string): boolean => {
-    const textMatch = q === "" || matchesQuery(el.name, q) || matchesQuery(el.xmlTag, q)
+    const textMatch =
+      q === "" || matchesQuery(el.name, q) || matchesQuery(el.xmlTag, q)
     const changeMatch =
-      !changesOnly || elementOverrideOrigin(path, ownOverrides, effectiveOverrides) !== null
+      !changesOnly ||
+      elementOverrideOrigin(path, ownOverrides, effectiveOverrides) !== null
     const selfMatch = textMatch && changeMatch
     let descMatch = false
     for (const child of el.elements) {
       if (visit(child, `${path}/${child.xmlTag}`)) descMatch = true
     }
-    for (const { constraint, colour } of constraintsAt(path, el, ownOverrides, effectiveOverrides)) {
-      const conMatch = (q === "" || matchesQuery(constraint.name, q)) && (!changesOnly || colour !== null)
+    for (const { constraint, colour } of constraintsAt(
+      path,
+      el,
+      ownOverrides,
+      effectiveOverrides
+    )) {
+      const conMatch =
+        (q === "" || matchesQuery(constraint.name, q)) &&
+        (!changesOnly || colour !== null)
       if (conMatch) {
         keep.add(`${path}/${constraint.name}`)
         descMatch = true
@@ -240,7 +298,7 @@ function flattenTree(
   filter: TreeFilter | null,
   hideExcluded: boolean,
   ownOverrides: ElementOverrides | undefined,
-  effectiveOverrides: ElementOverrides | undefined,
+  effectiveOverrides: ElementOverrides | undefined
 ): FlatNode[] {
   const out: FlatNode[] = []
   const walk = (
@@ -248,16 +306,21 @@ function flattenTree(
     path: string,
     level: number,
     parentPath: string | null,
-    ancestorExcluded: boolean,
+    ancestorExcluded: boolean
   ) => {
     if (filter && !filter.keep.has(path)) return
-    const excluded = ancestorExcluded || isOwnExcluded(path, el, effectiveOverrides)
+    const excluded =
+      ancestorExcluded || isOwnExcluded(path, el, effectiveOverrides)
     if (hideExcluded && excluded) return
 
     // Children are visible unless filtered out or (when hiding) excluded.
     const childEls = el.elements.filter((c) => {
       if (filter && !filter.keep.has(`${path}/${c.xmlTag}`)) return false
-      if (hideExcluded && isOwnExcluded(`${path}/${c.xmlTag}`, c, effectiveOverrides)) return false
+      if (
+        hideExcluded &&
+        isOwnExcluded(`${path}/${c.xmlTag}`, c, effectiveOverrides)
+      )
+        return false
       return true
     })
     const cons = constraintsAt(path, el, ownOverrides, effectiveOverrides)
@@ -265,7 +328,9 @@ function flattenTree(
       ? cons.filter((c) => filter.keep.has(`${path}/${c.constraint.name}`))
       : cons
     const hasChildren = childEls.length > 0 || childCons.length > 0
-    const isOpen = filter ? filter.expand.has(path) || expanded.has(path) : expanded.has(path)
+    const isOpen = filter
+      ? filter.expand.has(path) || expanded.has(path)
+      : expanded.has(path)
     out.push({
       kind: "element",
       element: el,
@@ -278,7 +343,11 @@ function flattenTree(
       excluded,
       // Coloured only for element-field overrides (constraint-only entries don't
       // tint the element); own override wins over an inherited one.
-      overrideOrigin: elementOverrideOrigin(path, ownOverrides, effectiveOverrides),
+      overrideOrigin: elementOverrideOrigin(
+        path,
+        ownOverrides,
+        effectiveOverrides
+      ),
     })
     if (!hasChildren || !isOpen) return
     for (const child of childEls) {
@@ -305,7 +374,11 @@ function flattenTree(
 }
 
 /** Collect every expandable path at or under `el` (for the `*` subtree-expand key). */
-function collectExpandable(el: MessageElement, path: string, into: Set<string>): void {
+function collectExpandable(
+  el: MessageElement,
+  path: string,
+  into: Set<string>
+): void {
   if (el.elements.length > 0 || el.constraints.length > 0) into.add(path)
   for (const child of el.elements) {
     collectExpandable(child, `${path}/${child.xmlTag}`, into)
@@ -343,7 +416,10 @@ export function ElementTree({
 }: {
   root: MessageElement
   ariaLabel: string
-  renderDetail: (selected: SelectedNode | null, actions: TreeActions) => ReactNode
+  renderDetail: (
+    selected: SelectedNode | null,
+    actions: TreeActions
+  ) => ReactNode
   /**
    * This MIG's **own** overrides keyed by `xmlPath` — each path's
    * `additionalConstraints` appear as MIG-specific tree nodes. Omitted by the
@@ -364,7 +440,9 @@ export function ElementTree({
   const [showXmlTags, setShowXmlTags] = useState(false)
   // Root is expanded by default; expansion is keyed by xmlPath so the keyboard
   // handler can drive it centrally (each node no longer owns its open state).
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set([rootPath(root)]))
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => new Set([rootPath(root)])
+  )
   const [focusedPath, setFocusedPath] = useState<string | null>(null)
   const [filter, setFilter] = useState("")
   const [hideExcluded, setHideExcluded] = useState(false)
@@ -373,7 +451,10 @@ export function ElementTree({
   const nodeRefs = useRef(new Map<string, HTMLElement>())
   const filterRef = useRef<HTMLInputElement>(null)
 
-  const excludedCount = useMemo(() => countExcluded(root, effective), [root, effective])
+  const excludedCount = useMemo(
+    () => countExcluded(root, effective),
+    [root, effective]
+  )
   // Whether to show the override-colour legend + "changes only" toggle (only in a
   // MIG with overrides).
   const hasOverrides = !!effective && Object.keys(effective).length > 0
@@ -382,12 +463,22 @@ export function ElementTree({
   const q = filter.trim().toLowerCase()
   const treeFilter = useMemo(
     () =>
-      q || changesActive ? buildFilter(root, q, changesActive, elementOverrides, effective) : null,
-    [root, q, changesActive, elementOverrides, effective],
+      q || changesActive
+        ? buildFilter(root, q, changesActive, elementOverrides, effective)
+        : null,
+    [root, q, changesActive, elementOverrides, effective]
   )
   const flatNodes = useMemo(
-    () => flattenTree(root, expanded, treeFilter, hideExcluded, elementOverrides, effective),
-    [root, expanded, treeFilter, hideExcluded, elementOverrides, effective],
+    () =>
+      flattenTree(
+        root,
+        expanded,
+        treeFilter,
+        hideExcluded,
+        elementOverrides,
+        effective
+      ),
+    [root, expanded, treeFilter, hideExcluded, elementOverrides, effective]
   )
   const noMatches = treeFilter !== null && flatNodes.length === 0
 
@@ -431,7 +522,8 @@ export function ElementTree({
     if (parts.length > 2) {
       setExpanded((prev) => {
         const next = new Set(prev)
-        for (let i = 2; i < parts.length; i++) next.add(parts.slice(0, i).join("/"))
+        for (let i = 2; i < parts.length; i++)
+          next.add(parts.slice(0, i).join("/"))
         return next
       })
     }
@@ -486,7 +578,8 @@ export function ElementTree({
       case "ArrowRight":
         e.preventDefault()
         if (node.hasChildren && !node.expanded) open(node.path)
-        else if (node.hasChildren && idx < flatNodes.length - 1) focusNode(flatNodes[idx + 1].path)
+        else if (node.hasChildren && idx < flatNodes.length - 1)
+          focusNode(flatNodes[idx + 1].path)
         break
       case "ArrowLeft":
         e.preventDefault()
@@ -532,7 +625,8 @@ export function ElementTree({
       const slash = e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey
       if (!cmdF && !slash) return
       const target = e.target as HTMLElement | null
-      if (slash && target?.closest("input, textarea, [contenteditable='true']")) return
+      if (slash && target?.closest("input, textarea, [contenteditable='true']"))
+        return
       e.preventDefault()
       filterRef.current?.focus()
       filterRef.current?.select()
@@ -582,7 +676,7 @@ export function ElementTree({
         <label
           className={cn(
             "flex w-fit items-center gap-1.5 text-xs text-muted-foreground",
-            excludedCount === 0 && "opacity-50",
+            excludedCount === 0 && "opacity-50"
           )}
         >
           <input
@@ -706,8 +800,8 @@ function TreeNode({
           // Selected: a stronger, still-neutral fill (keeps the override-tint text
           // readable) with a ring; hover (only when not selected): a faint fill.
           active
-            ? "bg-muted-foreground/20 ring-1 ring-inset ring-border"
-            : "hover:bg-muted",
+            ? "bg-muted-foreground/20 ring-1 ring-border ring-inset"
+            : "hover:bg-muted"
         )}
       >
         {node.hasChildren ? (
@@ -719,16 +813,23 @@ function TreeNode({
             }}
             className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted-foreground/10"
           >
-            <CaretRightIcon className={cn("size-3.5", node.expanded && "rotate-90")} aria-hidden />
+            <CaretRightIcon
+              className={cn("size-3.5", node.expanded && "rotate-90")}
+              aria-hidden
+            />
           </span>
         ) : node.kind === "constraint" ? (
-          <CheckIcon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
+          <CheckIcon
+            className="size-3 shrink-0 text-muted-foreground"
+            aria-hidden
+          />
         ) : (
           <span className="inline-block size-4 shrink-0" aria-hidden />
         )}
         {(() => {
           // Excluded element / disabled constraint → muted strike-through (wins).
-          const muted = node.excluded || (node.kind === "constraint" && node.disabled)
+          const muted =
+            node.excluded || (node.kind === "constraint" && node.disabled)
           // Override provenance tint (elements: element-field overrides only;
           // constraints: their own provenance), suppressed under the muted style.
           const tint = muted ? null : node.overrideOrigin
@@ -738,7 +839,7 @@ function TreeNode({
                 node.kind === "element" && "font-medium",
                 muted && "text-muted-foreground line-through",
                 tint === "own" && "text-provenance-own",
-                tint === "inherited" && "text-provenance-inherited",
+                tint === "inherited" && "text-provenance-inherited"
               )}
             >
               {label}
@@ -781,17 +882,31 @@ function TreeNode({
 }
 
 /** A labelled field row for the detail panel. */
-export function Field({ label, children }: { label: string; children: ReactNode }) {
+export function Field({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) {
   return (
     <div>
-      <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">{label}</div>
+      <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
+        {label}
+      </div>
       <div className="text-sm break-words">{children}</div>
     </div>
   )
 }
 
 /** The sticky, bordered right-pane region that holds a node's details. */
-export function DetailPanel({ label, children }: { label: string; children: ReactNode }) {
+export function DetailPanel({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) {
   return (
     <div
       role="region"

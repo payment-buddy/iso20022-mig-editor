@@ -26,7 +26,7 @@ export function ProvenanceMarker({
         "size-1.5 shrink-0",
         provenance === "own" && "rounded-full bg-provenance-own",
         provenance === "inherited" &&
-          "rotate-45 scale-[0.85] bg-provenance-inherited",
+          "scale-[0.85] rotate-45 bg-provenance-inherited",
         className
       )}
     />

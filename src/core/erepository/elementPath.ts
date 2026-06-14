@@ -16,7 +16,10 @@ export function rootPath(root: MessageElement): string {
  * message version. Used to tell whether an override's path actually exists in a
  * given flavour/version.
  */
-export function elementAtPath(root: MessageElement, path: string): MessageElement | null {
+export function elementAtPath(
+  root: MessageElement,
+  path: string
+): MessageElement | null {
   // Absolute paths begin with "/", so the split yields an empty first segment.
   const segments = path.split("/")
   const start = segments[0] === "" ? 1 : 0

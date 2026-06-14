@@ -7,7 +7,9 @@ import {
   removeConstraintAnnotation,
 } from "./annotations"
 
-function mig(over: Partial<MessageImplementationGuide> = {}): MessageImplementationGuide {
+function mig(
+  over: Partial<MessageImplementationGuide> = {}
+): MessageImplementationGuide {
   return {
     name: "Guide",
     version: "1.0",
@@ -42,7 +44,9 @@ describe("removeAnnotation", () => {
     const next = removeAnnotation(base, "Usage")
 
     expect(next.elementAnnotationNames).toEqual(["Mandate"])
-    expect(next.elementOverrides["/Doc/Amt"].annotations).toEqual({ Mandate: "x" })
+    expect(next.elementOverrides["/Doc/Amt"].annotations).toEqual({
+      Mandate: "x",
+    })
     // Dt's annotations become empty → pruned, but other fields remain.
     expect(next.elementOverrides["/Doc/Dt"]).toEqual({ minOccurs: 0 })
   })
@@ -63,7 +67,9 @@ describe("removeAnnotation", () => {
       elementOverrides: { "/Doc/Amt": { annotations: { Usage: "x" } } },
     })
     removeAnnotation(base, "Usage")
-    expect(base.elementOverrides["/Doc/Amt"].annotations).toEqual({ Usage: "x" })
+    expect(base.elementOverrides["/Doc/Amt"].annotations).toEqual({
+      Usage: "x",
+    })
   })
 })
 
@@ -89,8 +95,16 @@ describe("removeConstraintAnnotation", () => {
       elementOverrides: {
         "/Doc/Amt": {
           additionalConstraints: [
-            { name: "Rule A", definition: "", annotations: { Severity: "high", Owner: "x" } },
-            { name: "Rule B", definition: "", annotations: { Severity: "low" } },
+            {
+              name: "Rule A",
+              definition: "",
+              annotations: { Severity: "high", Owner: "x" },
+            },
+            {
+              name: "Rule B",
+              definition: "",
+              annotations: { Severity: "low" },
+            },
           ],
         },
       },
@@ -109,7 +123,9 @@ describe("removeConstraintAnnotation", () => {
       constraintAnnotationNames: ["Severity"],
       elementOverrides: {
         "/Doc/Amt": {
-          additionalConstraints: [{ name: "Rule A", definition: "", annotations: { Severity: "x" } }],
+          additionalConstraints: [
+            { name: "Rule A", definition: "", annotations: { Severity: "x" } },
+          ],
         },
       },
     })
@@ -125,12 +141,16 @@ describe("removeConstraintAnnotation", () => {
       constraintAnnotationNames: ["Severity"],
       elementOverrides: {
         "/Doc/Amt": {
-          additionalConstraints: [{ name: "Rule A", definition: "", annotations: { Severity: "x" } }],
+          additionalConstraints: [
+            { name: "Rule A", definition: "", annotations: { Severity: "x" } },
+          ],
         },
       },
     })
     removeConstraintAnnotation(base, "Severity")
-    expect(base.elementOverrides["/Doc/Amt"].additionalConstraints?.[0].annotations).toEqual({
+    expect(
+      base.elementOverrides["/Doc/Amt"].additionalConstraints?.[0].annotations
+    ).toEqual({
       Severity: "x",
     })
   })

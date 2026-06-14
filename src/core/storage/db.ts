@@ -66,7 +66,7 @@ export async function closeDB(): Promise<void> {
 export async function withStore<T>(
   storeName: string,
   fn: (store: IDBObjectStore) => IDBRequest<T>,
-  mode: IDBTransactionMode = "readonly",
+  mode: IDBTransactionMode = "readonly"
 ): Promise<T> {
   const db = await openDB()
   return new Promise<T>((resolve, reject) => {

@@ -45,7 +45,8 @@ export function MigConstraintDetail({
 
   const commitName = (text: string) => {
     const name = text.trim()
-    if (name === "" || name === constraint.name || takenNames.includes(name)) return
+    if (name === "" || name === constraint.name || takenNames.includes(name))
+      return
     onRename(name)
   }
   const commitDefinition = (text: string) => {
@@ -73,7 +74,10 @@ export function MigConstraintDetail({
   return (
     <DetailPanel label="Constraint details">
       <div className="flex items-center gap-1.5">
-        <CheckIcon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+        <CheckIcon
+          className="size-3.5 shrink-0 text-muted-foreground"
+          aria-hidden
+        />
         <div className="min-w-0 flex-1 font-medium">
           <InlineEdit
             value={constraint.name}

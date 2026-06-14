@@ -30,23 +30,43 @@ describe("InlineEdit", () => {
     await user.keyboard("{Escape}")
 
     expect(onCommit).not.toHaveBeenCalled()
-    expect(screen.queryByRole("textbox", { name: "Note" })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("textbox", { name: "Note" })
+    ).not.toBeInTheDocument()
   })
 
   it("collapses a long value behind a Show more/less toggle", async () => {
     const user = userEvent.setup()
     render(
-      <InlineEdit value={"x".repeat(500)} onCommit={vi.fn()} ariaLabel="Description" multiline />,
+      <InlineEdit
+        value={"x".repeat(500)}
+        onCommit={vi.fn()}
+        ariaLabel="Description"
+        multiline
+      />
     )
 
     await user.click(screen.getByRole("button", { name: "Show more" }))
-    expect(screen.getByRole("button", { name: "Show less" })).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Show less" })
+    ).toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "Show less" }))
-    expect(screen.getByRole("button", { name: "Show more" })).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Show more" })
+    ).toBeInTheDocument()
   })
 
   it("does not show a toggle for short values", () => {
-    render(<InlineEdit value="short" onCommit={vi.fn()} ariaLabel="Description" multiline />)
-    expect(screen.queryByRole("button", { name: /show (more|less)/i })).not.toBeInTheDocument()
+    render(
+      <InlineEdit
+        value="short"
+        onCommit={vi.fn()}
+        ariaLabel="Description"
+        multiline
+      />
+    )
+    expect(
+      screen.queryByRole("button", { name: /show (more|less)/i })
+    ).not.toBeInTheDocument()
   })
 })

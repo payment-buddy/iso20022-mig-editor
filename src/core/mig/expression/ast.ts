@@ -71,7 +71,11 @@ export type ExprNode = Binary | Compare | Call | Path | Str | Num
  * Presence-cardinality functions: count how many arguments hold, then bound the
  * tally (`≥1` / `≤1` / `=1`). Boolean-returning, like `not`/`matches`.
  */
-export const CARDINALITY_FUNCTIONS = new Set(["at-least-one", "at-most-one", "exactly-one"])
+export const CARDINALITY_FUNCTIONS = new Set([
+  "at-least-one",
+  "at-most-one",
+  "exactly-one",
+])
 
 /** Coarse value type, used to flag clearly-wrong function arguments. */
 export type ValueKind = "boolean" | "string" | "number" | "unknown"
@@ -90,7 +94,12 @@ export function kindOf(node: ExprNode): ValueKind {
     case "compare":
       return "boolean"
     case "call":
-      if (node.name === "not" || node.name === "matches" || node.name === "all-equal") return "boolean"
+      if (
+        node.name === "not" ||
+        node.name === "matches" ||
+        node.name === "all-equal"
+      )
+        return "boolean"
       if (CARDINALITY_FUNCTIONS.has(node.name)) return "boolean"
       if (node.name === "count") return "number"
       return "unknown"

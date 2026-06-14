@@ -116,7 +116,10 @@ function compareValues(op: string, left: Value, right: Value): boolean {
 }
 
 /** Resolve a location path to a node-set, relative to `context`. */
-function evalPath(context: EvalNode, steps: { name: string; isAttribute: boolean }[]): NodeRef[] {
+function evalPath(
+  context: EvalNode,
+  steps: { name: string; isAttribute: boolean }[]
+): NodeRef[] {
   let current: EvalNode[] = [context]
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]
@@ -127,7 +130,9 @@ function evalPath(context: EvalNode, steps: { name: string; isAttribute: boolean
         .filter((n) => step.name in n.attributes)
         .map((n) => ({ value: n.attributes[step.name] }))
     }
-    current = current.flatMap((n) => n.children.filter((c) => c.localName === step.name))
+    current = current.flatMap((n) =>
+      n.children.filter((c) => c.localName === step.name)
+    )
   }
   return current.map((n) => ({ value: n.text.trim(), element: n }))
 }
@@ -143,13 +148,21 @@ function evalNode(node: ExprNode, context: EvalNode): Value {
     case "binary": {
       const l = toBool(evalNode(node.left, context))
       // Short-circuit where it matches the operator's semantics.
-      if (node.op === "or") return { kind: "bool", value: l || toBool(evalNode(node.right, context)) }
+      if (node.op === "or")
+        return {
+          kind: "bool",
+          value: l || toBool(evalNode(node.right, context)),
+        }
       return { kind: "bool", value: l && toBool(evalNode(node.right, context)) } // and
     }
     case "compare":
       return {
         kind: "bool",
-        value: compareValues(node.op, evalNode(node.left, context), evalNode(node.right, context)),
+        value: compareValues(
+          node.op,
+          evalNode(node.left, context),
+          evalNode(node.right, context)
+        ),
       }
     case "call":
       return evalCall(node.name, node.args, context)
@@ -172,13 +185,16 @@ function evalCall(name: string, args: ExprNode[], context: EvalNode): Value {
       try {
         re = new RegExp(pattern)
       } catch {
-        throw new EvalError("matches() pattern is not a valid regular expression")
+        throw new EvalError(
+          "matches() pattern is not a valid regular expression"
+        )
       }
       return { kind: "bool", value: re.test(input) }
     }
     case "all-equal": {
       const v = evalNode(args[0], context)
-      if (v.kind !== "nodes") throw new EvalError("all-equal() expects a node-set")
+      if (v.kind !== "nodes")
+        throw new EvalError("all-equal() expects a node-set")
       const vals = v.nodes.map((n) => n.value)
       // Vacuously true for 0 or 1 nodes — "all occurrences are equal".
       return { kind: "bool", value: vals.every((x) => x === vals[0]) }
@@ -188,9 +204,16 @@ function evalCall(name: string, args: ExprNode[], context: EvalNode): Value {
     case "exactly-one": {
       // Count how many arguments hold (a path counts once when present, however
       // many times it occurs), then bound that tally.
-      const held = args.reduce((n, a) => n + (toBool(evalNode(a, context)) ? 1 : 0), 0)
+      const held = args.reduce(
+        (n, a) => n + (toBool(evalNode(a, context)) ? 1 : 0),
+        0
+      )
       const value =
-        name === "at-least-one" ? held >= 1 : name === "at-most-one" ? held <= 1 : held === 1
+        name === "at-least-one"
+          ? held >= 1
+          : name === "at-most-one"
+            ? held <= 1
+            : held === 1
       return { kind: "bool", value }
     }
     default:
@@ -204,7 +227,10 @@ function evalCall(name: string, args: ExprNode[], context: EvalNode): Value {
  * function or a bad regex) — the caller should skip rather than treat it as a
  * violation.
  */
-export function evaluateExpression(ast: ExprNode, context: EvalNode): EvalResult {
+export function evaluateExpression(
+  ast: ExprNode,
+  context: EvalNode
+): EvalResult {
   try {
     return { ok: true, value: toBool(evalNode(ast, context)) }
   } catch (e) {

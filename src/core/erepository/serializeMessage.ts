@@ -14,7 +14,12 @@
 //   - `isAttribute` / `isChoice` are emitted only when `true`.
 
 import { stringify } from "yaml"
-import type { Code, Constraint, MessageDefinition, MessageElement } from "@/core/types/types"
+import type {
+  Code,
+  Constraint,
+  MessageDefinition,
+  MessageElement,
+} from "@/core/types/types"
 
 const STRINGIFY_OPTIONS = {
   lineWidth: 0,
@@ -46,7 +51,10 @@ function canonicalCode(code: Code): Record<string, unknown> {
 
 /** One constraint → plain object: name, definition, then optional expression/annotations. */
 function canonicalConstraint(c: Constraint): Record<string, unknown> {
-  const out: Record<string, unknown> = { name: c.name, definition: c.definition }
+  const out: Record<string, unknown> = {
+    name: c.name,
+    definition: c.definition,
+  }
   if (c.expression) out.expression = c.expression
   const names = Object.keys(c.annotations ?? {}).sort(byString)
   if (names.length > 0) {
@@ -72,7 +80,8 @@ function canonicalElement(el: MessageElement): Record<string, unknown> {
     if (v !== null) out[key] = v
   }
   if (el.codes.length > 0) out.codes = el.codes.map(canonicalCode)
-  if (el.constraints.length > 0) out.constraints = el.constraints.map(canonicalConstraint)
+  if (el.constraints.length > 0)
+    out.constraints = el.constraints.map(canonicalConstraint)
   if (el.examples.length > 0) out.examples = [...el.examples]
   if (el.elements.length > 0) out.elements = el.elements.map(canonicalElement)
   return out

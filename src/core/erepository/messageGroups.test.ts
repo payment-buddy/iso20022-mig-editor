@@ -2,13 +2,24 @@ import { describe, expect, it } from "vitest"
 import type { MessageDefinition } from "@/core/types/types"
 import { baseName, groupMessages } from "./messageGroups"
 
-function msg(name: string, shortCode: string, identifier: string): MessageDefinition {
-  return { name, shortCode, identifier, rootElement: {} as MessageDefinition["rootElement"] }
+function msg(
+  name: string,
+  shortCode: string,
+  identifier: string
+): MessageDefinition {
+  return {
+    name,
+    shortCode,
+    identifier,
+    rootElement: {} as MessageDefinition["rootElement"],
+  }
 }
 
 describe("baseName", () => {
   it("strips a trailing version suffix", () => {
-    expect(baseName("FIToFICustomerCreditTransferV08")).toBe("FIToFICustomerCreditTransfer")
+    expect(baseName("FIToFICustomerCreditTransferV08")).toBe(
+      "FIToFICustomerCreditTransfer"
+    )
     expect(baseName("NoSuffix")).toBe("NoSuffix")
   })
 })

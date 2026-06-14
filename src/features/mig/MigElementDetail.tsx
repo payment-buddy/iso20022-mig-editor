@@ -1,5 +1,9 @@
 import { type ReactNode } from "react"
-import { ArrowCounterClockwiseIcon, PlusIcon, WarningIcon } from "@phosphor-icons/react"
+import {
+  ArrowCounterClockwiseIcon,
+  PlusIcon,
+  WarningIcon,
+} from "@phosphor-icons/react"
 import type { ElementOverride, MessageElement } from "@/core/types/types"
 import {
   createValueValidator,
@@ -13,7 +17,12 @@ import { DetailPanel, Field } from "@/features/repository/ElementTree"
 import { ProvenanceDot } from "./ProvenanceDot"
 
 /** Base types that carry a length facet. */
-const LENGTH_BASE_TYPES = new Set(["Text", "CodeSet", "IdentifierSet", "Binary"])
+const LENGTH_BASE_TYPES = new Set([
+  "Text",
+  "CodeSet",
+  "IdentifierSet",
+  "Binary",
+])
 
 /** Base types that carry an inclusive-range facet (values may be decimals). */
 const INCLUSIVE_BASE_TYPES = new Set(["Year", "Amount", "Quantity", "Rate"])
@@ -22,7 +31,13 @@ const INCLUSIVE_BASE_TYPES = new Set(["Year", "Amount", "Quantity", "Rate"])
 const DIGITS_BASE_TYPES = new Set(["Amount", "Quantity", "Rate"])
 
 /** Base types that carry a pattern (regex) facet. */
-const PATTERN_BASE_TYPES = new Set(["Text", "CodeSet", "IdentifierSet", "DateTime", "Quantity"])
+const PATTERN_BASE_TYPES = new Set([
+  "Text",
+  "CodeSet",
+  "IdentifierSet",
+  "DateTime",
+  "Quantity",
+])
 
 /** Base types that carry an enumerated allowed-values facet. */
 const ALLOWED_VALUES_BASE_TYPES = new Set(["Text", "CodeSet"])
@@ -59,19 +74,28 @@ export function MigElementDetail({
   /** Declared MIG-level annotation names (managed in the metadata block). */
   propertyNames: string[]
   /** Persist one override field. */
-  onSet: <K extends keyof ElementOverride>(field: K, value: ElementOverride[K]) => void
+  onSet: <K extends keyof ElementOverride>(
+    field: K,
+    value: ElementOverride[K]
+  ) => void
   /** Drop one override field (back to inherited). */
   onClear: (field: keyof ElementOverride) => void
   /** Add a MIG-specific constraint to this element and select it in the tree. */
   onAddConstraint: () => void
 }) {
   // Key-presence, not truthiness: a stored `null` still counts as set.
-  const has = (field: keyof ElementOverride) => override !== undefined && field in override
-  const inh = (field: keyof ElementOverride) => inherited !== undefined && field in inherited
+  const has = (field: keyof ElementOverride) =>
+    override !== undefined && field in override
+  const inh = (field: keyof ElementOverride) =>
+    inherited !== undefined && field in inherited
   // A field shown without its own override but set by a parent reads "inherited".
-  const inheritedHere = (field: keyof ElementOverride) => !has(field) && inh(field)
+  const inheritedHere = (field: keyof ElementOverride) =>
+    !has(field) && inh(field)
   // Baseline number = the parent's value if it sets one, else the ISO standard.
-  const numBaseline = (field: keyof ElementOverride, iso: number | null): number | null => {
+  const numBaseline = (
+    field: keyof ElementOverride,
+    iso: number | null
+  ): number | null => {
     const v = inherited?.[field]
     return inh(field) && (typeof v === "number" || v === null) ? v : iso
   }
@@ -91,8 +115,12 @@ export function MigElementDetail({
 
   // Definition (text). Inherited-or-ISO baseline.
   const defOverridden = has("definition")
-  const defBaseline = inh("definition") ? (inherited?.definition ?? "") : element.definition
-  const defEffective = defOverridden ? (override?.definition ?? "") : defBaseline
+  const defBaseline = inh("definition")
+    ? (inherited?.definition ?? "")
+    : element.definition
+  const defEffective = defOverridden
+    ? (override?.definition ?? "")
+    : defBaseline
   const commitDefinition = (text: string) =>
     text === defBaseline ? onClear("definition") : onSet("definition", text)
 
@@ -108,7 +136,12 @@ export function MigElementDetail({
   const fractionDigits = numField("fractionDigits", element.fractionDigits)
 
   // Loosening / range warnings (advisory).
-  const minOccursWarn = looseningWarning("min occurs", minOccurs.baseline, minOccurs.effective, "min")
+  const minOccursWarn = looseningWarning(
+    "min occurs",
+    minOccurs.baseline,
+    minOccurs.effective,
+    "min"
+  )
   // Any max occurs below min occurs is flagged — including `maxOccurs: 0`
   // (exclusion) while min still requires the element. Set min occurs to 0 too for
   // a clean exclusion.
@@ -117,42 +150,70 @@ export function MigElementDetail({
     minOccurs.effective !== null &&
     maxOccurs.effective < minOccurs.effective
       ? `Occurs: max ${maxOccurs.effective} is below min ${minOccurs.effective}.`
-      : looseningWarning("max occurs", maxOccurs.baseline, maxOccurs.effective, "max")
-  const minLengthWarn = looseningWarning("min length", minLength.baseline, minLength.effective, "min")
+      : looseningWarning(
+          "max occurs",
+          maxOccurs.baseline,
+          maxOccurs.effective,
+          "max"
+        )
+  const minLengthWarn = looseningWarning(
+    "min length",
+    minLength.baseline,
+    minLength.effective,
+    "min"
+  )
   const maxLengthWarn =
     rangeWarning("Length", minLength.effective, maxLength.effective) ??
-    looseningWarning("max length", maxLength.baseline, maxLength.effective, "max")
+    looseningWarning(
+      "max length",
+      maxLength.baseline,
+      maxLength.effective,
+      "max"
+    )
   const minInclusiveWarn = looseningWarning(
     "min inclusive",
     minInclusive.baseline,
     minInclusive.effective,
-    "min",
+    "min"
   )
   const maxInclusiveWarn =
     rangeWarning("Inclusive", minInclusive.effective, maxInclusive.effective) ??
-    looseningWarning("max inclusive", maxInclusive.baseline, maxInclusive.effective, "max")
+    looseningWarning(
+      "max inclusive",
+      maxInclusive.baseline,
+      maxInclusive.effective,
+      "max"
+    )
   const totalDigitsWarn = looseningWarning(
     "total digits",
     totalDigits.baseline,
     totalDigits.effective,
-    "max",
+    "max"
   )
   const fractionDigitsWarn = looseningWarning(
     "fraction digits",
     fractionDigits.baseline,
     fractionDigits.effective,
-    "max",
+    "max"
   )
 
-  const showLength = element.baseType !== null && LENGTH_BASE_TYPES.has(element.baseType)
-  const showInclusive = element.baseType !== null && INCLUSIVE_BASE_TYPES.has(element.baseType)
-  const showDigits = element.baseType !== null && DIGITS_BASE_TYPES.has(element.baseType)
-  const showPattern = element.baseType !== null && PATTERN_BASE_TYPES.has(element.baseType)
+  const showLength =
+    element.baseType !== null && LENGTH_BASE_TYPES.has(element.baseType)
+  const showInclusive =
+    element.baseType !== null && INCLUSIVE_BASE_TYPES.has(element.baseType)
+  const showDigits =
+    element.baseType !== null && DIGITS_BASE_TYPES.has(element.baseType)
+  const showPattern =
+    element.baseType !== null && PATTERN_BASE_TYPES.has(element.baseType)
 
   // Pattern (regex text). Empty means "no pattern" (null = remove the constraint).
   const patternOverridden = has("pattern")
-  const basePattern = inh("pattern") ? (inherited?.pattern ?? null) : element.pattern
-  const patternEffective = patternOverridden ? (override?.pattern ?? "") : (basePattern ?? "")
+  const basePattern = inh("pattern")
+    ? (inherited?.pattern ?? null)
+    : element.pattern
+  const patternEffective = patternOverridden
+    ? (override?.pattern ?? "")
+    : (basePattern ?? "")
   const patternWarn = patternWarning(patternEffective || null)
   const commitPattern = (text: string) => {
     const value = text === "" ? null : text
@@ -172,23 +233,32 @@ export function MigElementDetail({
     : baseAllowedValues
   const commitAllowed = (values: string[]) => {
     // Empty or back-to-inherited means "no override"
-    if (values.length === 0 || arraysEqual(values, baseAllowedValues)) onClear("allowedValues")
+    if (values.length === 0 || arraysEqual(values, baseAllowedValues))
+      onClear("allowedValues")
     else onSet("allowedValues", values)
   }
 
   // Examples (simple types only).
   const showExamples = element.baseType !== null
-  const baseExamples = inh("examples") ? (inherited?.examples ?? []) : element.examples
+  const baseExamples = inh("examples")
+    ? (inherited?.examples ?? [])
+    : element.examples
   const examplesOverridden = has("examples")
-  const effectiveExamples = examplesOverridden ? (override?.examples ?? []) : baseExamples
+  const effectiveExamples = examplesOverridden
+    ? (override?.examples ?? [])
+    : baseExamples
   const commitExamples = (values: string[]) => {
-    if (values.length === 0 || arraysEqual(values, baseExamples)) onClear("examples")
+    if (values.length === 0 || arraysEqual(values, baseExamples))
+      onClear("examples")
     else onSet("examples", values)
   }
 
   // Allowed values and examples are validated against the effective (inherited +
   // own) length/pattern, so an inherited constraint still applies.
-  const validateValue = createValueValidator(element, { ...inherited, ...override })
+  const validateValue = createValueValidator(element, {
+    ...inherited,
+    ...override,
+  })
 
   // Custom property values for this element (names are declared MIG-level).
   const customValues = override?.annotations ?? {}
@@ -211,7 +281,9 @@ export function MigElementDetail({
       </Field>
       <Field label="Type">
         {element.type}
-        {element.baseType && <span className="text-muted-foreground"> ({element.baseType})</span>}
+        {element.baseType && (
+          <span className="text-muted-foreground"> ({element.baseType})</span>
+        )}
       </Field>
 
       <OverrideRow
@@ -420,7 +492,8 @@ export function MigElementDetail({
             const inhVal = inherited?.annotations?.[name]
             const overridden = ownVal != null && ownVal !== ""
             const inheritedHere = !overridden && inhVal != null && inhVal !== ""
-            const value = (overridden ? ownVal : inheritedHere ? inhVal : "") ?? ""
+            const value =
+              (overridden ? ownVal : inheritedHere ? inhVal : "") ?? ""
             return (
               <div key={name} className="flex items-start gap-2">
                 <div className="flex w-28 shrink-0 items-center gap-1.5 pt-1.5 text-xs font-medium break-words">
@@ -513,7 +586,8 @@ function NumberOverrideField({
       value = null
     } else {
       const n = Number(t)
-      const valid = (integer ? Number.isInteger(n) : Number.isFinite(n)) && n >= 0
+      const valid =
+        (integer ? Number.isInteger(n) : Number.isFinite(n)) && n >= 0
       if (!valid) return // ignore invalid input
       value = n
     }
@@ -573,7 +647,11 @@ function OverrideRow({
           <span className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
             {label}
           </span>
-          <ProvenanceDot overridden={overridden} inherited={inherited} baseline={baseline} />
+          <ProvenanceDot
+            overridden={overridden}
+            inherited={inherited}
+            baseline={baseline}
+          />
         </div>
         {overridden && (
           <button

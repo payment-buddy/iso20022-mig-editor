@@ -28,7 +28,17 @@ describe("tokenize", () => {
   })
 
   it("reads multi-character comparison operators greedily", () => {
-    expect(values("a <= b >= c != d < e")).toEqual(["a", "<=", "b", ">=", "c", "!=", "d", "<", "e"])
+    expect(values("a <= b >= c != d < e")).toEqual([
+      "a",
+      "<=",
+      "b",
+      ">=",
+      "c",
+      "!=",
+      "d",
+      "<",
+      "e",
+    ])
   })
 
   it("keeps the attribute marker on the name token", () => {
@@ -47,7 +57,12 @@ describe("tokenize", () => {
 
   it("records source offsets", () => {
     const toks = tokenize("A = 'b'")
-    expect(toks[2]).toMatchObject({ type: "string", value: "b", start: 4, end: 7 })
+    expect(toks[2]).toMatchObject({
+      type: "string",
+      value: "b",
+      start: 4,
+      end: 7,
+    })
   })
 
   it("throws on an unterminated string", () => {

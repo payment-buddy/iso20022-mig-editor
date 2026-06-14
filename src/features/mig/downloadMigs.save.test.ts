@@ -4,7 +4,12 @@ import type { MessageImplementationGuide } from "@/core/types/types"
 import { downloadMigs } from "./downloadMigs"
 
 function mig(name: string, version: string): MessageImplementationGuide {
-  return { name, version, messageIdentifier: "pacs.008.001.08", elementOverrides: {} }
+  return {
+    name,
+    version,
+    messageIdentifier: "pacs.008.001.08",
+    elementOverrides: {},
+  }
 }
 
 const win = window as unknown as { showSaveFilePicker?: unknown }
@@ -27,7 +32,7 @@ describe("downloadMigs", () => {
     await downloadMigs([mig("EPC", "1.0")])
 
     expect(picker).toHaveBeenCalledWith(
-      expect.objectContaining({ suggestedName: "EPC-1.0.yaml" }),
+      expect.objectContaining({ suggestedName: "EPC-1.0.yaml" })
     )
     expect(write).toHaveBeenCalledWith(expect.stringContaining("name: EPC"))
     expect(close).toHaveBeenCalled()
@@ -54,7 +59,9 @@ describe("downloadMigs", () => {
   it("swallows the user cancelling the save dialog (AbortError)", async () => {
     win.showSaveFilePicker = vi
       .fn()
-      .mockRejectedValue(Object.assign(new Error("cancelled"), { name: "AbortError" }))
+      .mockRejectedValue(
+        Object.assign(new Error("cancelled"), { name: "AbortError" })
+      )
     const createObjectURL = vi.fn()
     URL.createObjectURL = createObjectURL
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})

@@ -12,11 +12,17 @@ describe("parseMessageXml", () => {
     const result = parseMessageXml(xml)
     if ("error" in result) throw new Error(result.error)
     expect(result.root.localName).toBe("Document")
-    expect(result.root.children.map((c) => c.localName)).toEqual(["GrpHdr", "Amt"])
+    expect(result.root.children.map((c) => c.localName)).toEqual([
+      "GrpHdr",
+      "Amt",
+    ])
     const amt = result.root.children[1]
     expect(amt.text.trim()).toBe("100")
     expect(amt.attributes).toEqual({ Ccy: "EUR" }) // xmlns excluded
-    expect(result.root.children[0].children[0]).toMatchObject({ localName: "CreDtTm", text: "2024-01-01" })
+    expect(result.root.children[0].children[0]).toMatchObject({
+      localName: "CreDtTm",
+      text: "2024-01-01",
+    })
   })
 
   it("reports malformed XML as an error", () => {

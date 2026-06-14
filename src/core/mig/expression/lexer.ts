@@ -33,7 +33,8 @@ const KEYWORDS = new Set(["and", "or"])
 const isNameStart = (c: string) => /[A-Za-z_]/.test(c)
 const isNameChar = (c: string) => /[A-Za-z0-9_.-]/.test(c)
 const isDigit = (c: string) => c >= "0" && c <= "9"
-const isSpace = (c: string) => c === " " || c === "\t" || c === "\n" || c === "\r"
+const isSpace = (c: string) =>
+  c === " " || c === "\t" || c === "\n" || c === "\r"
 
 /**
  * Split `src` into tokens. Whitespace is skipped. Throws `ExprSyntaxError` on an
@@ -72,7 +73,8 @@ export function tokenize(src: string): Token[] {
         value += src[i]
         i++
       }
-      if (!closed) throw new ExprSyntaxError("Unterminated string literal", start, n)
+      if (!closed)
+        throw new ExprSyntaxError("Unterminated string literal", start, n)
       tokens.push({ type: "string", value, start, end: i })
       continue
     }
@@ -95,11 +97,20 @@ export function tokenize(src: string): Token[] {
       const start = i
       if (c === "@") i++
       if (i >= n || !isNameStart(src[i])) {
-        throw new ExprSyntaxError("Expected an attribute name after '@'", start, i)
+        throw new ExprSyntaxError(
+          "Expected an attribute name after '@'",
+          start,
+          i
+        )
       }
       while (i < n && isNameChar(src[i])) i++
       const value = src.slice(start, i)
-      tokens.push({ type: KEYWORDS.has(value) ? "kw" : "name", value, start, end: i })
+      tokens.push({
+        type: KEYWORDS.has(value) ? "kw" : "name",
+        value,
+        start,
+        end: i,
+      })
       continue
     }
 
@@ -114,13 +125,25 @@ export function tokenize(src: string): Token[] {
       i += 2
       continue
     }
-    if (c === "=" || c === "<" || c === ">" || c === "(" || c === ")" || c === "," || c === "/") {
+    if (
+      c === "=" ||
+      c === "<" ||
+      c === ">" ||
+      c === "(" ||
+      c === ")" ||
+      c === "," ||
+      c === "/"
+    ) {
       tokens.push({ type: "op", value: c, start: i, end: i + 1 })
       i++
       continue
     }
 
-    throw new ExprSyntaxError(`Unexpected character ${JSON.stringify(c)}`, i, i + 1)
+    throw new ExprSyntaxError(
+      `Unexpected character ${JSON.stringify(c)}`,
+      i,
+      i + 1
+    )
   }
 
   return tokens

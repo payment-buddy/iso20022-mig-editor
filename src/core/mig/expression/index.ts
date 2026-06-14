@@ -36,7 +36,8 @@ import { parseExpression } from "./parser"
 import { validateExpressionPaths } from "./paths"
 
 /** Format a parse error with its 1-based source position. */
-const atPosition = (message: string, start: number) => `${message} (at position ${start + 1})`
+const atPosition = (message: string, start: number) =>
+  `${message} (at position ${start + 1})`
 
 /**
  * Validate a constraint expression's syntax for display. Returns `null` when the
@@ -60,11 +61,13 @@ export function validateExpressionSyntax(src: string): string | null {
  */
 export function validateConstraintExpression(
   src: string,
-  owner: MessageElement | null,
+  owner: MessageElement | null
 ): string[] {
   if (src.trim() === "") return []
   const result = parseExpression(src)
   if (!result.ok) return [atPosition(result.error.message, result.error.start)]
   if (!owner) return []
-  return validateExpressionPaths(result.ast, owner).map((e) => atPosition(e.message, e.start))
+  return validateExpressionPaths(result.ast, owner).map((e) =>
+    atPosition(e.message, e.start)
+  )
 }

@@ -86,7 +86,11 @@ const SCALAR_FIELDS: { key: keyof ElementOverride; label: string }[] = [
 
 const sameSet = (a: string[], b: string[]) => {
   const sb = new Set(b)
-  return a.length === b.length && new Set(a).size === sb.size && a.every((x) => sb.has(x))
+  return (
+    a.length === b.length &&
+    new Set(a).size === sb.size &&
+    a.every((x) => sb.has(x))
+  )
 }
 
 const summarize = (xs: string[]) =>
@@ -97,7 +101,10 @@ const summarize = (xs: string[]) =>
       : xs.join(", ")
 
 /** Render a declared scalar value for display. `null` (a cleared constraint) is explicit. */
-function renderScalar(key: keyof ElementOverride, v: number | string | null): string {
+function renderScalar(
+  key: keyof ElementOverride,
+  v: number | string | null
+): string {
   if (v === null) return "cleared"
   if (key === "definition") return v === "" ? "(empty)" : String(v)
   return String(v)
@@ -110,7 +117,11 @@ function renderConstraint(c: Constraint): string {
 }
 
 function sameConstraint(a: Constraint, b: Constraint): boolean {
-  if (a.definition !== b.definition || (a.expression ?? "") !== (b.expression ?? "")) return false
+  if (
+    a.definition !== b.definition ||
+    (a.expression ?? "") !== (b.expression ?? "")
+  )
+    return false
   const aa = a.annotations ?? {}
   const ba = b.annotations ?? {}
   const keys = new Set([...Object.keys(aa), ...Object.keys(ba)])
@@ -127,7 +138,7 @@ function pair(
   inA: boolean,
   inB: boolean,
   a: string | null,
-  b: string | null,
+  b: string | null
 ): FieldChange | null {
   if (!inA && !inB) return null
   if (inA && inB) return { label, kind: "changed", a, b, ref }
@@ -137,7 +148,10 @@ function pair(
 }
 
 /** Field-level changes between two declared overrides (either may be `{}`). */
-function diffOverride(ovA: ElementOverride, ovB: ElementOverride): FieldChange[] {
+function diffOverride(
+  ovA: ElementOverride,
+  ovB: ElementOverride
+): FieldChange[] {
   const changes: FieldChange[] = []
   const push = (c: FieldChange | null) => {
     if (c) changes.push(c)
@@ -158,8 +172,8 @@ function diffOverride(ovA: ElementOverride, ovB: ElementOverride): FieldChange[]
         inA,
         inB,
         inA ? renderScalar(key, rawA) : null,
-        inB ? renderScalar(key, rawB) : null,
-      ),
+        inB ? renderScalar(key, rawB) : null
+      )
     )
   }
 
@@ -179,8 +193,8 @@ function diffOverride(ovA: ElementOverride, ovB: ElementOverride): FieldChange[]
         inA,
         inB,
         inA ? summarize(valA) : null,
-        inB ? summarize(valB) : null,
-      ),
+        inB ? summarize(valB) : null
+      )
     )
   }
 
@@ -197,8 +211,8 @@ function diffOverride(ovA: ElementOverride, ovB: ElementOverride): FieldChange[]
         inA,
         inB,
         inA ? annA[name] : null,
-        inB ? annB[name] : null,
-      ),
+        inB ? annB[name] : null
+      )
     )
   }
 
@@ -215,8 +229,8 @@ function diffOverride(ovA: ElementOverride, ovB: ElementOverride): FieldChange[]
         !!ca,
         !!cb,
         ca ? renderConstraint(ca) : null,
-        cb ? renderConstraint(cb) : null,
-      ),
+        cb ? renderConstraint(cb) : null
+      )
     )
   }
 
@@ -234,7 +248,7 @@ export function compareMigs(
   b: MigInput,
   order?: Map<string, number>,
   /** Resolve a path to its element's human name (falls back to the xmlTag). */
-  nameFor?: (path: string) => string | undefined,
+  nameFor?: (path: string) => string | undefined
 ): MigComparison {
   const overA = a.elementOverrides
   const overB = b.elementOverrides
@@ -254,13 +268,16 @@ export function compareMigs(
   }
 
   const rank = (p: string) => order?.get(p) ?? Number.POSITIVE_INFINITY
-  paths.sort((x, y) => rank(x.path) - rank(y.path) || x.path.localeCompare(y.path))
+  paths.sort(
+    (x, y) => rank(x.path) - rank(y.path) || x.path.localeCompare(y.path)
+  )
 
   return {
     a: { name: a.name, version: a.version },
     b: { name: b.name, version: b.version },
     sameMessage:
-      shortCodeForIdentifier(a.messageIdentifier) === shortCodeForIdentifier(b.messageIdentifier),
+      shortCodeForIdentifier(a.messageIdentifier) ===
+      shortCodeForIdentifier(b.messageIdentifier),
     paths,
   }
 }

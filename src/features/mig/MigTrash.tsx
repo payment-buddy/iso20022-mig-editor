@@ -56,9 +56,15 @@ export function MigTrash() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6 xl:max-w-4xl">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="mr-auto text-base font-semibold tracking-tight">Trash</h1>
+        <h1 className="mr-auto text-base font-semibold tracking-tight">
+          Trash
+        </h1>
         {items.length > 0 && (
-          <Button variant="destructive" size="sm" onClick={() => setConfirm({ kind: "empty" })}>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setConfirm({ kind: "empty" })}
+          >
             <TrashIcon data-icon="inline-start" aria-hidden />
             Empty trash
           </Button>
@@ -77,14 +83,40 @@ export function MigTrash() {
           land here, where you can restore or permanently delete them.
         </p>
       ) : items.length > 0 ? (
-        <table className="w-full border-separate border-spacing-0 text-sm" aria-label="Trashed MIGs">
+        <table
+          className="w-full border-separate border-spacing-0 text-sm"
+          aria-label="Trashed MIGs"
+        >
           <thead>
             <tr className="text-left text-xs text-muted-foreground">
-              <th scope="col" className="border-b border-border px-2 py-1.5 font-medium">Name</th>
-              <th scope="col" className="border-b border-border px-2 py-1.5 font-medium">Version</th>
-              <th scope="col" className="border-b border-border px-2 py-1.5 font-medium">Message</th>
-              <th scope="col" className="border-b border-border px-2 py-1.5 font-medium">Deleted</th>
-              <th scope="col" className="border-b border-border px-2 py-1.5 font-medium">
+              <th
+                scope="col"
+                className="border-b border-border px-2 py-1.5 font-medium"
+              >
+                Name
+              </th>
+              <th
+                scope="col"
+                className="border-b border-border px-2 py-1.5 font-medium"
+              >
+                Version
+              </th>
+              <th
+                scope="col"
+                className="border-b border-border px-2 py-1.5 font-medium"
+              >
+                Message
+              </th>
+              <th
+                scope="col"
+                className="border-b border-border px-2 py-1.5 font-medium"
+              >
+                Deleted
+              </th>
+              <th
+                scope="col"
+                className="border-b border-border px-2 py-1.5 font-medium"
+              >
                 <span className="sr-only">Actions</span>
               </th>
             </tr>
@@ -94,8 +126,12 @@ export function MigTrash() {
               const key = getMigKey(mig)
               return (
                 <tr key={key} className="hover:bg-muted">
-                  <td className="border-b border-border px-2 py-1.5 font-medium">{mig.name}</td>
-                  <td className="border-b border-border px-2 py-1.5">{mig.version}</td>
+                  <td className="border-b border-border px-2 py-1.5 font-medium">
+                    {mig.name}
+                  </td>
+                  <td className="border-b border-border px-2 py-1.5">
+                    {mig.version}
+                  </td>
                   <td className="border-b border-border px-2 py-1.5 text-muted-foreground">
                     {mig.messageIdentifier}
                   </td>
@@ -104,15 +140,28 @@ export function MigTrash() {
                   </td>
                   <td className="border-b border-border px-2 py-1.5">
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="outline" size="sm" onClick={() => void restore(key)}>
-                        <ArrowCounterClockwiseIcon data-icon="inline-start" aria-hidden />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void restore(key)}
+                      >
+                        <ArrowCounterClockwiseIcon
+                          data-icon="inline-start"
+                          aria-hidden
+                        />
                         Restore
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         aria-label={`Delete ${mig.name} ${mig.version} permanently`}
-                        onClick={() => setConfirm({ kind: "purge", key, label: `${mig.name} ${mig.version}` })}
+                        onClick={() =>
+                          setConfirm({
+                            kind: "purge",
+                            key,
+                            label: `${mig.name} ${mig.version}`,
+                          })
+                        }
                       >
                         <TrashIcon aria-hidden />
                       </Button>

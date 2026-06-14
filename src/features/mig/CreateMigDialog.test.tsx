@@ -15,7 +15,7 @@ function renderDialog() {
       onOpenChange={vi.fn()}
       messageIdentifier="pacs.008.001.08"
       shortCode="pacs.008"
-    />,
+    />
   )
 }
 
@@ -37,7 +37,9 @@ describe("CreateMigDialog", () => {
     renderDialog()
     await userEvent.click(screen.getByRole("button", { name: "Create" }))
 
-    await waitFor(() => expect(window.location.hash).toBe("#mig/MIG-pacs.008%3A1.0-DRAFT"))
+    await waitFor(() =>
+      expect(window.location.hash).toBe("#mig/MIG-pacs.008%3A1.0-DRAFT")
+    )
     const migs = await loadAllMigs()
     expect(migs).toHaveLength(1)
     expect(migs[0]).toMatchObject({
@@ -68,7 +70,9 @@ describe("CreateMigDialog", () => {
     renderDialog()
     await userEvent.click(screen.getByRole("button", { name: "Create" }))
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/already exists/i)
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /already exists/i
+    )
     expect(await loadAllMigs()).toHaveLength(1)
   })
 })

@@ -8,7 +8,9 @@ import { loadRevisions, saveRevisions } from "@/core/storage/revisionStore"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { useRevisionSnapshots } from "./useRevisionSnapshots"
 
-const mig = (over: Partial<MessageImplementationGuide> = {}): MessageImplementationGuide => ({
+const mig = (
+  over: Partial<MessageImplementationGuide> = {}
+): MessageImplementationGuide => ({
   name: "EPC",
   version: "1.0",
   messageIdentifier: "pacs.008.001.08",
@@ -27,9 +29,12 @@ afterEach(async () => {
 
 describe("useRevisionSnapshots", () => {
   it("seeds the baseline, then snapshots an edit on flush", async () => {
-    const { result, rerender } = renderHook(({ m }) => useRevisionSnapshots("EPC:1.0", m), {
-      initialProps: { m: mig() },
-    })
+    const { result, rerender } = renderHook(
+      ({ m }) => useRevisionSnapshots("EPC:1.0", m),
+      {
+        initialProps: { m: mig() },
+      }
+    )
     await tick() // existing (empty) history loads
     rerender({ m: mig({ description: "x" }) }) // an edit
     await result.current() // flush the pending burst
@@ -41,18 +46,24 @@ describe("useRevisionSnapshots", () => {
   })
 
   it("stores nothing for a view-only open (no edits)", async () => {
-    const { result } = renderHook(({ m }) => useRevisionSnapshots("EPC:1.0", m), {
-      initialProps: { m: mig() },
-    })
+    const { result } = renderHook(
+      ({ m }) => useRevisionSnapshots("EPC:1.0", m),
+      {
+        initialProps: { m: mig() },
+      }
+    )
     await tick()
     await result.current()
     expect(await loadRevisions("EPC:1.0")).toEqual([])
   })
 
   it("records nothing for a burst that nets no change (no empty revision)", async () => {
-    const { result, rerender } = renderHook(({ m }) => useRevisionSnapshots("EPC:1.0", m), {
-      initialProps: { m: mig() },
-    })
+    const { result, rerender } = renderHook(
+      ({ m }) => useRevisionSnapshots("EPC:1.0", m),
+      {
+        initialProps: { m: mig() },
+      }
+    )
     await tick()
     rerender({ m: mig({ description: "x" }) }) // an edit…
     rerender({ m: mig() }) // …reverted back to the baseline content
@@ -61,10 +72,16 @@ describe("useRevisionSnapshots", () => {
   })
 
   it("skips a no-op burst when history already exists", async () => {
-    await saveRevisions("EPC:1.0", appendRevision([], mig({ description: "y" }), 1))
-    const { result, rerender } = renderHook(({ m }) => useRevisionSnapshots("EPC:1.0", m), {
-      initialProps: { m: mig({ description: "y" }) },
-    })
+    await saveRevisions(
+      "EPC:1.0",
+      appendRevision([], mig({ description: "y" }), 1)
+    )
+    const { result, rerender } = renderHook(
+      ({ m }) => useRevisionSnapshots("EPC:1.0", m),
+      {
+        initialProps: { m: mig({ description: "y" }) },
+      }
+    )
     await tick()
     rerender({ m: mig({ description: "y", parentMIG: "B:1" }) }) // an edit…
     rerender({ m: mig({ description: "y" }) }) // …reverted to the last revision's content
@@ -74,9 +91,12 @@ describe("useRevisionSnapshots", () => {
 
   it("appends to existing history without re-seeding a baseline", async () => {
     await saveRevisions("EPC:1.0", appendRevision([], mig(), 1))
-    const { result, rerender } = renderHook(({ m }) => useRevisionSnapshots("EPC:1.0", m), {
-      initialProps: { m: mig() },
-    })
+    const { result, rerender } = renderHook(
+      ({ m }) => useRevisionSnapshots("EPC:1.0", m),
+      {
+        initialProps: { m: mig() },
+      }
+    )
     await tick()
     rerender({ m: mig({ description: "y" }) })
     await result.current()

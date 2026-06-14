@@ -66,5 +66,7 @@ function formatIssues(error: z.ZodError): string[] {
  */
 export function validateMigImport(value: unknown): ImportResult {
   const result = migSchema.safeParse(value)
-  return result.success ? { ok: true, mig: result.data } : { ok: false, errors: formatIssues(result.error) }
+  return result.success
+    ? { ok: true, mig: result.data }
+    : { ok: false, errors: formatIssues(result.error) }
 }

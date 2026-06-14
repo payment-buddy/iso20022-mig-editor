@@ -7,7 +7,9 @@ import type {
 } from "@/core/types/types"
 import { buildPathOrder, serializeMig, serializeMigs } from "./serializeMig"
 
-function mig(over: Partial<MessageImplementationGuide> = {}): MessageImplementationGuide {
+function mig(
+  over: Partial<MessageImplementationGuide> = {}
+): MessageImplementationGuide {
   return {
     name: "Guide",
     version: "1.0",
@@ -60,7 +62,7 @@ describe("serializeMig", () => {
         description: "A guide",
         elementAnnotationNames: ["Usage"],
         constraintAnnotationNames: ["Severity"],
-      }),
+      })
     )
     expect(topKeys(out)).toEqual([
       "formatVersion",
@@ -84,12 +86,15 @@ describe("serializeMig", () => {
         elementOverrides: {
           "/Doc/Amt": { maxLength: null, allowedValues: [], minOccurs: 0 },
         },
-      }),
+      })
     )
     expect(out).toContain("maxLength: null") // tri-state null kept
     expect(out).not.toContain("allowedValues") // empty list dropped
     expect(out).not.toContain("elementAnnotationNames") // empty list dropped
-    expect(parse(out).elementOverrides["/Doc/Amt"]).toEqual({ minOccurs: 0, maxLength: null })
+    expect(parse(out).elementOverrides["/Doc/Amt"]).toEqual({
+      minOccurs: 0,
+      maxLength: null,
+    })
   })
 
   it("orders override fields and sorts/orders additional constraints", () => {
@@ -102,21 +107,32 @@ describe("serializeMig", () => {
             minOccurs: 0,
             additionalConstraints: [
               { name: "Zebra", definition: "z" },
-              { name: "Alpha", definition: "a", expression: "x > 0", annotations: { Severity: "high" } },
+              {
+                name: "Alpha",
+                definition: "a",
+                expression: "x > 0",
+                annotations: { Severity: "high" },
+              },
             ],
           },
         },
-      }),
+      })
     )
     // Override field order: minOccurs before pattern before additionalConstraints.
     expect(out.indexOf("minOccurs")).toBeLessThan(out.indexOf("pattern"))
-    expect(out.indexOf("pattern")).toBeLessThan(out.indexOf("additionalConstraints"))
+    expect(out.indexOf("pattern")).toBeLessThan(
+      out.indexOf("additionalConstraints")
+    )
     // Constraints sorted by name (Alpha before Zebra).
     expect(out.indexOf("Alpha")).toBeLessThan(out.indexOf("Zebra"))
     // Constraint field order: name, definition, expression, annotations.
     const alpha = out.slice(out.indexOf("Alpha"))
-    expect(alpha.indexOf("definition")).toBeLessThan(alpha.indexOf("expression"))
-    expect(alpha.indexOf("expression")).toBeLessThan(alpha.indexOf("annotations"))
+    expect(alpha.indexOf("definition")).toBeLessThan(
+      alpha.indexOf("expression")
+    )
+    expect(alpha.indexOf("expression")).toBeLessThan(
+      alpha.indexOf("annotations")
+    )
   })
 
   it("serializes constraintOverrides (after additionalConstraints, name-sorted, null kept, empties pruned)", () => {
@@ -132,9 +148,11 @@ describe("serializeMig", () => {
             },
           },
         },
-      }),
+      })
     )
-    expect(out.indexOf("additionalConstraints")).toBeLessThan(out.indexOf("constraintOverrides"))
+    expect(out.indexOf("additionalConstraints")).toBeLessThan(
+      out.indexOf("constraintOverrides")
+    )
     const block = out.slice(out.indexOf("constraintOverrides"))
     expect(block.indexOf("Alpha")).toBeLessThan(block.indexOf("Zeta")) // name-sorted
     expect(block).not.toContain("Empty") // entry with no fields dropped
@@ -148,7 +166,7 @@ describe("serializeMig", () => {
         elementOverrides: {
           "/Doc/Amt": { annotations: { Beta: "b", Alpha: "a", Zeta: "z" } },
         },
-      }),
+      })
     )
     // Declared order first (Zeta, Alpha), then undeclared alphabetical (Beta).
     expect(out.indexOf("Zeta:")).toBeLessThan(out.indexOf("Alpha:"))
@@ -170,7 +188,12 @@ describe("serializeMig", () => {
 
   it("falls back to alphabetical path order without a pathOrder", () => {
     const out = serializeMig(
-      mig({ elementOverrides: { "/Doc/Zzz": { minOccurs: 0 }, "/Doc/Aaa": { minOccurs: 0 } } }),
+      mig({
+        elementOverrides: {
+          "/Doc/Zzz": { minOccurs: 0 },
+          "/Doc/Aaa": { minOccurs: 0 },
+        },
+      })
     )
     expect(out.indexOf("/Doc/Aaa")).toBeLessThan(out.indexOf("/Doc/Zzz"))
   })
@@ -178,7 +201,9 @@ describe("serializeMig", () => {
   it("uses block literals for multi-line strings and never wraps", () => {
     const long = "word ".repeat(40).trim()
     const out = serializeMig(
-      mig({ elementOverrides: { "/Doc/Amt": { definition: `line one\nline two` } } }),
+      mig({
+        elementOverrides: { "/Doc/Amt": { definition: `line one\nline two` } },
+      })
     )
     expect(out).toMatch(/definition: \|/) // block literal marker
     // Single-line strings stay plain — not forced into block scalars.
@@ -206,7 +231,9 @@ describe("serializeMig", () => {
 
 describe("buildPathOrder", () => {
   it("indexes elements in document order, parents before children", () => {
-    const order = buildPathOrder(el("Doc", [el("GrpHdr", [el("CreDtTm")]), el("Amt")]))
+    const order = buildPathOrder(
+      el("Doc", [el("GrpHdr", [el("CreDtTm")]), el("Amt")])
+    )
     expect([...order.entries()]).toEqual([
       ["/Doc", 0],
       ["/Doc/GrpHdr", 1],

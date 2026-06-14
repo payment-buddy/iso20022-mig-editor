@@ -2,21 +2,36 @@ import { useState } from "react"
 import { CheckIcon, ExportIcon, PlusIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { CreateMigDialog } from "@/features/mig/CreateMigDialog"
-import { resolveMessage, type ResolvedMessage } from "@/core/erepository/resolveMessage"
-import type { Constraint, ERepository, MessageElement } from "@/core/types/types"
+import {
+  resolveMessage,
+  type ResolvedMessage,
+} from "@/core/erepository/resolveMessage"
+import type {
+  Constraint,
+  ERepository,
+  MessageElement,
+} from "@/core/types/types"
 import { hashFor } from "@/app/routes"
 import { cn } from "@/lib/utils"
 import { downloadMessageYaml } from "./downloadMessage"
 import { DetailPanel, ElementTree, Field } from "./ElementTree"
 
 /** Read-only message explorer (bare minimum) with a detail panel. */
-export function MessageExplorer({ repo, code }: { repo: ERepository; code: string }) {
+export function MessageExplorer({
+  repo,
+  code,
+}: {
+  repo: ERepository
+  code: string
+}) {
   const resolved = resolveMessage(repo, code)
 
   if (!resolved) {
     return (
       <div className="mx-auto flex max-w-3xl flex-col gap-2 p-6 xl:max-w-4xl">
-        <h1 className="text-base font-semibold tracking-tight">Message not found</h1>
+        <h1 className="text-base font-semibold tracking-tight">
+          Message not found
+        </h1>
         <p className="text-sm text-muted-foreground">
           No message matches “{code}”. Try the{" "}
           <a
@@ -48,7 +63,9 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
             Message Definition
           </p>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-base font-semibold tracking-tight">{current.name}</h1>
+            <h1 className="text-base font-semibold tracking-tight">
+              {current.name}
+            </h1>
             <code className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
               {current.identifier}
             </code>
@@ -56,7 +73,11 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
           <p className="text-xs text-muted-foreground">{area.name}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => void downloadMessageYaml(current)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void downloadMessageYaml(current)}
+          >
             <ExportIcon data-icon="inline-start" aria-hidden />
             Export YAML
           </Button>
@@ -75,7 +96,10 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
       />
 
       {versions.length > 1 && (
-        <div className="flex flex-wrap items-center gap-1" aria-label="Versions">
+        <div
+          className="flex flex-wrap items-center gap-1"
+          aria-label="Versions"
+        >
           {versions.map((v) => {
             const isCurrent = v.identifier === current.identifier
             return (
@@ -88,7 +112,7 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
                   "rounded-md border px-2 py-0.5 text-xs no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
                   isCurrent
                     ? "border-primary bg-primary/10 font-medium text-primary"
-                    : "border-border text-muted-foreground hover:bg-muted",
+                    : "border-border text-muted-foreground hover:bg-muted"
                 )}
               >
                 {v.identifier.split(".").pop()}
@@ -113,7 +137,13 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
   )
 }
 
-function ConstraintDetail({ constraint, path }: { constraint: Constraint; path: string }) {
+function ConstraintDetail({
+  constraint,
+  path,
+}: {
+  constraint: Constraint
+  path: string
+}) {
   return (
     <DetailPanel label="Constraint details">
       <div className="flex items-center gap-1.5 font-medium">
@@ -133,11 +163,19 @@ function ConstraintDetail({ constraint, path }: { constraint: Constraint; path: 
   )
 }
 
-function ElementDetail({ element, path }: { element: MessageElement; path: string }) {
+function ElementDetail({
+  element,
+  path,
+}: {
+  element: MessageElement
+  path: string
+}) {
   const e = element
   const range = (lo: number | null, hi: number | null) =>
     lo != null || hi != null ? `${lo ?? "*"} … ${hi ?? "*"}` : null
-  const length = range(e.minLength, e.maxLength) ?? (e.length != null ? String(e.length) : null)
+  const length =
+    range(e.minLength, e.maxLength) ??
+    (e.length != null ? String(e.length) : null)
   const inclusive = range(e.minInclusive, e.maxInclusive)
   const digits =
     e.totalDigits != null || e.fractionDigits != null
@@ -155,7 +193,9 @@ function ElementDetail({ element, path }: { element: MessageElement; path: strin
       </Field>
       <Field label="Type">
         {e.type}
-        {e.baseType && <span className="text-muted-foreground"> ({e.baseType})</span>}
+        {e.baseType && (
+          <span className="text-muted-foreground"> ({e.baseType})</span>
+        )}
       </Field>
       <Field label="Multiplicity">
         [{e.minOccurs}..{e.maxOccurs ?? "unbounded"}]
@@ -188,7 +228,9 @@ function ElementDetail({ element, path }: { element: MessageElement; path: strin
           </div>
         </Field>
       )}
-      {e.examples.length > 0 && <Field label="Examples">{e.examples.join(", ")}</Field>}
+      {e.examples.length > 0 && (
+        <Field label="Examples">{e.examples.join(", ")}</Field>
+      )}
     </DetailPanel>
   )
 }

@@ -1,12 +1,17 @@
 import { useState } from "react"
 import { Dialog } from "radix-ui"
 import { CheckCircleIcon, WarningIcon } from "@phosphor-icons/react"
-import { validateMessageInstance, type InstanceDiagnostic } from "@/core/mig/validateInstance"
+import {
+  validateMessageInstance,
+  type InstanceDiagnostic,
+} from "@/core/mig/validateInstance"
 import type { ElementOverrides, MessageDefinition } from "@/core/types/types"
 import { Button } from "@/components/ui/button"
 import { parseMessageXml } from "./parseMessageXml"
 
-type Result = { kind: "error"; error: string } | { kind: "ok"; diagnostics: InstanceDiagnostic[] }
+type Result =
+  | { kind: "error"; error: string }
+  | { kind: "ok"; diagnostics: InstanceDiagnostic[] }
 
 /**
  * Validate a message-instance XML against the resolved message + the effective
@@ -32,9 +37,12 @@ export function ValidateInstanceDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
         <Dialog.Content className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-border bg-background p-4 shadow-lg outline-none">
-          <Dialog.Title className="text-sm font-semibold">Validate a message instance</Dialog.Title>
+          <Dialog.Title className="text-sm font-semibold">
+            Validate a message instance
+          </Dialog.Title>
           <Dialog.Description className="mt-1 text-xs text-muted-foreground">
-            Check an XML message against <code>{message.identifier}</code> and this MIG.
+            Check an XML message against <code>{message.identifier}</code> and
+            this MIG.
           </Dialog.Description>
           {/* Content unmounts on close, so each open starts fresh. */}
           <ValidateForm
@@ -68,7 +76,14 @@ function ValidateForm({
     setResult(
       "error" in parsed
         ? { kind: "error", error: parsed.error }
-        : { kind: "ok", diagnostics: validateMessageInstance(parsed.root, message, effectiveOverrides) },
+        : {
+            kind: "ok",
+            diagnostics: validateMessageInstance(
+              parsed.root,
+              message,
+              effectiveOverrides
+            ),
+          }
     )
   }
 
@@ -101,7 +116,13 @@ function ValidateForm({
           aria-label="Upload message XML"
           className="text-xs text-muted-foreground file:mr-2 file:rounded-md file:border file:border-border file:bg-transparent file:px-2 file:py-1 file:text-foreground hover:file:bg-muted"
         />
-        <Button type="button" size="sm" className="ml-auto" disabled={!xml.trim()} onClick={validate}>
+        <Button
+          type="button"
+          size="sm"
+          className="ml-auto"
+          disabled={!xml.trim()}
+          onClick={validate}
+        >
           Validate
         </Button>
       </div>
@@ -114,7 +135,13 @@ function ValidateForm({
   )
 }
 
-function Results({ result, onNavigate }: { result: Result; onNavigate: (path: string) => void }) {
+function Results({
+  result,
+  onNavigate,
+}: {
+  result: Result
+  onNavigate: (path: string) => void
+}) {
   if (result.kind === "error") {
     return (
       <p role="alert" className="text-sm text-destructive">
@@ -140,7 +167,10 @@ function Results({ result, onNavigate }: { result: Result; onNavigate: (path: st
         <WarningIcon className="size-4 shrink-0" aria-hidden />
         {n} {n === 1 ? "violation" : "violations"}
       </p>
-      <ul aria-label="Violations" className="flex flex-col border-t border-amber-500/30 py-1">
+      <ul
+        aria-label="Violations"
+        className="flex flex-col border-t border-amber-500/30 py-1"
+      >
         {result.diagnostics.map((d, i) => (
           <li key={`${d.path}-${i}`}>
             <button
@@ -155,8 +185,12 @@ function Results({ result, onNavigate }: { result: Result; onNavigate: (path: st
                   Constraint
                 </span>
               )}
-              <span className="block text-amber-700/90 dark:text-amber-500/90">{d.message}</span>
-              <code className="text-[0.625rem] text-amber-700/60 dark:text-amber-500/60">{d.path}</code>
+              <span className="block text-amber-700/90 dark:text-amber-500/90">
+                {d.message}
+              </span>
+              <code className="text-[0.625rem] text-amber-700/60 dark:text-amber-500/60">
+                {d.path}
+              </code>
             </button>
           </li>
         ))}

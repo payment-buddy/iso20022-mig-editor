@@ -11,7 +11,7 @@ export type DuplicateResolution = "skip" | "overwrite" | "new"
 /** Keys among `incoming` that already exist in `existing`. */
 export function duplicateKeysOf(
   incoming: MessageImplementationGuide[],
-  existing: Iterable<string>,
+  existing: Iterable<string>
 ): Set<string> {
   const have = new Set(existing)
   return new Set(incoming.map(getMigKey).filter((k) => have.has(k)))
@@ -30,7 +30,7 @@ export function migsForResolution(
   incoming: MessageImplementationGuide[],
   duplicateKeys: Set<string>,
   resolution: DuplicateResolution,
-  timestamp: number,
+  timestamp: number
 ): MessageImplementationGuide[] {
   switch (resolution) {
     case "overwrite":
@@ -39,7 +39,9 @@ export function migsForResolution(
       return incoming.filter((m) => !duplicateKeys.has(getMigKey(m)))
     case "new":
       return incoming.map((m) =>
-        duplicateKeys.has(getMigKey(m)) ? { ...m, version: `${m.version}-${timestamp}` } : m,
+        duplicateKeys.has(getMigKey(m))
+          ? { ...m, version: `${m.version}-${timestamp}` }
+          : m
       )
   }
 }

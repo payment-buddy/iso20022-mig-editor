@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState, type ComponentType } from "react"
-import { CaretDownIcon, ExportIcon, FileTextIcon, TableIcon } from "@phosphor-icons/react"
+import {
+  CaretDownIcon,
+  ExportIcon,
+  FileTextIcon,
+  TableIcon,
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 
 /**
@@ -7,7 +12,13 @@ import { Button } from "@/components/ui/button"
  * hand-rolled popover (no dropdown-library dependency): closes on select, Escape,
  * or an outside click; ↑/↓/Home/End move between items.
  */
-export function ExportMenu({ onMarkdown, onCsv }: { onMarkdown: () => void; onCsv: () => void }) {
+export function ExportMenu({
+  onMarkdown,
+  onCsv,
+}: {
+  onMarkdown: () => void
+  onCsv: () => void
+}) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -15,7 +26,9 @@ export function ExportMenu({ onMarkdown, onCsv }: { onMarkdown: () => void; onCs
   // Return focus to the trigger when the menu closes by keyboard or selection
   // (so focus isn't dropped to the body).
   const focusTrigger = () =>
-    rootRef.current?.querySelector<HTMLButtonElement>("button[aria-haspopup]")?.focus()
+    rootRef.current
+      ?.querySelector<HTMLButtonElement>("button[aria-haspopup]")
+      ?.focus()
 
   useEffect(() => {
     if (!open) return
@@ -38,7 +51,10 @@ export function ExportMenu({ onMarkdown, onCsv }: { onMarkdown: () => void; onCs
 
   // Focus the first item when the menu opens (keyboard-first).
   useEffect(() => {
-    if (open) menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus()
+    if (open)
+      menuRef.current
+        ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
+        ?.focus()
   }, [open])
 
   const select = (run: () => void) => {
@@ -48,10 +64,22 @@ export function ExportMenu({ onMarkdown, onCsv }: { onMarkdown: () => void; onCs
   }
 
   const onMenuKeyDown = (e: React.KeyboardEvent) => {
-    const items = Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [])
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLButtonElement>(
+        '[role="menuitem"]'
+      ) ?? []
+    )
     const i = items.indexOf(document.activeElement as HTMLButtonElement)
     const to =
-      e.key === "ArrowDown" ? i + 1 : e.key === "ArrowUp" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : null
+      e.key === "ArrowDown"
+        ? i + 1
+        : e.key === "ArrowUp"
+          ? i - 1
+          : e.key === "Home"
+            ? 0
+            : e.key === "End"
+              ? items.length - 1
+              : null
     if (to === null) return
     e.preventDefault()
     items[Math.max(0, Math.min(items.length - 1, to))]?.focus()
@@ -78,8 +106,16 @@ export function ExportMenu({ onMarkdown, onCsv }: { onMarkdown: () => void; onCs
           onKeyDown={onMenuKeyDown}
           className="absolute right-0 z-50 mt-1 min-w-36 rounded-md border border-border bg-background p-1 shadow-lg outline-none"
         >
-          <MenuItem icon={FileTextIcon} label="Markdown" onSelect={() => select(onMarkdown)} />
-          <MenuItem icon={TableIcon} label="CSV" onSelect={() => select(onCsv)} />
+          <MenuItem
+            icon={FileTextIcon}
+            label="Markdown"
+            onSelect={() => select(onMarkdown)}
+          />
+          <MenuItem
+            icon={TableIcon}
+            label="CSV"
+            onSelect={() => select(onCsv)}
+          />
         </div>
       )}
     </div>

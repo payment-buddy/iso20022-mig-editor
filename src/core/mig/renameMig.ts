@@ -26,7 +26,7 @@ export function renameMig(
   allMigs: MessageImplementationGuide[],
   oldKey: string,
   name: string,
-  version: string,
+  version: string
 ): RenameResult {
   const trimmedName = name.trim()
   const trimmedVersion = version.trim()
@@ -39,13 +39,24 @@ export function renameMig(
 
   const newKey = getMigKey({ name: trimmedName, version: trimmedVersion })
   if (newKey === oldKey) {
-    return { ok: true, oldKey, newKey, changed: false, renamed: mig, reparented: [] }
+    return {
+      ok: true,
+      oldKey,
+      newKey,
+      changed: false,
+      renamed: mig,
+      reparented: [],
+    }
   }
   if (allMigs.some((m) => getMigKey(m) === newKey)) {
     return { ok: false, error: `A MIG "${newKey}" already exists.` }
   }
 
-  const renamed: MessageImplementationGuide = { ...mig, name: trimmedName, version: trimmedVersion }
+  const renamed: MessageImplementationGuide = {
+    ...mig,
+    name: trimmedName,
+    version: trimmedVersion,
+  }
   const reparented = allMigs
     .filter((m) => m.parentMIG === oldKey && getMigKey(m) !== oldKey)
     .map((m) => ({ ...m, parentMIG: newKey }))

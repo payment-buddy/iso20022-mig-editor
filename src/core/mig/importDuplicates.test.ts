@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { duplicateKeysOf, migsForResolution } from "./importDuplicates"
 
-function mig(name: string, version: string, description?: string): MessageImplementationGuide {
+function mig(
+  name: string,
+  version: string,
+  description?: string
+): MessageImplementationGuide {
   return {
     name,
     version,
@@ -29,7 +33,9 @@ describe("migsForResolution", () => {
   const dups = new Set(["A:1"])
 
   it("overwrite keeps every incoming MIG as-is", () => {
-    expect(migsForResolution(incoming, dups, "overwrite", 999)).toEqual(incoming)
+    expect(migsForResolution(incoming, dups, "overwrite", 999)).toEqual(
+      incoming
+    )
   })
 
   it("skip drops the duplicates, keeps the new ones", () => {
@@ -39,7 +45,10 @@ describe("migsForResolution", () => {
 
   it("new re-versions duplicates with the timestamp, leaves others", () => {
     const out = migsForResolution(incoming, dups, "new", 1700000000000)
-    expect(out.map((m) => `${m.name}:${m.version}`)).toEqual(["A:1-1700000000000", "B:1"])
+    expect(out.map((m) => `${m.name}:${m.version}`)).toEqual([
+      "A:1-1700000000000",
+      "B:1",
+    ])
     // The bumped duplicate keeps its content (a fresh identity, not a mutation).
     expect(out[0].description).toBe("incoming")
   })

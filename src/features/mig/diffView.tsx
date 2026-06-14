@@ -1,5 +1,5 @@
-import type {FieldChange} from "@/core/mig/compareMigs"
-import {hashFor} from "@/app/routes"
+import type { FieldChange } from "@/core/mig/compareMigs"
+import { hashFor } from "@/app/routes"
 
 /**
  * Presentation leaves shared by the Compare and Merge screens. These are the
@@ -30,7 +30,9 @@ export function Cell({
   kind: FieldChange["kind"]
 }) {
   const tinted =
-    kind === "changed" || (kind === "removed" && side === "a") || (kind === "added" && side === "b")
+    kind === "changed" ||
+    (kind === "removed" && side === "a") ||
+    (kind === "added" && side === "b")
   const tint =
     !tinted || value === null
       ? ""
@@ -40,11 +42,13 @@ export function Cell({
           ? "bg-red-500/10"
           : "bg-blue-500/10"
   return (
-    <div className={`flex flex-wrap items-baseline gap-x-2 px-3 py-1.5 text-sm ${tint}`}>
+    <div
+      className={`flex flex-wrap items-baseline gap-x-2 px-3 py-1.5 text-sm ${tint}`}
+    >
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className="min-w-0 break-words">
         {value === null ? (
-          <span className="italic text-muted-foreground/70">inherits</span>
+          <span className="text-muted-foreground/70 italic">inherits</span>
         ) : (
           value
         )}
@@ -54,7 +58,13 @@ export function Cell({
 }
 
 /** Full-screen status message (loading / not-found) used before the diff renders. */
-export function Notice({ title, children }: { title: string; children?: React.ReactNode }) {
+export function Notice({
+  title,
+  children,
+}: {
+  title: string
+  children?: React.ReactNode
+}) {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-2 p-6 xl:max-w-4xl">
       <h1 className="text-base font-semibold tracking-tight">{title}</h1>
@@ -66,7 +76,10 @@ export function Notice({ title, children }: { title: string; children?: React.Re
 /** Inline link back to the home screen, for use inside a {@link Notice}. */
 export function Home() {
   return (
-    <a href={hashFor({ name: "home" })} className="text-primary underline-offset-4 hover:underline">
+    <a
+      href={hashFor({ name: "home" })}
+      className="text-primary underline-offset-4 hover:underline"
+    >
       Home
     </a>
   )

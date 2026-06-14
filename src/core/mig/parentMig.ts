@@ -1,7 +1,10 @@
 import { getMigKey } from "./migKey"
 import type { MessageImplementationGuide } from "@/core/types/types"
 
-type MigIdentity = Pick<MessageImplementationGuide, "name" | "version" | "messageIdentifier">
+type MigIdentity = Pick<
+  MessageImplementationGuide,
+  "name" | "version" | "messageIdentifier"
+>
 
 /**
  * Eligible parents for `current`: other stored MIGs that target the **same
@@ -11,7 +14,7 @@ type MigIdentity = Pick<MessageImplementationGuide, "name" | "version" | "messag
  */
 export function eligibleParents(
   all: MessageImplementationGuide[],
-  current: MigIdentity,
+  current: MigIdentity
 ): MessageImplementationGuide[] {
   const currentKey = getMigKey(current)
   const byKey = new Map(all.map((m) => [getMigKey(m), m]))
@@ -32,6 +35,6 @@ export function eligibleParents(
     (m) =>
       getMigKey(m) !== currentKey &&
       m.messageIdentifier === current.messageIdentifier &&
-      !descendsFromCurrent(m),
+      !descendsFromCurrent(m)
   )
 }

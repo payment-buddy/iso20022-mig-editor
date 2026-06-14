@@ -43,7 +43,9 @@ function message(root: MessageElement): MessageDefinition {
 
 describe("serializeMessage", () => {
   it("emits formatVersion first, then identity, then the root element, with a trailing newline", () => {
-    const yaml = serializeMessage(message(el({ name: "Document", xmlTag: "Document" })))
+    const yaml = serializeMessage(
+      message(el({ name: "Document", xmlTag: "Document" }))
+    )
     expect(yaml.split("\n")[0]).toBe("formatVersion: 1")
     expect(Object.keys(parse(yaml))).toEqual([
       "formatVersion",
@@ -56,7 +58,9 @@ describe("serializeMessage", () => {
   })
 
   it("drops internal xmi ids (id, typeId)", () => {
-    const parsed = parse(serializeMessage(message(el({ id: "_xyz", typeId: "_t" }))))
+    const parsed = parse(
+      serializeMessage(message(el({ id: "_xyz", typeId: "_t" })))
+    )
     expect(parsed.rootElement).not.toHaveProperty("id")
     expect(parsed.rootElement).not.toHaveProperty("typeId")
   })
@@ -86,7 +90,8 @@ describe("serializeMessage", () => {
         el({ name: "Plain", xmlTag: "Plain" }),
       ],
     })
-    const [attr, choice, plain] = parse(serializeMessage(message(root))).rootElement.elements
+    const [attr, choice, plain] = parse(serializeMessage(message(root)))
+      .rootElement.elements
     expect(attr.isAttribute).toBe(true)
     expect(choice.isChoice).toBe(true)
     expect(plain).not.toHaveProperty("isAttribute")
@@ -118,7 +123,9 @@ describe("serializeMessage", () => {
       ],
     })
     const parsed = parse(
-      serializeMessage(message(el({ xmlTag: "Document", elements: [amt, ccy] }))),
+      serializeMessage(
+        message(el({ xmlTag: "Document", elements: [amt, ccy] }))
+      )
     )
     expect(parsed.rootElement.elements).toHaveLength(2)
     expect(parsed.rootElement.elements[0]).toMatchObject({
@@ -142,7 +149,8 @@ describe("serializeMessage", () => {
   })
 
   it("renders multi-line definitions as block literals without reflowing", () => {
-    const text = "Line one of the definition.\nLine two continues without wrapping."
+    const text =
+      "Line one of the definition.\nLine two continues without wrapping."
     const yaml = serializeMessage(message(el({ definition: text })))
     expect(yaml).toContain("definition: |-")
     expect(parse(yaml).rootElement.definition).toBe(text)

@@ -2,7 +2,13 @@
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import * as db from "@/core/storage/db"
 import { saveMig } from "@/core/storage/migStore"
@@ -32,7 +38,9 @@ afterEach(async () => {
 describe("RecoveryScreen", () => {
   it("explains the failure and shows the error detail", () => {
     render(<RecoveryScreen error={new Error("QuotaExceededError")} />)
-    expect(screen.getByRole("heading", { name: /couldn.t open local storage/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: /couldn.t open local storage/i })
+    ).toBeInTheDocument()
     expect(screen.getByText("QuotaExceededError")).toBeInTheDocument()
   })
 
@@ -41,7 +49,9 @@ describe("RecoveryScreen", () => {
     await saveMig(mig("B"))
     render(<RecoveryScreen error={new Error("boom")} />)
 
-    await userEvent.click(screen.getByRole("button", { name: /download my migs/i }))
+    await userEvent.click(
+      screen.getByRole("button", { name: /download my migs/i })
+    )
 
     await waitFor(() => expect(downloadMigs).toHaveBeenCalledTimes(1))
     expect(vi.mocked(downloadMigs).mock.calls[0][0]).toHaveLength(2)
@@ -50,8 +60,12 @@ describe("RecoveryScreen", () => {
 
   it("reports when there are no MIGs to back up", async () => {
     render(<RecoveryScreen error={new Error("boom")} />)
-    await userEvent.click(screen.getByRole("button", { name: /download my migs/i }))
-    expect(await screen.findByText(/no migs could be read/i)).toBeInTheDocument()
+    await userEvent.click(
+      screen.getByRole("button", { name: /download my migs/i })
+    )
+    expect(
+      await screen.findByText(/no migs could be read/i)
+    ).toBeInTheDocument()
     expect(downloadMigs).not.toHaveBeenCalled()
   })
 
@@ -59,9 +73,13 @@ describe("RecoveryScreen", () => {
     const del = vi.spyOn(db, "deleteDatabase").mockResolvedValue()
     render(<RecoveryScreen error={new Error("boom")} />)
 
-    await userEvent.click(screen.getByRole("button", { name: /reset & start fresh/i }))
+    await userEvent.click(
+      screen.getByRole("button", { name: /reset & start fresh/i })
+    )
     const dialog = await screen.findByRole("alertdialog")
-    await userEvent.click(within(dialog).getByRole("button", { name: /delete everything/i }))
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: /delete everything/i })
+    )
 
     await waitFor(() => expect(del).toHaveBeenCalledTimes(1))
     expect(reloadPage).toHaveBeenCalled()

@@ -25,10 +25,11 @@ export type Diagnostic = {
 function elementDiagnostics(
   element: MessageElement,
   inherited: ElementOverride | undefined,
-  own: ElementOverride,
+  own: ElementOverride
 ): { field: string; message: string }[] {
   const out: { field: string; message: string }[] = []
-  const inh = (f: keyof ElementOverride) => inherited !== undefined && f in inherited
+  const inh = (f: keyof ElementOverride) =>
+    inherited !== undefined && f in inherited
   const ownHas = (f: keyof ElementOverride) => f in own
   const add = (field: string, message: string | null) => {
     if (message) out.push({ field, message })
@@ -51,13 +52,34 @@ function elementDiagnostics(
 
   // Min facets loosen when lowered below the baseline.
   if (ownHas("minOccurs"))
-    add("Min occurs", looseningWarning("min occurs", minOccurs.baseline, minOccurs.effective, "min"))
+    add(
+      "Min occurs",
+      looseningWarning(
+        "min occurs",
+        minOccurs.baseline,
+        minOccurs.effective,
+        "min"
+      )
+    )
   if (ownHas("minLength"))
-    add("Min length", looseningWarning("min length", minLength.baseline, minLength.effective, "min"))
+    add(
+      "Min length",
+      looseningWarning(
+        "min length",
+        minLength.baseline,
+        minLength.effective,
+        "min"
+      )
+    )
   if (ownHas("minInclusive"))
     add(
       "Min inclusive",
-      looseningWarning("min inclusive", minInclusive.baseline, minInclusive.effective, "min"),
+      looseningWarning(
+        "min inclusive",
+        minInclusive.baseline,
+        minInclusive.effective,
+        "min"
+      )
     )
 
   // Max facets: an empty range (max below min) when this MIG touches either side,
@@ -69,7 +91,7 @@ function elementDiagnostics(
     label: string,
     rangeLabel: string,
     max: Num,
-    min: Num,
+    min: Num
   ) => {
     if (
       (ownHas(maxField) || ownHas(minField)) &&
@@ -77,26 +99,72 @@ function elementDiagnostics(
       min.effective !== null &&
       max.effective < min.effective
     ) {
-      add(label, `${rangeLabel}: max ${max.effective} is below min ${min.effective}.`)
+      add(
+        label,
+        `${rangeLabel}: max ${max.effective} is below min ${min.effective}.`
+      )
       return
     }
-    if (ownHas(maxField)) add(label, looseningWarning(label.toLowerCase(), max.baseline, max.effective, "max"))
+    if (ownHas(maxField))
+      add(
+        label,
+        looseningWarning(
+          label.toLowerCase(),
+          max.baseline,
+          max.effective,
+          "max"
+        )
+      )
   }
 
   // occurs included: `maxOccurs: 0` only consistently excludes when min is 0 too;
   // any max below min (e.g. an exclusion that still requires the element) is an
   // empty range and flagged like the others.
-  maxPair("maxOccurs", "minOccurs", "Max occurs", "Occurs", maxOccurs, minOccurs)
-  maxPair("maxLength", "minLength", "Max length", "Length", maxLength, minLength)
-  maxPair("maxInclusive", "minInclusive", "Max inclusive", "Inclusive", maxInclusive, minInclusive)
+  maxPair(
+    "maxOccurs",
+    "minOccurs",
+    "Max occurs",
+    "Occurs",
+    maxOccurs,
+    minOccurs
+  )
+  maxPair(
+    "maxLength",
+    "minLength",
+    "Max length",
+    "Length",
+    maxLength,
+    minLength
+  )
+  maxPair(
+    "maxInclusive",
+    "minInclusive",
+    "Max inclusive",
+    "Inclusive",
+    maxInclusive,
+    minInclusive
+  )
 
   // Digit facets loosen when raised (allow more digits).
   if (ownHas("totalDigits"))
-    add("Total digits", looseningWarning("total digits", totalDigits.baseline, totalDigits.effective, "max"))
+    add(
+      "Total digits",
+      looseningWarning(
+        "total digits",
+        totalDigits.baseline,
+        totalDigits.effective,
+        "max"
+      )
+    )
   if (ownHas("fractionDigits"))
     add(
       "Fraction digits",
-      looseningWarning("fraction digits", fractionDigits.baseline, fractionDigits.effective, "max"),
+      looseningWarning(
+        "fraction digits",
+        fractionDigits.baseline,
+        fractionDigits.effective,
+        "max"
+      )
     )
 
   if (ownHas("pattern")) add("Pattern", patternWarning(own.pattern ?? null))
@@ -109,16 +177,24 @@ function elementDiagnostics(
     if (base.length > 0) {
       const set = new Set(base)
       const extra = own.allowedValues.filter((v) => !set.has(v))
-      if (extra.length > 0) add("Allowed values", `Adds values outside the standard set: ${extra.join(", ")}`)
+      if (extra.length > 0)
+        add(
+          "Allowed values",
+          `Adds values outside the standard set: ${extra.join(", ")}`
+        )
     }
   }
 
   // Disabling a rule drops a restriction — looser, unless an ancestor already
   // disabled it (then this MIG adds nothing).
   for (const [name, co] of Object.entries(own.constraintOverrides ?? {})) {
-    const inhDisabled = inherited?.constraintOverrides?.[name]?.disabled === true
+    const inhDisabled =
+      inherited?.constraintOverrides?.[name]?.disabled === true
     if (co.disabled === true && !inhDisabled) {
-      add("Constraint", `Disables the "${name}" rule — looser than the original.`)
+      add(
+        "Constraint",
+        `Disables the "${name}" rule — looser than the original.`
+      )
     }
   }
 
@@ -133,13 +209,17 @@ function elementDiagnostics(
 export function validateMigConsistency(
   mig: MessageImplementationGuide,
   inherited: ElementOverrides,
-  message: MessageDefinition,
+  message: MessageDefinition
 ): Diagnostic[] {
   const out: Diagnostic[] = []
   for (const [path, own] of Object.entries(mig.elementOverrides)) {
     const element = elementAtPath(message.rootElement, path)
     if (!element) continue
-    for (const { field, message: msg } of elementDiagnostics(element, inherited[path], own)) {
+    for (const { field, message: msg } of elementDiagnostics(
+      element,
+      inherited[path],
+      own
+    )) {
       out.push({ path, elementName: element.name, field, message: msg })
     }
   }

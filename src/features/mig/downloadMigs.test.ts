@@ -4,7 +4,12 @@ import type { MessageImplementationGuide } from "@/core/types/types"
 import { buildMigDownload } from "./downloadMigs"
 
 function mig(name: string, version: string): MessageImplementationGuide {
-  return { name, version, messageIdentifier: "pacs.008.001.08", elementOverrides: {} }
+  return {
+    name,
+    version,
+    messageIdentifier: "pacs.008.001.08",
+    elementOverrides: {},
+  }
 }
 
 describe("buildMigDownload", () => {

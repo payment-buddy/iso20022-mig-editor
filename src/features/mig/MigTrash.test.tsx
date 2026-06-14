@@ -2,7 +2,13 @@
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it } from "vitest"
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
@@ -26,7 +32,8 @@ async function seedTrashed(...names: string[]) {
   }
 }
 
-const rowFor = (name: string) => screen.getByText(name).closest("tr") as HTMLTableRowElement
+const rowFor = (name: string) =>
+  screen.getByText(name).closest("tr") as HTMLTableRowElement
 
 afterEach(async () => {
   cleanup()
@@ -51,7 +58,9 @@ describe("MigTrash", () => {
     render(<MigTrash />)
     await screen.findByText("A")
 
-    await userEvent.click(within(rowFor("A")).getByRole("button", { name: /restore/i }))
+    await userEvent.click(
+      within(rowFor("A")).getByRole("button", { name: /restore/i })
+    )
 
     await waitFor(() => expect(screen.queryByText("A")).not.toBeInTheDocument())
     expect((await loadMig("A:1.0"))?.name).toBe("A")
@@ -63,10 +72,14 @@ describe("MigTrash", () => {
     render(<MigTrash />)
     await screen.findByText("A")
 
-    const purge = within(rowFor("A")).getByRole("button", { name: /delete a 1\.0 permanently/i })
+    const purge = within(rowFor("A")).getByRole("button", {
+      name: /delete a 1\.0 permanently/i,
+    })
     await userEvent.click(purge)
     const dialog = await screen.findByRole("alertdialog")
-    await userEvent.click(within(dialog).getByRole("button", { name: /delete permanently/i }))
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: /delete permanently/i })
+    )
 
     await waitFor(() => expect(screen.queryByText("A")).not.toBeInTheDocument())
     expect((await loadTrash()).map((t) => t.mig.name)).toEqual(["B"])
@@ -79,7 +92,9 @@ describe("MigTrash", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /empty trash/i }))
     const dialog = await screen.findByRole("alertdialog")
-    await userEvent.click(within(dialog).getByRole("button", { name: /delete permanently/i }))
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: /delete permanently/i })
+    )
 
     await waitFor(() => expect(screen.queryByText("A")).not.toBeInTheDocument())
     expect(await loadTrash()).toEqual([])

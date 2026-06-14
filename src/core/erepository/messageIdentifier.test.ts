@@ -9,13 +9,13 @@ describe("shortCodeForIdentifier", () => {
 
   it("matches across flavours/versions of one family", () => {
     expect(shortCodeForIdentifier("pacs.008.001.08")).toBe(
-      shortCodeForIdentifier("pacs.008.001.09"),
+      shortCodeForIdentifier("pacs.008.001.09")
     )
   })
 
   it("distinguishes different families", () => {
     expect(shortCodeForIdentifier("pacs.008.001.08")).not.toBe(
-      shortCodeForIdentifier("pacs.009.001.08"),
+      shortCodeForIdentifier("pacs.009.001.08")
     )
   })
 

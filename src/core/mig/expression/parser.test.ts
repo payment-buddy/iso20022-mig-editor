@@ -6,20 +6,26 @@ import { validateExpressionSyntax } from "./index"
 /** Parse and assert success, returning the AST. */
 function ast(src: string): ExprNode {
   const r = parseExpression(src)
-  if (!r.ok) throw new Error(`expected ${JSON.stringify(src)} to parse, got: ${r.error.message}`)
+  if (!r.ok)
+    throw new Error(
+      `expected ${JSON.stringify(src)} to parse, got: ${r.error.message}`
+    )
   return r.ast
 }
 
 /** Parse and assert failure, returning the error. */
 function err(src: string) {
   const r = parseExpression(src)
-  if (r.ok) throw new Error(`expected ${JSON.stringify(src)} to fail, but it parsed`)
+  if (r.ok)
+    throw new Error(`expected ${JSON.stringify(src)} to fail, but it parsed`)
   return r.error
 }
 
 describe("parseExpression — valid", () => {
   it("parses the motivating example", () => {
-    const r = parseExpression("not(SchmeNm/Prtry = 'LGID' or matches(Id, '[0-9]{13}'))")
+    const r = parseExpression(
+      "not(SchmeNm/Prtry = 'LGID' or matches(Id, '[0-9]{13}'))"
+    )
     expect(r.ok).toBe(true)
   })
 
@@ -176,8 +182,12 @@ describe("parseExpression — function argument checks", () => {
 
   it("accepts all-equal() of a path; rejects wrong arity or a literal", () => {
     expect(parseExpression("all-equal(Item/Amount/@Ccy)").ok).toBe(true)
-    expect(err("all-equal(A, B)").message).toMatch(/all-equal\(\) takes exactly one/)
-    expect(err("all-equal('x')").message).toMatch(/all-equal\(\) expects a path/)
+    expect(err("all-equal(A, B)").message).toMatch(
+      /all-equal\(\) takes exactly one/
+    )
+    expect(err("all-equal('x')").message).toMatch(
+      /all-equal\(\) expects a path/
+    )
   })
 
   it("treats a presence-cardinality call as boolean (so count() rejects it)", () => {
@@ -194,6 +204,8 @@ describe("validateExpressionSyntax", () => {
   })
 
   it("returns a one-line message with a 1-based position", () => {
-    expect(validateExpressionSyntax("not(A = 1")).toMatch(/Expected "\)" \(at position \d+\)/)
+    expect(validateExpressionSyntax("not(A = 1")).toMatch(
+      /Expected "\)" \(at position \d+\)/
+    )
   })
 })

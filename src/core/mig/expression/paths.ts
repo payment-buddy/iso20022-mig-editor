@@ -43,7 +43,7 @@ function resolvePath(owner: MessageElement, path: Path): ExprError | null {
   for (let i = 0; i < path.steps.length; i++) {
     const step = path.steps[i]
     const child = current.elements.find(
-      (c) => c.xmlTag === step.name && c.isAttribute === step.isAttribute,
+      (c) => c.xmlTag === step.name && c.isAttribute === step.isAttribute
     )
     if (!child) {
       // A name match of the wrong kind gives a more pointed hint than "unknown".
@@ -52,10 +52,12 @@ function resolvePath(owner: MessageElement, path: Path): ExprError | null {
         return fail(
           step.isAttribute
             ? `"${step.name}" is an element, not an attribute`
-            : `"${step.name}" is an attribute — reference it as "@${step.name}"`,
+            : `"${step.name}" is an attribute — reference it as "@${step.name}"`
         )
       }
-      const label = step.isAttribute ? `attribute "@${step.name}"` : `element "${step.name}"`
+      const label = step.isAttribute
+        ? `attribute "@${step.name}"`
+        : `element "${step.name}"`
       return fail(`Unknown ${label}`)
     }
     // Attributes are leaves: a step after one can never resolve.
@@ -71,7 +73,10 @@ function resolvePath(owner: MessageElement, path: Path): ExprError | null {
  * Validate every path in `ast` against the constraint's owning element, returning
  * one error per unresolved path (in source order). Empty when all paths resolve.
  */
-export function validateExpressionPaths(ast: ExprNode, owner: MessageElement): ExprError[] {
+export function validateExpressionPaths(
+  ast: ExprNode,
+  owner: MessageElement
+): ExprError[] {
   const errors: ExprError[] = []
   for (const path of collectPaths(ast)) {
     const error = resolvePath(owner, path)

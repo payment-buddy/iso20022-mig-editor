@@ -44,7 +44,10 @@ export function MigMetadata({
 
   const options = [
     { value: "", label: "(none)" },
-    ...eligible.map((m) => ({ value: getMigKey(m), label: `${m.name} ${m.version}` })),
+    ...eligible.map((m) => ({
+      value: getMigKey(m),
+      label: `${m.name} ${m.version}`,
+    })),
   ]
   // Keep the current parent selectable even if it's missing/not loaded.
   if (parentKey && !options.some((o) => o.value === parentKey)) {

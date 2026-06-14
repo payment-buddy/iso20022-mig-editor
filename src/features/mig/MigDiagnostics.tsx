@@ -26,7 +26,9 @@ export function MigDiagnostics({
   return (
     <section
       aria-label={
-        subject === "This MIG" ? "Consistency diagnostics" : `${subject}: consistency diagnostics`
+        subject === "This MIG"
+          ? "Consistency diagnostics"
+          : `${subject}: consistency diagnostics`
       }
       className="rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-500"
     >
@@ -38,11 +40,20 @@ export function MigDiagnostics({
       >
         <WarningIcon className="size-4 shrink-0" aria-hidden />
         {subject} has {n} {n === 1 ? "issue" : "issues"}
-        <CaretRightIcon className={cn("ml-auto size-3.5 transition-transform", open && "rotate-90")} aria-hidden />
+        <CaretRightIcon
+          className={cn(
+            "ml-auto size-3.5 transition-transform",
+            open && "rotate-90"
+          )}
+          aria-hidden
+        />
       </button>
 
       {open && (
-        <ul aria-label="Diagnostics" className="flex flex-col border-t border-amber-500/30 py-1">
+        <ul
+          aria-label="Diagnostics"
+          className="flex flex-col border-t border-amber-500/30 py-1"
+        >
           {diagnostics.map((d, i) => (
             <li key={`${d.path}-${d.field}-${i}`}>
               <button
@@ -52,9 +63,16 @@ export function MigDiagnostics({
                 className="w-full rounded-sm px-3 py-1 text-left text-xs outline-none hover:bg-amber-500/15 focus-visible:ring-2 focus-visible:ring-ring/30"
               >
                 <span className="font-medium">{d.elementName}</span>
-                <span className="text-amber-700/70 dark:text-amber-500/70"> · {d.field}</span>
-                <span className="block text-amber-700/90 dark:text-amber-500/90">{d.message}</span>
-                <code className="text-[0.625rem] text-amber-700/60 dark:text-amber-500/60">{d.path}</code>
+                <span className="text-amber-700/70 dark:text-amber-500/70">
+                  {" "}
+                  · {d.field}
+                </span>
+                <span className="block text-amber-700/90 dark:text-amber-500/90">
+                  {d.message}
+                </span>
+                <code className="text-[0.625rem] text-amber-700/60 dark:text-amber-500/60">
+                  {d.path}
+                </code>
               </button>
             </li>
           ))}

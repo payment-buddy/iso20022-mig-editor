@@ -38,7 +38,8 @@ function el(name: string, props: Partial<MessageElement> = {}): MessageElement {
   }
 }
 
-const codes = (...names: string[]): Code[] => names.map((codeName) => ({ codeName, definition: "" }))
+const codes = (...names: string[]): Code[] =>
+  names.map((codeName) => ({ codeName, definition: "" }))
 
 const MESSAGE: MessageDefinition = {
   name: "CreditTransfer",
@@ -71,20 +72,29 @@ function diffOf(elementOverrides: ElementOverrides) {
   return diffMig(effectiveMig(mig, [mig]), MESSAGE)
 }
 
-const only = (elementOverrides: ElementOverrides): ElementDiff => diffOf(elementOverrides).elements[0]
+const only = (elementOverrides: ElementOverrides): ElementDiff =>
+  diffOf(elementOverrides).elements[0]
 
 describe("diffMig field classification", () => {
   it("classifies a narrowed bound as tightened, a widened one as loosened", () => {
     expect(only({ "/Doc/GrpHdr": { maxLength: 20 } }).changes).toEqual([
       { label: "Max length", kind: "tightened", baseline: "35", value: "20" },
     ])
-    expect(only({ "/Doc/GrpHdr": { maxLength: 50 } }).changes[0].kind).toBe("loosened")
-    expect(only({ "/Doc/GrpHdr": { minOccurs: 0 } }).changes[0].kind).toBe("loosened")
+    expect(only({ "/Doc/GrpHdr": { maxLength: 50 } }).changes[0].kind).toBe(
+      "loosened"
+    )
+    expect(only({ "/Doc/GrpHdr": { minOccurs: 0 } }).changes[0].kind).toBe(
+      "loosened"
+    )
   })
 
   it("classifies a removed (null) constraint", () => {
     const change = only({ "/Doc/GrpHdr": { maxLength: null } }).changes[0]
-    expect(change).toMatchObject({ label: "Max length", kind: "removed", value: "none" })
+    expect(change).toMatchObject({
+      label: "Max length",
+      kind: "removed",
+      value: "none",
+    })
   })
 
   it("marks maxOccurs 0 as excluded and skips field changes", () => {
@@ -94,18 +104,34 @@ describe("diffMig field classification", () => {
   })
 
   it("treats an allowed-values subset as tightened, a non-subset as loosened", () => {
-    expect(only({ "/Doc/Sts": { allowedValues: ["ACTV"] } }).changes[0].kind).toBe("tightened")
-    expect(only({ "/Doc/Sts": { allowedValues: ["ACTV", "NEW"] } }).changes[0].kind).toBe("loosened")
+    expect(
+      only({ "/Doc/Sts": { allowedValues: ["ACTV"] } }).changes[0].kind
+    ).toBe("tightened")
+    expect(
+      only({ "/Doc/Sts": { allowedValues: ["ACTV", "NEW"] } }).changes[0].kind
+    ).toBe("loosened")
   })
 
   it("classifies pattern add / change / remove", () => {
-    expect(only({ "/Doc/GrpHdr": { pattern: "[A-Z]+" } }).changes[0].kind).toBe("added")
+    expect(only({ "/Doc/GrpHdr": { pattern: "[A-Z]+" } }).changes[0].kind).toBe(
+      "added"
+    )
   })
 
   it("treats definition as an informational change and annotations as added", () => {
-    const d = only({ "/Doc/GrpHdr": { definition: "Bank rule", annotations: { Usage: "debit" } } })
+    const d = only({
+      "/Doc/GrpHdr": {
+        definition: "Bank rule",
+        annotations: { Usage: "debit" },
+      },
+    })
     expect(d.changes).toEqual([
-      { label: "Definition", kind: "changed", baseline: "Group header", value: "Bank rule" },
+      {
+        label: "Definition",
+        kind: "changed",
+        baseline: "Group header",
+        value: "Bank rule",
+      },
       { label: "Usage", kind: "added", baseline: "—", value: "debit" },
     ])
   })
@@ -114,7 +140,12 @@ describe("diffMig field classification", () => {
     const d = only({
       "/Doc/GrpHdr": {
         additionalConstraints: [
-          { name: "R", definition: "must hold", expression: "x > 0", annotations: { Severity: "high" } },
+          {
+            name: "R",
+            definition: "must hold",
+            expression: "x > 0",
+            annotations: { Severity: "high" },
+          },
         ],
       },
     })
@@ -132,15 +163,26 @@ describe("diffMig field classification", () => {
   it("carries an overlaid standard constraint and marks a disabled one", () => {
     const d = only({
       "/Doc/GrpHdr": {
-        constraintOverrides: { StdRule: { expression: "x > 0" }, OffRule: { disabled: true } },
+        constraintOverrides: {
+          StdRule: { expression: "x > 0" },
+          OffRule: { disabled: true },
+        },
       },
     })
     // GrpHdr's ISO constraints (defined in the test message below) are StdRule + OffRule.
     expect(d.constraints).toContainEqual(
-      expect.objectContaining({ name: "StdRule", expression: "x > 0", source: "standard" }),
+      expect.objectContaining({
+        name: "StdRule",
+        expression: "x > 0",
+        source: "standard",
+      })
     )
     expect(d.constraints).toContainEqual(
-      expect.objectContaining({ name: "OffRule", source: "standard", disabled: true }),
+      expect.objectContaining({
+        name: "OffRule",
+        source: "standard",
+        disabled: true,
+      })
     )
   })
 })
@@ -157,7 +199,11 @@ describe("diffMig structure", () => {
 
   it("reports an override path that isn't in the message as an orphan", () => {
     const diff = diffOf({ "/Doc/Ghost": { minOccurs: 0 } })
-    expect(diff.elements[0]).toMatchObject({ path: "/Doc/Ghost", name: "Ghost", orphan: true })
+    expect(diff.elements[0]).toMatchObject({
+      path: "/Doc/Ghost",
+      name: "Ghost",
+      orphan: true,
+    })
   })
 
   it("lists parent keys and merges the chain for the diff", () => {
@@ -177,7 +223,9 @@ describe("diffMig structure", () => {
     const diff = diffMig(effectiveMig(leaf, [leaf, parent]), MESSAGE)
     expect(diff.mig.parents).toEqual(["Base:1"])
     // Effective maxLength is the leaf's 20 (vs ISO 35).
-    expect(diff.elements[0].changes.find((c) => c.label === "Max length")).toMatchObject({
+    expect(
+      diff.elements[0].changes.find((c) => c.label === "Max length")
+    ).toMatchObject({
       value: "20",
     })
   })
@@ -190,6 +238,8 @@ describe("diffMig structure", () => {
       parentMIG: "Missing:9",
       elementOverrides: {},
     }
-    expect(diffMig(effectiveMig(leaf, [leaf]), MESSAGE).missingParent).toBe("Missing:9")
+    expect(diffMig(effectiveMig(leaf, [leaf]), MESSAGE).missingParent).toBe(
+      "Missing:9"
+    )
   })
 })

@@ -39,7 +39,9 @@ function message(): MessageDefinition {
 
 describe("buildMessageYamlDownload", () => {
   it("names the file after the message identifier", () => {
-    expect(buildMessageYamlDownload(message()).filename).toBe("pacs.008.001.08.yaml")
+    expect(buildMessageYamlDownload(message()).filename).toBe(
+      "pacs.008.001.08.yaml"
+    )
   })
 
   it("serializes the message as canonical YAML", () => {

@@ -49,7 +49,9 @@
 import sax from "sax"
 import { parseExpression } from "./parser"
 
-export type TranspileResult = { ok: true; dsl: string } | { ok: false; reason: string }
+export type TranspileResult =
+  | { ok: true; dsl: string }
+  | { ok: false; reason: string }
 
 export interface TranspileOptions {
   /**
@@ -135,7 +137,8 @@ function isSingleNot(expr: string): boolean {
     const c = expr[i]
     if (inStr) {
       if (c === "'") {
-        if (expr[i + 1] === "'") i++ // escaped quote
+        if (expr[i + 1] === "'")
+          i++ // escaped quote
         else inStr = false
       }
       continue
@@ -148,7 +151,8 @@ function isSingleNot(expr: string): boolean {
 }
 
 /** Negate `expr`, collapsing `not(not(x))` to `x`. */
-const negate = (expr: string): string => (isSingleNot(expr) ? expr.slice(4, -1) : `not(${expr})`)
+const negate = (expr: string): string =>
+  isSingleNot(expr) ? expr.slice(4, -1) : `not(${expr})`
 
 /**
  * Convert an operand path (`/Status/Code`, `/Amt/@Ccy`) to a relative DSL path.
@@ -177,7 +181,9 @@ function dslPath(raw: string | undefined, existence = false): string | null {
 // iff `count(X) < n`. Restricted to a single element step so the count is
 // unambiguous regardless of parent cardinality; `[1]` is handled by `dslPath`'s
 // existence strip.
-function leafCardinality(raw: string | undefined): { base: string; n: number } | null {
+function leafCardinality(
+  raw: string | undefined
+): { base: string; n: number } | null {
   if (raw == null) return null
   let p = raw.trim()
   if (p.startsWith("/")) p = p.slice(1)
@@ -229,7 +235,10 @@ function renderRule(rule: XmlNode, resolve?: Resolver): Rendered | null {
       // (see `dslPath`).
       const left = dslPath(leftRaw, true)
       if (!left) return null
-      return { expr: type === "Presence" ? left : negate(left), compound: false }
+      return {
+        expr: type === "Presence" ? left : negate(left),
+        compound: false,
+      }
     }
     case "EqualToValue":
     case "DifferentFromValue": {
@@ -289,18 +298,26 @@ function renderBlock(block: XmlNode, resolve?: Resolver): Rendered | null {
   const connector = child(block, "connector")?.text.trim().toUpperCase()
   if (connector !== "AND" && connector !== "OR") return null
   const op = connector === "AND" ? "and" : "or"
-  const joined = parts.map((p) => (p.compound ? `(${p.expr})` : p.expr)).join(` ${op} `)
+  const joined = parts
+    .map((p) => (p.compound ? `(${p.expr})` : p.expr))
+    .join(` ${op} `)
   return { expr: joined, compound: true }
 }
 
 /** Transpile a `RuleDefinition` XML string to DSL, or skip with a reason. */
-export function ruleDefinitionToDsl(xml: string, opts: TranspileOptions = {}): TranspileResult {
+export function ruleDefinitionToDsl(
+  xml: string,
+  opts: TranspileOptions = {}
+): TranspileResult {
   const resolve = opts.resolveCodeList
   const root = parseXml(xml)
   if (!root) return fail("not valid XML")
-  if (root.name !== "RuleDefinition") return fail(`expected <RuleDefinition>, got <${root.name}>`)
+  if (root.name !== "RuleDefinition")
+    return fail(`expected <RuleDefinition>, got <${root.name}>`)
 
-  const rule = root.children.find((c) => c.name === "SimpleRule" || c.name === "ComplexRule")
+  const rule = root.children.find(
+    (c) => c.name === "SimpleRule" || c.name === "ComplexRule"
+  )
   if (!rule) return fail("no SimpleRule or ComplexRule")
 
   const mustBe = child(rule, "mustBe")

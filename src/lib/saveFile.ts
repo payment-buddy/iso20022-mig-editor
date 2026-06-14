@@ -4,11 +4,27 @@
 // download link where it isn't supported.
 
 export type SavedFile = { filename: string; content: string }
-export type FileKind = { mime: string; description: string; extensions: string[] }
+export type FileKind = {
+  mime: string
+  description: string
+  extensions: string[]
+}
 
-export const YAML: FileKind = { mime: "text/yaml", description: "YAML", extensions: [".yaml", ".yml"] }
-export const MARKDOWN: FileKind = { mime: "text/markdown", description: "Markdown", extensions: [".md"] }
-export const CSV: FileKind = { mime: "text/csv", description: "CSV", extensions: [".csv"] }
+export const YAML: FileKind = {
+  mime: "text/yaml",
+  description: "YAML",
+  extensions: [".yaml", ".yml"],
+}
+export const MARKDOWN: FileKind = {
+  mime: "text/markdown",
+  description: "Markdown",
+  extensions: [".md"],
+}
+export const CSV: FileKind = {
+  mime: "text/csv",
+  description: "CSV",
+  extensions: [".csv"],
+}
 
 /**
  * Minimal slice of the File System Access API we use — not in every lib.dom, and
@@ -29,14 +45,23 @@ type ShowSaveFilePicker = (options?: {
  * location and an existing file is overwritten in place — no `" (1)"` suffix.
  * Returns `false` when the API is unavailable so the caller can fall back.
  */
-async function saveViaPicker(file: SavedFile, kind: FileKind): Promise<boolean> {
-  const picker = (window as unknown as { showSaveFilePicker?: ShowSaveFilePicker })
-    .showSaveFilePicker
+async function saveViaPicker(
+  file: SavedFile,
+  kind: FileKind
+): Promise<boolean> {
+  const picker = (
+    window as unknown as { showSaveFilePicker?: ShowSaveFilePicker }
+  ).showSaveFilePicker
   if (!picker) return false
   try {
     const handle = await picker({
       suggestedName: file.filename,
-      types: [{ description: kind.description, accept: { [kind.mime]: kind.extensions } }],
+      types: [
+        {
+          description: kind.description,
+          accept: { [kind.mime]: kind.extensions },
+        },
+      ],
     })
     const writable = await handle.createWritable()
     await writable.write(file.content)
@@ -65,6 +90,9 @@ function saveViaAnchor(file: SavedFile, kind: FileKind): void {
  * avoiding `" (1)"` collision suffixes) and falling back to an anchor download
  * link where it isn't supported.
  */
-export async function saveTextFile(file: SavedFile, kind: FileKind): Promise<void> {
+export async function saveTextFile(
+  file: SavedFile,
+  kind: FileKind
+): Promise<void> {
   if (!(await saveViaPicker(file, kind))) saveViaAnchor(file, kind)
 }

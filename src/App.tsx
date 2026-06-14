@@ -41,7 +41,10 @@ export function App() {
   if (gate.phase === "loading") {
     return (
       <div className="flex min-h-svh items-center justify-center">
-        <SpinnerGapIcon className="size-6 animate-spin text-muted-foreground" aria-hidden />
+        <SpinnerGapIcon
+          className="size-6 animate-spin text-muted-foreground"
+          aria-hidden
+        />
         <span className="sr-only">Loading…</span>
       </div>
     )
@@ -69,7 +72,9 @@ export function App() {
       <RouteView
         route={route}
         repo={gate.repo}
-        onUpdateRepository={() => setGate({ phase: "updating", current: gate.repo })}
+        onUpdateRepository={() =>
+          setGate({ phase: "updating", current: gate.repo })
+        }
       />
     </AppShell>
   )

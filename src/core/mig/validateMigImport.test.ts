@@ -17,7 +17,10 @@ describe("validateMigImport", () => {
     const mig = {
       ...base,
       elementOverrides: {
-        "/Doc/Amt": { maxLength: null, additionalConstraints: [{ name: "R", definition: "" }] },
+        "/Doc/Amt": {
+          maxLength: null,
+          additionalConstraints: [{ name: "R", definition: "" }],
+        },
       },
     }
     expect(validateMigImport(mig)).toEqual({ ok: true, mig })
@@ -27,7 +30,12 @@ describe("validateMigImport", () => {
     const mig = {
       ...base,
       elementOverrides: {
-        "/Doc/Amt": { constraintOverrides: { R1: { expression: "a > 0" }, R2: { expression: null } } },
+        "/Doc/Amt": {
+          constraintOverrides: {
+            R1: { expression: "a > 0" },
+            R2: { expression: null },
+          },
+        },
       },
     }
     expect(validateMigImport(mig)).toEqual({ ok: true, mig })

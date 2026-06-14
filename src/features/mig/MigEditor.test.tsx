@@ -2,7 +2,13 @@
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
@@ -14,7 +20,11 @@ import type {
   MessageImplementationGuide,
 } from "@/core/types/types"
 import { MigEditor } from "./MigEditor"
-import { downloadMigCsv, downloadMigMarkdown, downloadMigs } from "./downloadMigs"
+import {
+  downloadMigCsv,
+  downloadMigMarkdown,
+  downloadMigs,
+} from "./downloadMigs"
 
 // The DOM download side-effect is exercised separately (downloadMigs.save.test.ts);
 // here we only assert the editor wires its export buttons to it.
@@ -108,14 +118,20 @@ describe("MigEditor", () => {
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
 
     // Tree appears once the MIG loads from IndexedDB.
-    expect(await screen.findByRole("treeitem", { name: "Document" })).toBeInTheDocument()
+    expect(
+      await screen.findByRole("treeitem", { name: "Document" })
+    ).toBeInTheDocument()
     // The MIG name is an inline-editable title in the header.
-    expect(screen.getByRole("button", { name: "Edit MIG name" })).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Edit MIG name" })
+    ).toBeInTheDocument()
     expect(screen.getAllByText("EPC Guide").length).toBeGreaterThan(0)
     // Root is expanded by default.
     expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toBeInTheDocument()
     // Grandchild stays collapsed until its parent is expanded.
-    expect(screen.queryByRole("treeitem", { name: "Amt" })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("treeitem", { name: "Amt" })
+    ).not.toBeInTheDocument()
   })
 
   it("downloads the current MIG as YAML from the header button", async () => {
@@ -130,7 +146,7 @@ describe("MigEditor", () => {
     // Called with the MIG and a schema-order index (Map) for its overrides.
     expect(downloadMigs).toHaveBeenCalledWith(
       [expect.objectContaining({ name: "EPC Guide", version: "1.0" })],
-      expect.any(Map),
+      expect.any(Map)
     )
   })
 
@@ -148,7 +164,7 @@ describe("MigEditor", () => {
     expect(downloadMigMarkdown).toHaveBeenCalledWith(
       expect.objectContaining({ name: "EPC Guide" }),
       expect.any(Array),
-      expect.objectContaining({ identifier: "pacs.008.001.10" }),
+      expect.objectContaining({ identifier: "pacs.008.001.10" })
     )
   })
 
@@ -165,7 +181,7 @@ describe("MigEditor", () => {
     expect(downloadMigCsv).toHaveBeenCalledWith(
       expect.objectContaining({ name: "EPC Guide" }),
       expect.any(Array),
-      expect.objectContaining({ identifier: "pacs.008.001.10" }),
+      expect.objectContaining({ identifier: "pacs.008.001.10" })
     )
   })
 
@@ -177,7 +193,9 @@ describe("MigEditor", () => {
     // Root is selected by default (selection follows focus).
     const panel = screen.getByRole("region", { name: /element details/i })
     expect(within(panel).getByText("Document")).toBeInTheDocument()
-    expect(within(panel).getByRole("button", { name: "Edit Definition" })).toBeInTheDocument()
+    expect(
+      within(panel).getByRole("button", { name: "Edit Definition" })
+    ).toBeInTheDocument()
   })
 
   it("edits, autosaves and resets an element's definition override", async () => {
@@ -188,26 +206,38 @@ describe("MigEditor", () => {
     const panel = screen.getByRole("region", { name: /element details/i })
 
     // Edit the root element's definition.
-    await user.click(within(panel).getByRole("button", { name: "Edit Definition" }))
-    await user.type(within(panel).getByRole("textbox", { name: "Definition" }), "House rule")
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Definition" })
+    )
+    await user.type(
+      within(panel).getByRole("textbox", { name: "Definition" }),
+      "House rule"
+    )
     await user.tab() // blur commits
 
     // Persisted as a tri-state override keyed by xmlPath, and flagged overridden.
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.definition).toBe(
-      "House rule",
-    )
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.definition
+    ).toBe("House rule")
     // Overridden state is conveyed by a dot whose tooltip names the baseline.
     expect(within(panel).getByTitle(/overridden/i)).toBeInTheDocument()
 
     // Reset removes the override entirely.
-    await user.click(within(panel).getByRole("button", { name: /reset to inherited/i }))
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]).toBeUndefined()
+    await user.click(
+      within(panel).getByRole("button", { name: /reset to inherited/i })
+    )
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+    ).toBeUndefined()
     expect(within(panel).queryByTitle(/overridden/i)).not.toBeInTheDocument()
   })
 
   it("shows a not-found state when the MIG is absent", async () => {
     render(<MigEditor migKey="Ghost:9.9" repo={REPO} />)
-    expect(await screen.findByRole("heading", { name: /mig not found/i })).toBeInTheDocument()
+    expect(
+      await screen.findByRole("heading", { name: /mig not found/i })
+    ).toBeInTheDocument()
   })
 
   it("edits and autosaves the description inline", async () => {
@@ -217,7 +247,10 @@ describe("MigEditor", () => {
     await screen.findByRole("treeitem", { name: "Document" })
 
     await user.click(screen.getByRole("button", { name: "Edit Description" }))
-    await user.type(screen.getByRole("textbox", { name: "Description" }), "Domestic credit transfers")
+    await user.type(
+      screen.getByRole("textbox", { name: "Description" }),
+      "Domestic credit transfers"
+    )
     await user.tab() // blur commits
 
     // Reflected in the UI and persisted to storage.
@@ -234,15 +267,22 @@ describe("MigEditor", () => {
     const panel = screen.getByRole("region", { name: /element details/i })
 
     // Raise min occurs above the (ISO 1) max occurs → advisory warning, not blocked.
-    await user.click(within(panel).getByRole("button", { name: "Edit Min occurs" }))
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Min occurs" })
+    )
     const input = within(panel).getByRole("spinbutton", { name: "Min occurs" })
     await user.clear(input)
     await user.type(input, "2")
     await user.tab()
 
-    expect(within(panel).getByRole("alert")).toHaveTextContent(/max 1 is below min 2/i)
+    expect(within(panel).getByRole("alert")).toHaveTextContent(
+      /max 1 is below min 2/i
+    )
     // The value is still accepted (advisory, non-blocking).
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.minOccurs).toBe(2)
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.minOccurs
+    ).toBe(2)
   })
 
   it("warns when an element is excluded (max 0) but min occurs still requires it", async () => {
@@ -254,14 +294,18 @@ describe("MigEditor", () => {
     await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
     const panel = screen.getByRole("region", { name: /element details/i })
 
-    await user.click(within(panel).getByRole("button", { name: "Edit Max occurs" }))
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Max occurs" })
+    )
     const input = within(panel).getByRole("spinbutton", { name: "Max occurs" })
     await user.clear(input)
     await user.type(input, "0")
     await user.tab()
 
     // Excluding while min still requires it: max 0 < min 1 is flagged.
-    expect(within(panel).getByRole("alert")).toHaveTextContent(/max 0 is below min 1/i)
+    expect(within(panel).getByRole("alert")).toHaveTextContent(
+      /max 0 is below min 1/i
+    )
   })
 
   it("edits Min/Max occurs overrides (unbounded = null)", async () => {
@@ -272,16 +316,27 @@ describe("MigEditor", () => {
     const panel = screen.getByRole("region", { name: /element details/i })
 
     // Min occurs: baseline 1 → 0.
-    await user.click(within(panel).getByRole("button", { name: "Edit Min occurs" }))
-    const minInput = within(panel).getByRole("spinbutton", { name: "Min occurs" })
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Min occurs" })
+    )
+    const minInput = within(panel).getByRole("spinbutton", {
+      name: "Min occurs",
+    })
     await user.clear(minInput)
     await user.type(minInput, "0")
     await user.tab()
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.minOccurs).toBe(0)
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.minOccurs
+    ).toBe(0)
 
     // Max occurs: baseline 1 → unbounded (empty number field, stored as null).
-    await user.click(within(panel).getByRole("button", { name: "Edit Max occurs" }))
-    const maxInput = within(panel).getByRole("spinbutton", { name: "Max occurs" })
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Max occurs" })
+    )
+    const maxInput = within(panel).getByRole("spinbutton", {
+      name: "Max occurs",
+    })
     await user.clear(maxInput)
     await user.tab()
     const saved = await loadMig(getMigKey(MIG))
@@ -290,14 +345,22 @@ describe("MigEditor", () => {
     expect(override?.maxOccurs).toBeNull()
 
     // Both fields are now overridden → two reset actions; the first resets Min occurs.
-    const resets = within(panel).getAllByRole("button", { name: /reset to inherited/i })
+    const resets = within(panel).getAllByRole("button", {
+      name: /reset to inherited/i,
+    })
     await user.click(resets[0])
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.minOccurs).toBeUndefined()
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.minOccurs
+    ).toBeUndefined()
   })
 
   it("shows the effective cardinality in the tree (own override)", async () => {
     // GrpHdr is [1..1] in ISO; overriding maxOccurs to 5 shows [1..5] in the tree.
-    await saveMig({ ...MIG, elementOverrides: { "/DocumentTag/GrpHdrTag": { maxOccurs: 5 } } })
+    await saveMig({
+      ...MIG,
+      elementOverrides: { "/DocumentTag/GrpHdrTag": { maxOccurs: 5 } },
+    })
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
     const grpHdr = screen.getByRole("treeitem", { name: "GrpHdr" })
@@ -330,7 +393,10 @@ describe("MigEditor", () => {
   it("counts and hides elements excluded via a maxOccurs:0 override", async () => {
     const user = userEvent.setup()
     // Exclude CdtTrfTxInf by overriding its effective maxOccurs to 0.
-    await saveMig({ ...MIG, elementOverrides: { "/DocumentTag/CdtTrfTxInfTag": { maxOccurs: 0 } } })
+    await saveMig({
+      ...MIG,
+      elementOverrides: { "/DocumentTag/CdtTrfTxInfTag": { maxOccurs: 0 } },
+    })
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
 
@@ -342,7 +408,9 @@ describe("MigEditor", () => {
 
     // Toggling on drops the excluded element (and its subtree) from the tree.
     await user.click(toggle)
-    expect(screen.queryByRole("treeitem", { name: "CdtTrfTxInf" })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("treeitem", { name: "CdtTrfTxInf" })
+    ).not.toBeInTheDocument()
   })
 
   it("adds a MIG-specific constraint, revealing and selecting it in the tree", async () => {
@@ -353,16 +421,21 @@ describe("MigEditor", () => {
     const panel = screen.getByRole("region", { name: /element details/i })
 
     // Root (Document) is selected by default; add a constraint to it.
-    await user.click(within(panel).getByRole("button", { name: /add constraint/i }))
+    await user.click(
+      within(panel).getByRole("button", { name: /add constraint/i })
+    )
 
     // The constraint appears in the tree, tagged "added", and is now selected.
-    const node = await screen.findByRole("treeitem", { name: /constraint new constraint$/i })
+    const node = await screen.findByRole("treeitem", {
+      name: /constraint new constraint$/i,
+    })
     expect(within(node).getByText("added")).toBeInTheDocument()
     expect(node).toHaveAttribute("aria-selected", "true")
 
     // Persisted as a MIG-specific (additional) constraint on the root path.
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.additionalConstraints,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.additionalConstraints
     ).toEqual([{ name: "New constraint", definition: "" }])
   })
 
@@ -376,7 +449,9 @@ describe("MigEditor", () => {
     // then add again — the second name must not collide with the first.
     const add = async () => {
       const panel = screen.getByRole("region", { name: /element details/i })
-      await user.click(within(panel).getByRole("button", { name: /add constraint/i }))
+      await user.click(
+        within(panel).getByRole("button", { name: /add constraint/i })
+      )
     }
     await add()
     await user.click(screen.getByRole("treeitem", { name: "Document" }))
@@ -395,20 +470,34 @@ describe("MigEditor", () => {
     await screen.findByRole("treeitem", { name: "Document" })
 
     // Add a constraint (selection moves to it → constraint detail panel).
-    const elementPanel = screen.getByRole("region", { name: /element details/i })
-    await user.click(within(elementPanel).getByRole("button", { name: /add constraint/i }))
-    const panel = await screen.findByRole("region", { name: /constraint details/i })
+    const elementPanel = screen.getByRole("region", {
+      name: /element details/i,
+    })
+    await user.click(
+      within(elementPanel).getByRole("button", { name: /add constraint/i })
+    )
+    const panel = await screen.findByRole("region", {
+      name: /constraint details/i,
+    })
 
-    await user.click(within(panel).getByRole("button", { name: "Edit Constraint definition" }))
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Constraint definition" })
+    )
     await user.type(
       within(panel).getByRole("textbox", { name: "Constraint definition" }),
-      "Must reference a settlement date",
+      "Must reference a settlement date"
     )
     await user.tab() // blur commits
 
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.additionalConstraints,
-    ).toEqual([{ name: "New constraint", definition: "Must reference a settlement date" }])
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.additionalConstraints
+    ).toEqual([
+      {
+        name: "New constraint",
+        definition: "Must reference a settlement date",
+      },
+    ])
   })
 
   it("edits an added constraint's expression", async () => {
@@ -417,21 +506,32 @@ describe("MigEditor", () => {
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
 
-    const elementPanel = screen.getByRole("region", { name: /element details/i })
-    await user.click(within(elementPanel).getByRole("button", { name: /add constraint/i }))
-    const panel = await screen.findByRole("region", { name: /constraint details/i })
+    const elementPanel = screen.getByRole("region", {
+      name: /element details/i,
+    })
+    await user.click(
+      within(elementPanel).getByRole("button", { name: /add constraint/i })
+    )
+    const panel = await screen.findByRole("region", {
+      name: /constraint details/i,
+    })
 
-    await user.click(within(panel).getByRole("button", { name: "Edit Constraint expression" }))
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Constraint expression" })
+    )
     await user.type(
       within(panel).getByRole("textbox", { name: "Constraint expression" }),
-      "Amt > 0",
+      "Amt > 0"
     )
     await user.tab() // blur commits
 
     // Expression is stored as an optional field alongside name/definition.
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.additionalConstraints,
-    ).toEqual([{ name: "New constraint", definition: "", expression: "Amt > 0" }])
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.additionalConstraints
+    ).toEqual([
+      { name: "New constraint", definition: "", expression: "Amt > 0" },
+    ])
   })
 
   it("renames an added constraint, keeping it selected in the tree", async () => {
@@ -440,21 +540,34 @@ describe("MigEditor", () => {
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
 
-    const elementPanel = screen.getByRole("region", { name: /element details/i })
-    await user.click(within(elementPanel).getByRole("button", { name: /add constraint/i }))
-    const panel = await screen.findByRole("region", { name: /constraint details/i })
+    const elementPanel = screen.getByRole("region", {
+      name: /element details/i,
+    })
+    await user.click(
+      within(elementPanel).getByRole("button", { name: /add constraint/i })
+    )
+    const panel = await screen.findByRole("region", {
+      name: /constraint details/i,
+    })
 
-    await user.click(within(panel).getByRole("button", { name: "Edit Constraint name" }))
-    const input = within(panel).getByRole("textbox", { name: "Constraint name" })
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Constraint name" })
+    )
+    const input = within(panel).getByRole("textbox", {
+      name: "Constraint name",
+    })
     await user.clear(input)
     await user.type(input, "Settlement rule")
     await user.tab() // blur commits
 
     // Renamed in storage and re-selected in the tree under its new path.
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.additionalConstraints,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.additionalConstraints
     ).toEqual([{ name: "Settlement rule", definition: "" }])
-    const node = await screen.findByRole("treeitem", { name: /constraint settlement rule$/i })
+    const node = await screen.findByRole("treeitem", {
+      name: /constraint settlement rule$/i,
+    })
     expect(node).toHaveAttribute("aria-selected", "true")
   })
 
@@ -467,7 +580,9 @@ describe("MigEditor", () => {
     // Two constraints on the root; the second stays selected.
     const add = async () => {
       const p = screen.getByRole("region", { name: /element details/i })
-      await user.click(within(p).getByRole("button", { name: /add constraint/i }))
+      await user.click(
+        within(p).getByRole("button", { name: /add constraint/i })
+      )
     }
     await add()
     await user.click(screen.getByRole("treeitem", { name: "Document" }))
@@ -475,8 +590,12 @@ describe("MigEditor", () => {
 
     // Try to rename "New constraint 2" → "New constraint" (taken): no change.
     const panel = screen.getByRole("region", { name: /constraint details/i })
-    await user.click(within(panel).getByRole("button", { name: "Edit Constraint name" }))
-    const input = within(panel).getByRole("textbox", { name: "Constraint name" })
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Constraint name" })
+    )
+    const input = within(panel).getByRole("textbox", {
+      name: "Constraint name",
+    })
     await user.clear(input)
     await user.type(input, "New constraint")
     await user.tab()
@@ -513,22 +632,34 @@ describe("MigEditor", () => {
     await screen.findByRole("treeitem", { name: "Document" })
 
     // Select the standard constraint (a child of the expanded root).
-    await user.click(screen.getByRole("treeitem", { name: /constraint stdrule/i }))
+    await user.click(
+      screen.getByRole("treeitem", { name: /constraint stdrule/i })
+    )
 
     const panel = screen.getByRole("region", { name: /constraint details/i })
     expect(within(panel).getByText("StdRule")).toBeInTheDocument()
     // Name stays read-only and a standard rule can't be deleted (definition and
     // expression are overlay-editable below).
-    expect(within(panel).queryByRole("button", { name: "Edit Constraint name" })).not.toBeInTheDocument()
-    expect(within(panel).queryByRole("button", { name: /delete constraint/i })).not.toBeInTheDocument()
+    expect(
+      within(panel).queryByRole("button", { name: "Edit Constraint name" })
+    ).not.toBeInTheDocument()
+    expect(
+      within(panel).queryByRole("button", { name: /delete constraint/i })
+    ).not.toBeInTheDocument()
 
     // The expression, however, can be overlaid — stored under constraintOverrides.
-    await user.click(within(panel).getByRole("button", { name: "Edit Constraint expression" }))
-    await user.type(within(panel).getByRole("textbox", { name: "Constraint expression" }), "Amt > 0")
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Constraint expression" })
+    )
+    await user.type(
+      within(panel).getByRole("textbox", { name: "Constraint expression" }),
+      "Amt > 0"
+    )
     await user.tab()
 
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.constraintOverrides,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.constraintOverrides
     ).toEqual({ StdRule: { expression: "Amt > 0" } })
   })
 
@@ -557,23 +688,38 @@ describe("MigEditor", () => {
       name: "Base",
       version: "1.0",
       messageIdentifier: "pacs.008.001.10",
-      elementOverrides: { "/DocumentTag": { constraintOverrides: { StdRule: { expression: "x > 0" } } } },
+      elementOverrides: {
+        "/DocumentTag": {
+          constraintOverrides: { StdRule: { expression: "x > 0" } },
+        },
+      },
     }
-    const child: MessageImplementationGuide = { ...MIG, parentMIG: getMigKey(parent) }
+    const child: MessageImplementationGuide = {
+      ...MIG,
+      parentMIG: getMigKey(parent),
+    }
     await saveMig(parent)
     await saveMig(child)
     render(<MigEditor migKey={getMigKey(child)} repo={repo} />)
     await screen.findByRole("treeitem", { name: "Document" })
-    await user.click(screen.getByRole("treeitem", { name: /constraint stdrule/i }))
+    await user.click(
+      screen.getByRole("treeitem", { name: /constraint stdrule/i })
+    )
     const panel = screen.getByRole("region", { name: /constraint details/i })
 
     // Expression is inherited from the parent's overlay → blue diamond.
-    const inheritedDot = within(panel).getByTitle(/inherited from a parent mig: x > 0/i)
+    const inheritedDot = within(panel).getByTitle(
+      /inherited from a parent mig: x > 0/i
+    )
     expect(inheritedDot).toHaveClass("rotate-45", "bg-provenance-inherited")
 
     // Override it here → blue circle, baseline still the inherited value.
-    await user.click(within(panel).getByRole("button", { name: "Edit Constraint expression" }))
-    const input = within(panel).getByRole("textbox", { name: "Constraint expression" })
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Constraint expression" })
+    )
+    const input = within(panel).getByRole("textbox", {
+      name: "Constraint expression",
+    })
     await user.clear(input)
     await user.type(input, "Amt > 0")
     await user.tab()
@@ -605,13 +751,18 @@ describe("MigEditor", () => {
     await saveMig(MIG)
     render(<MigEditor migKey={getMigKey(MIG)} repo={repo} />)
     await screen.findByRole("treeitem", { name: "Document" })
-    await user.click(screen.getByRole("treeitem", { name: /constraint stdrule/i }))
+    await user.click(
+      screen.getByRole("treeitem", { name: /constraint stdrule/i })
+    )
 
     const panel = screen.getByRole("region", { name: /constraint details/i })
-    await user.click(within(panel).getByRole("checkbox", { name: /disable this rule/i }))
+    await user.click(
+      within(panel).getByRole("checkbox", { name: /disable this rule/i })
+    )
 
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.constraintOverrides,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.constraintOverrides
     ).toEqual({ StdRule: { disabled: true } })
   })
 
@@ -626,7 +777,9 @@ describe("MigEditor", () => {
 
     expect(screen.getByText("Overridden here")).toBeInTheDocument()
     const item = screen.getByRole("treeitem", { name: /GrpHdr/ })
-    expect(item.querySelector(".text-provenance-own")?.textContent).toBe("GrpHdr")
+    expect(item.querySelector(".text-provenance-own")?.textContent).toBe(
+      "GrpHdr"
+    )
   })
 
   it("filters to changes (and their ancestors) via the 'Only changes' toggle", async () => {
@@ -649,11 +802,17 @@ describe("MigEditor", () => {
     await user.click(screen.getByRole("checkbox", { name: /only changes/i }))
 
     // The changed element, its added constraint, and the ancestor remain…
-    expect(screen.getByRole("treeitem", { name: "Document" })).toBeInTheDocument()
+    expect(
+      screen.getByRole("treeitem", { name: "Document" })
+    ).toBeInTheDocument()
     expect(screen.getByRole("treeitem", { name: /GrpHdr/ })).toBeInTheDocument()
-    expect(screen.getByRole("treeitem", { name: /constraint myrule/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole("treeitem", { name: /constraint myrule/i })
+    ).toBeInTheDocument()
     // …while unchanged siblings are filtered out.
-    expect(screen.queryByRole("treeitem", { name: /Rate/ })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("treeitem", { name: /Rate/ })
+    ).not.toBeInTheDocument()
   })
 
   it("colours a node overridden only by a parent MIG in the inherited colour", async () => {
@@ -663,14 +822,19 @@ describe("MigEditor", () => {
       messageIdentifier: "pacs.008.001.10",
       elementOverrides: { "/DocumentTag/GrpHdrTag": { maxLength: 20 } },
     }
-    const child: MessageImplementationGuide = { ...MIG, parentMIG: getMigKey(parent) }
+    const child: MessageImplementationGuide = {
+      ...MIG,
+      parentMIG: getMigKey(parent),
+    }
     await saveMig(parent)
     await saveMig(child)
     render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: /Document/ })
 
     const item = screen.getByRole("treeitem", { name: /GrpHdr/ })
-    expect(item.querySelector(".text-provenance-inherited")?.textContent).toBe("GrpHdr")
+    expect(item.querySelector(".text-provenance-inherited")?.textContent).toBe(
+      "GrpHdr"
+    )
     // It isn't this MIG's own override.
     expect(item.querySelector(".text-provenance-own")).toBeNull()
   })
@@ -678,7 +842,11 @@ describe("MigEditor", () => {
   it("does not tint an element that has only a constraint override, but tints the constraint", async () => {
     const guide: MessageImplementationGuide = {
       ...MIG,
-      elementOverrides: { "/DocumentTag": { additionalConstraints: [{ name: "Mine", definition: "" }] } },
+      elementOverrides: {
+        "/DocumentTag": {
+          additionalConstraints: [{ name: "Mine", definition: "" }],
+        },
+      },
     }
     await saveMig(guide)
     render(<MigEditor migKey={getMigKey(guide)} repo={REPO} />)
@@ -690,7 +858,9 @@ describe("MigEditor", () => {
     expect(doc.querySelector(".text-provenance-inherited")).toBeNull()
     // The added constraint node is tinted by its own provenance.
     const con = screen.getByRole("treeitem", { name: /constraint mine/i })
-    expect(con.querySelector(".text-provenance-own")?.textContent).toContain("Mine")
+    expect(con.querySelector(".text-provenance-own")?.textContent).toContain(
+      "Mine"
+    )
   })
 
   it("tints a standard constraint this MIG overlays, leaving untouched ISO rules plain", async () => {
@@ -718,14 +888,22 @@ describe("MigEditor", () => {
     }
     const guide: MessageImplementationGuide = {
       ...MIG,
-      elementOverrides: { "/DocumentTag": { constraintOverrides: { StdRule: { expression: "x > 0" } } } },
+      elementOverrides: {
+        "/DocumentTag": {
+          constraintOverrides: { StdRule: { expression: "x > 0" } },
+        },
+      },
     }
     await saveMig(guide)
     render(<MigEditor migKey={getMigKey(guide)} repo={repo} />)
     await screen.findByRole("treeitem", { name: /Document/ })
 
-    const overlaid = screen.getByRole("treeitem", { name: /constraint stdrule/i })
-    expect(overlaid.querySelector(".text-provenance-own")?.textContent).toContain("StdRule")
+    const overlaid = screen.getByRole("treeitem", {
+      name: /constraint stdrule/i,
+    })
+    expect(
+      overlaid.querySelector(".text-provenance-own")?.textContent
+    ).toContain("StdRule")
     const plain = screen.getByRole("treeitem", { name: /constraint plain/i })
     expect(plain.querySelector(".text-provenance-own")).toBeNull()
     expect(plain.querySelector(".text-provenance-inherited")).toBeNull()
@@ -738,29 +916,48 @@ describe("MigEditor", () => {
       version: "1.0",
       messageIdentifier: "pacs.008.001.10",
       elementOverrides: {
-        "/DocumentTag": { additionalConstraints: [{ name: "InhRule", definition: "Inherited rule" }] },
+        "/DocumentTag": {
+          additionalConstraints: [
+            { name: "InhRule", definition: "Inherited rule" },
+          ],
+        },
       },
     }
-    const child: MessageImplementationGuide = { ...MIG, parentMIG: getMigKey(parent) }
+    const child: MessageImplementationGuide = {
+      ...MIG,
+      parentMIG: getMigKey(parent),
+    }
     await saveMig(parent)
     await saveMig(child)
     render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
 
     // The inherited constraint is visible (it isn't in this MIG's own overrides).
-    await user.click(screen.getByRole("treeitem", { name: /constraint inhrule/i }))
+    await user.click(
+      screen.getByRole("treeitem", { name: /constraint inhrule/i })
+    )
     const panel = screen.getByRole("region", { name: /constraint details/i })
     // It uses the overlay panel: no rename/delete, but an editable expression.
-    expect(within(panel).queryByRole("button", { name: "Edit Constraint name" })).not.toBeInTheDocument()
-    expect(within(panel).queryByRole("button", { name: /delete constraint/i })).not.toBeInTheDocument()
+    expect(
+      within(panel).queryByRole("button", { name: "Edit Constraint name" })
+    ).not.toBeInTheDocument()
+    expect(
+      within(panel).queryByRole("button", { name: /delete constraint/i })
+    ).not.toBeInTheDocument()
 
-    await user.click(within(panel).getByRole("button", { name: "Edit Constraint expression" }))
-    await user.type(within(panel).getByRole("textbox", { name: "Constraint expression" }), "Amt > 0")
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Constraint expression" })
+    )
+    await user.type(
+      within(panel).getByRole("textbox", { name: "Constraint expression" }),
+      "Amt > 0"
+    )
     await user.tab()
 
     // The overlay lands on the child MIG, keyed by the inherited rule's name.
     expect(
-      (await loadMig(getMigKey(child)))?.elementOverrides["/DocumentTag"]?.constraintOverrides,
+      (await loadMig(getMigKey(child)))?.elementOverrides["/DocumentTag"]
+        ?.constraintOverrides
     ).toEqual({ InhRule: { expression: "Amt > 0" } })
   })
 
@@ -770,26 +967,48 @@ describe("MigEditor", () => {
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
 
-    const elementPanel = screen.getByRole("region", { name: /element details/i })
-    await user.click(within(elementPanel).getByRole("button", { name: /add constraint/i }))
-    const panel = await screen.findByRole("region", { name: /constraint details/i })
+    const elementPanel = screen.getByRole("region", {
+      name: /element details/i,
+    })
+    await user.click(
+      within(elementPanel).getByRole("button", { name: /add constraint/i })
+    )
+    const panel = await screen.findByRole("region", {
+      name: /constraint details/i,
+    })
 
     // Cancelling the confirm leaves the constraint in place.
-    await user.click(within(panel).getByRole("button", { name: /delete constraint/i }))
-    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Cancel" }))
-    expect(screen.getByRole("treeitem", { name: /constraint new constraint$/i })).toBeInTheDocument()
+    await user.click(
+      within(panel).getByRole("button", { name: /delete constraint/i })
+    )
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", {
+        name: "Cancel",
+      })
+    )
+    expect(
+      screen.getByRole("treeitem", { name: /constraint new constraint$/i })
+    ).toBeInTheDocument()
 
     // Confirming removes it and selection falls back to the owning element.
-    await user.click(within(panel).getByRole("button", { name: /delete constraint/i }))
-    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Delete" }))
+    await user.click(
+      within(panel).getByRole("button", { name: /delete constraint/i })
+    )
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", {
+        name: "Delete",
+      })
+    )
 
     expect(
-      screen.queryByRole("treeitem", { name: /constraint new constraint$/i }),
+      screen.queryByRole("treeitem", { name: /constraint new constraint$/i })
     ).not.toBeInTheDocument()
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]).toBeUndefined()
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+    ).toBeUndefined()
     expect(screen.getByRole("treeitem", { name: "Document" })).toHaveAttribute(
       "aria-selected",
-      "true",
+      "true"
     )
   })
 
@@ -817,11 +1036,17 @@ describe("MigEditor", () => {
 
     // Max length inherits the parent's 20 (not the ISO 35), flagged with a blue
     // "inherited" diamond (consistent with the element-tree tint).
-    const inheritedDot = within(panel).getByTitle(/inherited from a parent mig: 20/i)
+    const inheritedDot = within(panel).getByTitle(
+      /inherited from a parent mig: 20/i
+    )
     expect(inheritedDot).toBeInTheDocument()
     expect(inheritedDot).toHaveClass("rotate-45", "bg-provenance-inherited")
-    await user.click(within(panel).getByRole("button", { name: "Edit Max length" }))
-    expect(within(panel).getByRole("spinbutton", { name: "Max length" })).toHaveValue(20)
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Max length" })
+    )
+    expect(
+      within(panel).getByRole("spinbutton", { name: "Max length" })
+    ).toHaveValue(20)
 
     // Override it here → its baseline (reset target) is still the inherited 20.
     const input = within(panel).getByRole("spinbutton", { name: "Max length" })
@@ -829,18 +1054,26 @@ describe("MigEditor", () => {
     await user.type(input, "15")
     await user.tab()
     expect(
-      (await loadMig(getMigKey(child)))?.elementOverrides["/DocumentTag/GrpHdrTag"]?.maxLength,
+      (await loadMig(getMigKey(child)))?.elementOverrides[
+        "/DocumentTag/GrpHdrTag"
+      ]?.maxLength
     ).toBe(15)
     const ownDot = within(panel).getByTitle(/overridden — inherited: 20/i)
     expect(ownDot).toBeInTheDocument()
     expect(ownDot).toHaveClass("rounded-full", "bg-provenance-own")
 
     // Reset drops the own override → back to inheriting the parent's 20.
-    await user.click(within(panel).getByRole("button", { name: /reset to inherited/i }))
+    await user.click(
+      within(panel).getByRole("button", { name: /reset to inherited/i })
+    )
     expect(
-      (await loadMig(getMigKey(child)))?.elementOverrides["/DocumentTag/GrpHdrTag"],
+      (await loadMig(getMigKey(child)))?.elementOverrides[
+        "/DocumentTag/GrpHdrTag"
+      ]
     ).toBeUndefined()
-    expect(within(panel).getByTitle(/inherited from a parent mig: 20/i)).toBeInTheDocument()
+    expect(
+      within(panel).getByTitle(/inherited from a parent mig: 20/i)
+    ).toBeInTheDocument()
   })
 
   it("shows Total/Fraction digits only for digit-bearing types and edits them", async () => {
@@ -852,22 +1085,31 @@ describe("MigEditor", () => {
     // GrpHdr (Text) has no digits facet.
     await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
     expect(
-      within(screen.getByRole("region", { name: /element details/i })).queryByRole("button", {
+      within(
+        screen.getByRole("region", { name: /element details/i })
+      ).queryByRole("button", {
         name: "Edit Total digits",
-      }),
+      })
     ).not.toBeInTheDocument()
 
     // Rate (baseType Rate) does — edit its fraction digits.
     await user.click(screen.getByRole("treeitem", { name: "Rate" }))
     const panel = screen.getByRole("region", { name: /element details/i })
-    expect(within(panel).getByRole("button", { name: "Edit Total digits" })).toBeInTheDocument()
-    await user.click(within(panel).getByRole("button", { name: "Edit Fraction digits" }))
-    const input = within(panel).getByRole("spinbutton", { name: "Fraction digits" })
+    expect(
+      within(panel).getByRole("button", { name: "Edit Total digits" })
+    ).toBeInTheDocument()
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Fraction digits" })
+    )
+    const input = within(panel).getByRole("spinbutton", {
+      name: "Fraction digits",
+    })
     await user.clear(input)
     await user.type(input, "2")
     await user.tab()
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/RateTag"]?.fractionDigits,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/RateTag"]
+        ?.fractionDigits
     ).toBe(2)
   })
 
@@ -885,7 +1127,9 @@ describe("MigEditor", () => {
               identifier: "pacs.008.001.10",
               shortCode: "pacs.008",
               rootElement: el("Document", {
-                elements: [el("Amt", { baseType: "Amount", fractionDigits: 2 })],
+                elements: [
+                  el("Amt", { baseType: "Amount", fractionDigits: 2 }),
+                ],
               }),
             },
           ],
@@ -902,12 +1146,18 @@ describe("MigEditor", () => {
     expect(within(panel).queryByRole("alert")).not.toBeInTheDocument()
 
     // Raise it to 5 → loosens, so a warning appears.
-    await user.click(within(panel).getByRole("button", { name: "Edit Fraction digits" }))
-    const input = within(panel).getByRole("spinbutton", { name: "Fraction digits" })
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Fraction digits" })
+    )
+    const input = within(panel).getByRole("spinbutton", {
+      name: "Fraction digits",
+    })
     await user.clear(input)
     await user.type(input, "5")
     await user.tab()
-    expect(within(panel).getByRole("alert")).toHaveTextContent(/looser than the original/i)
+    expect(within(panel).getByRole("alert")).toHaveTextContent(
+      /looser than the original/i
+    )
   })
 
   it("warns when min occurs drops below the original", async () => {
@@ -919,12 +1169,16 @@ describe("MigEditor", () => {
     const panel = screen.getByRole("region", { name: /element details/i })
 
     expect(within(panel).queryByRole("alert")).not.toBeInTheDocument()
-    await user.click(within(panel).getByRole("button", { name: "Edit Min occurs" }))
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Min occurs" })
+    )
     const input = within(panel).getByRole("spinbutton", { name: "Min occurs" })
     await user.clear(input)
     await user.type(input, "0")
     await user.tab()
-    expect(within(panel).getByRole("alert")).toHaveTextContent(/min occurs 0 is below 1/i)
+    expect(within(panel).getByRole("alert")).toHaveTextContent(
+      /min occurs 0 is below 1/i
+    )
   })
 
   it("flags a pattern that isn't a valid regular expression", async () => {
@@ -935,11 +1189,18 @@ describe("MigEditor", () => {
     await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
     const panel = screen.getByRole("region", { name: /element details/i })
 
-    await user.click(within(panel).getByRole("button", { name: "Edit Pattern" }))
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Pattern" })
+    )
     // An unbalanced group — invalid regex (brackets are special to user-event).
-    await user.type(within(panel).getByRole("textbox", { name: "Pattern" }), "(")
+    await user.type(
+      within(panel).getByRole("textbox", { name: "Pattern" }),
+      "("
+    )
     await user.tab()
-    expect(within(panel).getByRole("alert")).toHaveTextContent(/invalid pattern/i)
+    expect(within(panel).getByRole("alert")).toHaveTextContent(
+      /invalid pattern/i
+    )
   })
 
   it("shows Min/Max length only for length-bearing types and edits them", async () => {
@@ -950,21 +1211,29 @@ describe("MigEditor", () => {
     const panel = screen.getByRole("region", { name: /element details/i })
 
     // The root (Document) has no base type → no length fields.
-    expect(within(panel).queryByRole("button", { name: "Edit Max length" })).not.toBeInTheDocument()
+    expect(
+      within(panel).queryByRole("button", { name: "Edit Max length" })
+    ).not.toBeInTheDocument()
 
     // GrpHdr is a Text type → length fields appear. (The panel remounts per
     // selection, so re-query it after navigating.)
     await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
     const grpPanel = screen.getByRole("region", { name: /element details/i })
-    await user.click(within(grpPanel).getByRole("button", { name: "Edit Max length" }))
-    const maxLen = within(grpPanel).getByRole("spinbutton", { name: "Max length" })
+    await user.click(
+      within(grpPanel).getByRole("button", { name: "Edit Max length" })
+    )
+    const maxLen = within(grpPanel).getByRole("spinbutton", {
+      name: "Max length",
+    })
     await user.clear(maxLen)
     await user.type(maxLen, "20")
     await user.tab()
 
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/GrpHdrTag"]?.maxLength).toBe(
-      20,
-    )
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides[
+        "/DocumentTag/GrpHdrTag"
+      ]?.maxLength
+    ).toBe(20)
   })
 
   it("shows Min/Max inclusive for numeric types and accepts decimals", async () => {
@@ -976,20 +1245,25 @@ describe("MigEditor", () => {
     // The root (Document) has no base type → no inclusive fields.
     const rootPanel = screen.getByRole("region", { name: /element details/i })
     expect(
-      within(rootPanel).queryByRole("button", { name: "Edit Max inclusive" }),
+      within(rootPanel).queryByRole("button", { name: "Edit Max inclusive" })
     ).not.toBeInTheDocument()
 
     // Rate is a Rate type → inclusive fields appear and accept a decimal.
     await user.click(screen.getByRole("treeitem", { name: "Rate" }))
     const panel = screen.getByRole("region", { name: /element details/i })
-    await user.click(within(panel).getByRole("button", { name: "Edit Max inclusive" }))
-    const maxIncl = within(panel).getByRole("spinbutton", { name: "Max inclusive" })
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Max inclusive" })
+    )
+    const maxIncl = within(panel).getByRole("spinbutton", {
+      name: "Max inclusive",
+    })
     await user.clear(maxIncl)
     await user.type(maxIncl, "99.99")
     await user.tab()
 
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/RateTag"]?.maxInclusive,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/RateTag"]
+        ?.maxInclusive
     ).toBe(99.99)
   })
 
@@ -1001,19 +1275,28 @@ describe("MigEditor", () => {
 
     // The root (Document) has no base type → no pattern field.
     const rootPanel = screen.getByRole("region", { name: /element details/i })
-    expect(within(rootPanel).queryByRole("button", { name: "Edit Pattern" })).not.toBeInTheDocument()
+    expect(
+      within(rootPanel).queryByRole("button", { name: "Edit Pattern" })
+    ).not.toBeInTheDocument()
 
     // GrpHdr is a Text type → pattern field appears.
     await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
     const panel = screen.getByRole("region", { name: /element details/i })
-    await user.click(within(panel).getByRole("button", { name: "Edit Pattern" }))
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Pattern" })
+    )
     // Note: userEvent treats { and [ as special, so use a brace-free regex.
-    await user.type(within(panel).getByRole("textbox", { name: "Pattern" }), "\\d\\d\\d")
+    await user.type(
+      within(panel).getByRole("textbox", { name: "Pattern" }),
+      "\\d\\d\\d"
+    )
     await user.tab()
 
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/GrpHdrTag"]?.pattern).toBe(
-      "\\d\\d\\d",
-    )
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides[
+        "/DocumentTag/GrpHdrTag"
+      ]?.pattern
+    ).toBe("\\d\\d\\d")
   })
 
   it("edits allowed values for code sets", async () => {
@@ -1025,27 +1308,32 @@ describe("MigEditor", () => {
     // The root (Document) has no base type → no allowed-values editor.
     const rootPanel = screen.getByRole("region", { name: /element details/i })
     expect(
-      within(rootPanel).queryByRole("textbox", { name: /add to allowed values/i }),
+      within(rootPanel).queryByRole("textbox", {
+        name: /add to allowed values/i,
+      })
     ).not.toBeInTheDocument()
 
     // Sts is a CodeSet → its inherited codes are editable; enter edit, remove one.
     await user.click(screen.getByRole("treeitem", { name: "Sts" }))
     const panel = screen.getByRole("region", { name: /element details/i })
-    await user.click(within(panel).getByRole("button", { name: "Edit Allowed values" }))
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Allowed values" })
+    )
     await user.click(within(panel).getByRole("button", { name: "Remove INAC" }))
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/StsTag"]?.allowedValues).toEqual([
-      "ACTV",
-    ])
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/StsTag"]
+        ?.allowedValues
+    ).toEqual(["ACTV"])
 
     // Add a custom value (Enter adds, avoiding the per-list Add buttons).
     await user.type(
       within(panel).getByRole("textbox", { name: /add to allowed values/i }),
-      "PEND{Enter}",
+      "PEND{Enter}"
     )
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/StsTag"]?.allowedValues).toEqual([
-      "ACTV",
-      "PEND",
-    ])
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/StsTag"]
+        ?.allowedValues
+    ).toEqual(["ACTV", "PEND"])
   })
 
   it("edits examples for simple types", async () => {
@@ -1057,17 +1345,20 @@ describe("MigEditor", () => {
     // The root (Document) is a complex type → no examples editor.
     const rootPanel = screen.getByRole("region", { name: /element details/i })
     expect(
-      within(rootPanel).queryByRole("textbox", { name: /add to examples/i }),
+      within(rootPanel).queryByRole("textbox", { name: /add to examples/i })
     ).not.toBeInTheDocument()
 
     // Rate is a simple type → its inherited examples are editable; enter edit, remove one.
     await user.click(screen.getByRole("treeitem", { name: "Rate" }))
     const panel = screen.getByRole("region", { name: /element details/i })
-    await user.click(within(panel).getByRole("button", { name: "Edit Examples" }))
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Examples" })
+    )
     await user.click(within(panel).getByRole("button", { name: "Remove 2.0" }))
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/RateTag"]?.examples).toEqual([
-      "1.5",
-    ])
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/RateTag"]
+        ?.examples
+    ).toEqual(["1.5"])
   })
 
   it("flags allowed values that violate the length facet", async () => {
@@ -1079,16 +1370,24 @@ describe("MigEditor", () => {
     // GrpHdr is Text with maxLength 35.
     await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
     const panel = screen.getByRole("region", { name: /element details/i })
-    await user.click(within(panel).getByRole("button", { name: "Edit Allowed values" }))
-    const input = within(panel).getByRole("textbox", { name: /add to allowed values/i })
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Allowed values" })
+    )
+    const input = within(panel).getByRole("textbox", {
+      name: /add to allowed values/i,
+    })
 
     await user.type(input, "x".repeat(40))
     // Live warning while typing the (too-long) draft value.
-    expect(within(panel).getByText(/longer than max length 35/i)).toBeInTheDocument()
+    expect(
+      within(panel).getByText(/longer than max length 35/i)
+    ).toBeInTheDocument()
 
     await user.keyboard("{Enter}")
     // Once added, the offending chip carries the warning as a tooltip.
-    expect(within(panel).getByTitle(/longer than max length 35/i)).toBeInTheDocument()
+    expect(
+      within(panel).getByTitle(/longer than max length 35/i)
+    ).toBeInTheDocument()
   })
 
   it("flags examples that exceed the fraction-digits facet", async () => {
@@ -1105,7 +1404,9 @@ describe("MigEditor", () => {
               identifier: "pacs.008.001.10",
               shortCode: "pacs.008",
               rootElement: el("Document", {
-                elements: [el("Amt", { baseType: "Amount", fractionDigits: 2 })],
+                elements: [
+                  el("Amt", { baseType: "Amount", fractionDigits: 2 }),
+                ],
               }),
             },
           ],
@@ -1118,33 +1419,52 @@ describe("MigEditor", () => {
     await user.click(screen.getByRole("treeitem", { name: "Amt" }))
     const panel = screen.getByRole("region", { name: /element details/i })
 
-    await user.click(within(panel).getByRole("button", { name: "Edit Examples" }))
-    await user.type(within(panel).getByRole("textbox", { name: /add to examples/i }), "1.234")
-    expect(within(panel).getByText(/more than 2 fraction digits/i)).toBeInTheDocument()
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Examples" })
+    )
+    await user.type(
+      within(panel).getByRole("textbox", { name: /add to examples/i }),
+      "1.234"
+    )
+    expect(
+      within(panel).getByText(/more than 2 fraction digits/i)
+    ).toBeInTheDocument()
   })
 
   it("surfaces loosening diagnostics in the consistency banner/drawer", async () => {
     const user = userEvent.setup()
     // GrpHdr maxLength 35 → overriding to 50 loosens it.
-    await saveMig({ ...MIG, elementOverrides: { "/DocumentTag/GrpHdrTag": { maxLength: 50 } } })
+    await saveMig({
+      ...MIG,
+      elementOverrides: { "/DocumentTag/GrpHdrTag": { maxLength: 50 } },
+    })
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
 
-    await user.click(screen.getByRole("button", { name: /this mig has 1 issue/i }))
-    const region = screen.getByRole("region", { name: /consistency diagnostics/i })
+    await user.click(
+      screen.getByRole("button", { name: /this mig has 1 issue/i })
+    )
+    const region = screen.getByRole("region", {
+      name: /consistency diagnostics/i,
+    })
     expect(within(region).getByText(/above 35/i)).toBeInTheDocument()
     expect(within(region).getByText("GrpHdr")).toBeInTheDocument()
 
     // Clicking a diagnostic selects its element in the tree.
     await user.click(within(region).getByRole("button", { name: /grphdr/i }))
-    expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toHaveAttribute("aria-selected", "true")
+    expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    )
   })
 
   it("shows no consistency banner for a clean MIG", async () => {
     await saveMig(MIG)
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
-    expect(screen.queryByRole("region", { name: /consistency diagnostics/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("region", { name: /consistency diagnostics/i })
+    ).not.toBeInTheDocument()
   })
 
   it("validates a pasted message instance and navigates from a violation", async () => {
@@ -1156,16 +1476,28 @@ describe("MigEditor", () => {
     await user.click(screen.getByRole("button", { name: /^validate$/i }))
     const dialog = await screen.findByRole("dialog")
     // An empty Document → every required child is missing.
-    await user.type(within(dialog).getByRole("textbox", { name: /message xml/i }), "<DocumentTag></DocumentTag>")
-    await user.click(within(dialog).getByRole("button", { name: /^validate$/i }))
+    await user.type(
+      within(dialog).getByRole("textbox", { name: /message xml/i }),
+      "<DocumentTag></DocumentTag>"
+    )
+    await user.click(
+      within(dialog).getByRole("button", { name: /^validate$/i })
+    )
 
-    const results = within(dialog).getByRole("region", { name: /validation results/i })
-    const grpHdr = within(results).getByRole("button", { name: /grphdr.*minimum is 1/i })
+    const results = within(dialog).getByRole("region", {
+      name: /validation results/i,
+    })
+    const grpHdr = within(results).getByRole("button", {
+      name: /grphdr.*minimum is 1/i,
+    })
     await user.click(grpHdr)
 
     // Clicking the violation closes the dialog and selects its element.
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-    expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toHaveAttribute("aria-selected", "true")
+    expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    )
   })
 
   it("declares custom property names in metadata and edits per-element values", async () => {
@@ -1180,24 +1512,38 @@ describe("MigEditor", () => {
     expect(within(panel).queryByText("Annotations")).not.toBeInTheDocument()
 
     // Declare a shared element-annotation name in the metadata block.
-    await user.click(within(meta).getByRole("button", { name: "Edit Element annotations" }))
+    await user.click(
+      within(meta).getByRole("button", { name: "Edit Element annotations" })
+    )
     await user.type(
-      within(meta).getByRole("textbox", { name: /add to element annotations/i }),
-      "Usage",
+      within(meta).getByRole("textbox", {
+        name: /add to element annotations/i,
+      }),
+      "Usage"
     )
     await user.keyboard("{Enter}")
-    expect((await loadMig(getMigKey(MIG)))?.elementAnnotationNames).toEqual(["Usage"])
+    expect((await loadMig(getMigKey(MIG)))?.elementAnnotationNames).toEqual([
+      "Usage",
+    ])
 
     // Its value field now appears in the detail panel; set this element's value.
-    await user.click(within(panel).getByRole("button", { name: "Edit Usage value" }))
-    await user.type(within(panel).getByRole("textbox", { name: "Usage value" }), "debit only")
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Usage value" })
+    )
+    await user.type(
+      within(panel).getByRole("textbox", { name: "Usage value" }),
+      "debit only"
+    )
     await user.tab()
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.annotations,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.annotations
     ).toEqual({ Usage: "debit only" })
 
     // Removing the name in metadata drops it everywhere (cascades to overrides).
-    await user.click(within(meta).getByRole("button", { name: "Edit Element annotations" }))
+    await user.click(
+      within(meta).getByRole("button", { name: "Edit Element annotations" })
+    )
     await user.click(within(meta).getByRole("button", { name: "Remove Usage" }))
     const saved = await loadMig(getMigKey(MIG))
     expect(saved?.elementAnnotationNames).toBeUndefined()
@@ -1213,12 +1559,18 @@ describe("MigEditor", () => {
       version: "1.0",
       messageIdentifier: "pacs.008.001.10",
       elementAnnotationNames: ["Owner", "Usage"],
-      elementOverrides: { "/DocumentTag/GrpHdrTag": { annotations: { Owner: "ops", Usage: "credit" } } },
+      elementOverrides: {
+        "/DocumentTag/GrpHdrTag": {
+          annotations: { Owner: "ops", Usage: "credit" },
+        },
+      },
     }
     const child: MessageImplementationGuide = {
       ...MIG,
       parentMIG: getMigKey(parent),
-      elementOverrides: { "/DocumentTag/GrpHdrTag": { annotations: { Owner: "mine" } } },
+      elementOverrides: {
+        "/DocumentTag/GrpHdrTag": { annotations: { Owner: "mine" } },
+      },
     }
     await saveMig(parent)
     await saveMig(child)
@@ -1228,13 +1580,15 @@ describe("MigEditor", () => {
     const panel = screen.getByRole("region", { name: /element details/i })
 
     // Owner is overridden here (over the parent's "ops") → blue dot.
-    expect(within(panel).getByTitle("Overridden — inherited: ops")).toHaveClass("bg-provenance-own")
+    expect(within(panel).getByTitle("Overridden — inherited: ops")).toHaveClass(
+      "bg-provenance-own"
+    )
     expect(within(panel).getByText("mine")).toBeInTheDocument()
     // Usage is inherited from the parent → blue dot, and its value shows even
     // though the child declares no annotation names of its own.
-    expect(within(panel).getByTitle("Inherited from a parent MIG: credit")).toHaveClass(
-      "bg-provenance-inherited",
-    )
+    expect(
+      within(panel).getByTitle("Inherited from a parent MIG: credit")
+    ).toHaveClass("bg-provenance-inherited")
     expect(within(panel).getByText("credit")).toBeInTheDocument()
   })
 
@@ -1246,18 +1600,28 @@ describe("MigEditor", () => {
     const meta = screen.getByRole("region", { name: /mig metadata/i })
 
     // Add a constraint (selection moves to it → constraint detail panel).
-    const elementPanel = screen.getByRole("region", { name: /element details/i })
-    await user.click(within(elementPanel).getByRole("button", { name: /add constraint/i }))
-    const panel = await screen.findByRole("region", { name: /constraint details/i })
+    const elementPanel = screen.getByRole("region", {
+      name: /element details/i,
+    })
+    await user.click(
+      within(elementPanel).getByRole("button", { name: /add constraint/i })
+    )
+    const panel = await screen.findByRole("region", {
+      name: /constraint details/i,
+    })
 
     // No constraint-annotation names yet → no annotations section in the panel.
     expect(within(panel).queryByText("Annotations")).not.toBeInTheDocument()
 
     // Declare a constraint-annotation name — its own list, separate from elements.
-    await user.click(within(meta).getByRole("button", { name: "Edit Constraint annotations" }))
+    await user.click(
+      within(meta).getByRole("button", { name: "Edit Constraint annotations" })
+    )
     await user.type(
-      within(meta).getByRole("textbox", { name: /add to constraint annotations/i }),
-      "Severity",
+      within(meta).getByRole("textbox", {
+        name: /add to constraint annotations/i,
+      }),
+      "Severity"
     )
     await user.keyboard("{Enter}")
     const declared = await loadMig(getMigKey(MIG))
@@ -1265,23 +1629,41 @@ describe("MigEditor", () => {
     expect(declared?.elementAnnotationNames).toBeUndefined()
 
     // The value field appears in the constraint panel; set this constraint's value.
-    await user.click(within(panel).getByRole("button", { name: "Edit Severity value" }))
-    await user.type(within(panel).getByRole("textbox", { name: "Severity value" }), "high")
+    await user.click(
+      within(panel).getByRole("button", { name: "Edit Severity value" })
+    )
+    await user.type(
+      within(panel).getByRole("textbox", { name: "Severity value" }),
+      "high"
+    )
     await user.tab()
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.additionalConstraints,
-    ).toEqual([{ name: "New constraint", definition: "", annotations: { Severity: "high" } }])
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]
+        ?.additionalConstraints
+    ).toEqual([
+      {
+        name: "New constraint",
+        definition: "",
+        annotations: { Severity: "high" },
+      },
+    ])
     // The set value is this MIG's own → a blue provenance dot.
-    expect(within(panel).getByTitle("Overridden — inherited: —")).toHaveClass("bg-provenance-own")
+    expect(within(panel).getByTitle("Overridden — inherited: —")).toHaveClass(
+      "bg-provenance-own"
+    )
 
     // Removing the name strips the value but leaves the constraint in place.
-    await user.click(within(meta).getByRole("button", { name: "Edit Constraint annotations" }))
-    await user.click(within(meta).getByRole("button", { name: "Remove Severity" }))
+    await user.click(
+      within(meta).getByRole("button", { name: "Edit Constraint annotations" })
+    )
+    await user.click(
+      within(meta).getByRole("button", { name: "Remove Severity" })
+    )
     const saved = await loadMig(getMigKey(MIG))
     expect(saved?.constraintAnnotationNames).toBeUndefined()
-    expect(saved?.elementOverrides["/DocumentTag"]?.additionalConstraints).toEqual([
-      { name: "New constraint", definition: "" },
-    ])
+    expect(
+      saved?.elementOverrides["/DocumentTag"]?.additionalConstraints
+    ).toEqual([{ name: "New constraint", definition: "" }])
   })
 
   it("re-versions the MIG (metadata), re-keys storage, repoints children and re-routes", async () => {
@@ -1336,7 +1718,9 @@ describe("MigEditor", () => {
     await user.tab()
 
     await waitFor(async () => {
-      expect(await loadMig("Header Renamed:1.0")).toMatchObject({ name: "Header Renamed" })
+      expect(await loadMig("Header Renamed:1.0")).toMatchObject({
+        name: "Header Renamed",
+      })
     })
     expect(await loadMig("EPC Guide:1.0")).toBeNull()
     expect((await loadMig("Child:1"))?.parentMIG).toBe("Header Renamed:1.0")
@@ -1351,7 +1735,10 @@ describe("MigEditor", () => {
 
     // Edit the description — a pending revision burst.
     await user.click(screen.getByRole("button", { name: "Edit Description" }))
-    await user.type(screen.getByRole("textbox", { name: "Description" }), "hello")
+    await user.type(
+      screen.getByRole("textbox", { name: "Description" }),
+      "hello"
+    )
     await user.tab()
 
     // Rename via the header → flushes the burst, then moves the history.
@@ -1394,7 +1781,11 @@ describe("MigEditor", () => {
 
   it("offers same-message MIGs as parents and autosaves the choice", async () => {
     const user = userEvent.setup()
-    const base: MessageImplementationGuide = { ...MIG, name: "Base", description: undefined }
+    const base: MessageImplementationGuide = {
+      ...MIG,
+      name: "Base",
+      description: undefined,
+    }
     await saveMig(base)
     await saveMig(MIG)
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
@@ -1402,7 +1793,10 @@ describe("MigEditor", () => {
 
     // Parent MIG is view-only until the pencil reveals the select.
     await user.click(screen.getByRole("button", { name: /edit parent mig/i }))
-    await user.selectOptions(screen.getByRole("combobox", { name: "Parent MIG" }), "Base:1.0")
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Parent MIG" }),
+      "Base:1.0"
+    )
 
     const saved = await loadMig(getMigKey(MIG))
     expect(saved?.parentMIG).toBe("Base:1.0")
@@ -1415,7 +1809,10 @@ describe("MigEditor", () => {
       messageIdentifier: "pacs.008.001.10",
       elementOverrides: {},
     }
-    const child: MessageImplementationGuide = { ...MIG, parentMIG: getMigKey(parent) }
+    const child: MessageImplementationGuide = {
+      ...MIG,
+      parentMIG: getMigKey(parent),
+    }
     await saveMig(parent)
     await saveMig(child)
     render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
@@ -1427,7 +1824,11 @@ describe("MigEditor", () => {
   })
 
   it("warns when the parent MIG isn't loaded", async () => {
-    const child: MessageImplementationGuide = { ...MIG, name: "Child", parentMIG: "Ghost:1.0" }
+    const child: MessageImplementationGuide = {
+      ...MIG,
+      name: "Child",
+      parentMIG: "Ghost:1.0",
+    }
     await saveMig(child)
     render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
@@ -1444,6 +1845,8 @@ describe("MigEditor", () => {
     await saveMig(orphan)
     render(<MigEditor migKey={getMigKey(orphan)} repo={REPO} />)
 
-    expect(await screen.findByText(/isn’t in the loaded e-Repository/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/isn’t in the loaded e-Repository/i)
+    ).toBeInTheDocument()
   })
 })

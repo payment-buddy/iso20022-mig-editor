@@ -49,7 +49,8 @@ export function RecoveryScreen({ error }: { error: unknown }) {
     reloadPage()
   }
 
-  const message = error instanceof Error ? error.message : error ? String(error) : ""
+  const message =
+    error instanceof Error ? error.message : error ? String(error) : ""
 
   return (
     <div className="mx-auto flex min-h-svh max-w-lg flex-col justify-center gap-4 p-6">
@@ -58,9 +59,9 @@ export function RecoveryScreen({ error }: { error: unknown }) {
         Couldn’t open local storage
       </h1>
       <p className="text-sm text-muted-foreground">
-        The browser database that holds your e-Repository and MIGs couldn’t be opened — it may be
-        corrupted, full, or blocked (e.g. private browsing). Try downloading a backup of your MIGs
-        first, then reset to start fresh.
+        The browser database that holds your e-Repository and MIGs couldn’t be
+        opened — it may be corrupted, full, or blocked (e.g. private browsing).
+        Try downloading a backup of your MIGs first, then reset to start fresh.
       </p>
       {message && (
         <p className="rounded-md border border-border bg-muted/40 px-3 py-2 font-mono text-xs break-words text-muted-foreground">
@@ -82,16 +83,22 @@ export function RecoveryScreen({ error }: { error: unknown }) {
           <ArrowClockwiseIcon data-icon="inline-start" aria-hidden />
           Retry
         </Button>
-        <Button variant="destructive" size="sm" onClick={() => setResetOpen(true)}>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => setResetOpen(true)}
+        >
           <TrashIcon data-icon="inline-start" aria-hidden />
           Reset &amp; start fresh
         </Button>
       </div>
 
       <p className="min-h-4 text-xs text-muted-foreground" aria-live="polite">
-        {backup === "done" && "Backup downloaded. Keep it safe — re-import it after resetting."}
+        {backup === "done" &&
+          "Backup downloaded. Keep it safe — re-import it after resetting."}
         {backup === "empty" && "No MIGs could be read to back up."}
-        {backup === "failed" && "Couldn’t read your MIGs — the storage may be unreadable."}
+        {backup === "failed" &&
+          "Couldn’t read your MIGs — the storage may be unreadable."}
       </p>
 
       <ConfirmDialog

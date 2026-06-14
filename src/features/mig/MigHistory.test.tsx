@@ -2,7 +2,13 @@
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it } from "vitest"
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
@@ -53,13 +59,20 @@ const repoWith = (root: MessageElement): ERepository => ({
       code: "pacs",
       definition: "",
       messages: [
-        { name: "msg", identifier: "pacs.008.001.08", shortCode: "pacs.008", rootElement: root },
+        {
+          name: "msg",
+          identifier: "pacs.008.001.08",
+          shortCode: "pacs.008",
+          rootElement: root,
+        },
       ],
     },
   ],
 })
 
-const mig = (over: Partial<MessageImplementationGuide> = {}): MessageImplementationGuide => ({
+const mig = (
+  over: Partial<MessageImplementationGuide> = {}
+): MessageImplementationGuide => ({
   name: "EPC",
   version: "1.0",
   messageIdentifier: "pacs.008.001.08",
@@ -125,9 +138,13 @@ describe("MigHistory", () => {
     await screen.findByText("Initial")
 
     const baselineRow = screen.getByText("Initial").closest("li")!
-    await userEvent.click(within(baselineRow).getByRole("button", { name: /revert/i }))
+    await userEvent.click(
+      within(baselineRow).getByRole("button", { name: /revert/i })
+    )
     const dialog = await screen.findByRole("alertdialog")
-    await userEvent.click(within(dialog).getByRole("button", { name: "Revert" }))
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Revert" })
+    )
 
     await waitFor(async () => {
       // Restored to the baseline (no overrides).
@@ -141,15 +158,25 @@ describe("MigHistory", () => {
   it("orders the diff by message schema order, not alphabetically", async () => {
     // Message lists Zeb before Amt; current sets both, baseline neither.
     const repo = repoWith(el("Doc", [el("Zeb"), el("Amt")]))
-    const current = mig({ elementOverrides: { "/Doc/Amt": { maxLength: 5 }, "/Doc/Zeb": { maxLength: 7 } } })
+    const current = mig({
+      elementOverrides: {
+        "/Doc/Amt": { maxLength: 5 },
+        "/Doc/Zeb": { maxLength: 7 },
+      },
+    })
     await saveMig(current)
-    await saveRevisions("EPC:1.0", appendRevision(appendRevision([], mig(), 1000), current, 2000))
+    await saveRevisions(
+      "EPC:1.0",
+      appendRevision(appendRevision([], mig(), 1000), current, 2000)
+    )
     render(<MigHistory migKey="EPC:1.0" repo={repo} />)
 
     // Newest revision selected by default → diff vs baseline lists both paths.
     const zeb = await screen.findByText("/Doc/Zeb")
     const amt = screen.getByText("/Doc/Amt")
     // Schema order → Zeb's card precedes Amt's (alphabetical would be the reverse).
-    expect(zeb.compareDocumentPosition(amt) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(
+      zeb.compareDocumentPosition(amt) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
   })
 })

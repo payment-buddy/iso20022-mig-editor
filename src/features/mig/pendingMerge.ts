@@ -6,19 +6,29 @@ import type { MessageImplementationGuide } from "@/core/types/types"
 // taken once on the merge screen, keyed by the target it was meant for. A page
 // reload clears it — the merge screen then falls back to its own upload.
 
-let pending: { targetKey: string; incoming: MessageImplementationGuide } | null = null
+let pending: {
+  targetKey: string
+  incoming: MessageImplementationGuide
+} | null = null
 
-export function setPendingMerge(targetKey: string, incoming: MessageImplementationGuide): void {
+export function setPendingMerge(
+  targetKey: string,
+  incoming: MessageImplementationGuide
+): void {
   pending = { targetKey, incoming }
 }
 
 /** The pending incoming MIG for `targetKey`, if any — without clearing it. */
-export function peekPendingMerge(targetKey: string): MessageImplementationGuide | null {
+export function peekPendingMerge(
+  targetKey: string
+): MessageImplementationGuide | null {
   return pending?.targetKey === targetKey ? pending.incoming : null
 }
 
 /** Return and clear the pending incoming MIG, but only if it matches `targetKey`. */
-export function takePendingMerge(targetKey: string): MessageImplementationGuide | null {
+export function takePendingMerge(
+  targetKey: string
+): MessageImplementationGuide | null {
   const incoming = peekPendingMerge(targetKey)
   if (incoming) pending = null
   return incoming

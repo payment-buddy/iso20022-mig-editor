@@ -38,12 +38,16 @@ export function EditableList({
     setDraft("")
   }
 
-  const remove = (index: number) => onChange(values.filter((_, i) => i !== index))
+  const remove = (index: number) =>
+    onChange(values.filter((_, i) => i !== index))
 
   // Chips list (shared by view/edit); `removable` adds the per-chip delete button.
   const chips = (removable: boolean) =>
     values.length > 0 ? (
-      <ul aria-label={ariaLabel} className="flex max-h-40 flex-wrap gap-1 overflow-auto">
+      <ul
+        aria-label={ariaLabel}
+        className="flex max-h-40 flex-wrap gap-1 overflow-auto"
+      >
         {values.map((value, i) => {
           const error = validate ? validate(value) : null
           return (
@@ -53,10 +57,14 @@ export function EditableList({
                 className={cn(
                   "inline-flex items-center gap-1 rounded-sm py-0.5 text-xs",
                   removable ? "pr-0.5 pl-1.5" : "px-1.5",
-                  error ? "bg-amber-500/10 text-amber-700 dark:text-amber-500" : "bg-muted",
+                  error
+                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-500"
+                    : "bg-muted"
                 )}
               >
-                {error && <WarningIcon className="size-3 shrink-0" aria-hidden />}
+                {error && (
+                  <WarningIcon className="size-3 shrink-0" aria-hidden />
+                )}
                 <code>{value}</code>
                 {removable && (
                   <button
@@ -78,16 +86,20 @@ export function EditableList({
 
   if (!editing) {
     return (
-      <div className="group flex w-full items-start justify-between gap-2 rounded-md border border-transparent px-2 py-1 transition-colors hover:border-border focus-within:border-border">
+      <div className="group flex w-full items-start justify-between gap-2 rounded-md border border-transparent px-2 py-1 transition-colors focus-within:border-border hover:border-border">
         <div className="min-w-0">
           {/* Empty optional list reads as "<none>", not the "Add…" input hint. */}
-          {chips(false) ?? <span className="text-sm text-muted-foreground italic">{"<none>"}</span>}
+          {chips(false) ?? (
+            <span className="text-sm text-muted-foreground italic">
+              {"<none>"}
+            </span>
+          )}
         </div>
         <button
           type="button"
           onClick={() => setEditing(true)}
           aria-label={`Edit ${ariaLabel}`}
-          className="mt-0.5 shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 outline-none transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/30"
+          className="mt-0.5 shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity outline-none group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/30"
         >
           <PencilSimpleIcon className="size-3.5" aria-hidden />
         </button>

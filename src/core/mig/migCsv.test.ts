@@ -10,7 +10,7 @@ import { buildMigCsv, buildMigCsvRows } from "./migCsv"
 function el(
   xmlTag: string,
   props: Partial<MessageElement> = {},
-  elements: MessageElement[] = [],
+  elements: MessageElement[] = []
 ): MessageElement {
   return {
     id: xmlTag,
@@ -40,7 +40,8 @@ function el(
   }
 }
 
-const codes = (...names: string[]): Code[] => names.map((codeName) => ({ codeName, definition: "" }))
+const codes = (...names: string[]): Code[] =>
+  names.map((codeName) => ({ codeName, definition: "" }))
 
 // Doc › GrpHdr › { MsgId(Text 1..35), Itm(complex, 0..*) }, Amt(Decimal 18.4),
 // Ccy(Text codes), Dt(DateTime)
@@ -57,10 +58,22 @@ const MESSAGE: MessageDefinition = {
         maxLength: 35,
         constraints: [{ name: "Format", definition: "No leading spaces." }],
       }),
-      el("Itm", { maxOccurs: null }, [el("Val", { baseType: "Text", type: "Text", maxLength: 4 })]),
+      el("Itm", { maxOccurs: null }, [
+        el("Val", { baseType: "Text", type: "Text", maxLength: 4 }),
+      ]),
     ]),
-    el("Amt", { baseType: "Decimal", type: "Amount", totalDigits: 18, fractionDigits: 4, minOccurs: 0 }),
-    el("Ccy", { baseType: "Text", type: "CurrencyCode", codes: codes("EUR", "USD", "NOK") }),
+    el("Amt", {
+      baseType: "Decimal",
+      type: "Amount",
+      totalDigits: 18,
+      fractionDigits: 4,
+      minOccurs: 0,
+    }),
+    el("Ccy", {
+      baseType: "Text",
+      type: "CurrencyCode",
+      codes: codes("EUR", "USD", "NOK"),
+    }),
     el("Dt", { baseType: "ISODateTime", type: "ISODateTime", minOccurs: 0 }),
   ]),
 }
@@ -68,9 +81,15 @@ const MESSAGE: MessageDefinition = {
 function mig(
   name: string,
   overrides: MessageImplementationGuide["elementOverrides"],
-  extra: Partial<MessageImplementationGuide> = {},
+  extra: Partial<MessageImplementationGuide> = {}
 ): MessageImplementationGuide {
-  return { name, version: "1.0", messageIdentifier: "pacs.008.001.08", elementOverrides: overrides, ...extra }
+  return {
+    name,
+    version: "1.0",
+    messageIdentifier: "pacs.008.001.08",
+    elementOverrides: overrides,
+    ...extra,
+  }
 }
 
 /** Column index by header. */
@@ -126,7 +145,9 @@ describe("buildMigCsvRows — element rows", () => {
 
   it("applies a MIG overlay onto an ISO constraint (effective expression, MIG source)", () => {
     const m = mig("M", {
-      "/Doc/GrpHdr/MsgId": { constraintOverrides: { Format: { expression: "matches(., '[A-Z]+')" } } },
+      "/Doc/GrpHdr/MsgId": {
+        constraintOverrides: { Format: { expression: "matches(., '[A-Z]+')" } },
+      },
     })
     const { columns, rows } = buildMigCsvRows(m, [], MESSAGE)
     const r = rows.find((x) => x[col(columns, "Rule")] === "Format")!
@@ -135,7 +156,11 @@ describe("buildMigCsvRows — element rows", () => {
   })
 
   it("marks a disabled ISO constraint in the Rule column", () => {
-    const m = mig("M", { "/Doc/GrpHdr/MsgId": { constraintOverrides: { Format: { disabled: true } } } })
+    const m = mig("M", {
+      "/Doc/GrpHdr/MsgId": {
+        constraintOverrides: { Format: { disabled: true } },
+      },
+    })
     const { columns, rows } = buildMigCsvRows(m, [], MESSAGE)
     const r = rows.find((x) => x[col(columns, "Rule")] === "Format (disabled)")!
     expect(r[col(columns, "Source")]).toBe("M")
@@ -143,9 +168,11 @@ describe("buildMigCsvRows — element rows", () => {
 
   it("renders element annotations as a single multiline cell before Source", () => {
     const { columns, rows } = buildMigCsvRows(
-      mig("M", { "/Doc/Amt": { annotations: { Purpose: "Payment", Note: "x" } } }),
+      mig("M", {
+        "/Doc/Amt": { annotations: { Purpose: "Payment", Note: "x" } },
+      }),
       [],
-      MESSAGE,
+      MESSAGE
     )
     const amt = rows.find((r) => r[col(columns, "Name")] === "Amt")!
     expect(amt[col(columns, "Annotations")]).toBe("Purpose: Payment\nNote: x")
@@ -157,7 +184,7 @@ describe("buildMigCsvRows — overrides", () => {
     const { columns, rows } = buildMigCsvRows(
       mig("M", { "/Doc/Amt": { minOccurs: 1 } }),
       [],
-      MESSAGE,
+      MESSAGE
     )
     const r = rows.find((x) => x[col(columns, "Rule")] === "Multiplicity")!
     expect(r[col(columns, "Source")]).toBe("M")
@@ -168,7 +195,7 @@ describe("buildMigCsvRows — overrides", () => {
     const { columns, rows } = buildMigCsvRows(
       mig("M", { "/Doc/GrpHdr/MsgId": { maxLength: 20 } }),
       [],
-      MESSAGE,
+      MESSAGE
     )
     const r = rows.find((x) => x[col(columns, "Rule")] === "Type")!
     expect(r[col(columns, "Source")]).toBe("M")
@@ -178,10 +205,14 @@ describe("buildMigCsvRows — overrides", () => {
   it("emits added constraints sourced to this MIG", () => {
     const { columns, rows } = buildMigCsvRows(
       mig("M", {
-        "/Doc/Amt": { additionalConstraints: [{ name: "Positive", definition: "Must be > 0" }] },
+        "/Doc/Amt": {
+          additionalConstraints: [
+            { name: "Positive", definition: "Must be > 0" },
+          ],
+        },
       }),
       [],
-      MESSAGE,
+      MESSAGE
     )
     const r = rows.find((x) => x[col(columns, "Rule")] === "Positive")!
     expect(r[col(columns, "Source")]).toBe("M")
@@ -191,10 +222,14 @@ describe("buildMigCsvRows — overrides", () => {
   it("fills the Expression column for a constraint", () => {
     const { columns, rows } = buildMigCsvRows(
       mig("M", {
-        "/Doc/Amt": { additionalConstraints: [{ name: "R", definition: "d", expression: "a > 0" }] },
+        "/Doc/Amt": {
+          additionalConstraints: [
+            { name: "R", definition: "d", expression: "a > 0" },
+          ],
+        },
       }),
       [],
-      MESSAGE,
+      MESSAGE
     )
     const r = rows.find((x) => x[col(columns, "Rule")] === "R")!
     expect(r[col(columns, "Definition")]).toBe("d")
@@ -205,19 +240,31 @@ describe("buildMigCsvRows — overrides", () => {
 describe("buildMigCsvRows — provenance and annotations", () => {
   const parent = mig(
     "Base",
-    { "/Doc/Amt": { additionalConstraints: [{ name: "Inherited", definition: "From base" }] } },
-    { version: "1.0" },
+    {
+      "/Doc/Amt": {
+        additionalConstraints: [{ name: "Inherited", definition: "From base" }],
+      },
+    },
+    { version: "1.0" }
   )
   const leaf = mig(
     "Leaf",
     {
       "/Doc/Amt": {
         additionalConstraints: [
-          { name: "Own", definition: "From leaf", annotations: { Usage: "Mandatory" } },
+          {
+            name: "Own",
+            definition: "From leaf",
+            annotations: { Usage: "Mandatory" },
+          },
         ],
       },
     },
-    { version: "2.0", parentMIG: "Base:1.0", constraintAnnotationNames: ["Usage"] },
+    {
+      version: "2.0",
+      parentMIG: "Base:1.0",
+      constraintAnnotationNames: ["Usage"],
+    }
   )
 
   it("attributes inherited rules to the parent MIG and own rules to MIG", () => {
@@ -231,19 +278,33 @@ describe("buildMigCsvRows — provenance and annotations", () => {
   it("strips the message identifier / short code from the Source MIG name", () => {
     const base = mig(
       "pacs.008 Base",
-      { "/Doc/Amt": { additionalConstraints: [{ name: "Inh", definition: "x" }] } },
-      { version: "1.0" },
+      {
+        "/Doc/Amt": {
+          additionalConstraints: [{ name: "Inh", definition: "x" }],
+        },
+      },
+      { version: "1.0" }
     )
     const top = mig(
       "pacs.008.001.08 EPC SCT",
-      { "/Doc/Amt": { additionalConstraints: [{ name: "Mine", definition: "y" }] } },
-      { version: "2.0", parentMIG: "pacs.008 Base:1.0" },
+      {
+        "/Doc/Amt": {
+          additionalConstraints: [{ name: "Mine", definition: "y" }],
+        },
+      },
+      { version: "2.0", parentMIG: "pacs.008 Base:1.0" }
     )
     const { columns, rows } = buildMigCsvRows(top, [top, base], MESSAGE)
-    expect(rows.find((r) => r[col(columns, "Rule")] === "Mine")![col(columns, "Source")]).toBe(
-      "EPC SCT",
-    )
-    expect(rows.find((r) => r[col(columns, "Rule")] === "Inh")![col(columns, "Source")]).toBe("Base")
+    expect(
+      rows.find((r) => r[col(columns, "Rule")] === "Mine")![
+        col(columns, "Source")
+      ]
+    ).toBe("EPC SCT")
+    expect(
+      rows.find((r) => r[col(columns, "Rule")] === "Inh")![
+        col(columns, "Source")
+      ]
+    ).toBe("Base")
   })
 
   it("adds one column per constraint annotation and fills it", () => {
@@ -258,10 +319,12 @@ describe("buildMigCsv", () => {
   it("renders RFC4180 CSV, quoting fields with commas or quotes", () => {
     const { content, filename } = buildMigCsv(
       mig("M", {
-        "/Doc/Amt": { additionalConstraints: [{ name: "R", definition: 'a, b and "c"' }] },
+        "/Doc/Amt": {
+          additionalConstraints: [{ name: "R", definition: 'a, b and "c"' }],
+        },
       }),
       [],
-      MESSAGE,
+      MESSAGE
     )
     expect(filename).toBe("M-1.0.csv")
     expect(content.endsWith("\r\n")).toBe(true)

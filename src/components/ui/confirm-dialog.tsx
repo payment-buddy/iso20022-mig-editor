@@ -28,19 +28,26 @@ export function ConfirmDialog({
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
         <AlertDialog.Content className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-background p-4 shadow-lg outline-none">
-          <AlertDialog.Title className="text-sm font-semibold">{title}</AlertDialog.Title>
+          <AlertDialog.Title className="text-sm font-semibold">
+            {title}
+          </AlertDialog.Title>
           {description && (
             <AlertDialog.Description className="mt-1 text-sm text-muted-foreground">
               {description}
             </AlertDialog.Description>
           )}
           <div className="mt-4 flex items-center justify-end gap-2">
-            <AlertDialog.Cancel className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            <AlertDialog.Cancel
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
               {cancelLabel}
             </AlertDialog.Cancel>
             <AlertDialog.Action
               className={cn(
-                buttonVariants({ variant: destructive ? "destructive" : "default", size: "sm" }),
+                buttonVariants({
+                  variant: destructive ? "destructive" : "default",
+                  size: "sm",
+                })
               )}
               onClick={onConfirm}
             >

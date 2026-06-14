@@ -11,7 +11,10 @@ import { elementAtPath } from "@/core/erepository/elementPath"
 import { buildPathOrder } from "@/core/mig/serializeMig"
 import { loadMig, saveMig } from "@/core/storage/migStore"
 import { loadRevisions, saveRevisions } from "@/core/storage/revisionStore"
-import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
+import type {
+  ERepository,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { cn } from "@/lib/utils"
@@ -24,7 +27,13 @@ import { formatLocalDateTime } from "@/lib/datetime"
  * `compareMigs`. Revert restores the revision's document content under the
  * current identity, records a "Reverted" revision, and returns to the editor.
  */
-export function MigHistory({ migKey, repo }: { migKey: string; repo: ERepository }) {
+export function MigHistory({
+  migKey,
+  repo,
+}: {
+  migKey: string
+  repo: ERepository
+}) {
   const [status, setStatus] = useState<"loading" | "ready">("loading")
   const [mig, setMig] = useState<MessageImplementationGuide | null>(null)
   const [revisions, setRevisions] = useState<Revision[]>([])
@@ -53,10 +62,14 @@ export function MigHistory({ migKey, repo }: { migKey: string; repo: ERepository
   // Schema (document) order + element-name lookup for the diff — resolve the
   // MIG's message once.
   const { order, nameFor } = useMemo(() => {
-    const root = mig ? resolveMessage(repo, mig.messageIdentifier)?.current?.rootElement : undefined
+    const root = mig
+      ? resolveMessage(repo, mig.messageIdentifier)?.current?.rootElement
+      : undefined
     return {
       order: root ? buildPathOrder(root) : undefined,
-      nameFor: root ? (path: string) => elementAtPath(root, path)?.name : undefined,
+      nameFor: root
+        ? (path: string) => elementAtPath(root, path)?.name
+        : undefined,
     }
   }, [repo, mig])
 
@@ -76,13 +89,23 @@ export function MigHistory({ migKey, repo }: { migKey: string; repo: ERepository
   const selectedIndex = revisions.findIndex((r) => r.id === selectedId)
   const selected = selectedIndex >= 0 ? revisions[selectedIndex] : null
   const previous = selectedIndex > 0 ? revisions[selectedIndex - 1] : null
-  const diff = selected && previous ? compareMigs(previous.mig, selected.mig, order, nameFor) : null
+  const diff =
+    selected && previous
+      ? compareMigs(previous.mig, selected.mig, order, nameFor)
+      : null
 
   const revert = async (rev: Revision) => {
     // Restore the revision's content but keep the current identity (no re-key).
-    const restored: MessageImplementationGuide = { ...rev.mig, name: mig.name, version: mig.version }
+    const restored: MessageImplementationGuide = {
+      ...rev.mig,
+      name: mig.name,
+      version: mig.version,
+    }
     await saveMig(restored)
-    await saveRevisions(migKey, appendRevision(revisions, restored, Date.now(), "Reverted"))
+    await saveRevisions(
+      migKey,
+      appendRevision(revisions, restored, Date.now(), "Reverted")
+    )
     navigate({ name: "mig", key: migKey })
   }
 
@@ -105,7 +128,8 @@ export function MigHistory({ migKey, repo }: { migKey: string; repo: ERepository
 
       {revisions.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No revisions yet — edits you make in the editor are snapshotted here automatically.
+          No revisions yet — edits you make in the editor are snapshotted here
+          automatically.
         </p>
       ) : (
         <div className="grid gap-4 md:grid-cols-[minmax(0,18rem)_1fr]">
@@ -126,7 +150,8 @@ export function MigHistory({ migKey, repo }: { migKey: string; repo: ERepository
               <DiffView diff={diff} />
             ) : selected && !previous ? (
               <p className="text-sm text-muted-foreground">
-                Initial snapshot — there's no earlier revision to compare against.
+                Initial snapshot — there's no earlier revision to compare
+                against.
               </p>
             ) : null}
           </div>
@@ -160,7 +185,9 @@ function RevisionRow({
     <div
       className={cn(
         "flex items-start gap-2 rounded-md border px-3 py-2",
-        selected ? "border-border bg-muted/60" : "border-transparent hover:bg-muted/40",
+        selected
+          ? "border-border bg-muted/60"
+          : "border-transparent hover:bg-muted/40"
       )}
     >
       <button
@@ -169,7 +196,9 @@ function RevisionRow({
         className="min-w-0 flex-1 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
       >
         <div className="text-xs font-medium">{formatLocalDateTime(rev.at)}</div>
-        <div className="truncate text-xs text-muted-foreground">{rev.summary}</div>
+        <div className="truncate text-xs text-muted-foreground">
+          {rev.summary}
+        </div>
       </button>
       <button
         type="button"
@@ -187,10 +216,18 @@ function RevisionRow({
  *  (right) of what changed at that revision. */
 function DiffView({ diff }: { diff: MigComparison }) {
   if (diff.paths.length === 0) {
-    return <p className="text-sm text-muted-foreground">No changes in this revision.</p>
+    return (
+      <p className="text-sm text-muted-foreground">
+        No changes in this revision.
+      </p>
+    )
   }
   const value = (v: string | null) =>
-    v === null ? <span className="text-muted-foreground/70 italic">inherits</span> : v
+    v === null ? (
+      <span className="text-muted-foreground/70 italic">inherits</span>
+    ) : (
+      v
+    )
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3 px-3 text-[0.625rem] tracking-wide text-muted-foreground uppercase">
@@ -201,7 +238,10 @@ function DiffView({ diff }: { diff: MigComparison }) {
         <section key={p.path} className="rounded-md border border-border">
           <header className="flex items-center gap-2 border-b border-border bg-muted/40 px-3 py-1.5">
             <span className="text-sm font-medium">{p.name}</span>
-            <code title={p.path} className="truncate text-[0.625rem] text-muted-foreground">
+            <code
+              title={p.path}
+              className="truncate text-[0.625rem] text-muted-foreground"
+            >
               {p.path}
             </code>
           </header>
@@ -233,7 +273,10 @@ function Notice({ title, children }: { title: string; children?: ReactNode }) {
 
 function Home() {
   return (
-    <a href={hashFor({ name: "home" })} className="text-primary underline-offset-4 hover:underline">
+    <a
+      href={hashFor({ name: "home" })}
+      className="text-primary underline-offset-4 hover:underline"
+    >
       Home
     </a>
   )

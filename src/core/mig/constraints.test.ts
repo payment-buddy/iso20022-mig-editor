@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest"
-import type { Constraint, ElementOverride, MessageElement } from "@/core/types/types"
+import type {
+  Constraint,
+  ElementOverride,
+  MessageElement,
+} from "@/core/types/types"
 import { resolveConstraints } from "./constraints"
 
-const constraint = (name: string, extra: Partial<Constraint> = {}): Constraint => ({
+const constraint = (
+  name: string,
+  extra: Partial<Constraint> = {}
+): Constraint => ({
   name,
   definition: `${name} def`,
   ...extra,
@@ -38,7 +45,9 @@ function el(constraints: Constraint[]): MessageElement {
 
 describe("resolveConstraints", () => {
   it("returns standard then additional constraints, tagged by source", () => {
-    const override: ElementOverride = { additionalConstraints: [constraint("Extra")] }
+    const override: ElementOverride = {
+      additionalConstraints: [constraint("Extra")],
+    }
     const out = resolveConstraints(el([constraint("Std")]), override)
     expect(out.map((r) => [r.constraint.name, r.source])).toEqual([
       ["Std", "standard"],
@@ -47,7 +56,9 @@ describe("resolveConstraints", () => {
   })
 
   it("overlays an expression onto a standard constraint", () => {
-    const override: ElementOverride = { constraintOverrides: { Std: { expression: "Amt > 0" } } }
+    const override: ElementOverride = {
+      constraintOverrides: { Std: { expression: "Amt > 0" } },
+    }
     const [r] = resolveConstraints(el([constraint("Std")]), override)
     expect(r.constraint.expression).toBe("Amt > 0")
   })
@@ -64,15 +75,23 @@ describe("resolveConstraints", () => {
   })
 
   it("clears the inherited expression when the overlay sets null", () => {
-    const override: ElementOverride = { constraintOverrides: { Std: { expression: null } } }
-    const [r] = resolveConstraints(el([constraint("Std", { expression: "old" })]), override)
+    const override: ElementOverride = {
+      constraintOverrides: { Std: { expression: null } },
+    }
+    const [r] = resolveConstraints(
+      el([constraint("Std", { expression: "old" })]),
+      override
+    )
     expect(r.constraint.expression).toBeUndefined()
   })
 
   it("leaves a constraint untouched when no overlay targets its name", () => {
-    const out = resolveConstraints(el([constraint("Std", { expression: "keep" })]), {
-      constraintOverrides: { Other: { expression: "x" } },
-    })
+    const out = resolveConstraints(
+      el([constraint("Std", { expression: "keep" })]),
+      {
+        constraintOverrides: { Other: { expression: "x" } },
+      }
+    )
     expect(out[0].constraint.expression).toBe("keep")
   })
 

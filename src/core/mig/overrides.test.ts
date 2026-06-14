@@ -12,7 +12,7 @@ import {
 } from "./overrides"
 
 function mig(
-  elementOverrides: MessageImplementationGuide["elementOverrides"] = {},
+  elementOverrides: MessageImplementationGuide["elementOverrides"] = {}
 ): MessageImplementationGuide {
   return {
     name: "Guide",
@@ -25,12 +25,22 @@ function mig(
 describe("setOverrideField", () => {
   it("creates an override entry for a new path", () => {
     const next = setOverrideField(mig(), "/Doc/Amt", "definition", "Custom")
-    expect(next.elementOverrides).toEqual({ "/Doc/Amt": { definition: "Custom" } })
+    expect(next.elementOverrides).toEqual({
+      "/Doc/Amt": { definition: "Custom" },
+    })
   })
 
   it("merges into an existing override, keeping other fields", () => {
-    const next = setOverrideField(mig({ "/Doc/Amt": { minOccurs: 0 } }), "/Doc/Amt", "definition", "X")
-    expect(next.elementOverrides["/Doc/Amt"]).toEqual({ minOccurs: 0, definition: "X" })
+    const next = setOverrideField(
+      mig({ "/Doc/Amt": { minOccurs: 0 } }),
+      "/Doc/Amt",
+      "definition",
+      "X"
+    )
+    expect(next.elementOverrides["/Doc/Amt"]).toEqual({
+      minOccurs: 0,
+      definition: "X",
+    })
   })
 
   it("preserves a tri-state null value", () => {
@@ -51,13 +61,17 @@ describe("clearOverrideField", () => {
     const next = clearOverrideField(
       mig({ "/Doc/Amt": { definition: "X", minOccurs: 0 } }),
       "/Doc/Amt",
-      "definition",
+      "definition"
     )
     expect(next.elementOverrides["/Doc/Amt"]).toEqual({ minOccurs: 0 })
   })
 
   it("prunes the override entry when it becomes empty", () => {
-    const next = clearOverrideField(mig({ "/Doc/Amt": { definition: "X" } }), "/Doc/Amt", "definition")
+    const next = clearOverrideField(
+      mig({ "/Doc/Amt": { definition: "X" } }),
+      "/Doc/Amt",
+      "definition"
+    )
     expect(next.elementOverrides).toEqual({})
   })
 
@@ -82,23 +96,32 @@ describe("nextConstraintName", () => {
 
   it("suffixes a number to avoid collisions", () => {
     expect(nextConstraintName(["New constraint"])).toBe("New constraint 2")
-    expect(nextConstraintName(["New constraint", "New constraint 2"])).toBe("New constraint 3")
+    expect(nextConstraintName(["New constraint", "New constraint 2"])).toBe(
+      "New constraint 3"
+    )
   })
 })
 
 describe("addConstraint", () => {
   it("creates additionalConstraints on a new path", () => {
-    const next = addConstraint(mig(), "/Doc/Amt", { name: "Rule A", definition: "" })
+    const next = addConstraint(mig(), "/Doc/Amt", {
+      name: "Rule A",
+      definition: "",
+    })
     expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
       { name: "Rule A", definition: "" },
     ])
   })
 
   it("appends to an existing override, keeping other fields", () => {
-    const next = addConstraint(mig({ "/Doc/Amt": { minOccurs: 0 } }), "/Doc/Amt", {
-      name: "Rule A",
-      definition: "",
-    })
+    const next = addConstraint(
+      mig({ "/Doc/Amt": { minOccurs: 0 } }),
+      "/Doc/Amt",
+      {
+        name: "Rule A",
+        definition: "",
+      }
+    )
     expect(next.elementOverrides["/Doc/Amt"]).toEqual({
       minOccurs: 0,
       additionalConstraints: [{ name: "Rule A", definition: "" }],
@@ -106,8 +129,15 @@ describe("addConstraint", () => {
   })
 
   it("is a no-op when a constraint of the same name already exists", () => {
-    const before = mig({ "/Doc/Amt": { additionalConstraints: [{ name: "Rule A", definition: "" }] } })
-    const next = addConstraint(before, "/Doc/Amt", { name: "Rule A", definition: "new" })
+    const before = mig({
+      "/Doc/Amt": {
+        additionalConstraints: [{ name: "Rule A", definition: "" }],
+      },
+    })
+    const next = addConstraint(before, "/Doc/Amt", {
+      name: "Rule A",
+      definition: "new",
+    })
     expect(next).toBe(before)
   })
 
@@ -120,10 +150,16 @@ describe("addConstraint", () => {
 
 describe("updateConstraint", () => {
   const withConstraints = (...names: string[]) =>
-    mig({ "/Doc/Amt": { additionalConstraints: names.map((name) => ({ name, definition: "" })) } })
+    mig({
+      "/Doc/Amt": {
+        additionalConstraints: names.map((name) => ({ name, definition: "" })),
+      },
+    })
 
   it("renames an additional constraint, keeping order", () => {
-    const next = updateConstraint(withConstraints("A", "B"), "/Doc/Amt", "A", { name: "Z" })
+    const next = updateConstraint(withConstraints("A", "B"), "/Doc/Amt", "A", {
+      name: "Z",
+    })
     expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
       { name: "Z", definition: "" },
       { name: "B", definition: "" },
@@ -131,14 +167,18 @@ describe("updateConstraint", () => {
   })
 
   it("updates the definition", () => {
-    const next = updateConstraint(withConstraints("A"), "/Doc/Amt", "A", { definition: "Must be set" })
+    const next = updateConstraint(withConstraints("A"), "/Doc/Amt", "A", {
+      definition: "Must be set",
+    })
     expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
       { name: "A", definition: "Must be set" },
     ])
   })
 
   it("sets the expression, and prunes an emptied one", () => {
-    const set = updateConstraint(withConstraints("A"), "/Doc/Amt", "A", { expression: "amt > 0" })
+    const set = updateConstraint(withConstraints("A"), "/Doc/Amt", "A", {
+      expression: "amt > 0",
+    })
     expect(set.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
       { name: "A", definition: "", expression: "amt > 0" },
     ])
@@ -163,13 +203,19 @@ describe("updateConstraint", () => {
 
   it("is a no-op when the rename collides with a sibling", () => {
     const before = withConstraints("A", "B")
-    expect(updateConstraint(before, "/Doc/Amt", "A", { name: "B" })).toBe(before)
+    expect(updateConstraint(before, "/Doc/Amt", "A", { name: "B" })).toBe(
+      before
+    )
   })
 
   it("is a no-op when the constraint or path is absent", () => {
     const before = withConstraints("A")
-    expect(updateConstraint(before, "/Doc/Amt", "Missing", { name: "Z" })).toBe(before)
-    expect(updateConstraint(before, "/Doc/Other", "A", { name: "Z" })).toBe(before)
+    expect(updateConstraint(before, "/Doc/Amt", "Missing", { name: "Z" })).toBe(
+      before
+    )
+    expect(updateConstraint(before, "/Doc/Other", "A", { name: "Z" })).toBe(
+      before
+    )
   })
 
   it("does not mutate the input MIG", () => {
@@ -183,7 +229,11 @@ describe("updateConstraint", () => {
 
 describe("removeConstraint", () => {
   const withConstraints = (...names: string[]) =>
-    mig({ "/Doc/Amt": { additionalConstraints: names.map((name) => ({ name, definition: "" })) } })
+    mig({
+      "/Doc/Amt": {
+        additionalConstraints: names.map((name) => ({ name, definition: "" })),
+      },
+    })
 
   it("removes one additional constraint, keeping the rest", () => {
     const next = removeConstraint(withConstraints("A", "B"), "/Doc/Amt", "A")
@@ -194,7 +244,10 @@ describe("removeConstraint", () => {
 
   it("prunes the empty array but keeps other override fields", () => {
     const before = mig({
-      "/Doc/Amt": { minOccurs: 0, additionalConstraints: [{ name: "A", definition: "" }] },
+      "/Doc/Amt": {
+        minOccurs: 0,
+        additionalConstraints: [{ name: "A", definition: "" }],
+      },
     })
     const next = removeConstraint(before, "/Doc/Amt", "A")
     expect(next.elementOverrides["/Doc/Amt"]).toEqual({ minOccurs: 0 })
@@ -222,31 +275,64 @@ describe("removeConstraint", () => {
 
 describe("setConstraintOverrideField / clearConstraintOverrideField", () => {
   it("creates the nested map and entry for a new override", () => {
-    const next = setConstraintOverrideField(mig(), "/Doc/Amt", "R1", "expression", "a > 0")
+    const next = setConstraintOverrideField(
+      mig(),
+      "/Doc/Amt",
+      "R1",
+      "expression",
+      "a > 0"
+    )
     expect(next.elementOverrides).toEqual({
       "/Doc/Amt": { constraintOverrides: { R1: { expression: "a > 0" } } },
     })
   })
 
   it("preserves an explicit null (remove the rule's expression)", () => {
-    const next = setConstraintOverrideField(mig(), "/Doc/Amt", "R1", "expression", null)
-    expect(next.elementOverrides["/Doc/Amt"].constraintOverrides!.R1).toEqual({ expression: null })
+    const next = setConstraintOverrideField(
+      mig(),
+      "/Doc/Amt",
+      "R1",
+      "expression",
+      null
+    )
+    expect(next.elementOverrides["/Doc/Amt"].constraintOverrides!.R1).toEqual({
+      expression: null,
+    })
   })
 
   it("merges alongside other entries and fields without disturbing them", () => {
     const before = mig({
-      "/Doc/Amt": { minOccurs: 0, constraintOverrides: { R0: { expression: "keep" } } },
+      "/Doc/Amt": {
+        minOccurs: 0,
+        constraintOverrides: { R0: { expression: "keep" } },
+      },
     })
-    const next = setConstraintOverrideField(before, "/Doc/Amt", "R1", "expression", "x")
+    const next = setConstraintOverrideField(
+      before,
+      "/Doc/Amt",
+      "R1",
+      "expression",
+      "x"
+    )
     expect(next.elementOverrides["/Doc/Amt"]).toEqual({
       minOccurs: 0,
-      constraintOverrides: { R0: { expression: "keep" }, R1: { expression: "x" } },
+      constraintOverrides: {
+        R0: { expression: "keep" },
+        R1: { expression: "x" },
+      },
     })
   })
 
   it("prunes the entry, the map, and the override entry as they empty", () => {
-    const before = mig({ "/Doc/Amt": { constraintOverrides: { R1: { expression: "x" } } } })
-    const next = clearConstraintOverrideField(before, "/Doc/Amt", "R1", "expression")
+    const before = mig({
+      "/Doc/Amt": { constraintOverrides: { R1: { expression: "x" } } },
+    })
+    const next = clearConstraintOverrideField(
+      before,
+      "/Doc/Amt",
+      "R1",
+      "expression"
+    )
     expect(next.elementOverrides).toEqual({})
   })
 
@@ -254,10 +340,18 @@ describe("setConstraintOverrideField / clearConstraintOverrideField", () => {
     const before = mig({
       "/Doc/Amt": {
         minOccurs: 0,
-        constraintOverrides: { R1: { expression: "x" }, R2: { expression: "y" } },
+        constraintOverrides: {
+          R1: { expression: "x" },
+          R2: { expression: "y" },
+        },
       },
     })
-    const next = clearConstraintOverrideField(before, "/Doc/Amt", "R1", "expression")
+    const next = clearConstraintOverrideField(
+      before,
+      "/Doc/Amt",
+      "R1",
+      "expression"
+    )
     expect(next.elementOverrides["/Doc/Amt"]).toEqual({
       minOccurs: 0,
       constraintOverrides: { R2: { expression: "y" } },
@@ -265,8 +359,14 @@ describe("setConstraintOverrideField / clearConstraintOverrideField", () => {
   })
 
   it("is a no-op when the entry or field is absent", () => {
-    const before = mig({ "/Doc/Amt": { constraintOverrides: { R1: { expression: "x" } } } })
-    expect(clearConstraintOverrideField(before, "/Doc/Amt", "Missing", "expression")).toBe(before)
-    expect(clearConstraintOverrideField(before, "/Doc/Other", "R1", "expression")).toBe(before)
+    const before = mig({
+      "/Doc/Amt": { constraintOverrides: { R1: { expression: "x" } } },
+    })
+    expect(
+      clearConstraintOverrideField(before, "/Doc/Amt", "Missing", "expression")
+    ).toBe(before)
+    expect(
+      clearConstraintOverrideField(before, "/Doc/Other", "R1", "expression")
+    ).toBe(before)
   })
 })

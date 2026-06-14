@@ -119,7 +119,9 @@ function CreateMigForm({
         </p>
       )}
       <div className="mt-2 flex items-center justify-end gap-2">
-        <Dialog.Close className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+        <Dialog.Close
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
           Cancel
         </Dialog.Close>
         <Button type="submit" size="sm">

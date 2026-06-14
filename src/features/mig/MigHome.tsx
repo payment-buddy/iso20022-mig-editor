@@ -43,11 +43,17 @@ type PendingImport = {
   errors: string[]
 }
 
-const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
+const clamp = (n: number, lo: number, hi: number) =>
+  Math.max(lo, Math.min(hi, n))
 
 /** Sortable columns and the direction each one starts in on first click. */
 type SortCol = "name" | "version" | "message" | "modified"
-const SORT_DEFAULT_DIR: Record<SortCol, 1 | -1> = { name: 1, version: 1, message: 1, modified: -1 }
+const SORT_DEFAULT_DIR: Record<SortCol, 1 | -1> = {
+  name: 1,
+  version: 1,
+  message: 1,
+  modified: -1,
+}
 
 function keysBetween(keys: string[], a: string, b: string): string[] {
   const i = keys.indexOf(a)
@@ -59,7 +65,10 @@ function keysBetween(keys: string[], a: string, b: string): string[] {
 export function MigHome() {
   const [migs, setMigs] = useState<MessageImplementationGuide[]>([])
   const [lastModified, setLastModified] = useState<Record<string, number>>({})
-  const [sort, setSort] = useState<{ col: SortCol; dir: 1 | -1 }>({ col: "name", dir: 1 })
+  const [sort, setSort] = useState<{ col: SortCol; dir: 1 | -1 }>({
+    col: "name",
+    dir: 1,
+  })
   const [selected, setSelected] = useState<Set<string>>(() => new Set())
   const [focusedKey, setFocusedKey] = useState<string | null>(null)
   const [anchorKey, setAnchorKey] = useState<string | null>(null)
@@ -76,16 +85,28 @@ export function MigHome() {
   // key tiebreak so equal rows never jitter. Keyboard nav + range selection read
   // `keys` from this, so they follow the visible order.
   const sortedMigs = useMemo(() => {
-    const primary = (a: MessageImplementationGuide, b: MessageImplementationGuide): number => {
+    const primary = (
+      a: MessageImplementationGuide,
+      b: MessageImplementationGuide
+    ): number => {
       switch (sort.col) {
         case "name":
           return a.name.localeCompare(b.name, undefined, { numeric: true })
         case "version":
-          return a.version.localeCompare(b.version, undefined, { numeric: true })
+          return a.version.localeCompare(b.version, undefined, {
+            numeric: true,
+          })
         case "message":
-          return a.messageIdentifier.localeCompare(b.messageIdentifier, undefined, { numeric: true })
+          return a.messageIdentifier.localeCompare(
+            b.messageIdentifier,
+            undefined,
+            { numeric: true }
+          )
         case "modified":
-          return (lastModified[getMigKey(a)] ?? 0) - (lastModified[getMigKey(b)] ?? 0)
+          return (
+            (lastModified[getMigKey(a)] ?? 0) -
+            (lastModified[getMigKey(b)] ?? 0)
+          )
       }
     }
     return [...migs].sort((a, b) => {
@@ -95,7 +116,8 @@ export function MigHome() {
   }, [migs, sort, lastModified])
 
   const keys = sortedMigs.map(getMigKey)
-  const activeKey = focusedKey && keys.includes(focusedKey) ? focusedKey : (keys[0] ?? null)
+  const activeKey =
+    focusedKey && keys.includes(focusedKey) ? focusedKey : (keys[0] ?? null)
   const selectedMigs = migs.filter((m) => selected.has(getMigKey(m)))
 
   const refresh = useCallback(() => {
@@ -114,12 +136,17 @@ export function MigHome() {
   // Keep the select-all checkbox's indeterminate state in sync.
   useEffect(() => {
     if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = selected.size > 0 && selected.size < migs.length
+      selectAllRef.current.indeterminate =
+        selected.size > 0 && selected.size < migs.length
     }
   }, [selected, migs.length])
 
   const commitImport = useCallback(
-    (toSave: MessageImplementationGuide[], problems: string[], openKey?: string) => {
+    (
+      toSave: MessageImplementationGuide[],
+      problems: string[],
+      openKey?: string
+    ) => {
       Promise.all(toSave.map(saveMig))
         .then(() => {
           setImportErrors(problems)
@@ -130,7 +157,7 @@ export function MigHome() {
         })
         .catch((err) => console.error("Failed to import MIGs:", err))
     },
-    [refresh],
+    [refresh]
   )
 
   const handleFiles = useCallback(
@@ -151,23 +178,32 @@ export function MigHome() {
       }
       // Exactly one new MIG and nothing rejected → open it in the editor.
       const openKey =
-        incoming.length === 1 && problems.length === 0 ? getMigKey(incoming[0]) : undefined
+        incoming.length === 1 && problems.length === 0
+          ? getMigKey(incoming[0])
+          : undefined
       commitImport(incoming, problems, openKey)
     },
-    [migs, commitImport],
+    [migs, commitImport]
   )
 
   const resolvePendingImport = (resolution: DuplicateResolution) => {
     if (!pendingImport) return
     const { incoming, duplicateKeys, errors } = pendingImport
     setPendingImport(null)
-    commitImport(migsForResolution(incoming, duplicateKeys, resolution, Date.now()), errors)
+    commitImport(
+      migsForResolution(incoming, duplicateKeys, resolution, Date.now()),
+      errors
+    )
   }
 
   // Merge is offered only for a single colliding MIG whose message family matches
   // the stored one — it hands the parsed upload to the merge screen (Compare-like).
   const mergeCandidate = (() => {
-    if (!pendingImport || pendingImport.incoming.length !== 1 || pendingImport.duplicateKeys.size !== 1) {
+    if (
+      !pendingImport ||
+      pendingImport.incoming.length !== 1 ||
+      pendingImport.duplicateKeys.size !== 1
+    ) {
       return null
     }
     const candidate = pendingImport.incoming[0]
@@ -217,12 +253,16 @@ export function MigHome() {
     })
 
   const toggleAll = () =>
-    setSelected((prev) => (prev.size === migs.length ? new Set() : new Set(keys)))
+    setSelected((prev) =>
+      prev.size === migs.length ? new Set() : new Set(keys)
+    )
 
   // Click a header to sort by it; click the active one again to flip direction.
   const toggleSort = (col: SortCol) =>
     setSort((s) =>
-      s.col === col ? { col, dir: (s.dir === 1 ? -1 : 1) as 1 | -1 } : { col, dir: SORT_DEFAULT_DIR[col] },
+      s.col === col
+        ? { col, dir: (s.dir === 1 ? -1 : 1) as 1 | -1 }
+        : { col, dir: SORT_DEFAULT_DIR[col] }
     )
 
   const sortHeader = (col: SortCol, label: string) => {
@@ -230,7 +270,9 @@ export function MigHome() {
     return (
       <th
         scope="col"
-        aria-sort={active ? (sort.dir === 1 ? "ascending" : "descending") : "none"}
+        aria-sort={
+          active ? (sort.dir === 1 ? "ascending" : "descending") : "none"
+        }
         className="border-b border-border px-2 py-1.5 font-medium"
       >
         <button
@@ -356,7 +398,9 @@ export function MigHome() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6 xl:max-w-4xl">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="mr-auto text-base font-semibold tracking-tight">Message Implementation Guides</h1>
+        <h1 className="mr-auto text-base font-semibold tracking-tight">
+          Message Implementation Guides
+        </h1>
         <Button variant="outline" size="sm" asChild>
           <a href={hashFor({ name: "trash" })}>
             <TrashIcon data-icon="inline-start" aria-hidden />
@@ -417,8 +461,13 @@ export function MigHome() {
       ) : (
         <>
           <div className="flex items-center gap-2">
-            <span className="mr-auto text-xs text-muted-foreground" aria-live="polite">
-              {selected.size > 0 ? `${selected.size} selected` : `${migs.length} MIGs`}
+            <span
+              className="mr-auto text-xs text-muted-foreground"
+              aria-live="polite"
+            >
+              {selected.size > 0
+                ? `${selected.size} selected`
+                : `${migs.length} MIGs`}
             </span>
             <Button
               variant="outline"
@@ -460,7 +509,10 @@ export function MigHome() {
           >
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
-                <th scope="col" className="w-8 border-b border-border px-2 py-1.5">
+                <th
+                  scope="col"
+                  className="w-8 border-b border-border px-2 py-1.5"
+                >
                   <input
                     ref={selectAllRef}
                     type="checkbox"
@@ -490,7 +542,7 @@ export function MigHome() {
                       else rowRefs.current.delete(key)
                     }}
                     onFocus={() => setFocusedKey(key)}
-                    className="outline-none data-[selected=true]:bg-muted/60 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-inset"
+                    className="outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-inset data-[selected=true]:bg-muted/60"
                     data-selected={isSelected}
                   >
                     <td className="border-b border-border px-2 py-1.5">
@@ -511,12 +563,16 @@ export function MigHome() {
                         {mig.name}
                       </a>
                     </td>
-                    <td className="border-b border-border px-2 py-1.5">{mig.version}</td>
+                    <td className="border-b border-border px-2 py-1.5">
+                      {mig.version}
+                    </td>
                     <td className="border-b border-border px-2 py-1.5 text-muted-foreground">
                       {mig.messageIdentifier}
                     </td>
                     <td className="border-b border-border px-2 py-1.5 whitespace-nowrap text-muted-foreground">
-                      {lastModified[key] !== undefined ? formatLocalDateTime(lastModified[key]) : "—"}
+                      {lastModified[key] !== undefined
+                        ? formatLocalDateTime(lastModified[key])
+                        : "—"}
                     </td>
                   </tr>
                 )

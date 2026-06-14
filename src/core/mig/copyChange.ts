@@ -19,7 +19,7 @@ export function applyFieldCopy(
   source: MessageImplementationGuide,
   target: MessageImplementationGuide,
   path: string,
-  ref: FieldRef,
+  ref: FieldRef
 ): MessageImplementationGuide {
   const srcOv = source.elementOverrides[path]
 
@@ -27,7 +27,8 @@ export function applyFieldCopy(
     const { field } = ref
     // Key-presence, not `??`: a stored `null` (cleared) must copy as `null`, not
     // collapse to "inherit". Source absent → clear the target back to inherit.
-    if (srcOv && field in srcOv) return setOverrideField(target, path, field, srcOv[field])
+    if (srcOv && field in srcOv)
+      return setOverrideField(target, path, field, srcOv[field])
     return clearOverrideField(target, path, field)
   }
 
@@ -46,7 +47,9 @@ export function applyFieldCopy(
   // ref.type === "constraint"
   const { name } = ref
   const srcC = srcOv?.additionalConstraints?.find((c) => c.name === name)
-  const exists = target.elementOverrides[path]?.additionalConstraints?.some((c) => c.name === name)
+  const exists = target.elementOverrides[path]?.additionalConstraints?.some(
+    (c) => c.name === name
+  )
 
   if (!srcC) return exists ? removeConstraint(target, path, name) : target
   if (!exists) return addConstraint(target, path, srcC)

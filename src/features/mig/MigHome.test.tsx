@@ -2,7 +2,13 @@
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadAllMigs, loadMig, saveMig } from "@/core/storage/migStore"
@@ -22,7 +28,7 @@ function migYaml(
   name: string,
   version: string,
   description?: string,
-  messageIdentifier = "pacs.008.001.08",
+  messageIdentifier = "pacs.008.001.08"
 ): string {
   return (
     `name: ${name}\nversion: '${version}'\nmessageIdentifier: ${messageIdentifier}\n` +
@@ -35,11 +41,15 @@ function migFile(
   name: string,
   version: string,
   description?: string,
-  messageIdentifier?: string,
+  messageIdentifier?: string
 ): File {
-  return new File([migYaml(name, version, description, messageIdentifier)], `${name}.yaml`, {
-    type: "text/yaml",
-  })
+  return new File(
+    [migYaml(name, version, description, messageIdentifier)],
+    `${name}.yaml`,
+    {
+      type: "text/yaml",
+    }
+  )
 }
 
 /** A single file holding an array of MIGs. */
@@ -50,7 +60,7 @@ function migArrayFile(entries: [string, string, string?][]): File {
         .split("\n")
         .filter(Boolean)
         .map((line, i) => (i === 0 ? `- ${line}` : `  ${line}`))
-        .join("\n"),
+        .join("\n")
     )
     .join("\n")
   return new File([yaml + "\n"], "batch.yaml", { type: "text/yaml" })
@@ -59,7 +69,7 @@ function migArrayFile(entries: [string, string, string?][]): File {
 function migObj(
   name: string,
   version: string,
-  messageIdentifier = "pacs.008.001.08",
+  messageIdentifier = "pacs.008.001.08"
 ): MessageImplementationGuide {
   return { name, version, messageIdentifier, elementOverrides: {} }
 }
@@ -89,7 +99,10 @@ describe("MigHome", () => {
 
   it("uploads a single new MIG, persists it, and opens its editor", async () => {
     render(<MigHome />)
-    await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0"))
+    await userEvent.upload(
+      screen.getByLabelText("MIG YAML file"),
+      migFile("EPC", "1.0")
+    )
 
     // A single clean import lands straight in the editor.
     await waitFor(() => expect(window.location.hash).toBe("#mig/EPC%3A1.0"))
@@ -98,18 +111,29 @@ describe("MigHome", () => {
 
   it("shows a Last modified time per MIG, dashing those with none", async () => {
     await saveRevisions("EPC:1.0", [
-      { id: "r0", at: 1_700_000_000_000, mig: migObj("EPC", "1.0"), summary: "Initial" },
+      {
+        id: "r0",
+        at: 1_700_000_000_000,
+        mig: migObj("EPC", "1.0"),
+        summary: "Initial",
+      },
     ])
     await renderWith(migObj("EPC", "1.0"), migObj("CSM", "2.0"))
 
     // The timestamp is plain text (not a link); MIGs without history show a dash.
-    expect(screen.getByText(formatLocalDateTime(1_700_000_000_000))).toBeInTheDocument()
+    expect(
+      screen.getByText(formatLocalDateTime(1_700_000_000_000))
+    ).toBeInTheDocument()
     expect(screen.getByText("—")).toBeInTheDocument()
   })
 
   it("sorts rows by a column header, flipping direction on re-click", async () => {
     const user = userEvent.setup()
-    await renderWith(migObj("Bravo", "1.0"), migObj("Alpha", "2.0"), migObj("Charlie", "1.5"))
+    await renderWith(
+      migObj("Bravo", "1.0"),
+      migObj("Alpha", "2.0"),
+      migObj("Charlie", "1.5")
+    )
     const names = () =>
       within(screen.getByRole("grid"))
         .getAllByRole("link")
@@ -132,7 +156,7 @@ describe("MigHome", () => {
       "- name: B\n  version: '1'\n  messageIdentifier: x\n  elementOverrides: {}\n"
     await userEvent.upload(
       screen.getByLabelText("MIG YAML file"),
-      new File([yaml], "both.yaml", { type: "text/yaml" }),
+      new File([yaml], "both.yaml", { type: "text/yaml" })
     )
 
     expect(await screen.findByRole("link", { name: "A" })).toBeInTheDocument()
@@ -143,9 +167,13 @@ describe("MigHome", () => {
     const user = userEvent.setup()
     render(<MigHome />)
     // Missing messageIdentifier → the schema rejects it.
-    const bad = new File(["name: Oops\nversion: '1'\nelementOverrides: {}\n"], "bad.yaml", {
-      type: "text/yaml",
-    })
+    const bad = new File(
+      ["name: Oops\nversion: '1'\nelementOverrides: {}\n"],
+      "bad.yaml",
+      {
+        type: "text/yaml",
+      }
+    )
     await user.upload(screen.getByLabelText("MIG YAML file"), bad)
 
     const alert = await screen.findByRole("alert")
@@ -154,13 +182,18 @@ describe("MigHome", () => {
     expect(screen.queryByRole("link", { name: "Oops" })).not.toBeInTheDocument()
 
     // Dismissible.
-    await user.click(within(alert).getByRole("button", { name: /dismiss import errors/i }))
+    await user.click(
+      within(alert).getByRole("button", { name: /dismiss import errors/i })
+    )
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
   })
 
   it("prompts to resolve a duplicate import", async () => {
     await renderWith(migObj("EPC", "1.0"))
-    await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0"))
+    await userEvent.upload(
+      screen.getByLabelText("MIG YAML file"),
+      migFile("EPC", "1.0")
+    )
 
     const dialog = await screen.findByRole("alertdialog")
     expect(within(dialog).getByText(/already exists/i)).toBeInTheDocument()
@@ -169,10 +202,17 @@ describe("MigHome", () => {
 
   it("Overwrite replaces the stored MIG with the incoming one", async () => {
     await renderWith(migObj("EPC", "1.0")) // no description
-    await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0", "updated"))
+    await userEvent.upload(
+      screen.getByLabelText("MIG YAML file"),
+      migFile("EPC", "1.0", "updated")
+    )
 
-    await userEvent.click(await screen.findByRole("button", { name: /overwrite/i }))
-    await waitFor(async () => expect((await loadMig("EPC:1.0"))?.description).toBe("updated"))
+    await userEvent.click(
+      await screen.findByRole("button", { name: /overwrite/i })
+    )
+    await waitFor(async () =>
+      expect((await loadMig("EPC:1.0"))?.description).toBe("updated")
+    )
   })
 
   it("Skip keeps the stored duplicate and imports only the new ones", async () => {
@@ -182,37 +222,55 @@ describe("MigHome", () => {
       migArrayFile([
         ["EPC", "1.0", "updated"],
         ["NEW", "1.0"],
-      ]),
+      ])
     )
 
-    await userEvent.click(await screen.findByRole("button", { name: /^skip$/i }))
+    await userEvent.click(
+      await screen.findByRole("button", { name: /^skip$/i })
+    )
 
     // The new one lands; the existing duplicate is untouched.
     expect(await screen.findByRole("link", { name: "NEW" })).toBeInTheDocument()
-    await waitFor(async () => expect((await loadMig("EPC:1.0"))?.description).toBeUndefined())
+    await waitFor(async () =>
+      expect((await loadMig("EPC:1.0"))?.description).toBeUndefined()
+    )
   })
 
   it("Upload as new keeps the original and adds a version-bumped copy", async () => {
     await renderWith(migObj("EPC", "1.0"))
-    await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0", "updated"))
+    await userEvent.upload(
+      screen.getByLabelText("MIG YAML file"),
+      migFile("EPC", "1.0", "updated")
+    )
 
-    await userEvent.click(await screen.findByRole("button", { name: /upload as new/i }))
+    await userEvent.click(
+      await screen.findByRole("button", { name: /upload as new/i })
+    )
 
     // Two EPC rows: the untouched original and the re-versioned import.
-    await waitFor(() => expect(screen.getAllByRole("link", { name: "EPC" })).toHaveLength(2))
+    await waitFor(() =>
+      expect(screen.getAllByRole("link", { name: "EPC" })).toHaveLength(2)
+    )
     expect((await loadMig("EPC:1.0"))?.description).toBeUndefined()
-    const bumped = (await loadAllMigs()).find((m) => m.version.startsWith("1.0-"))
+    const bumped = (await loadAllMigs()).find((m) =>
+      m.version.startsWith("1.0-")
+    )
     expect(bumped?.description).toBe("updated")
   })
 
   it("Cancel aborts the import, changing nothing", async () => {
     await renderWith(migObj("EPC", "1.0"))
-    await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0", "updated"))
+    await userEvent.upload(
+      screen.getByLabelText("MIG YAML file"),
+      migFile("EPC", "1.0", "updated")
+    )
 
-    await userEvent.click(await screen.findByRole("button", { name: /cancel/i }))
+    await userEvent.click(
+      await screen.findByRole("button", { name: /cancel/i })
+    )
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
     expect((await loadMig("EPC:1.0"))?.description).toBeUndefined()
-    expect((await loadAllMigs())).toHaveLength(1)
+    expect(await loadAllMigs()).toHaveLength(1)
   })
 
   it("select-all toggles every row", async () => {
@@ -271,7 +329,7 @@ describe("MigHome", () => {
   it("Compare stays disabled for two MIGs of different message families", async () => {
     await renderWith(
       migObj("A", "1", "pacs.008.001.08"),
-      migObj("B", "1", "pacs.009.001.08"),
+      migObj("B", "1", "pacs.009.001.08")
     )
     const compare = () => screen.getByRole("button", { name: /compare/i })
 
@@ -284,7 +342,7 @@ describe("MigHome", () => {
   it("Compare is enabled for two versions of the same family", async () => {
     await renderWith(
       migObj("A", "1", "pacs.008.001.08"),
-      migObj("B", "1", "pacs.008.001.09"),
+      migObj("B", "1", "pacs.008.001.09")
     )
     const compare = () => screen.getByRole("button", { name: /compare/i })
 
@@ -295,10 +353,15 @@ describe("MigHome", () => {
 
   it("offers Merge for a single same-family duplicate and hands it to the merge screen", async () => {
     await renderWith(migObj("EPC", "1.0"))
-    await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0", "updated"))
+    await userEvent.upload(
+      screen.getByLabelText("MIG YAML file"),
+      migFile("EPC", "1.0", "updated")
+    )
 
     const dialog = await screen.findByRole("alertdialog")
-    await userEvent.click(within(dialog).getByRole("button", { name: /merge/i }))
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: /merge/i })
+    )
 
     // Routes to the merge screen and hands the parsed incoming over.
     expect(window.location.hash).toBe("#merge/EPC%3A1.0")
@@ -309,11 +372,13 @@ describe("MigHome", () => {
     await renderWith(migObj("EPC", "1.0", "pacs.008.001.08"))
     await userEvent.upload(
       screen.getByLabelText("MIG YAML file"),
-      migFile("EPC", "1.0", "updated", "pacs.009.001.08"),
+      migFile("EPC", "1.0", "updated", "pacs.009.001.08")
     )
 
     const dialog = await screen.findByRole("alertdialog")
-    expect(within(dialog).queryByRole("button", { name: /merge/i })).not.toBeInTheDocument()
+    expect(
+      within(dialog).queryByRole("button", { name: /merge/i })
+    ).not.toBeInTheDocument()
   })
 
   it("does not offer Merge when several MIGs collide", async () => {
@@ -323,11 +388,13 @@ describe("MigHome", () => {
       migArrayFile([
         ["A", "1", "x"],
         ["B", "1", "y"],
-      ]),
+      ])
     )
 
     const dialog = await screen.findByRole("alertdialog")
-    expect(within(dialog).queryByRole("button", { name: /merge/i })).not.toBeInTheDocument()
+    expect(
+      within(dialog).queryByRole("button", { name: /merge/i })
+    ).not.toBeInTheDocument()
   })
 
   it("backs up all stored MIGs from the local-only footer", async () => {
@@ -346,13 +413,19 @@ describe("MigHome", () => {
     await userEvent.click(screen.getByRole("button", { name: "Delete" }))
 
     const dialog = screen.getByRole("alertdialog")
-    await userEvent.click(within(dialog).getByRole("button", { name: "Delete" }))
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Delete" })
+    )
 
     // A leaves the list (B stays), and lands in the trash.
-    await waitFor(() => expect(screen.queryByRole("link", { name: "A" })).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByRole("link", { name: "A" })).not.toBeInTheDocument()
+    )
     expect(screen.getByRole("link", { name: "B" })).toBeInTheDocument()
     expect((await loadTrash()).map((t) => t.mig.name)).toEqual(["A"])
     // The header Trash link shows the count.
-    expect(await screen.findByRole("link", { name: /trash \(1\)/i })).toBeInTheDocument()
+    expect(
+      await screen.findByRole("link", { name: /trash \(1\)/i })
+    ).toBeInTheDocument()
   })
 })

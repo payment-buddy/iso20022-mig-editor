@@ -36,7 +36,11 @@ export function groupMessages(messages: MessageDefinition[]): MessageGroup[] {
     const sorted = versions
       .slice()
       .sort((a, b) => versionNumber(a.name) - versionNumber(b.name))
-    groups.push({ shortCode, label: baseName(sorted[0].name), versions: sorted })
+    groups.push({
+      shortCode,
+      label: baseName(sorted[0].name),
+      versions: sorted,
+    })
   }
   return groups.sort((a, b) => a.shortCode.localeCompare(b.shortCode))
 }

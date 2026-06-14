@@ -2,7 +2,10 @@ import { parse } from "yaml"
 import { validateMigImport } from "@/core/mig/validateMigImport"
 import type { MessageImplementationGuide } from "@/core/types/types"
 
-export type ParseResult = { migs: MessageImplementationGuide[]; errors: string[] }
+export type ParseResult = {
+  migs: MessageImplementationGuide[]
+  errors: string[]
+}
 
 /**
  * Parse MIG YAML text into validated MIGs. Accepts a single MIG or an array

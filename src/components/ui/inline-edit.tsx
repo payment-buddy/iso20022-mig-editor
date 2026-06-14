@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils"
 // A value longer than this (or spanning many lines) is collapsed to a few lines
 // behind a "Show more" toggle. Heuristic — avoids measuring the DOM in an effect.
 const LONG_TEXT_CHARS = 300
-const isLongText = (s: string) => s.length > LONG_TEXT_CHARS || s.split("\n").length > 5
+const isLongText = (s: string) =>
+  s.length > LONG_TEXT_CHARS || s.split("\n").length > 5
 
 /**
  * Inline-edit text field. The value is
@@ -63,11 +64,18 @@ export function InlineEdit({
     const showPlaceholder = display == null && !value
     const collapsible = display == null && isLongText(value)
     return (
-      <div className="group flex w-full items-start justify-between gap-2 rounded-md border border-transparent px-2 py-1 transition-colors hover:border-border focus-within:border-border">
+      <div className="group flex w-full items-start justify-between gap-2 rounded-md border border-transparent px-2 py-1 transition-colors focus-within:border-border hover:border-border">
         <div className={cn("min-w-0 text-sm", textClassName)}>
           {collapsible ? (
             <>
-              <p className={cn("whitespace-pre-wrap", !expanded && "line-clamp-5")}>{value}</p>
+              <p
+                className={cn(
+                  "whitespace-pre-wrap",
+                  !expanded && "line-clamp-5"
+                )}
+              >
+                {value}
+              </p>
               <button
                 type="button"
                 onClick={() => setExpanded((v) => !v)}
@@ -78,7 +86,10 @@ export function InlineEdit({
             </>
           ) : (
             <span
-              className={cn("whitespace-pre-wrap", showPlaceholder && "text-muted-foreground italic")}
+              className={cn(
+                "whitespace-pre-wrap",
+                showPlaceholder && "text-muted-foreground italic"
+              )}
             >
               {/* Empty optional value reads as "<none>", not the "Add…" input hint. */}
               {display ?? (value || "<none>")}
@@ -89,7 +100,7 @@ export function InlineEdit({
           type="button"
           onClick={start}
           aria-label={`Edit ${ariaLabel}`}
-          className="mt-0.5 shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 outline-none transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/30"
+          className="mt-0.5 shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity outline-none group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/30"
         >
           <PencilSimpleIcon className="size-3.5" aria-hidden />
         </button>
@@ -97,7 +108,9 @@ export function InlineEdit({
     )
   }
 
-  const onKeyDown = (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const onKeyDown = (
+    e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     if (e.key === "Escape") {
       e.preventDefault()
       cancel()

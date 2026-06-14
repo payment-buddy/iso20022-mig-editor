@@ -8,7 +8,9 @@ import { STORE_REVISION, withStore } from "./db"
  * The most recent revision timestamp for every MIG that has history, keyed by
  * `name:version` (for a "last modified" column). MIGs with no history are absent.
  */
-export async function loadLatestRevisionTimes(): Promise<Record<string, number>> {
+export async function loadLatestRevisionTimes(): Promise<
+  Record<string, number>
+> {
   const [keys, lists] = await Promise.all([
     withStore<IDBValidKey[]>(STORE_REVISION, (s) => s.getAllKeys()),
     withStore<Revision[][]>(STORE_REVISION, (s) => s.getAll()),
@@ -23,12 +25,17 @@ export async function loadLatestRevisionTimes(): Promise<Record<string, number>>
 
 /** Load a MIG's revisions (oldest → newest), or `[]` if none. */
 export async function loadRevisions(key: string): Promise<Revision[]> {
-  const result = await withStore<Revision[] | undefined>(STORE_REVISION, (s) => s.get(key))
+  const result = await withStore<Revision[] | undefined>(STORE_REVISION, (s) =>
+    s.get(key)
+  )
   return result ?? []
 }
 
 /** Replace a MIG's revision list. */
-export async function saveRevisions(key: string, revisions: Revision[]): Promise<void> {
+export async function saveRevisions(
+  key: string,
+  revisions: Revision[]
+): Promise<void> {
   await withStore(STORE_REVISION, (s) => s.put(revisions, key), "readwrite")
 }
 
@@ -38,7 +45,10 @@ export async function deleteRevisions(key: string): Promise<void> {
 }
 
 /** Move a MIG's history to a new key (on a name/version re-key). No-op if empty. */
-export async function renameRevisions(oldKey: string, newKey: string): Promise<void> {
+export async function renameRevisions(
+  oldKey: string,
+  newKey: string
+): Promise<void> {
   if (oldKey === newKey) return
   const revisions = await loadRevisions(oldKey)
   if (revisions.length === 0) return

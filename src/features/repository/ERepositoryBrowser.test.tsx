@@ -6,14 +6,31 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { saveMig } from "@/core/storage/migStore"
-import type { BusinessArea, ERepository, MessageDefinition } from "@/core/types/types"
+import type {
+  BusinessArea,
+  ERepository,
+  MessageDefinition,
+} from "@/core/types/types"
 import { ERepositoryBrowser } from "./ERepositoryBrowser"
 
-function msg(name: string, shortCode: string, identifier: string): MessageDefinition {
-  return { name, shortCode, identifier, rootElement: {} as MessageDefinition["rootElement"] }
+function msg(
+  name: string,
+  shortCode: string,
+  identifier: string
+): MessageDefinition {
+  return {
+    name,
+    shortCode,
+    identifier,
+    rootElement: {} as MessageDefinition["rootElement"],
+  }
 }
 
-function area(name: string, code: string, messages: MessageDefinition[]): BusinessArea {
+function area(
+  name: string,
+  code: string,
+  messages: MessageDefinition[]
+): BusinessArea {
   return { name, code, definition: "", messages }
 }
 
@@ -24,7 +41,9 @@ const REPO: ERepository = {
       msg("CreditTransferV10", "pacs.008", "pacs.008.001.10"),
       msg("PaymentStatusV12", "pacs.002", "pacs.002.001.12"),
     ]),
-    area("Cash Management", "camt", [msg("BankStatementV09", "camt.053", "camt.053.001.09")]),
+    area("Cash Management", "camt", [
+      msg("BankStatementV09", "camt.053", "camt.053.001.09"),
+    ]),
   ],
 }
 
@@ -39,38 +58,50 @@ describe("ERepositoryBrowser", () => {
 
     expect(screen.getByText("Payments Clearing")).toBeInTheDocument()
     // pacs has two groups: pacs.002 and pacs.008
-    const pacs = screen.getByText("Payments Clearing").closest("[role=treeitem]")!
+    const pacs = screen
+      .getByText("Payments Clearing")
+      .closest("[role=treeitem]")!
     expect(pacs).toHaveAttribute("aria-expanded", "false")
 
     await userEvent.click(screen.getByText("Payments Clearing"))
     expect(pacs).toHaveAttribute("aria-expanded", "true")
     expect(screen.getByRole("treeitem", { name: /pacs\.008/ })).toHaveAttribute(
       "href",
-      "#pacs.008",
+      "#pacs.008"
     )
   })
 
   it("keeps collapsed groups in the DOM with hidden='until-found' for native find", () => {
-    const { container } = render(<ERepositoryBrowser repo={REPO} onUpdateRepository={vi.fn()} />)
+    const { container } = render(
+      <ERepositoryBrowser repo={REPO} onUpdateRepository={vi.fn()} />
+    )
     const group = container.querySelector("ul[role=group]")!
     expect(group).toHaveAttribute("hidden", "until-found")
     // children present even while collapsed (so Ctrl-F can locate them)
-    expect(within(group as HTMLElement).getByText("CreditTransfer")).toBeInTheDocument()
+    expect(
+      within(group as HTMLElement).getByText("CreditTransfer")
+    ).toBeInTheDocument()
   })
 
   it("filters to matching messages and force-expands their area", async () => {
     render(<ERepositoryBrowser repo={REPO} onUpdateRepository={vi.fn()} />)
     await userEvent.type(screen.getByRole("searchbox"), "camt.053")
 
-    expect(screen.getByRole("treeitem", { name: /camt\.053/ })).toBeInTheDocument()
-    expect(screen.queryByRole("treeitem", { name: /pacs\.008/ })).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("treeitem", { name: /camt\.053/ })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole("treeitem", { name: /pacs\.008/ })
+    ).not.toBeInTheDocument()
   })
 
   it("navigates the tree with arrow keys (roving tabindex)", async () => {
     render(<ERepositoryBrowser repo={REPO} onUpdateRepository={vi.fn()} />)
     const user = userEvent.setup()
 
-    const camt = screen.getByText("Cash Management").closest("[role=treeitem]")! as HTMLElement
+    const camt = screen
+      .getByText("Cash Management")
+      .closest("[role=treeitem]")! as HTMLElement
     camt.focus()
     expect(camt).toHaveFocus()
 
@@ -89,7 +120,7 @@ describe("ERepositoryBrowser", () => {
         repo={REPO}
         onUpdateRepository={vi.fn()}
         migMessageIds={new Set(["pacs.008.001.10"])}
-      />,
+      />
     )
     await userEvent.click(screen.getByText("Payments Clearing"))
 
@@ -112,14 +143,18 @@ describe("ERepositoryBrowser", () => {
     expect(await within(pacs008).findByText("MIG")).toBeInTheDocument()
     // a group without a MIG is not flagged
     expect(
-      within(screen.getByRole("treeitem", { name: /pacs\.002/ })).queryByText("MIG"),
+      within(screen.getByRole("treeitem", { name: /pacs\.002/ })).queryByText(
+        "MIG"
+      )
     ).not.toBeInTheDocument()
   })
 
   it("invokes onUpdateRepository from the page header action", async () => {
     const onUpdate = vi.fn()
     render(<ERepositoryBrowser repo={REPO} onUpdateRepository={onUpdate} />)
-    await userEvent.click(screen.getByRole("button", { name: /update e-repository/i }))
+    await userEvent.click(
+      screen.getByRole("button", { name: /update e-repository/i })
+    )
     expect(onUpdate).toHaveBeenCalledOnce()
   })
 })

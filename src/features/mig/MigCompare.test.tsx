@@ -2,7 +2,13 @@
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it } from "vitest"
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
@@ -20,15 +26,20 @@ const emptyRepo: ERepository = { businessAreas: [] }
 function mig(
   name: string,
   overrides: MessageImplementationGuide["elementOverrides"],
-  messageIdentifier = "pacs.008.001.08",
+  messageIdentifier = "pacs.008.001.08"
 ): MessageImplementationGuide {
-  return { name, version: "1.0", messageIdentifier, elementOverrides: overrides }
+  return {
+    name,
+    version: "1.0",
+    messageIdentifier,
+    elementOverrides: overrides,
+  }
 }
 
 function el(
   xmlTag: string,
   elements: MessageElement[] = [],
-  props: Partial<MessageElement> = {},
+  props: Partial<MessageElement> = {}
 ): MessageElement {
   return {
     id: xmlTag,
@@ -59,8 +70,14 @@ function el(
 }
 
 /** A repo with one area holding two pacs.008 versions with different element trees. */
-function repoWithVersions(v08: MessageElement, v09: MessageElement): ERepository {
-  const def = (identifier: string, root: MessageElement): MessageDefinition => ({
+function repoWithVersions(
+  v08: MessageElement,
+  v09: MessageElement
+): ERepository {
+  const def = (
+    identifier: string,
+    root: MessageElement
+  ): MessageDefinition => ({
     name: identifier,
     identifier,
     shortCode: "pacs.008",
@@ -81,7 +98,7 @@ function repoWithVersions(v08: MessageElement, v09: MessageElement): ERepository
 async function renderCompare(
   a: MessageImplementationGuide,
   b: MessageImplementationGuide,
-  repo: ERepository = emptyRepo,
+  repo: ERepository = emptyRepo
 ) {
   await saveMig(a)
   await saveMig(b)
@@ -128,7 +145,9 @@ describe("MigCompare", () => {
     const a = mig("A", { "/Doc/Amt": { maxLength: 18 } }, "pacs.008.001.08")
     const b = mig("B", { "/Doc/Amt": { maxLength: 12 } }, "pacs.009.001.08")
     await renderCompare(a, b)
-    expect(await screen.findByText(/target different messages/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/target different messages/i)
+    ).toBeInTheDocument()
   })
 
   it("copies a field from A to B and resolves the difference in the draft", async () => {
@@ -137,7 +156,9 @@ describe("MigCompare", () => {
     await renderCompare(a, b)
 
     const card = await screen.findByRole("region", { name: /Amt/ })
-    await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
+    await userEvent.click(
+      within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i })
+    )
 
     // The draft now agrees on that field → nothing left to compare.
     expect(await screen.findByText(/identical overrides/i)).toBeInTheDocument()
@@ -149,16 +170,22 @@ describe("MigCompare", () => {
     await renderCompare(a, b)
 
     const card = await screen.findByRole("region", { name: /Amt/ })
-    await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
+    await userEvent.click(
+      within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i })
+    )
 
     // Still in the draft only — storage is unchanged, and the UI flags it.
     expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument()
-    expect((await loadMig(getMigKey(b)))?.elementOverrides["/Doc/Amt"].maxLength).toBe(12)
+    expect(
+      (await loadMig(getMigKey(b)))?.elementOverrides["/Doc/Amt"].maxLength
+    ).toBe(12)
 
     await userEvent.click(screen.getByRole("button", { name: /^save$/i }))
 
     await waitFor(async () =>
-      expect((await loadMig(getMigKey(b)))?.elementOverrides["/Doc/Amt"].maxLength).toBe(18),
+      expect(
+        (await loadMig(getMigKey(b)))?.elementOverrides["/Doc/Amt"].maxLength
+      ).toBe(18)
     )
     expect(screen.queryByText(/unsaved changes/i)).not.toBeInTheDocument()
   })
@@ -169,11 +196,15 @@ describe("MigCompare", () => {
     await renderCompare(a, b)
 
     const card = await screen.findByRole("region", { name: /Amt/ })
-    await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i }))
+    await userEvent.click(
+      within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i })
+    )
     await userEvent.click(screen.getByRole("button", { name: /^save$/i }))
 
     await waitFor(async () =>
-      expect((await loadMig(getMigKey(a)))?.elementOverrides["/Doc/Amt"].maxLength).toBe(12),
+      expect(
+        (await loadMig(getMigKey(a)))?.elementOverrides["/Doc/Amt"].maxLength
+      ).toBe(12)
     )
   })
 
@@ -182,18 +213,26 @@ describe("MigCompare", () => {
     const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
-    expect(await screen.findByRole("button", { name: /^save$/i })).toBeDisabled()
+    expect(
+      await screen.findByRole("button", { name: /^save$/i })
+    ).toBeDisabled()
 
     const card = await screen.findByRole("region", { name: /Amt/ })
-    await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
+    await userEvent.click(
+      within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i })
+    )
     expect(screen.getByRole("button", { name: /^save$/i })).toBeEnabled()
 
     await userEvent.click(screen.getByRole("button", { name: /discard/i }))
 
     // Back to the original difference, Save disabled, storage untouched.
-    expect(await screen.findByRole("region", { name: /Amt/ })).toBeInTheDocument()
+    expect(
+      await screen.findByRole("region", { name: /Amt/ })
+    ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled()
-    expect((await loadMig(getMigKey(b)))?.elementOverrides["/Doc/Amt"].maxLength).toBe(12)
+    expect(
+      (await loadMig(getMigKey(b)))?.elementOverrides["/Doc/Amt"].maxLength
+    ).toBe(12)
   })
 
   it("guards the Back link when there are unsaved changes", async () => {
@@ -203,15 +242,21 @@ describe("MigCompare", () => {
     await renderCompare(a, b)
 
     const card = await screen.findByRole("region", { name: /Amt/ })
-    await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
+    await userEvent.click(
+      within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i })
+    )
 
     await userEvent.click(screen.getByRole("link", { name: /back/i }))
 
     // Confirm dialog appears and navigation is blocked (still on the compare hash).
-    expect(await screen.findByText(/discard unsaved changes/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/discard unsaved changes/i)
+    ).toBeInTheDocument()
     expect(window.location.hash).toBe("#compare/A%3A1.0/B%3A1.0")
 
-    await userEvent.click(screen.getByRole("button", { name: /discard & leave/i }))
+    await userEvent.click(
+      screen.getByRole("button", { name: /discard & leave/i })
+    )
     expect(window.location.hash).not.toContain("compare")
   })
 
@@ -222,14 +267,16 @@ describe("MigCompare", () => {
 
     await screen.findByRole("region", { name: /Amt/ })
     await userEvent.click(screen.getByRole("link", { name: /back/i }))
-    expect(screen.queryByText(/discard unsaved changes/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/discard unsaved changes/i)
+    ).not.toBeInTheDocument()
   })
 
   it("disables copying toward a version whose message lacks the element", async () => {
     // .08 has Doc/Extra; .09 does not.
     const repo = repoWithVersions(
       el("Doc", [el("Amt"), el("Extra")]),
-      el("Doc", [el("Amt")]),
+      el("Doc", [el("Amt")])
     )
     const a = mig("A", { "/Doc/Extra": { maxLength: 5 } }, "pacs.008.001.08")
     const b = mig("B", {}, "pacs.008.001.09")
@@ -237,24 +284,37 @@ describe("MigCompare", () => {
 
     const card = await screen.findByRole("region", { name: "Extra" })
     // → B (pacs.008.001.09) has no Doc/Extra, so copying there is blocked…
-    expect(within(card).getByRole("button", { name: /Can.t copy: B 1\.0/i })).toBeDisabled()
+    expect(
+      within(card).getByRole("button", { name: /Can.t copy: B 1\.0/i })
+    ).toBeDisabled()
     // …but copying back into A (which has the element) is allowed.
-    expect(within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i })).toBeEnabled()
+    expect(
+      within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i })
+    ).toBeEnabled()
   })
 
   it("allows copying in both directions when both versions have the element", async () => {
-    const repo = repoWithVersions(el("Doc", [el("Amt")]), el("Doc", [el("Amt")]))
+    const repo = repoWithVersions(
+      el("Doc", [el("Amt")]),
+      el("Doc", [el("Amt")])
+    )
     const a = mig("A", { "/Doc/Amt": { maxLength: 18 } }, "pacs.008.001.08")
     const b = mig("B", { "/Doc/Amt": { maxLength: 12 } }, "pacs.008.001.09")
     await renderCompare(a, b, repo)
 
     const card = await screen.findByRole("region", { name: /Amt/ })
-    expect(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i })).toBeEnabled()
-    expect(within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i })).toBeEnabled()
+    expect(
+      within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i })
+    ).toBeEnabled()
+    expect(
+      within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i })
+    ).toBeEnabled()
   })
 
   it("reports a missing MIG", async () => {
-    render(<MigCompare keyA="Ghost:1.0" keyB="AlsoGhost:1.0" repo={emptyRepo} />)
+    render(
+      <MigCompare keyA="Ghost:1.0" keyB="AlsoGhost:1.0" repo={emptyRepo} />
+    )
     expect(await screen.findByText(/MIG not found/i)).toBeInTheDocument()
   })
 })

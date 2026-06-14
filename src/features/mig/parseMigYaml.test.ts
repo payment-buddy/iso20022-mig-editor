@@ -33,14 +33,18 @@ describe("parseMigYaml", () => {
 
   it("skips and reports an invalid MIG (missing required field)", () => {
     // No messageIdentifier.
-    const { migs, errors } = parseMigYaml("name: EPC\nversion: '1.0'\nelementOverrides: {}\n")
+    const { migs, errors } = parseMigYaml(
+      "name: EPC\nversion: '1.0'\nelementOverrides: {}\n"
+    )
     expect(migs).toEqual([])
     expect(errors.join("\n")).toMatch(/messageIdentifier/i)
   })
 
   it("keeps the valid entries and reports the invalid ones in an array", () => {
     // Second entry has no messageIdentifier.
-    const { migs, errors } = parseMigYaml(item("Good", "1") + item("Bad", "1", false))
+    const { migs, errors } = parseMigYaml(
+      item("Good", "1") + item("Bad", "1", false)
+    )
     expect(migs.map((m) => m.name)).toEqual(["Good"])
     expect(errors[0]).toMatch(/Entry 2/)
   })

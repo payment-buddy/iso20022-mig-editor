@@ -12,9 +12,17 @@ import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import { buildPathOrder } from "@/core/mig/serializeMig"
 import { applyFieldCopy } from "@/core/mig/copyChange"
-import { compareMigs, type FieldChange, type FieldRef, type PathDiff } from "@/core/mig/compareMigs"
+import {
+  compareMigs,
+  type FieldChange,
+  type FieldRef,
+  type PathDiff,
+} from "@/core/mig/compareMigs"
 import { loadMig, saveMig } from "@/core/storage/migStore"
-import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
+import type {
+  ERepository,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -37,7 +45,15 @@ type CopyFn = (path: string, ref: FieldRef, dir: CopyDir) => void
  * the now-matching field drops out of the diff. Keyboard: j/k or ↑/↓ step between
  * changed elements.
  */
-export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; repo: ERepository }) {
+export function MigCompare({
+  keyA,
+  keyB,
+  repo,
+}: {
+  keyA: string
+  keyB: string
+  repo: ERepository
+}) {
   const [status, setStatus] = useState<"loading" | "ready">("loading")
   // `saved` mirrors what's in storage; `draft` holds the in-progress copies.
   // Edits go to the draft and only persist on Save (reference-equal until then).
@@ -87,8 +103,8 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
     const missing = [!a && keyA, !b && keyB].filter(Boolean) as string[]
     return (
       <Notice title="MIG not found">
-        Couldn’t load {missing.map((k) => `“${k}”`).join(" and ")}. They may have been deleted.
-        Return to <Home /> to see your MIGs.
+        Couldn’t load {missing.map((k) => `“${k}”`).join(" and ")}. They may
+        have been deleted. Return to <Home /> to see your MIGs.
       </Notice>
     )
   }
@@ -97,7 +113,10 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
   // flavour/version, so an element present in one can be absent in the other.
   const messageA = resolveMessage(repo, a.messageIdentifier)?.current
   const messageB = resolveMessage(repo, b.messageIdentifier)?.current
-  const order = messageA || messageB ? buildPathOrder((messageA ?? messageB)!.rootElement) : undefined
+  const order =
+    messageA || messageB
+      ? buildPathOrder((messageA ?? messageB)!.rootElement)
+      : undefined
   // Element name from whichever version has the path (versions can differ).
   const nameFor = (path: string) =>
     (messageA && elementAtPath(messageA.rootElement, path)?.name) ||
@@ -143,7 +162,10 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
         </h1>
         <div className="flex shrink-0 items-center gap-2">
           {dirty && (
-            <span className="text-xs text-amber-700 dark:text-amber-500" aria-live="polite">
+            <span
+              className="text-xs text-amber-700 dark:text-amber-500"
+              aria-live="polite"
+            >
               Unsaved changes
             </span>
           )}
@@ -191,8 +213,10 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
         >
           <WarningIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
           <p>
-            These MIGs target different messages (<code>{a.messageIdentifier}</code> vs{" "}
-            <code>{b.messageIdentifier}</code>). Paths are compared by name only.
+            These MIGs target different messages (
+            <code>{a.messageIdentifier}</code> vs{" "}
+            <code>{b.messageIdentifier}</code>). Paths are compared by name
+            only.
           </p>
         </div>
       )}
@@ -229,30 +253,34 @@ function ComparePanel({
       onKeyDown={onKeyDown}
       className="flex flex-col gap-3 outline-none"
     >
-
       {/* Column headers: MIG A (left) vs MIG B (right) sit above the table like a label
           for each column — underlined only, not boxed into the table. */}
       <div className={`${COLS} -mb-1 text-sm font-semibold tracking-tight`}>
         <div className="truncate pb-1.5">
           {diff.a.name}{" "}
-          <span className="text-sm font-medium text-muted-foreground">{diff.a.version}</span>
+          <span className="text-sm font-medium text-muted-foreground">
+            {diff.a.version}
+          </span>
         </div>
         <div />
         <div className="truncate pb-1.5">
           {diff.b.name}{" "}
-          <span className="text-sm font-medium text-muted-foreground">{diff.b.version}</span>
+          <span className="text-sm font-medium text-muted-foreground">
+            {diff.b.version}
+          </span>
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
         <span aria-live="polite">
           {diff.paths.length === 1
-              ? "1 element differs"
-              : `${diff.paths.length} elements differ`}
+            ? "1 element differs"
+            : `${diff.paths.length} elements differ`}
         </span>
         <span className="hidden sm:inline">
-          <kbd className="rounded border px-1">j</kbd>/<kbd className="rounded border px-1">k</kbd>{" "}
-          to step · hover a row to copy across
+          <kbd className="rounded border px-1">j</kbd>/
+          <kbd className="rounded border px-1">k</kbd> to step · hover a row to
+          copy across
         </span>
       </div>
 
@@ -302,7 +330,10 @@ function ElementCard({
     >
       <header className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <span className="text-sm font-medium">{diff.name}</span>
-        <code title={diff.path} className="truncate text-[0.625rem] text-muted-foreground">
+        <code
+          title={diff.path}
+          className="truncate text-[0.625rem] text-muted-foreground"
+        >
           {diff.path}
         </code>
       </header>
@@ -342,7 +373,7 @@ function FieldRow({
   return (
     <div className={`group ${COLS}`}>
       <Cell label={field.label} value={field.a} side="a" kind={field.kind} />
-      <div className="flex items-center justify-center gap-0.5 border-x bg-muted/10 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 group-focus-visible/card:opacity-100">
+      <div className="flex items-center justify-center gap-0.5 border-x bg-muted/10 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible/card:opacity-100 focus-within:opacity-100">
         <CopyButton
           dir="right"
           disabled={!canToB}
@@ -394,4 +425,3 @@ function CopyButton({
     </button>
   )
 }
-

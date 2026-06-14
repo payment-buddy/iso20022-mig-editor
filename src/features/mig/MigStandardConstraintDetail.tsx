@@ -1,6 +1,14 @@
 import type { ReactNode } from "react"
-import { ArrowCounterClockwiseIcon, CheckIcon, WarningIcon } from "@phosphor-icons/react"
-import type { Constraint, ConstraintOverride, MessageElement } from "@/core/types/types"
+import {
+  ArrowCounterClockwiseIcon,
+  CheckIcon,
+  WarningIcon,
+} from "@phosphor-icons/react"
+import type {
+  Constraint,
+  ConstraintOverride,
+  MessageElement,
+} from "@/core/types/types"
 import { validateConstraintExpression } from "@/core/mig/expression"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
@@ -48,13 +56,23 @@ export function MigStandardConstraintDetail({
   // is a parent's overlay if it sets the field, else the ISO constraint's own
   // value; the own overlay wins when present. Commit drops the override when the
   // value returns to that baseline (stay minimal).
-  const field = <K extends keyof ConstraintOverride>(key: K, base: string | null) => {
-    const baseline = inherited && key in inherited ? (inherited[key] ?? null) : base
+  const field = <K extends keyof ConstraintOverride>(
+    key: K,
+    base: string | null
+  ) => {
+    const baseline =
+      inherited && key in inherited ? (inherited[key] ?? null) : base
     const overridden = override !== undefined && key in override
     // No own override, but a parent sets it → the value is inherited here.
-    const inheritedHere = !overridden && inherited !== undefined && key in inherited
+    const inheritedHere =
+      !overridden && inherited !== undefined && key in inherited
     const effective = overridden ? (override[key] ?? null) : baseline
-    return { baseline, overridden, inherited: inheritedHere, text: effective ?? "" }
+    return {
+      baseline,
+      overridden,
+      inherited: inheritedHere,
+      text: effective ?? "",
+    }
   }
 
   const definition = field("definition", constraint.definition)
@@ -70,15 +88,21 @@ export function MigStandardConstraintDetail({
     if (value === expression.baseline) onClearExpression()
     else onSetExpression(value)
   }
-  const expressionWarnings = validateConstraintExpression(expression.text, element)
+  const expressionWarnings = validateConstraintExpression(
+    expression.text,
+    element
+  )
 
   // Disable toggle (tri-state): the rule is off when the effective override says
   // so; toggling back to the inherited baseline drops the override.
-  const disabledBaseline = inherited && "disabled" in inherited ? !!inherited.disabled : false
+  const disabledBaseline =
+    inherited && "disabled" in inherited ? !!inherited.disabled : false
   const disabledOverridden = override !== undefined && "disabled" in override
   const disabledInherited =
     !disabledOverridden && inherited !== undefined && "disabled" in inherited
-  const disabledEffective = disabledOverridden ? !!override.disabled : disabledBaseline
+  const disabledEffective = disabledOverridden
+    ? !!override.disabled
+    : disabledBaseline
   const toggleDisabled = () => {
     const value = !disabledEffective
     if (value === disabledBaseline) onClearDisabled()
@@ -203,7 +227,11 @@ function OverrideField({
           <span className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
             {label}
           </span>
-          <ProvenanceDot overridden={overridden} inherited={inherited} baseline={baseline} />
+          <ProvenanceDot
+            overridden={overridden}
+            inherited={inherited}
+            baseline={baseline}
+          />
         </div>
         {overridden && (
           <button

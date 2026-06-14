@@ -5,7 +5,11 @@ import { evaluateExpression, type EvalNode } from "./evaluate"
 /** Terse builder for a parsed-XML node. */
 function node(
   localName: string,
-  opts: { text?: string; attributes?: Record<string, string>; children?: EvalNode[] } = {},
+  opts: {
+    text?: string
+    attributes?: Record<string, string>
+    children?: EvalNode[]
+  } = {}
 ): EvalNode {
   return {
     localName,
@@ -121,12 +125,19 @@ describe("evaluateExpression — boolean operators", () => {
 
   it("evaluates the motivating example", () => {
     // not(Prtry = 'LGID' or matches(Id, 13 digits)) — Prtry is LGID, so false.
-    expect(evalOk("not(SchmeNm/Prtry = 'LGID' or matches(Id, '[0-9]{13}'))", othr)).toBe(false)
+    expect(
+      evalOk("not(SchmeNm/Prtry = 'LGID' or matches(Id, '[0-9]{13}'))", othr)
+    ).toBe(false)
     // With a non-matching Prtry and a 5-digit Id, the inner OR is false → not() true.
     const othr2 = node("Othr", {
-      children: [node("Id", { text: "12345" }), node("SchmeNm", { children: [node("Prtry", { text: "BBA" })] })],
+      children: [
+        node("Id", { text: "12345" }),
+        node("SchmeNm", { children: [node("Prtry", { text: "BBA" })] }),
+      ],
     })
-    expect(evalOk("not(SchmeNm/Prtry = 'LGID' or matches(Id, '[0-9]{13}'))", othr2)).toBe(true)
+    expect(
+      evalOk("not(SchmeNm/Prtry = 'LGID' or matches(Id, '[0-9]{13}'))", othr2)
+    ).toBe(true)
   })
 })
 
@@ -137,7 +148,9 @@ describe("evaluateExpression — functions", () => {
   })
 
   it("count() returns the node-set size", () => {
-    const list = node("List", { children: [node("Cd"), node("Cd"), node("Cd")] })
+    const list = node("List", {
+      children: [node("Cd"), node("Cd"), node("Cd")],
+    })
     expect(evalOk("count(Cd) = 3", list)).toBe(true)
     expect(evalOk("count(Cd) > 5", list)).toBe(false)
     expect(evalOk("count(Missing) = 0", list)).toBe(true)
@@ -148,11 +161,16 @@ describe("evaluateExpression — indeterminate", () => {
   it("returns ok:false for an unsupported function", () => {
     const r = parseExpression("contains(Id, '5')")
     if (!r.ok) throw new Error("parse failed")
-    expect(evaluateExpression(r.ast, othr)).toEqual({ ok: false, reason: 'Unsupported function "contains"' })
+    expect(evaluateExpression(r.ast, othr)).toEqual({
+      ok: false,
+      reason: 'Unsupported function "contains"',
+    })
   })
 
   it("returns ok:false for a bad regex passed through a path", () => {
-    const ctx = node("X", { children: [node("Id", { text: "5" }), node("P", { text: "[0-9" })] })
+    const ctx = node("X", {
+      children: [node("Id", { text: "5" }), node("P", { text: "[0-9" })],
+    })
     const r = parseExpression("matches(Id, P)")
     if (!r.ok) throw new Error("parse failed")
     expect(evaluateExpression(r.ast, ctx).ok).toBe(false)

@@ -36,7 +36,12 @@ describe("buildCodeListResolver", () => {
 
   it("fails closed when a member's wire value can't be resolved", () => {
     // trace points nowhere, and the code has no codeName of its own.
-    const orphan: RepoCodeSet = { id: "_o", name: "Orphan", trace: "_missing", codes: [{ name: "X" }] }
+    const orphan: RepoCodeSet = {
+      id: "_o",
+      name: "Orphan",
+      trace: "_missing",
+      codes: [{ name: "X" }],
+    }
     expect(buildCodeListResolver([orphan])("Orphan")).toBeUndefined()
   })
 

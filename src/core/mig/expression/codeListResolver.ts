@@ -35,7 +35,7 @@ export interface RepoCodeSet {
  * a half-resolved list would yield silently-wrong DSL).
  */
 export function buildCodeListResolver(
-  codeSets: RepoCodeSet[],
+  codeSets: RepoCodeSet[]
 ): (codeSetName: string) => string[] | undefined {
   const byId = new Map<string, RepoCodeSet>()
   const byName = new Map<string, RepoCodeSet>()
@@ -54,7 +54,8 @@ export function buildCodeListResolver(
       // Prefer a directly-attached wire value; else borrow it from the traced
       // set's same-named code (the validation-set case).
       const wire =
-        code.codeName ?? traced?.codes.find((t) => t.name === code.name)?.codeName
+        code.codeName ??
+        traced?.codes.find((t) => t.name === code.name)?.codeName
       if (!wire) return undefined
       out.push(wire)
     }

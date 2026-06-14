@@ -1,4 +1,8 @@
-import type { BusinessArea, ERepository, MessageDefinition } from "@/core/types/types"
+import type {
+  BusinessArea,
+  ERepository,
+  MessageDefinition,
+} from "@/core/types/types"
 
 export interface ResolvedMessage {
   area: BusinessArea
@@ -14,7 +18,10 @@ const byIdentifier = (a: MessageDefinition, b: MessageDefinition) =>
  * Resolve a route code to a message. An exact `identifier` selects that version;
  * otherwise a `shortCode` selects the latest version of that family.
  */
-export function resolveMessage(repo: ERepository, code: string): ResolvedMessage | null {
+export function resolveMessage(
+  repo: ERepository,
+  code: string
+): ResolvedMessage | null {
   for (const area of repo.businessAreas) {
     const current = area.messages.find((m) => m.identifier === code)
     if (current) {
@@ -26,7 +33,9 @@ export function resolveMessage(repo: ERepository, code: string): ResolvedMessage
   }
 
   for (const area of repo.businessAreas) {
-    const versions = area.messages.filter((m) => m.shortCode === code).sort(byIdentifier)
+    const versions = area.messages
+      .filter((m) => m.shortCode === code)
+      .sort(byIdentifier)
     if (versions.length > 0) {
       return { area, current: versions[versions.length - 1], versions }
     }

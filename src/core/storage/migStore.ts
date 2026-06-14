@@ -15,9 +15,12 @@ export async function loadAllMigs(): Promise<MessageImplementationGuide[]> {
 }
 
 /** Load a single MIG by `name:version`, or `null` if absent. */
-export async function loadMig(key: string): Promise<MessageImplementationGuide | null> {
-  const result = await withStore<MessageImplementationGuide | undefined>(STORE_MIG, (s) =>
-    s.get(key),
+export async function loadMig(
+  key: string
+): Promise<MessageImplementationGuide | null> {
+  const result = await withStore<MessageImplementationGuide | undefined>(
+    STORE_MIG,
+    (s) => s.get(key)
   )
   return result ?? null
 }

@@ -5,7 +5,12 @@ import { deleteDatabase } from "./db"
 import { deleteMig, loadAllMigs, loadMig, saveMig } from "./migStore"
 
 function makeMig(name: string, version: string): MessageImplementationGuide {
-  return { name, messageIdentifier: "pacs.008.001.08", version, elementOverrides: {} }
+  return {
+    name,
+    messageIdentifier: "pacs.008.001.08",
+    version,
+    elementOverrides: {},
+  }
 }
 
 afterEach(async () => {
@@ -24,7 +29,10 @@ describe("MIG persistence", () => {
 
     const all = await loadAllMigs()
     expect(all).toHaveLength(2)
-    expect(await loadMig("EPC:1.0")).toMatchObject({ name: "EPC", version: "1.0" })
+    expect(await loadMig("EPC:1.0")).toMatchObject({
+      name: "EPC",
+      version: "1.0",
+    })
   })
 
   it("replaces a MIG on re-save under the same key", async () => {

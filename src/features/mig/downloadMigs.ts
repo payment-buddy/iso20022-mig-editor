@@ -2,7 +2,10 @@ import { buildMigMarkdown } from "@/core/mig/migMarkdown"
 import { buildMigCsv } from "@/core/mig/migCsv"
 import { serializeMig, serializeMigs } from "@/core/mig/serializeMig"
 import { CSV, MARKDOWN, saveTextFile, YAML } from "@/lib/saveFile"
-import type { MessageDefinition, MessageImplementationGuide } from "@/core/types/types"
+import type {
+  MessageDefinition,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 
 /**
  * Build the YAML download for one or many MIGs (canonical form):
@@ -13,20 +16,26 @@ import type { MessageDefinition, MessageImplementationGuide } from "@/core/types
  */
 export function buildMigDownload(
   migs: MessageImplementationGuide[],
-  pathOrder?: Map<string, number>,
+  pathOrder?: Map<string, number>
 ): { filename: string; content: string } | null {
   if (migs.length === 0) return null
   if (migs.length === 1) {
     const mig = migs[0]
-    return { filename: `${mig.name}-${mig.version}.yaml`, content: serializeMig(mig, pathOrder) }
+    return {
+      filename: `${mig.name}-${mig.version}.yaml`,
+      content: serializeMig(mig, pathOrder),
+    }
   }
-  return { filename: "MessageImplementationGuides.yaml", content: serializeMigs(migs) }
+  return {
+    filename: "MessageImplementationGuides.yaml",
+    content: serializeMigs(migs),
+  }
 }
 
 /** Trigger a browser download of the selected MIGs as canonical YAML. */
 export async function downloadMigs(
   migs: MessageImplementationGuide[],
-  pathOrder?: Map<string, number>,
+  pathOrder?: Map<string, number>
 ): Promise<void> {
   const file = buildMigDownload(migs, pathOrder)
   if (file) await saveTextFile(file, YAML)
@@ -39,7 +48,7 @@ export async function downloadMigs(
 export async function downloadMigMarkdown(
   mig: MessageImplementationGuide,
   allMigs: MessageImplementationGuide[],
-  message: MessageDefinition,
+  message: MessageDefinition
 ): Promise<void> {
   await saveTextFile(buildMigMarkdown(mig, allMigs, message), MARKDOWN)
 }
@@ -51,7 +60,7 @@ export async function downloadMigMarkdown(
 export async function downloadMigCsv(
   mig: MessageImplementationGuide,
   allMigs: MessageImplementationGuide[],
-  message: MessageDefinition,
+  message: MessageDefinition
 ): Promise<void> {
   await saveTextFile(buildMigCsv(mig, allMigs, message), CSV)
 }

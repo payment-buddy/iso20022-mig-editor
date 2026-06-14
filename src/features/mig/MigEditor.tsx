@@ -23,7 +23,10 @@ import {
 } from "@/core/mig/overrides"
 import { deleteMig, loadAllMigs, saveMig } from "@/core/storage/migStore"
 import { renameRevisions } from "@/core/storage/revisionStore"
-import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
+import type {
+  ERepository,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
 import { InlineEdit } from "@/components/ui/inline-edit"
@@ -39,7 +42,11 @@ import { useRevisionSnapshots } from "./useRevisionSnapshots"
 import { MigDiagnostics } from "./MigDiagnostics"
 import { ExportMenu } from "./ExportMenu"
 import { ValidateInstanceDialog } from "./ValidateInstanceDialog"
-import { downloadMigCsv, downloadMigMarkdown, downloadMigs } from "./downloadMigs"
+import {
+  downloadMigCsv,
+  downloadMigMarkdown,
+  downloadMigs,
+} from "./downloadMigs"
 
 type Status = "loading" | "missing" | "ready"
 
@@ -48,7 +55,13 @@ type Status = "loading" | "missing" | "ready"
  * the e-Repository, and shows the editable metadata block plus the element tree.
  * The inline-edit detail panel lands in a later slice.
  */
-export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository }) {
+export function MigEditor({
+  migKey,
+  repo,
+}: {
+  migKey: string
+  repo: ERepository
+}) {
   const [status, setStatus] = useState<Status>("loading")
   const [mig, setMig] = useState<MessageImplementationGuide | null>(null)
   const [allMigs, setAllMigs] = useState<MessageImplementationGuide[]>([])
@@ -90,7 +103,10 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   // Rename (name and/or version) → a new identity key: write under the new key,
   // repoint child MIGs' parentMIG, drop the old key, move the revision history,
   // and route to the new one. Returns an error message, or `null` on success/no-op.
-  const rename = async (name: string, version: string): Promise<string | null> => {
+  const rename = async (
+    name: string,
+    version: string
+  ): Promise<string | null> => {
     const result = renameMig(allMigs, migKey, name, version)
     if (!result.ok) return result.error
     if (!result.changed) return null
@@ -110,8 +126,8 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   if (status === "missing" || !mig) {
     return (
       <Notice title="MIG not found">
-        No MIG is stored under “{migKey}”. It may have been deleted. Return to <Home /> to see your
-        MIGs.
+        No MIG is stored under “{migKey}”. It may have been deleted. Return to{" "}
+        <Home /> to see your MIGs.
       </Notice>
     )
   }
@@ -121,8 +137,9 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   if (!resolved) {
     return (
       <Notice title={mig.name}>
-        This MIG targets message <code>{mig.messageIdentifier}</code>, which isn’t in the loaded
-        e-Repository. Update the e-Repository from <Home /> and try again.
+        This MIG targets message <code>{mig.messageIdentifier}</code>, which
+        isn’t in the loaded e-Repository. Update the e-Repository from <Home />{" "}
+        and try again.
       </Notice>
     )
   }
@@ -132,8 +149,12 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   // Inherited baseline = the parent chain's effective overrides (empty when this
   // MIG has no parent, or its parent isn't loaded). Drives the detail panel's
   // inherited/overridden-here affordances and reset targets.
-  const parent = mig.parentMIG ? allMigs.find((m) => getMigKey(m) === mig.parentMIG) : undefined
-  const inheritedOverrides = parent ? effectiveMig(parent, allMigs).mig.elementOverrides : {}
+  const parent = mig.parentMIG
+    ? allMigs.find((m) => getMigKey(m) === mig.parentMIG)
+    : undefined
+  const inheritedOverrides = parent
+    ? effectiveMig(parent, allMigs).mig.elementOverrides
+    : {}
   // Effective MIG (own + inherited chain): its overrides drive the tree's
   // cardinality/excluded styling, and its merged annotation-name lists drive
   // which annotation fields the detail panels show (so an inherited annotation is
@@ -142,7 +163,11 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   const effectiveOverrides = effective.elementOverrides
 
   // Advisory loosening/consistency diagnostics across the whole MIG.
-  const diagnostics = validateMigConsistency(mig, inheritedOverrides, resolved.current)
+  const diagnostics = validateMigConsistency(
+    mig,
+    inheritedOverrides,
+    resolved.current
+  )
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6 xl:max-w-6xl">
@@ -154,7 +179,9 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
           {/* The title is the same rename flow as the metadata Name field. */}
           <InlineEdit
             value={mig.name}
-            onCommit={(name) => void rename(name, mig.version).then(setRenameError)}
+            onCommit={(name) =>
+              void rename(name, mig.version).then(setRenameError)
+            }
             ariaLabel="MIG name"
             placeholder="MIG name"
             textClassName="text-base font-semibold tracking-tight"
@@ -168,7 +195,9 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
               {mig.messageIdentifier}
             </a>
           </p>
-          {renameError && <p className="px-2 text-xs text-destructive">{renameError}</p>}
+          {renameError && (
+            <p className="px-2 text-xs text-destructive">{renameError}</p>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Button variant="outline" size="sm" asChild>
@@ -177,15 +206,24 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
               History
             </a>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setValidateOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setValidateOpen(true)}
+          >
             <ShieldCheckIcon data-icon="inline-start" aria-hidden />
             Validate
           </Button>
           <ExportMenu
-            onMarkdown={() => downloadMigMarkdown(mig, allMigs, resolved.current)}
+            onMarkdown={() =>
+              downloadMigMarkdown(mig, allMigs, resolved.current)
+            }
             onCsv={() => downloadMigCsv(mig, allMigs, resolved.current)}
           />
-          <Button size="sm" onClick={() => downloadMigs([mig], buildPathOrder(root))}>
+          <Button
+            size="sm"
+            onClick={() => downloadMigs([mig], buildPathOrder(root))}
+          >
             <DownloadSimpleIcon data-icon="inline-start" aria-hidden />
             Download
           </Button>
@@ -200,7 +238,12 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
         onNavigate={(path) => treeRef.current?.select(path)}
       />
 
-      <MigMetadata mig={mig} allMigs={allMigs} onChange={persist} onRename={rename} />
+      <MigMetadata
+        mig={mig}
+        allMigs={allMigs}
+        onChange={persist}
+        onRename={rename}
+      />
 
       <MigDiagnostics
         diagnostics={diagnostics}
@@ -225,18 +268,25 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                 override={mig.elementOverrides[sel.path]}
                 inherited={inheritedOverrides[sel.path]}
                 propertyNames={effective.elementAnnotationNames ?? []}
-                onSet={(field, value) => persist(setOverrideField(mig, sel.path, field, value))}
-                onClear={(field) => persist(clearOverrideField(mig, sel.path, field))}
+                onSet={(field, value) =>
+                  persist(setOverrideField(mig, sel.path, field, value))
+                }
+                onClear={(field) =>
+                  persist(clearOverrideField(mig, sel.path, field))
+                }
                 onAddConstraint={() => {
                   // Unique within the element across standard + already-added.
                   const existing = [
                     ...sel.element.constraints.map((c) => c.name),
-                    ...(mig.elementOverrides[sel.path]?.additionalConstraints ?? []).map(
-                      (c) => c.name,
-                    ),
+                    ...(
+                      mig.elementOverrides[sel.path]?.additionalConstraints ??
+                      []
+                    ).map((c) => c.name),
                   ]
                   const name = nextConstraintName(existing)
-                  persist(addConstraint(mig, sel.path, { name, definition: "" }))
+                  persist(
+                    addConstraint(mig, sel.path, { name, definition: "" })
+                  )
                   // Reveal and select the new constraint under its element.
                   actions.select(`${sel.path}/${name}`)
                 }}
@@ -256,29 +306,76 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                   constraint={sel.constraint}
                   element={elementAtPath(root, elementPath)}
                   path={sel.path}
-                  override={mig.elementOverrides[elementPath]?.constraintOverrides?.[name]}
-                  inherited={inheritedOverrides[elementPath]?.constraintOverrides?.[name]}
+                  override={
+                    mig.elementOverrides[elementPath]?.constraintOverrides?.[
+                      name
+                    ]
+                  }
+                  inherited={
+                    inheritedOverrides[elementPath]?.constraintOverrides?.[name]
+                  }
                   onSetDefinition={(definition) =>
                     persist(
-                      setConstraintOverrideField(mig, elementPath, name, "definition", definition),
+                      setConstraintOverrideField(
+                        mig,
+                        elementPath,
+                        name,
+                        "definition",
+                        definition
+                      )
                     )
                   }
                   onClearDefinition={() =>
-                    persist(clearConstraintOverrideField(mig, elementPath, name, "definition"))
+                    persist(
+                      clearConstraintOverrideField(
+                        mig,
+                        elementPath,
+                        name,
+                        "definition"
+                      )
+                    )
                   }
                   onSetExpression={(expression) =>
                     persist(
-                      setConstraintOverrideField(mig, elementPath, name, "expression", expression),
+                      setConstraintOverrideField(
+                        mig,
+                        elementPath,
+                        name,
+                        "expression",
+                        expression
+                      )
                     )
                   }
                   onClearExpression={() =>
-                    persist(clearConstraintOverrideField(mig, elementPath, name, "expression"))
+                    persist(
+                      clearConstraintOverrideField(
+                        mig,
+                        elementPath,
+                        name,
+                        "expression"
+                      )
+                    )
                   }
                   onSetDisabled={(disabled) =>
-                    persist(setConstraintOverrideField(mig, elementPath, name, "disabled", disabled))
+                    persist(
+                      setConstraintOverrideField(
+                        mig,
+                        elementPath,
+                        name,
+                        "disabled",
+                        disabled
+                      )
+                    )
                   }
                   onClearDisabled={() =>
-                    persist(clearConstraintOverrideField(mig, elementPath, name, "disabled"))
+                    persist(
+                      clearConstraintOverrideField(
+                        mig,
+                        elementPath,
+                        name,
+                        "disabled"
+                      )
+                    )
                   }
                 />
               )
@@ -288,7 +385,9 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
             const current = sel.constraint.name
             const takenNames = [
               ...(owner?.constraints ?? []).map((c) => c.name),
-              ...(mig.elementOverrides[elementPath]?.additionalConstraints ?? []).map((c) => c.name),
+              ...(
+                mig.elementOverrides[elementPath]?.additionalConstraints ?? []
+              ).map((c) => c.name),
             ].filter((n) => n !== current)
             return (
               // Keyed by path so a rename remounts cleanly and resets any edit.
@@ -305,13 +404,19 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                   actions.select(`${elementPath}/${name}`)
                 }}
                 onSetDefinition={(definition) =>
-                  persist(updateConstraint(mig, elementPath, current, { definition }))
+                  persist(
+                    updateConstraint(mig, elementPath, current, { definition })
+                  )
                 }
                 onSetExpression={(expression) =>
-                  persist(updateConstraint(mig, elementPath, current, { expression }))
+                  persist(
+                    updateConstraint(mig, elementPath, current, { expression })
+                  )
                 }
                 onSetAnnotations={(annotations) =>
-                  persist(updateConstraint(mig, elementPath, current, { annotations }))
+                  persist(
+                    updateConstraint(mig, elementPath, current, { annotations })
+                  )
                 }
                 onDelete={() => {
                   persist(removeConstraint(mig, elementPath, current))
@@ -328,7 +433,13 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   )
 }
 
-function Notice({ title, children }: { title: string; children?: React.ReactNode }) {
+function Notice({
+  title,
+  children,
+}: {
+  title: string
+  children?: React.ReactNode
+}) {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-2 p-6 xl:max-w-4xl">
       <h1 className="text-base font-semibold tracking-tight">{title}</h1>
@@ -339,7 +450,10 @@ function Notice({ title, children }: { title: string; children?: React.ReactNode
 
 function Home() {
   return (
-    <a href={hashFor({ name: "home" })} className="text-primary underline-offset-4 hover:underline">
+    <a
+      href={hashFor({ name: "home" })}
+      className="text-primary underline-offset-4 hover:underline"
+    >
       Home
     </a>
   )

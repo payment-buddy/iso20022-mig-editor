@@ -6,9 +6,16 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react"
-import { ArrowClockwiseIcon, CaretRightIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
+import {
+  ArrowClockwiseIcon,
+  CaretRightIcon,
+  MagnifyingGlassIcon,
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
-import { groupMessages, type MessageGroup } from "@/core/erepository/messageGroups"
+import {
+  groupMessages,
+  type MessageGroup,
+} from "@/core/erepository/messageGroups"
 import { loadAllMigs } from "@/core/storage/migStore"
 import type { BusinessArea, ERepository } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
@@ -23,11 +30,18 @@ interface ViewArea {
 
 // Flattened, in-order list of currently navigable nodes — drives arrow keys.
 type FlatNode =
-  | { kind: "area"; id: string; areaCode: string; hasChildren: boolean; expanded: boolean }
+  | {
+      kind: "area"
+      id: string
+      areaCode: string
+      hasChildren: boolean
+      expanded: boolean
+    }
   | { kind: "group"; id: string; areaCode: string; shortCode: string }
 
 const areaId = (code: string) => `area:${code}`
-const groupId = (areaCode: string, shortCode: string) => `group:${areaCode}/${shortCode}`
+const groupId = (areaCode: string, shortCode: string) =>
+  `group:${areaCode}/${shortCode}`
 
 function matches(text: string, q: string) {
   return text.toLowerCase().includes(q)
@@ -62,7 +76,8 @@ export function ERepositoryBrowser({
     let active = true
     loadAllMigs()
       .then((migs) => {
-        if (active) setLoadedMigIds(new Set(migs.map((m) => m.messageIdentifier)))
+        if (active)
+          setLoadedMigIds(new Set(migs.map((m) => m.messageIdentifier)))
       })
       .catch((err) => console.error("Failed to load MIGs for badges:", err))
     return () => {
@@ -74,8 +89,12 @@ export function ERepositoryBrowser({
 
   // Group each area's messages once per repo.
   const areaGroups = useMemo(
-    () => repo.businessAreas.map((area) => ({ area, groups: groupMessages(area.messages) })),
-    [repo],
+    () =>
+      repo.businessAreas.map((area) => ({
+        area,
+        groups: groupMessages(area.messages),
+      })),
+    [repo]
   )
 
   const filtering = filter.trim() !== ""
@@ -98,7 +117,7 @@ export function ERepositoryBrowser({
             (g) =>
               matches(g.label, q) ||
               matches(g.shortCode, q) ||
-              g.versions.some((v) => matches(v.identifier, q)),
+              g.versions.some((v) => matches(v.identifier, q))
           )
       if (areaMatches || shownGroups.length > 0) {
         result.push({ area, groups: shownGroups, expanded: true })
@@ -133,7 +152,9 @@ export function ERepositoryBrowser({
 
   // The single tab-stop. Falls back to the first node if the focused one vanished.
   const activeId =
-    focusedId && flatNodes.some((n) => n.id === focusedId) ? focusedId : (flatNodes[0]?.id ?? null)
+    focusedId && flatNodes.some((n) => n.id === focusedId)
+      ? focusedId
+      : (flatNodes[0]?.id ?? null)
 
   const toggle = (code: string) =>
     setExpanded((prev) => {
@@ -207,7 +228,8 @@ export function ERepositoryBrowser({
     const handler = (e: globalThis.KeyboardEvent) => {
       if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return
       const target = e.target as HTMLElement | null
-      if (target && target.closest("input, textarea, [contenteditable='true']")) return
+      if (target && target.closest("input, textarea, [contenteditable='true']"))
+        return
       e.preventDefault()
       filterRef.current?.focus()
     }
@@ -251,7 +273,12 @@ export function ERepositoryBrowser({
           No business areas or messages match “{filter}”.
         </p>
       ) : (
-        <ul role="tree" aria-label="e-Repository" className="flex flex-col" onKeyDown={onKeyDown}>
+        <ul
+          role="tree"
+          aria-label="e-Repository"
+          className="flex flex-col"
+          onKeyDown={onKeyDown}
+        >
           {viewAreas.map(({ area, groups, expanded: areaOpen }) => (
             <li role="none" key={area.code}>
               <div
@@ -269,7 +296,7 @@ export function ERepositoryBrowser({
                   className={cn(
                     "size-3.5 shrink-0 text-muted-foreground transition-transform",
                     areaOpen && "rotate-90",
-                    groups.length === 0 && "invisible",
+                    groups.length === 0 && "invisible"
                   )}
                   aria-hidden
                 />
@@ -280,9 +307,14 @@ export function ERepositoryBrowser({
                 </span>
               </div>
 
-              <Disclosure collapsed={!areaOpen && !filtering} onReveal={() => open(area.code)}>
+              <Disclosure
+                collapsed={!areaOpen && !filtering}
+                onReveal={() => open(area.code)}
+              >
                 {groups.map((g) => {
-                  const hasMig = g.versions.some((v) => migIds.has(v.identifier))
+                  const hasMig = g.versions.some((v) =>
+                    migIds.has(v.identifier)
+                  )
                   const id = groupId(area.code, g.shortCode)
                   return (
                     <li role="none" key={g.shortCode}>
@@ -304,7 +336,8 @@ export function ERepositoryBrowser({
                           </span>
                         )}
                         <span className="ml-auto text-xs text-muted-foreground">
-                          {g.versions.length} version{g.versions.length === 1 ? "" : "s"}
+                          {g.versions.length} version
+                          {g.versions.length === 1 ? "" : "s"}
                         </span>
                       </a>
                     </li>

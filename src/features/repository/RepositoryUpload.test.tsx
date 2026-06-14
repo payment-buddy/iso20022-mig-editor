@@ -43,11 +43,17 @@ describe("RepositoryUpload", () => {
     render(<RepositoryUpload onLoaded={onLoaded} />)
 
     // applyAccept: false mirrors drag-and-drop, which bypasses the accept filter
-    await userEvent.upload(screen.getByLabelText("e-Repository file"), makeFile("notes.txt"), {
-      applyAccept: false,
-    })
+    await userEvent.upload(
+      screen.getByLabelText("e-Repository file"),
+      makeFile("notes.txt"),
+      {
+        applyAccept: false,
+      }
+    )
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/not a .iso20022 or .zip file/i)
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /not a .iso20022 or .zip file/i
+    )
     expect(parseRepository).not.toHaveBeenCalled()
     expect(onLoaded).not.toHaveBeenCalled()
   })
@@ -57,7 +63,10 @@ describe("RepositoryUpload", () => {
     const onLoaded = vi.fn()
     render(<RepositoryUpload onLoaded={onLoaded} />)
 
-    await userEvent.upload(screen.getByLabelText("e-Repository file"), makeFile("repo.zip"))
+    await userEvent.upload(
+      screen.getByLabelText("e-Repository file"),
+      makeFile("repo.zip")
+    )
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/bad xml/i)
     expect(saveERepository).not.toHaveBeenCalled()
@@ -66,7 +75,9 @@ describe("RepositoryUpload", () => {
 
   it("shows a Cancel affordance only in re-upload mode", async () => {
     const { rerender } = render(<RepositoryUpload onLoaded={vi.fn()} />)
-    expect(screen.queryByRole("button", { name: /cancel/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: /cancel/i })
+    ).not.toBeInTheDocument()
 
     const onCancel = vi.fn()
     rerender(<RepositoryUpload onLoaded={vi.fn()} onCancel={onCancel} />)

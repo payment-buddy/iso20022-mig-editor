@@ -38,17 +38,24 @@ export async function trashMig(key: string, deletedAt: number): Promise<void> {
   const mig = await loadMig(key)
   if (!mig) return
   const revisions = await loadRevisions(key)
-  await withStore(STORE_TRASH, (s) => s.put({ mig, revisions, deletedAt }, key), "readwrite")
+  await withStore(
+    STORE_TRASH,
+    (s) => s.put({ mig, revisions, deletedAt }, key),
+    "readwrite"
+  )
   await deleteMig(key)
   await deleteRevisions(key)
 }
 
 /** Restore a trashed MIG (and its history) to the active stores. No-op if absent. */
 export async function restoreFromTrash(key: string): Promise<void> {
-  const record = await withStore<TrashedMig | undefined>(STORE_TRASH, (s) => s.get(key))
+  const record = await withStore<TrashedMig | undefined>(STORE_TRASH, (s) =>
+    s.get(key)
+  )
   if (!record) return
   await saveMig(record.mig)
-  if (record.revisions.length > 0) await saveRevisions(getMigKey(record.mig), record.revisions)
+  if (record.revisions.length > 0)
+    await saveRevisions(getMigKey(record.mig), record.revisions)
   await withStore(STORE_TRASH, (s) => s.delete(key), "readwrite")
 }
 

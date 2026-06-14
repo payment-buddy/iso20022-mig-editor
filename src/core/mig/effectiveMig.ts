@@ -20,7 +20,10 @@ import type {
 } from "@/core/types/types"
 
 /** Union two constraint lists by name, the later list winning on a name clash. */
-function unionConstraints(base: Constraint[] = [], layer: Constraint[] = []): Constraint[] {
+function unionConstraints(
+  base: Constraint[] = [],
+  layer: Constraint[] = []
+): Constraint[] {
   const byName = new Map<string, Constraint>()
   for (const c of base) byName.set(c.name, c)
   for (const c of layer) byName.set(c.name, c)
@@ -33,7 +36,7 @@ function unionConstraints(base: Constraint[] = [], layer: Constraint[] = []): Co
  */
 function mergeConstraintOverrides(
   base: Record<string, ConstraintOverride> = {},
-  layer: Record<string, ConstraintOverride> = {},
+  layer: Record<string, ConstraintOverride> = {}
 ): Record<string, ConstraintOverride> {
   const out: Record<string, ConstraintOverride> = {}
   for (const name of new Set([...Object.keys(base), ...Object.keys(layer)])) {
@@ -43,22 +46,32 @@ function mergeConstraintOverrides(
 }
 
 /** Merge one override layer over a base: scalars by key-presence, composites accumulate. */
-function mergeOverride(base: ElementOverride, layer: ElementOverride): ElementOverride {
+function mergeOverride(
+  base: ElementOverride,
+  layer: ElementOverride
+): ElementOverride {
   const out: ElementOverride = { ...base, ...layer } // scalars/facets: layer wins, null preserved
 
-  const annotations = { ...(base.annotations ?? {}), ...(layer.annotations ?? {}) }
+  const annotations = {
+    ...(base.annotations ?? {}),
+    ...(layer.annotations ?? {}),
+  }
   if (Object.keys(annotations).length > 0) out.annotations = annotations
   else delete out.annotations
 
-  const constraints = unionConstraints(base.additionalConstraints, layer.additionalConstraints)
+  const constraints = unionConstraints(
+    base.additionalConstraints,
+    layer.additionalConstraints
+  )
   if (constraints.length > 0) out.additionalConstraints = constraints
   else delete out.additionalConstraints
 
   const constraintOverrides = mergeConstraintOverrides(
     base.constraintOverrides,
-    layer.constraintOverrides,
+    layer.constraintOverrides
   )
-  if (Object.keys(constraintOverrides).length > 0) out.constraintOverrides = constraintOverrides
+  if (Object.keys(constraintOverrides).length > 0)
+    out.constraintOverrides = constraintOverrides
   else delete out.constraintOverrides
 
   return out
@@ -68,9 +81,12 @@ function mergeOverride(base: ElementOverride, layer: ElementOverride): ElementOv
  * Merge the element overrides of a chain (ancestor-first … leaf-last) into one
  * effective map, the leaf winning. Empty merged entries are pruned.
  */
-export function mergeOverrides(chain: MessageImplementationGuide[]): ElementOverrides {
+export function mergeOverrides(
+  chain: MessageImplementationGuide[]
+): ElementOverrides {
   const paths = new Set<string>()
-  for (const m of chain) for (const p of Object.keys(m.elementOverrides)) paths.add(p)
+  for (const m of chain)
+    for (const p of Object.keys(m.elementOverrides)) paths.add(p)
 
   const out: ElementOverrides = {}
   for (const path of paths) {
@@ -97,7 +113,7 @@ export type ResolvedChain = {
  */
 export function resolveParentChain(
   mig: MessageImplementationGuide,
-  allMigs: MessageImplementationGuide[],
+  allMigs: MessageImplementationGuide[]
 ): ResolvedChain {
   const byKey = new Map(allMigs.map((m) => [getMigKey(m), m]))
   const chain: MessageImplementationGuide[] = [mig]
@@ -125,7 +141,7 @@ export function resolveParentChain(
 /** Union a per-MIG name list across the chain, ancestor-first, de-duplicated. */
 function unionNames(
   chain: MessageImplementationGuide[],
-  pick: (m: MessageImplementationGuide) => string[] | undefined,
+  pick: (m: MessageImplementationGuide) => string[] | undefined
 ): string[] {
   const out: string[] = []
   const seen = new Set<string>()
@@ -157,7 +173,7 @@ export type EffectiveMig = ResolvedChain & {
  */
 export function effectiveMig(
   mig: MessageImplementationGuide,
-  allMigs: MessageImplementationGuide[],
+  allMigs: MessageImplementationGuide[]
 ): EffectiveMig {
   const { chain, missingParent } = resolveParentChain(mig, allMigs)
 
@@ -171,7 +187,8 @@ export function effectiveMig(
   const elementNames = unionNames(chain, (m) => m.elementAnnotationNames)
   const constraintNames = unionNames(chain, (m) => m.constraintAnnotationNames)
   if (elementNames.length > 0) out.elementAnnotationNames = elementNames
-  if (constraintNames.length > 0) out.constraintAnnotationNames = constraintNames
+  if (constraintNames.length > 0)
+    out.constraintAnnotationNames = constraintNames
 
   return { mig: out, chain, missingParent }
 }

@@ -2,7 +2,13 @@
 import "fake-indexeddb/auto"
 import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it } from "vitest"
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
@@ -21,9 +27,14 @@ import { setPendingMerge } from "./pendingMerge"
 function mig(
   name: string,
   overrides: MessageImplementationGuide["elementOverrides"],
-  messageIdentifier = "pacs.008.001.08",
+  messageIdentifier = "pacs.008.001.08"
 ): MessageImplementationGuide {
-  return { name, version: "1.0", messageIdentifier, elementOverrides: overrides }
+  return {
+    name,
+    version: "1.0",
+    messageIdentifier,
+    elementOverrides: overrides,
+  }
 }
 
 function migFile(m: MessageImplementationGuide): File {
@@ -65,12 +76,19 @@ function repoWith(root: MessageElement): ERepository {
     shortCode: "pacs.008",
     rootElement: root,
   }
-  return { businessAreas: [{ name: "Payments", code: "pacs", definition: "", messages: [def] }] }
+  return {
+    businessAreas: [
+      { name: "Payments", code: "pacs", definition: "", messages: [def] },
+    ],
+  }
 }
 
 const docAmt = repoWith(el("Doc", [el("Amt")]))
 
-async function renderMerge(target: MessageImplementationGuide, repo: ERepository = docAmt) {
+async function renderMerge(
+  target: MessageImplementationGuide,
+  repo: ERepository = docAmt
+) {
   await saveMig(target)
   render(<MigMerge targetKey={getMigKey(target)} repo={repo} />)
 }
@@ -88,7 +106,7 @@ describe("MigMerge", () => {
 
     await userEvent.upload(
       screen.getByLabelText("MIG to merge"),
-      migFile(mig("Incoming", { "/Doc/Amt": { maxLength: 12 } })),
+      migFile(mig("Incoming", { "/Doc/Amt": { maxLength: 12 } }))
     )
 
     const card = await screen.findByRole("region", { name: /Amt/i })
@@ -101,17 +119,21 @@ describe("MigMerge", () => {
     await screen.findByRole("button", { name: /upload mig to merge/i })
     await userEvent.upload(
       screen.getByLabelText("MIG to merge"),
-      migFile(mig("Incoming", { "/Doc/Amt": { maxLength: 12 } })),
+      migFile(mig("Incoming", { "/Doc/Amt": { maxLength: 12 } }))
     )
 
     const card = await screen.findByRole("region", { name: /Amt/i })
     expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled() // not dirty yet
 
-    await userEvent.click(within(card).getByRole("button", { name: /take incoming max length/i }))
+    await userEvent.click(
+      within(card).getByRole("button", { name: /take incoming max length/i })
+    )
     await userEvent.click(screen.getByRole("button", { name: /^save$/i }))
 
     await waitFor(async () =>
-      expect((await loadMig("Target:1.0"))?.elementOverrides["/Doc/Amt"].maxLength).toBe(12),
+      expect(
+        (await loadMig("Target:1.0"))?.elementOverrides["/Doc/Amt"].maxLength
+      ).toBe(12)
     )
     expect(window.location.hash).toBe("#mig/Target%3A1.0")
     // The merge is recorded in history: the pre-merge baseline + a "Merged" rev.
@@ -122,7 +144,10 @@ describe("MigMerge", () => {
 
   it("consumes an incoming MIG handed off from the import flow (no upload)", async () => {
     const target = mig("Target", { "/Doc/Amt": { maxLength: 18 } })
-    setPendingMerge(getMigKey(target), mig("Incoming", { "/Doc/Amt": { maxLength: 12 } }))
+    setPendingMerge(
+      getMigKey(target),
+      mig("Incoming", { "/Doc/Amt": { maxLength: 12 } })
+    )
     await renderMerge(target)
 
     // Diff shown straight away, without the upload step.
@@ -131,16 +156,24 @@ describe("MigMerge", () => {
   })
 
   it("rejects an incoming MIG from a different message family", async () => {
-    await renderMerge(mig("Target", { "/Doc/Amt": { maxLength: 18 } }, "pacs.008.001.08"))
+    await renderMerge(
+      mig("Target", { "/Doc/Amt": { maxLength: 18 } }, "pacs.008.001.08")
+    )
     await screen.findByRole("button", { name: /upload mig to merge/i })
 
     await userEvent.upload(
       screen.getByLabelText("MIG to merge"),
-      migFile(mig("Other", { "/Doc/Amt": { maxLength: 12 } }, "pacs.009.001.08")),
+      migFile(
+        mig("Other", { "/Doc/Amt": { maxLength: 12 } }, "pacs.009.001.08")
+      )
     )
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/different message family/i)
-    expect(screen.queryByRole("region", { name: /Amt/i })).not.toBeInTheDocument()
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /different message family/i
+    )
+    expect(
+      screen.queryByRole("region", { name: /Amt/i })
+    ).not.toBeInTheDocument()
   })
 
   it("disables taking a field absent from the target's message version", async () => {
@@ -149,7 +182,12 @@ describe("MigMerge", () => {
 
     await userEvent.upload(
       screen.getByLabelText("MIG to merge"),
-      migFile(mig("Incoming", { "/Doc/Amt": { maxLength: 18 }, "/Doc/Extra": { maxLength: 5 } })),
+      migFile(
+        mig("Incoming", {
+          "/Doc/Amt": { maxLength: 18 },
+          "/Doc/Extra": { maxLength: 5 },
+        })
+      )
     )
 
     const card = await screen.findByRole("region", { name: /Extra/i })
@@ -162,7 +200,7 @@ describe("MigMerge", () => {
 
     await userEvent.upload(
       screen.getByLabelText("MIG to merge"),
-      migFile(mig("Same", { "/Doc/Amt": { maxLength: 18 } })),
+      migFile(mig("Same", { "/Doc/Amt": { maxLength: 18 } }))
     )
 
     expect(await screen.findByText(/no differences/i)).toBeInTheDocument()

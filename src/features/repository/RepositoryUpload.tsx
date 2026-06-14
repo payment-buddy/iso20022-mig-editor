@@ -1,5 +1,9 @@
 import { useCallback, useRef, useState } from "react"
-import { SpinnerGapIcon, UploadSimpleIcon, WarningIcon } from "@phosphor-icons/react"
+import {
+  SpinnerGapIcon,
+  UploadSimpleIcon,
+  WarningIcon,
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { parseRepository } from "@/core/erepository/eRepository"
 import { saveERepository } from "@/core/storage/eRepositoryStore"
@@ -9,7 +13,8 @@ import { cn } from "@/lib/utils"
 type Status = "idle" | "parsing" | "error"
 
 const ACCEPT = ".iso20022,.zip"
-const ISO_SOURCE_URL = "https://www.iso20022.org/iso20022-repository/e-repository"
+const ISO_SOURCE_URL =
+  "https://www.iso20022.org/iso20022-repository/e-repository"
 
 function hasValidExtension(name: string): boolean {
   const lower = name.toLowerCase()
@@ -51,11 +56,11 @@ export function RepositoryUpload({
         setError(
           err instanceof Error
             ? `Could not parse the file: ${err.message}`
-            : "Could not parse the file.",
+            : "Could not parse the file."
         )
       }
     },
-    [onLoaded],
+    [onLoaded]
   )
 
   const openPicker = () => inputRef.current?.click()
@@ -65,7 +70,9 @@ export function RepositoryUpload({
   return (
     <div className="mx-auto flex min-h-svh max-w-xl flex-col justify-center gap-6 p-6">
       <div className="space-y-1.5">
-        <h1 className="text-lg font-semibold tracking-tight">ISO 20022 MIG Editor</h1>
+        <h1 className="text-lg font-semibold tracking-tight">
+          ISO 20022 MIG Editor
+        </h1>
         <p className="text-sm text-muted-foreground">
           Load an{" "}
           <a
@@ -97,7 +104,7 @@ export function RepositoryUpload({
         className={cn(
           "flex flex-col items-center gap-3 rounded-lg border border-dashed px-6 py-10 text-center transition-colors",
           dragging ? "border-ring bg-input/50" : "border-border",
-          parsing && "opacity-70",
+          parsing && "opacity-70"
         )}
       >
         <input
@@ -117,9 +124,18 @@ export function RepositoryUpload({
 
         {parsing ? (
           <>
-            <SpinnerGapIcon className="size-6 animate-spin text-muted-foreground" aria-hidden />
+            <SpinnerGapIcon
+              className="size-6 animate-spin text-muted-foreground"
+              aria-hidden
+            />
             <p className="text-sm text-muted-foreground" role="status">
-              Parsing {fileName ? <span className="font-medium">{fileName}</span> : "file"}…
+              Parsing{" "}
+              {fileName ? (
+                <span className="font-medium">{fileName}</span>
+              ) : (
+                "file"
+              )}
+              …
             </p>
             <p className="text-xs text-muted-foreground">
               This can take a few seconds.
@@ -127,7 +143,10 @@ export function RepositoryUpload({
           </>
         ) : (
           <>
-            <UploadSimpleIcon className="size-6 text-muted-foreground" aria-hidden />
+            <UploadSimpleIcon
+              className="size-6 text-muted-foreground"
+              aria-hidden
+            />
             <p className="text-sm text-muted-foreground">
               Drag a file here, or
             </p>
@@ -150,9 +169,9 @@ export function RepositoryUpload({
       )}
 
       <p className="text-xs text-muted-foreground">
-        The file is stored locally in your browser and persists across sessions. It is
-        never uploaded anywhere. Export your MIGs as YAML regularly — clearing browser data deletes
-        them.
+        The file is stored locally in your browser and persists across sessions.
+        It is never uploaded anywhere. Export your MIGs as YAML regularly —
+        clearing browser data deletes them.
       </p>
 
       {onCancel && !parsing && (

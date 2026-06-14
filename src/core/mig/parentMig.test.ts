@@ -5,7 +5,7 @@ import { eligibleParents } from "./parentMig"
 
 function mig(
   name: string,
-  props: Partial<MessageImplementationGuide> = {},
+  props: Partial<MessageImplementationGuide> = {}
 ): MessageImplementationGuide {
   return {
     name,
