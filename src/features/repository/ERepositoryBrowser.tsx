@@ -188,7 +188,10 @@ function BusinessAreasView({
     }
     const result: ViewArea[] = []
     for (const { area, groups } of areaGroups) {
-      const areaMatches = matches(area.name, q) || matches(area.code, q)
+      const areaMatches =
+        matches(area.name, q) ||
+        matches(area.code, q) ||
+        matches(area.definition, q)
       const shownGroups = areaMatches
         ? groups
         : groups.filter(
@@ -372,6 +375,13 @@ function BusinessAreasView({
                 collapsed={!areaOpen && !filtering}
                 onReveal={() => open(area.code)}
               >
+                {area.definition && (
+                  <li role="none">
+                    <p className="ml-5 px-1.5 py-1 text-xs text-muted-foreground">
+                      {area.definition}
+                    </p>
+                  </li>
+                )}
                 {groups.map((g) => {
                   const hasMig = g.versions.some((v) =>
                     migIds.has(v.identifier)
