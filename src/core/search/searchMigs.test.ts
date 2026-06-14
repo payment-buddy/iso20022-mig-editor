@@ -68,6 +68,13 @@ const mig: MessageImplementationGuide = {
       definition: "Local debtor rules",
       allowedValues: ["AAAA", "BBBB"],
       annotations: { Usage: "mandatory for domestic" },
+      additionalConstraints: [
+        {
+          name: "DbtrRule",
+          definition: "debtor must be a bank",
+          annotations: { Rationale: "scheme requires settlement agent" },
+        },
+      ],
     },
   },
 }
@@ -98,6 +105,16 @@ describe("searchMigs", () => {
   it("matches allowed values and the override definition", () => {
     expect(searchMigs(repo, [mig], "AAAA")[0].field).toBe("allowedValue")
     expect(searchMigs(repo, [mig], "local debtor")[0].field).toBe("definition")
+  })
+
+  it("matches a constraint's annotation value, targeting the constraint node", () => {
+    const hits = searchMigs(repo, [mig], "settlement agent")
+    expect(hits).toHaveLength(1)
+    const h = hits[0]
+    expect(h.field).toBe("annotation")
+    expect(h.detail).toBe("Rationale")
+    // Navigates to the constraint node, where the annotation is edited.
+    expect(h.xmlPath).toBe("/Document/Dbtr/DbtrRule")
   })
 
   it("does not match the underlying standard message fields", () => {

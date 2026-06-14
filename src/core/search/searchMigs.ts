@@ -105,8 +105,18 @@ export function searchMigs(
       if (ov.examples?.length) at("example", ov.examples.join(", "))
       for (const [name, value] of Object.entries(ov.annotations ?? {}))
         at("annotation", `${name}: ${value}`, name)
-      for (const c of ov.additionalConstraints ?? [])
+      for (const c of ov.additionalConstraints ?? []) {
         at("constraint", constraintText(c), c.name)
+        // Annotation values on the constraint itself — navigate to the
+        // constraint node (where they're edited), not just its element.
+        const constraintPath = `${xmlPath}/${c.name}`
+        for (const [name, value] of Object.entries(c.annotations ?? {}))
+          if (value)
+            add("annotation", `${name}: ${value}`, {
+              xmlPath: constraintPath,
+              detail: name,
+            })
+      }
       for (const [name, co] of Object.entries(ov.constraintOverrides ?? {})) {
         const value = [name, co.definition, co.expression]
           .filter(Boolean)
