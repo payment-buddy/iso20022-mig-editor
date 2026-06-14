@@ -43,6 +43,12 @@ const SCOPES: { value: SearchScope; label: string }[] = [
   { value: "messages", label: "Messages" },
 ]
 
+// The palette opens with ⌘K on macOS and Ctrl+K elsewhere; show the platform's
+// own modifier so the hint matches the key the user actually presses.
+const IS_MAC =
+  typeof navigator !== "undefined" && /Mac|iP(hone|ad|od)/.test(navigator.platform)
+const SHORTCUT_HINT = IS_MAC ? "⌘K" : "Ctrl K"
+
 /**
  * Global command-palette search across all MIGs (authored content) and Message
  * Definitions (deduped across versions). Opens with ⌘/Ctrl-K or the header
@@ -181,13 +187,13 @@ export function GlobalSearch({ repo }: { repo: ERepository }) {
         size="sm"
         onClick={() => setOpen(true)}
         className="gap-2 text-muted-foreground"
-        title="Search (⌘/Ctrl K)"
+        title={`Search (${SHORTCUT_HINT})`}
         aria-label="Search MIGs and messages"
       >
         <MagnifyingGlassIcon aria-hidden />
         <span className="hidden sm:inline">Search</span>
         <kbd className="hidden rounded border border-border px-1 text-[0.625rem] sm:inline">
-          ⌘K
+          {SHORTCUT_HINT}
         </kbd>
       </Button>
 
