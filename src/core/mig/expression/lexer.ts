@@ -18,7 +18,7 @@ export type TokenType =
   | "string" // single-quoted literal
   | "number" // numeric literal
   | "op" // one of: = != < <= > >= ( ) , /
-  | "kw" // boolean keyword: and / or / xor
+  | "kw" // boolean keyword: and / or
 
 export interface Token {
   type: TokenType
@@ -28,7 +28,7 @@ export interface Token {
   end: number
 }
 
-const KEYWORDS = new Set(["and", "or", "xor"])
+const KEYWORDS = new Set(["and", "or"])
 
 const isNameStart = (c: string) => /[A-Za-z_]/.test(c)
 const isNameChar = (c: string) => /[A-Za-z0-9_.-]/.test(c)

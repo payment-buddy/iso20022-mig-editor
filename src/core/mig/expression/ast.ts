@@ -7,7 +7,7 @@
 // offsets so those phases (and error reporting) can point back at the text.
 
 /** Infix boolean connectives, lowest precedence. */
-export type BinaryOp = "or" | "xor" | "and"
+export type BinaryOp = "or" | "and"
 
 /** Comparison / equality operators (non-associative). */
 export type CompareOp = "=" | "!=" | "<" | "<=" | ">" | ">="
@@ -67,6 +67,12 @@ export interface Num {
 
 export type ExprNode = Binary | Compare | Call | Path | Str | Num
 
+/**
+ * Presence-cardinality functions: count how many arguments hold, then bound the
+ * tally (`≥1` / `≤1` / `=1`). Boolean-returning, like `not`/`matches`.
+ */
+export const CARDINALITY_FUNCTIONS = new Set(["at-least-one", "at-most-one", "exactly-one"])
+
 /** Coarse value type, used to flag clearly-wrong function arguments. */
 export type ValueKind = "boolean" | "string" | "number" | "unknown"
 
@@ -85,6 +91,7 @@ export function kindOf(node: ExprNode): ValueKind {
       return "boolean"
     case "call":
       if (node.name === "not" || node.name === "matches") return "boolean"
+      if (CARDINALITY_FUNCTIONS.has(node.name)) return "boolean"
       if (node.name === "count") return "number"
       return "unknown"
     case "str":

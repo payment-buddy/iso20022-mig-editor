@@ -144,8 +144,7 @@ function evalNode(node: ExprNode, context: EvalNode): Value {
       const l = toBool(evalNode(node.left, context))
       // Short-circuit where it matches the operator's semantics.
       if (node.op === "or") return { kind: "bool", value: l || toBool(evalNode(node.right, context)) }
-      if (node.op === "and") return { kind: "bool", value: l && toBool(evalNode(node.right, context)) }
-      return { kind: "bool", value: l !== toBool(evalNode(node.right, context)) } // xor
+      return { kind: "bool", value: l && toBool(evalNode(node.right, context)) } // and
     }
     case "compare":
       return {
@@ -176,6 +175,16 @@ function evalCall(name: string, args: ExprNode[], context: EvalNode): Value {
         throw new EvalError("matches() pattern is not a valid regular expression")
       }
       return { kind: "bool", value: re.test(input) }
+    }
+    case "at-least-one":
+    case "at-most-one":
+    case "exactly-one": {
+      // Count how many arguments hold (a path counts once when present, however
+      // many times it occurs), then bound that tally.
+      const held = args.reduce((n, a) => n + (toBool(evalNode(a, context)) ? 1 : 0), 0)
+      const value =
+        name === "at-least-one" ? held >= 1 : name === "at-most-one" ? held <= 1 : held === 1
+      return { kind: "bool", value }
     }
     default:
       throw new EvalError(`Unsupported function "${name}"`)

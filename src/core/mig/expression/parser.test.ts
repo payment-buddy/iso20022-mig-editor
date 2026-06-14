@@ -37,22 +37,11 @@ describe("parseExpression — valid", () => {
     expect(parseExpression("count(/Amt)").ok).toBe(false)
   })
 
-  it("nests precedence or < xor < and < comparison", () => {
+  it("nests precedence or < and < comparison", () => {
     // a or b and c  ->  a or (b and c)
     const node = ast("a or b and c") as Binary
     expect(node.op).toBe("or")
     expect((node.right as Binary).op).toBe("and")
-  })
-
-  it("groups xor below or and above and", () => {
-    // a or b xor c  ->  a or (b xor c)
-    const top = ast("a or b xor c") as Binary
-    expect(top.op).toBe("or")
-    expect((top.right as Binary).op).toBe("xor")
-    // a xor b and c  ->  a xor (b and c)
-    const top2 = ast("a xor b and c") as Binary
-    expect(top2.op).toBe("xor")
-    expect((top2.right as Binary).op).toBe("and")
   })
 
   it("binds comparison tighter than and", () => {
@@ -167,6 +156,27 @@ describe("parseExpression — function argument checks", () => {
     expect(err("count('x')").message).toMatch(/path expression/)
     expect(err("count(5)").message).toMatch(/path expression/)
     expect(err("count(a = b)").message).toMatch(/path expression/)
+  })
+
+  it("accepts the presence-cardinality functions with two or more arguments", () => {
+    expect(parseExpression("at-least-one(A, B)").ok).toBe(true)
+    expect(parseExpression("at-most-one(A, B, C)").ok).toBe(true)
+    expect(parseExpression("exactly-one(A, B/C, D = 'x')").ok).toBe(true)
+  })
+
+  it("rejects a presence-cardinality function with fewer than two arguments", () => {
+    expect(err("exactly-one(A)").message).toMatch(/at least two/)
+    expect(err("at-most-one()").message).toMatch(/at least two/)
+  })
+
+  it("rejects a bare literal argument to a presence-cardinality function", () => {
+    expect(err("exactly-one(A, 'x')").message).toMatch(/not literals/)
+    expect(err("at-least-one(A, 5)").message).toMatch(/not literals/)
+  })
+
+  it("treats a presence-cardinality call as boolean (so count() rejects it)", () => {
+    expect(err("count(exactly-one(A, B))").message).toMatch(/path expression/)
+    expect(parseExpression("not(at-most-one(A, B))").ok).toBe(true)
   })
 })
 

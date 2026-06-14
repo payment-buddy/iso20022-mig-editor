@@ -21,8 +21,10 @@ describe("tokenize", () => {
     ])
   })
 
-  it("treats only and/or/xor as keywords", () => {
-    expect(types("matches xor contains")).toEqual(["name", "kw", "name"])
+  it("treats only and/or as keywords", () => {
+    expect(types("matches or contains")).toEqual(["name", "kw", "name"])
+    // xor is no longer a keyword — it lexes as an ordinary name.
+    expect(types("a xor b")).toEqual(["name", "name", "name"])
   })
 
   it("reads multi-character comparison operators greedily", () => {

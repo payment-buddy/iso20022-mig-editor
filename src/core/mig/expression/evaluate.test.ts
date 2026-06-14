@@ -80,11 +80,34 @@ describe("evaluateExpression — comparison", () => {
 })
 
 describe("evaluateExpression — boolean operators", () => {
-  it("and / or / xor", () => {
+  it("and / or", () => {
     expect(evalOk("Id and SchmeNm", othr)).toBe(true)
     expect(evalOk("Missing or Id", othr)).toBe(true)
-    expect(evalOk("Id xor Missing", othr)).toBe(true)
-    expect(evalOk("Id xor SchmeNm", othr)).toBe(false)
+    expect(evalOk("Missing and Id", othr)).toBe(false)
+    expect(evalOk("Missing or Absent", othr)).toBe(false)
+  })
+
+  it("at-least-one / at-most-one / exactly-one count how many hold", () => {
+    // present: Id, SchmeNm, Amt — absent: Missing, Absent
+    expect(evalOk("at-least-one(Missing, Id)", othr)).toBe(true) // 1
+    expect(evalOk("at-least-one(Missing, Absent)", othr)).toBe(false) // 0
+
+    expect(evalOk("at-most-one(Missing, Absent)", othr)).toBe(true) // 0
+    expect(evalOk("at-most-one(Missing, Id)", othr)).toBe(true) // 1
+    expect(evalOk("at-most-one(Id, SchmeNm)", othr)).toBe(false) // 2
+
+    expect(evalOk("exactly-one(Missing, Id)", othr)).toBe(true) // 1
+    expect(evalOk("exactly-one(Missing, Absent)", othr)).toBe(false) // 0
+    expect(evalOk("exactly-one(Id, SchmeNm)", othr)).toBe(false) // 2
+  })
+
+  it("cardinality counts a repeating element once (present, not occurrences)", () => {
+    const ctx = node("Doc", {
+      children: [node("A"), node("A"), node("B", { text: "x" })],
+    })
+    // A occurs twice but counts as one present field; C is absent.
+    expect(evalOk("exactly-one(A, C)", ctx)).toBe(true)
+    expect(evalOk("exactly-one(A, B)", ctx)).toBe(false) // both present -> 2
   })
 
   it("evaluates the motivating example", () => {

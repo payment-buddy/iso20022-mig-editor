@@ -1,7 +1,6 @@
 // Recursive-descent precedence parser for the constraint expression grammar.
 //
-//   Or   := Xor  ( 'or'  Xor  )*
-//   Xor  := And  ( 'xor' And  )*
+//   Or   := And  ( 'or'  And  )*
 //   And  := Cmp  ( 'and' Cmp  )*
 //   Cmp  := Prim ( ('=' | '!=' | '<' | '<=' | '>' | '>=') Prim )?   non-associative
 //   Prim := Func | '(' Expr ')' | Path | String | Number
@@ -18,7 +17,7 @@ import type {
   Path,
   PathStep,
 } from "./ast"
-import { kindOf } from "./ast"
+import { CARDINALITY_FUNCTIONS, kindOf } from "./ast"
 import { ExprSyntaxError, tokenize, type Token } from "./lexer"
 
 export interface ExprError {
@@ -85,11 +84,7 @@ class Parser {
   }
 
   private parseOr(): ExprNode {
-    return this.parseBinary("or", () => this.parseXor())
-  }
-
-  private parseXor(): ExprNode {
-    return this.parseBinary("xor", () => this.parseAnd())
+    return this.parseBinary("or", () => this.parseAnd())
   }
 
   private parseAnd(): ExprNode {
@@ -211,11 +206,31 @@ class Parser {
 
 /**
  * Per-function argument checks for the functions with defined semantics
- * (`not`, `matches`, `count`). Any other function name parses with any arity (the
- * open set requested). Checks reject only clearly-wrong arguments (`kindOf`
- * `unknown` always passes), keeping this advisory and false-positive-free.
+ * (`not`, `matches`, `count`, and the presence-cardinality trio). Any other
+ * function name parses with any arity (the open set requested). Checks reject only
+ * clearly-wrong arguments (`kindOf` `unknown` always passes), keeping this
+ * advisory and false-positive-free.
  */
 function validateCallArgs(call: Call): void {
+  if (CARDINALITY_FUNCTIONS.has(call.name)) {
+    // A choice is between alternatives, so at least two are required; each must be
+    // an element or condition (a bare literal can't be "present").
+    if (call.args.length < 2) {
+      throw new ExprSyntaxError(`${call.name}() takes at least two arguments`, call.start, call.end)
+    }
+    for (const arg of call.args) {
+      const k = kindOf(arg)
+      if (k === "string" || k === "number") {
+        throw new ExprSyntaxError(
+          `${call.name}() arguments must be elements or conditions, not literals`,
+          arg.start,
+          arg.end,
+        )
+      }
+    }
+    return
+  }
+
   if (call.name === "not") {
     if (call.args.length !== 1) {
       throw new ExprSyntaxError("not() takes exactly one argument", call.start, call.end)
