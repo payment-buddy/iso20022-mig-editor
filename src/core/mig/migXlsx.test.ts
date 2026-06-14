@@ -187,7 +187,7 @@ describe("buildMigExportRows — element rows", () => {
     expect(r.cells.slice(0, 7)).toEqual(["", "", "", "", "", "", ""])
   })
 
-  it("applies a MIG overlay onto an ISO constraint (effective expression, green/own)", () => {
+  it("marks an overlaid ISO constraint as own (green), sourced to the MIG", () => {
     const m = mig("M", {
       "/Doc/GrpHdr/MsgId": {
         constraintOverrides: { Format: { expression: "matches(., '[A-Z]+')" } },
@@ -196,7 +196,6 @@ describe("buildMigExportRows — element rows", () => {
     const { columns, rows } = buildMigExportRows(m, [], MESSAGE)
     const r = rows.find((x) => x.cells[col(columns, "Rule")] === "Format")!
     expect(r.cells[col(columns, "Provenance")]).toBe("M") // overlaid → sourced to the MIG
-    expect(r.cells[col(columns, "Expression")]).toBe("matches(., '[A-Z]+')")
     expect(r.kind).toBe("own")
     expect(fillForKind(r.kind)).toBe("D1FAE5")
   })

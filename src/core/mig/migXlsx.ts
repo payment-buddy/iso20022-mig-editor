@@ -17,7 +17,7 @@
 // the element's own annotations as multiline `key: value`):
 //   Level | Choice | Name | XML tag | Path | Multiplicity | Type | Annotations
 // rule columns are blank on the element row:
-//   Provenance | Rule | Definition | Expression | <one column per constraint annotation>
+//   Provenance | Rule | Definition | <one column per constraint annotation>
 //
 // Provenance: "ISO" (rule from the message definition) or a MIG name — this MIG's
 // own name when it set the rule, or an ancestor's when inherited. Computed from
@@ -116,7 +116,7 @@ const COMMON_COLUMNS = [
   "Type",
 ]
 const ANNOTATIONS_COLUMN = "Annotations"
-const RULE_COLUMNS = ["Provenance", "Rule", "Definition", "Expression"]
+const RULE_COLUMNS = ["Provenance", "Rule", "Definition"]
 
 // Excel column widths (character units) by header; constraint-annotation columns
 // (and any unlisted header) fall back to the default.
@@ -132,7 +132,6 @@ const COLUMN_WIDTHS: Record<string, number> = {
   Provenance: 16,
   Rule: 18,
   Definition: 40,
-  Expression: 40,
 }
 const DEFAULT_WIDTH = 20
 
@@ -288,18 +287,10 @@ export function buildMigExportRows(
     source: string,
     rule: string,
     definition: string,
-    expression: string,
     annotations: string[]
   ): ExportRow => ({
     kind,
-    cells: [
-      ...blankCommon,
-      source,
-      rule,
-      definition,
-      expression,
-      ...annotations,
-    ],
+    cells: [...blankCommon, source, rule, definition, ...annotations],
   })
 
   // A disabled rule is marked in the Rule column.
@@ -358,7 +349,6 @@ export function buildMigExportRows(
             prov.name,
             ruleName(c.name, disabled),
             c.definition,
-            c.expression ?? "",
             annotationCells(c)
           )
         )
@@ -369,7 +359,6 @@ export function buildMigExportRows(
             "ISO",
             ruleName(c.name, disabled),
             c.definition,
-            c.expression ?? "",
             annotationCells(c)
           )
         )
@@ -393,7 +382,6 @@ export function buildMigExportRows(
             prov.name,
             "Multiplicity",
             multiplicity(effMin, effMax),
-            "",
             blankAnnotations
           )
         )
@@ -410,7 +398,6 @@ export function buildMigExportRows(
             prov.name,
             "Type",
             typeString(el, withOverride(iso, ov)),
-            "",
             blankAnnotations
           )
         )
@@ -429,7 +416,6 @@ export function buildMigExportRows(
             prov.name,
             ruleName(c.name, disabled),
             c.definition,
-            c.expression ?? "",
             annotationCells(c)
           )
         )
