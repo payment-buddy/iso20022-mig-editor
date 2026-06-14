@@ -259,6 +259,65 @@ describe("MigEditor", () => {
     expect(saved?.description).toBe("Domestic credit transfers")
   })
 
+  it("undoes and redoes the last edit with Ctrl-Z / Ctrl-Shift-Z", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // Edit the description, then commit by focusing the tree root (a non-input,
+    // so the undo shortcut applies to the MIG, not native text editing).
+    await user.click(screen.getByRole("button", { name: "Edit Description" }))
+    await user.type(
+      screen.getByRole("textbox", { name: "Description" }),
+      "Draft note"
+    )
+    await user.click(screen.getByRole("treeitem", { name: "Document" }))
+    expect(screen.getByText("Draft note")).toBeInTheDocument()
+    await waitFor(async () =>
+      expect((await loadMig(getMigKey(MIG)))?.description).toBe("Draft note")
+    )
+
+    // Undo reverts the edit.
+    await user.keyboard("{Control>}z{/Control}")
+    await waitFor(() =>
+      expect(screen.queryByText("Draft note")).not.toBeInTheDocument()
+    )
+    await waitFor(async () =>
+      expect((await loadMig(getMigKey(MIG)))?.description).toBeUndefined()
+    )
+
+    // Redo restores it.
+    await user.keyboard("{Control>}{Shift>}z{/Shift}{/Control}")
+    await screen.findByText("Draft note")
+    await waitFor(async () =>
+      expect((await loadMig(getMigKey(MIG)))?.description).toBe("Draft note")
+    )
+  })
+
+  it("leaves Ctrl-Z to the browser while a text field is focused", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    await user.click(screen.getByRole("button", { name: "Edit Description" }))
+    await user.type(
+      screen.getByRole("textbox", { name: "Description" }),
+      "Keep me"
+    )
+    await user.click(screen.getByRole("treeitem", { name: "Document" }))
+    await waitFor(async () =>
+      expect((await loadMig(getMigKey(MIG)))?.description).toBe("Keep me")
+    )
+
+    // Re-enter edit mode (textarea focused) and press Ctrl-Z: the MIG-level undo
+    // must not fire — it stays the browser's native text-undo.
+    await user.click(screen.getByRole("button", { name: "Edit Description" }))
+    await user.keyboard("{Control>}z{/Control}")
+    expect((await loadMig(getMigKey(MIG)))?.description).toBe("Keep me")
+  })
+
   it("warns (but does not block) when max occurs is below min occurs", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

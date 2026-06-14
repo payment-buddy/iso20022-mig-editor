@@ -50,6 +50,23 @@ import {
 
 type Status = "loading" | "missing" | "ready"
 
+/** Cap the undo history so a long editing session can't grow it unbounded. */
+const UNDO_LIMIT = 100
+
+/**
+ * Whether a keydown target is a text-editing control — there ⌘/Ctrl-Z must stay
+ * the browser's native text-undo, not the MIG-level undo.
+ */
+function isTextEditing(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return (
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.tagName === "SELECT" ||
+    target.isContentEditable
+  )
+}
+
 /**
  * MIG Editor. Loads the MIG by key, resolves its message in
  * the e-Repository, and shows the editable metadata block plus the element tree.
@@ -68,7 +85,13 @@ export function MigEditor({
   const [validateOpen, setValidateOpen] = useState(false)
   // Error from renaming via the header title (duplicate/blank); cleared on success.
   const [renameError, setRenameError] = useState<string | null>(null)
+  // Undo/redo stacks of prior MIG snapshots (most recent last). Edits push onto
+  // `past` and clear `future`; undo/redo move the current state between them.
+  const [past, setPast] = useState<MessageImplementationGuide[]>([])
+  const [future, setFuture] = useState<MessageImplementationGuide[]>([])
   const treeRef = useRef<ElementTreeHandle>(null)
+  // Latest undo/redo closures, so the once-registered key handler stays current.
+  const historyRef = useRef<{ undo: () => void; redo: () => void }>(null)
 
   useEffect(() => {
     let active = true
@@ -93,12 +116,55 @@ export function MigEditor({
   // unmount). `flushRevisions` lets the rename flow commit before it re-keys.
   const flushRevisions = useRevisionSnapshots(migKey, mig)
 
-  // Autosave: persist the edited MIG (same identity key) and reflect it locally.
-  const persist = (next: MessageImplementationGuide) => {
+  // Apply a MIG state: reflect it locally and autosave (no history side effects).
+  const applyMig = (next: MessageImplementationGuide) => {
     setMig(next)
     setAllMigs((prev) => prev.map((m) => (getMigKey(m) === migKey ? next : m)))
     saveMig(next).catch((err) => console.error("Failed to save MIG:", err))
   }
+
+  // Autosave an edit, recording the prior state for undo and dropping any redo.
+  const persist = (next: MessageImplementationGuide) => {
+    if (mig) setPast((p) => [...p, mig].slice(-UNDO_LIMIT))
+    setFuture([])
+    applyMig(next)
+  }
+
+  const undo = () => {
+    if (!mig || past.length === 0) return
+    setPast((p) => p.slice(0, -1))
+    setFuture((f) => [...f, mig])
+    applyMig(past[past.length - 1])
+  }
+
+  const redo = () => {
+    if (!mig || future.length === 0) return
+    setFuture((f) => f.slice(0, -1))
+    setPast((p) => [...p, mig])
+    applyMig(future[future.length - 1])
+  }
+  // Keep the once-registered key handler's view of undo/redo current.
+  useEffect(() => {
+    historyRef.current = { undo, redo }
+  })
+
+  // ⌘/Ctrl-Z undoes the last edit; add Shift (or Ctrl-Y) to redo. Skipped while a
+  // text field is focused, so it stays the browser's native text-undo there.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return
+      const key = e.key.toLowerCase()
+      const isUndo = key === "z" && !e.shiftKey
+      const isRedo = (key === "z" && e.shiftKey) || key === "y"
+      if (!isUndo && !isRedo) return
+      if (isTextEditing(e.target)) return
+      e.preventDefault()
+      if (isRedo) historyRef.current?.redo()
+      else historyRef.current?.undo()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
 
   // Rename (name and/or version) → a new identity key: write under the new key,
   // repoint child MIGs' parentMIG, drop the old key, move the revision history,
