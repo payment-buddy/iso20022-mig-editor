@@ -567,7 +567,7 @@ describe("MigEditor", () => {
     await user.click(screen.getByRole("treeitem", { name: /constraint stdrule/i }))
     const panel = screen.getByRole("region", { name: /constraint details/i })
 
-    // Expression is inherited from the parent's overlay → violet diamond.
+    // Expression is inherited from the parent's overlay → blue diamond.
     const inheritedDot = within(panel).getByTitle(/inherited from a parent mig: x > 0/i)
     expect(inheritedDot).toHaveClass("rotate-45", "bg-provenance-inherited")
 
@@ -815,7 +815,7 @@ describe("MigEditor", () => {
     await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
     const panel = screen.getByRole("region", { name: /element details/i })
 
-    // Max length inherits the parent's 20 (not the ISO 35), flagged with a violet
+    // Max length inherits the parent's 20 (not the ISO 35), flagged with a blue
     // "inherited" diamond (consistent with the element-tree tint).
     const inheritedDot = within(panel).getByTitle(/inherited from a parent mig: 20/i)
     expect(inheritedDot).toBeInTheDocument()
@@ -1230,7 +1230,7 @@ describe("MigEditor", () => {
     // Owner is overridden here (over the parent's "ops") → blue dot.
     expect(within(panel).getByTitle("Overridden — inherited: ops")).toHaveClass("bg-provenance-own")
     expect(within(panel).getByText("mine")).toBeInTheDocument()
-    // Usage is inherited from the parent → violet dot, and its value shows even
+    // Usage is inherited from the parent → blue dot, and its value shows even
     // though the child declares no annotation names of its own.
     expect(within(panel).getByTitle("Inherited from a parent MIG: credit")).toHaveClass(
       "bg-provenance-inherited",

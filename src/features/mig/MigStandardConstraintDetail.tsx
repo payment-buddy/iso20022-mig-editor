@@ -177,9 +177,9 @@ export function MigStandardConstraintDetail({
 }
 
 /**
- * A labelled override field: a primary (blue) dot + reset when overridden here, a
- * violet dot when the value is inherited from a parent MIG (matching the
- * element-tree tints and the element detail panel), else unmarked (ISO original).
+ * A labelled override field: a green dot + reset when overridden here, a blue dot
+ * when the value is inherited from a parent MIG (matching the element-tree tints
+ * and the element detail panel), else unmarked (ISO original).
  */
 function OverrideField({
   label,

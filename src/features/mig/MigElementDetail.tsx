@@ -543,10 +543,10 @@ function NumberOverrideField({
 }
 
 /**
- * One editable override field: a label, plus a state affordance — a primary
- * (blue) dot + reset when **overridden here**, or a violet dot when the value
- * comes from a parent MIG (otherwise it's the unmarked ISO original). The dot
- * colours match the element-tree tints. Both carry the baseline in their tooltip.
+ * One editable override field: a label, plus a state affordance — a green dot +
+ * reset when **overridden here**, or a blue dot when the value comes from a
+ * parent MIG (otherwise it's the unmarked ISO original). The dot colours match
+ * the element-tree tints. Both carry the baseline in their tooltip.
  */
 function OverrideRow({
   label,

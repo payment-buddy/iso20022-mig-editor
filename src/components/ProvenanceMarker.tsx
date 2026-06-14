@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils"
 
 /**
- * The shared override-provenance glyph: a filled **circle** in blue for a value
- * overridden in this MIG (`"own"`), or a filled **diamond** in violet for one
+ * The shared override-provenance glyph: a filled **circle** in green for a value
+ * overridden in this MIG (`"own"`), or a filled **diamond** in blue for one
  * inherited from a parent MIG (`"inherited"`). Shape *and* colour carry the
  * meaning so colour isn't the only cue (WCAG 1.4.1). Colours come from the
  * shared `--color-provenance-*` theme variables.
