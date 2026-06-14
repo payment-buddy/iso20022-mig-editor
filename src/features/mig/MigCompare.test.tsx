@@ -108,7 +108,7 @@ describe("MigCompare", () => {
     await renderCompare(a, b)
 
     expect(await screen.findByText(/1 element differs/i)).toBeInTheDocument()
-    const card = screen.getByRole("region", { name: /Amt — changed/i })
+    const card = screen.getByRole("region", { name: /Amt/ })
     expect(card).toBeInTheDocument()
     expect(within(card).getByText("18")).toBeInTheDocument()
     expect(within(card).getByText("12")).toBeInTheDocument()
@@ -119,7 +119,7 @@ describe("MigCompare", () => {
     const b = mig("B", { "/Doc/Amt": { maxLength: 18, minLength: 1 } })
     await renderCompare(a, b)
 
-    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    const card = await screen.findByRole("region", { name: /Amt/ })
     expect(within(card).getByText(/inherits/i)).toBeInTheDocument()
     expect(within(card).getByText("1")).toBeInTheDocument()
   })
@@ -136,7 +136,7 @@ describe("MigCompare", () => {
     const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
-    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    const card = await screen.findByRole("region", { name: /Amt/ })
     await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
 
     // The draft now agrees on that field → nothing left to compare.
@@ -148,7 +148,7 @@ describe("MigCompare", () => {
     const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
-    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    const card = await screen.findByRole("region", { name: /Amt/ })
     await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
 
     // Still in the draft only — storage is unchanged, and the UI flags it.
@@ -168,7 +168,7 @@ describe("MigCompare", () => {
     const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
-    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    const card = await screen.findByRole("region", { name: /Amt/ })
     await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i }))
     await userEvent.click(screen.getByRole("button", { name: /^save$/i }))
 
@@ -184,14 +184,14 @@ describe("MigCompare", () => {
 
     expect(await screen.findByRole("button", { name: /^save$/i })).toBeDisabled()
 
-    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    const card = await screen.findByRole("region", { name: /Amt/ })
     await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
     expect(screen.getByRole("button", { name: /^save$/i })).toBeEnabled()
 
     await userEvent.click(screen.getByRole("button", { name: /discard/i }))
 
     // Back to the original difference, Save disabled, storage untouched.
-    expect(await screen.findByRole("region", { name: /Amt — changed/i })).toBeInTheDocument()
+    expect(await screen.findByRole("region", { name: /Amt/ })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled()
     expect((await loadMig(getMigKey(b)))?.elementOverrides["/Doc/Amt"].maxLength).toBe(12)
   })
@@ -202,7 +202,7 @@ describe("MigCompare", () => {
     const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
-    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    const card = await screen.findByRole("region", { name: /Amt/ })
     await userEvent.click(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i }))
 
     await userEvent.click(screen.getByRole("link", { name: /back/i }))
@@ -220,7 +220,7 @@ describe("MigCompare", () => {
     const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
-    await screen.findByRole("region", { name: /Amt — changed/i })
+    await screen.findByRole("region", { name: /Amt/ })
     await userEvent.click(screen.getByRole("link", { name: /back/i }))
     expect(screen.queryByText(/discard unsaved changes/i)).not.toBeInTheDocument()
   })
@@ -248,7 +248,7 @@ describe("MigCompare", () => {
     const b = mig("B", { "/Doc/Amt": { maxLength: 12 } }, "pacs.008.001.09")
     await renderCompare(a, b, repo)
 
-    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    const card = await screen.findByRole("region", { name: /Amt/ })
     expect(within(card).getByRole("button", { name: /Copy Max length to B 1\.0/i })).toBeEnabled()
     expect(within(card).getByRole("button", { name: /Copy Max length to A 1\.0/i })).toBeEnabled()
   })

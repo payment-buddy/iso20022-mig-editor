@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react"
 import {
   ArrowCounterClockwiseIcon,
   ArrowLeftIcon,
-  ArrowLineLeftIcon,
-  ArrowLineRightIcon,
+  CaretDoubleLeftIcon,
+  CaretDoubleRightIcon,
   FloppyDiskIcon,
   GitDiffIcon,
   WarningIcon,
@@ -138,18 +138,11 @@ export function MigCompare({ keyA, keyB, repo }: { keyA: string; keyB: string; r
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <GitDiffIcon className="size-3.5" aria-hidden />
-            Compare MIGs
-          </p>
-          <h1 className="text-base font-semibold tracking-tight">
-            {diff.a.name} <span className="text-muted-foreground">{diff.a.version}</span>{" "}
-            <span className="text-muted-foreground">↔</span> {diff.b.name}{" "}
-            <span className="text-muted-foreground">{diff.b.version}</span>
-          </h1>
-        </div>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="flex items-center gap-2 text-base font-semibold tracking-tight">
+          <GitDiffIcon className="size-5 text-muted-foreground" aria-hidden />
+          Compare MIGs
+        </h1>
         <div className="flex shrink-0 items-center gap-2">
           {dirty && (
             <span className="text-xs text-amber-700 dark:text-amber-500" aria-live="polite">
@@ -246,11 +239,26 @@ function ComparePanel({
 
   return (
     <div className="flex flex-col gap-3" onKeyDown={onKeyDown}>
+
+      {/* Column headers: MIG A (left) vs MIG B (right) sit above the table like a label
+          for each column — underlined only, not boxed into the table. */}
+      <div className={`${COLS} -mb-1 text-sm font-semibold tracking-tight`}>
+        <div className="truncate pb-1.5">
+          {diff.a.name}{" "}
+          <span className="text-sm font-medium text-muted-foreground">{diff.a.version}</span>
+        </div>
+        <div />
+        <div className="truncate pb-1.5">
+          {diff.b.name}{" "}
+          <span className="text-sm font-medium text-muted-foreground">{diff.b.version}</span>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
         <span aria-live="polite">
           {diff.paths.length === 1
-            ? "1 element differs"
-            : `${diff.paths.length} elements differ`}
+              ? "1 element differs"
+              : `${diff.paths.length} elements differ`}
         </span>
         <span className="hidden sm:inline">
           <kbd className="rounded border px-1">j</kbd>/<kbd className="rounded border px-1">k</kbd>{" "}
@@ -258,18 +266,7 @@ function ComparePanel({
         </span>
       </div>
 
-      {/* Column headers: MIG A (left) vs MIG B (right), aligned with field rows. */}
-      <div className={`${COLS} overflow-hidden rounded-t-md border border-b-0 text-xs font-medium`}>
-        <div className="truncate px-3 py-1.5">
-          {diff.a.name} <span className="text-muted-foreground">{diff.a.version}</span>
-        </div>
-        <div className="border-x bg-muted/20" />
-        <div className="truncate px-3 py-1.5">
-          {diff.b.name} <span className="text-muted-foreground">{diff.b.version}</span>
-        </div>
-      </div>
-
-      <div className="-mt-3 flex flex-col">
+      <div className="flex flex-col overflow-hidden rounded-md border">
         {diff.paths.map((p, i) => (
           <ElementCard
             key={p.path}
@@ -288,14 +285,6 @@ function ComparePanel({
   )
 }
 
-// Only "changed" carries a header badge; an added/removed element is conveyed by
-// its per-field cells (one side blank), so no "only in A/B" label is shown.
-const KIND_BADGE: Record<PathDiff["kind"], { label: string; className: string }> = {
-  added: { label: "", className: "text-emerald-700 dark:text-emerald-400" },
-  removed: { label: "", className: "text-destructive" },
-  changed: { label: "changed", className: "text-blue-700 dark:text-blue-400" },
-}
-
 function ElementCard({
   diff,
   copy,
@@ -311,7 +300,6 @@ function ElementCard({
   bLabel: string
   ref: (el: HTMLElement | null) => void
 }) {
-  const badge = KIND_BADGE[diff.kind]
   // Path existence is per-element, not per-field — compute once for the card.
   const canToB = canCopy("a-to-b", diff.path)
   const canToA = canCopy("b-to-a", diff.path)
@@ -319,19 +307,14 @@ function ElementCard({
     <section
       ref={ref}
       tabIndex={0}
-      aria-label={badge.label ? `${diff.name} — ${badge.label}` : diff.name}
-      className="border border-t-0 outline-none first:border-t-0 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-inset"
+      aria-label={diff.name}
+      className="border-b outline-none last:border-b-0 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-inset"
     >
       <header className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <span className="text-sm font-medium">{diff.name}</span>
         <code title={diff.path} className="truncate text-[0.625rem] text-muted-foreground">
           {diff.path}
         </code>
-        {badge.label && (
-          <span className={`ml-auto shrink-0 text-xs font-medium ${badge.className}`}>
-            {badge.label}
-          </span>
-        )}
       </header>
       <div className="flex flex-col divide-y">
         {diff.fields.map((f) => (
@@ -407,7 +390,7 @@ function CopyButton({
   label: string
   onClick: () => void
 }) {
-  const Icon = dir === "right" ? ArrowLineRightIcon : ArrowLineLeftIcon
+  const Icon = dir === "right" ? CaretDoubleRightIcon : CaretDoubleLeftIcon
   return (
     <button
       type="button"
@@ -433,9 +416,9 @@ function Cell({
   side: "a" | "b"
   kind: FieldChange["kind"]
 }) {
-  // Tint the side that carries the change: removed → left (A), added → right (B),
-  // changed in both → blue on both sides. A `null` value means this MIG doesn't
-  // set the field.
+  // Tint the side that carries the change: removed → left (A) in red, added →
+  // right (B) in green, changed in both → blue on both sides. A `null` value
+  // means this MIG doesn't set the field.
   const tinted =
     kind === "changed" || (kind === "removed" && side === "a") || (kind === "added" && side === "b")
   const tint =
