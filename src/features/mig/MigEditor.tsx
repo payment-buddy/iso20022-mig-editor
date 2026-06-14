@@ -160,7 +160,13 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
             textClassName="text-base font-semibold tracking-tight"
           />
           <p className="px-2 text-xs text-muted-foreground">
-            {resolved.current.name} · {mig.messageIdentifier}
+            {resolved.current.name} ·{" "}
+            <a
+              href={hashFor({ name: "message", code: mig.messageIdentifier })}
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {mig.messageIdentifier}
+            </a>
           </p>
           {renameError && <p className="px-2 text-xs text-destructive">{renameError}</p>}
         </div>
