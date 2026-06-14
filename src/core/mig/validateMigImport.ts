@@ -34,9 +34,7 @@ const elementOverride = z.object({
   allowedValues: z.array(z.string()).optional(),
   examples: z.array(z.string()).optional(),
   annotations: z.record(z.string(), z.string()).optional(),
-  additionalConstraints: z
-    .record(z.string(), additionalConstraint)
-    .optional(),
+  additionalConstraints: z.record(z.string(), additionalConstraint).optional(),
   constraintOverrides: z.record(z.string(), constraintOverride).optional(),
 })
 

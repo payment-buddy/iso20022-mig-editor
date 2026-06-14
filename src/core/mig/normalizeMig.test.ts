@@ -95,12 +95,16 @@ const normalize = (m: MessageImplementationGuide, all = [m]) =>
 
 describe("normalizeMig — ISO baseline", () => {
   it("drops a facet equal to the ISO baseline, removing the now-empty path", () => {
-    const out = normalize(mig({ elementOverrides: { "/Doc/Amt": { minOccurs: 1 } } }))
+    const out = normalize(
+      mig({ elementOverrides: { "/Doc/Amt": { minOccurs: 1 } } })
+    )
     expect(out.elementOverrides).toEqual({})
   })
 
   it("keeps a facet that deviates from the standard", () => {
-    const out = normalize(mig({ elementOverrides: { "/Doc/Amt": { maxOccurs: 0 } } }))
+    const out = normalize(
+      mig({ elementOverrides: { "/Doc/Amt": { maxOccurs: 0 } } })
+    )
     expect(out.elementOverrides).toEqual({ "/Doc/Amt": { maxOccurs: 0 } })
   })
 
@@ -110,7 +114,9 @@ describe("normalizeMig — ISO baseline", () => {
     )
     expect(same.elementOverrides).toEqual({})
     const diff = normalize(
-      mig({ elementOverrides: { "/Doc/Amt": { definition: "Settled amount." } } })
+      mig({
+        elementOverrides: { "/Doc/Amt": { definition: "Settled amount." } },
+      })
     )
     expect(diff.elementOverrides).toEqual({
       "/Doc/Amt": { definition: "Settled amount." },
@@ -202,7 +208,12 @@ describe("normalizeMig — constraint cleanup and round-trip", () => {
         elementOverrides: {
           "/Doc/Amt": {
             additionalConstraints: {
-              R1: { definition: "d", expression: "", enabled: true, annotations: {} },
+              R1: {
+                definition: "d",
+                expression: "",
+                enabled: true,
+                annotations: {},
+              },
             },
           },
         },

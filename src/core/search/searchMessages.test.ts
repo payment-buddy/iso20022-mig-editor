@@ -142,9 +142,9 @@ describe("searchMessages", () => {
     ).toBe(true)
 
     // Leading and both-edge spaces also anchor (Debtor element name == "Debtor").
-    expect(searchMessages(repo, " debtor").some((h) => h.field === "name")).toBe(
-      true
-    )
+    expect(
+      searchMessages(repo, " debtor").some((h) => h.field === "name")
+    ).toBe(true)
     expect(
       searchMessages(repo, " debtor ").some((h) => h.field === "name")
     ).toBe(true)

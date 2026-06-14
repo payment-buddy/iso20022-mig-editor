@@ -692,9 +692,7 @@ describe("MigEditor", () => {
     await saveMig(guide)
     render(<MigEditor migKey={getMigKey(guide)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
-    await user.click(
-      screen.getByRole("treeitem", { name: /constraint mine/i })
-    )
+    await user.click(screen.getByRole("treeitem", { name: /constraint mine/i }))
 
     const panel = screen.getByRole("region", { name: /constraint details/i })
     expect(within(panel).getByText("disabled")).toBeInTheDocument()
@@ -954,7 +952,9 @@ describe("MigEditor", () => {
       version: "1.0",
       messageIdentifier: "pacs.008.001.10",
       elementOverrides: {
-        "/DocumentTag": { constraintOverrides: { StdRule: { disabled: true } } },
+        "/DocumentTag": {
+          constraintOverrides: { StdRule: { disabled: true } },
+        },
       },
     }
     const child: MessageImplementationGuide = {
@@ -1005,7 +1005,9 @@ describe("MigEditor", () => {
     const guide: MessageImplementationGuide = {
       ...MIG,
       elementOverrides: {
-        "/DocumentTag": { constraintOverrides: { StdRule: { disabled: true } } },
+        "/DocumentTag": {
+          constraintOverrides: { StdRule: { disabled: true } },
+        },
       },
     }
     await saveMig(guide)
@@ -1911,7 +1913,10 @@ describe("MigEditor", () => {
       elementOverrides: {
         "/DocumentTag": {
           additionalConstraints: {
-            R1: { definition: "inherited rule", annotations: { Severity: "high" } },
+            R1: {
+              definition: "inherited rule",
+              annotations: { Severity: "high" },
+            },
           },
         },
       },
@@ -1953,9 +1958,9 @@ describe("MigEditor", () => {
         ?.constraintOverrides?.R1?.annotations
     ).toEqual({ Severity: "low" })
     // Now overridden here → own (green) dot, with the inherited value as baseline.
-    expect(within(panel).getByTitle("Overridden — inherited: high")).toHaveClass(
-      "bg-provenance-own"
-    )
+    expect(
+      within(panel).getByTitle("Overridden — inherited: high")
+    ).toHaveClass("bg-provenance-own")
   })
 
   it("declares constraint-annotation names in metadata and edits per-constraint values", async () => {

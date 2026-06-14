@@ -46,7 +46,8 @@ const SCOPES: { value: SearchScope; label: string }[] = [
 // The palette opens with ⌘K on macOS and Ctrl+K elsewhere; show the platform's
 // own modifier so the hint matches the key the user actually presses.
 const IS_MAC =
-  typeof navigator !== "undefined" && /Mac|iP(hone|ad|od)/.test(navigator.platform)
+  typeof navigator !== "undefined" &&
+  /Mac|iP(hone|ad|od)/.test(navigator.platform)
 const SHORTCUT_HINT = IS_MAC ? "⌘K" : "Ctrl K"
 
 /**

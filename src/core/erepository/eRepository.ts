@@ -62,7 +62,9 @@ export async function parseRepository(file: File): Promise<ERepository> {
             name: attrs["name"],
             definition: attrs["definition"] ?? "",
             // Space-separated list of member message-definition xmi:ids.
-            ids: (attrs["messageDefinition"] ?? "").split(/\s+/).filter(Boolean),
+            ids: (attrs["messageDefinition"] ?? "")
+              .split(/\s+/)
+              .filter(Boolean),
           })
         }
       }

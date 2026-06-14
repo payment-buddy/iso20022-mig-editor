@@ -66,14 +66,25 @@ export function ResetScreen() {
   return (
     <div className="mx-auto flex min-h-svh max-w-lg flex-col justify-center gap-4 p-6">
       <h1 className="flex items-center gap-2 text-base font-semibold tracking-tight">
-        <WrenchIcon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+        <WrenchIcon
+          className="size-5 shrink-0 text-muted-foreground"
+          aria-hidden
+        />
         Reset local storage
       </h1>
       {done ? (
         <p className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-          <CheckCircleIcon className="size-4 shrink-0 text-foreground" aria-hidden />
+          <CheckCircleIcon
+            className="size-4 shrink-0 text-foreground"
+            aria-hidden
+          />
           Local storage cleared.
-          <Button variant="link" size="sm" className="h-auto p-0" onClick={leaveToHome}>
+          <Button
+            variant="link"
+            size="sm"
+            className="h-auto p-0"
+            onClick={leaveToHome}
+          >
             Reload the app
           </Button>
         </p>
@@ -81,8 +92,8 @@ export function ResetScreen() {
         <>
           <p className="text-sm text-muted-foreground">
             This permanently deletes the e-Repository, every MIG, all revision
-            history, and the trash from this browser. There is no undo — download
-            a backup of your MIGs first if you might need them.
+            history, and the trash from this browser. There is no undo —
+            download a backup of your MIGs first if you might need them.
           </p>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -113,7 +124,10 @@ export function ResetScreen() {
             </Button>
           </div>
 
-          <p className="min-h-4 text-xs text-muted-foreground" aria-live="polite">
+          <p
+            className="min-h-4 text-xs text-muted-foreground"
+            aria-live="polite"
+          >
             {backup === "done" &&
               "Backup downloaded. Keep it safe — re-import it after resetting."}
             {backup === "empty" && "No MIGs to back up."}

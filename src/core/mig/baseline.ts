@@ -8,7 +8,10 @@ import type { ElementOverride, MessageElement } from "@/core/types/types"
 // element. Keeping this in one place stops the editor and the importer drifting.
 
 /** Shallow, order-sensitive equality of two string lists. */
-export function arraysEqual(a: readonly string[], b: readonly string[]): boolean {
+export function arraysEqual(
+  a: readonly string[],
+  b: readonly string[]
+): boolean {
   return a.length === b.length && a.every((v, i) => v === b[i])
 }
 

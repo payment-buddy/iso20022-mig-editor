@@ -126,7 +126,8 @@ export function removeConstraintAnnotation(
         if (annotations) updated.annotations = annotations
         else delete updated.annotations
         // An overlay whose only purpose was this annotation is now empty — drop it.
-        if (Object.keys(updated).length > 0) constraintOverrides[cname] = updated
+        if (Object.keys(updated).length > 0)
+          constraintOverrides[cname] = updated
       }
       next =
         Object.keys(constraintOverrides).length > 0

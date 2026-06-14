@@ -63,7 +63,8 @@ function resolvePath(owner: MessageElement, path: string): string {
 export function resolveOperands(owner: MessageElement, xml: string): string {
   return xml.replace(
     /<(left|right)Operand>(\/[^<]*)<\/\1Operand>/g,
-    (_w, side, path) => `<${side}Operand>${resolvePath(owner, path)}</${side}Operand>`
+    (_w, side, path) =>
+      `<${side}Operand>${resolvePath(owner, path)}</${side}Operand>`
   )
 }
 
@@ -100,7 +101,11 @@ export function enrichMessageDsl(
   const walk = (el: MessageElement, ancestors: Set<string>): void => {
     for (const c of el.constraints ?? []) {
       if (c.expression || !c.isoExpression) continue
-      const dsl = transpileConstraintExpression(el, c.isoExpression, resolveCodeList)
+      const dsl = transpileConstraintExpression(
+        el,
+        c.isoExpression,
+        resolveCodeList
+      )
       if (dsl) c.expression = dsl
     }
     if (ancestors.has(el.id)) return // guard against recursive type cycles

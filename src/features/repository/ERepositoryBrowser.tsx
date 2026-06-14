@@ -460,8 +460,7 @@ function MessageSetsView({
           matches(s.name, q) ||
           matches(s.definition, q) ||
           s.messageIdentifiers.some(
-            (id) =>
-              matches(id, q) || matches(messageNames.get(id) ?? "", q)
+            (id) => matches(id, q) || matches(messageNames.get(id) ?? "", q)
           )
       )
       .map((set) => ({ set, open: true }))
