@@ -227,7 +227,11 @@ function constraintsAt(
   return [...standard, ...additional]
 }
 
-/** Count elements excluded in their own right (effective `maxOccurs:0`) tree-wide. */
+/**
+ * Count what "Hide excluded" removes tree-wide: elements excluded in their own
+ * right (effective `maxOccurs:0`) plus disabled constraints. `overrides` is the
+ * effective overlay, the same source `constraintsAt` reads `disabled` from.
+ */
 function countExcluded(
   root: MessageElement,
   overrides: ElementOverrides | undefined
@@ -235,6 +239,15 @@ function countExcluded(
   let n = 0
   const walk = (el: MessageElement, path: string) => {
     if (isOwnExcluded(path, el, overrides)) n++
+    const ov = overrides?.[path]
+    const isDisabled = (name: string) =>
+      ov?.constraintOverrides?.[name]?.disabled ?? false
+    for (const constraint of el.constraints) {
+      if (isDisabled(constraint.name)) n++
+    }
+    for (const [name, ac] of Object.entries(ov?.additionalConstraints ?? {})) {
+      if (ac.enabled === false || isDisabled(name)) n++
+    }
     for (const child of el.elements) walk(child, `${path}/${child.xmlTag}`)
   }
   walk(root, rootPath(root))
@@ -303,7 +316,8 @@ function buildFilter(
  * Walk the element tree, emitting only nodes whose ancestors are all expanded.
  * When `filter` is set, prune to its `keep` set and force its `expand` paths
  * open (a node also stays open if the user expanded it). When `hideExcluded` is
- * set, drop `maxOccurs:0` elements (and their subtrees) entirely. `ownOverrides`
+ * set, drop `maxOccurs:0` elements (and their subtrees) and disabled constraints
+ * entirely. `ownOverrides`
  * drive the MIG-specific constraint nodes; `effectiveOverrides` (own + inherited)
  * drive exclusion styling and the displayed cardinality.
  */
@@ -339,9 +353,14 @@ function flattenTree(
       return true
     })
     const cons = constraintsAt(path, el, ownOverrides, effectiveOverrides)
-    const childCons = filter
-      ? cons.filter((c) => filter.keep.has(`${path}/${c.constraint.name}`))
-      : cons
+    const childCons = cons.filter((c) => {
+      if (filter && !filter.keep.has(`${path}/${c.constraint.name}`))
+        return false
+      // "Hide excluded" also drops disabled rules (a re-enabled rule reports
+      // `disabled: false`, so it stays).
+      if (hideExcluded && c.disabled) return false
+      return true
+    })
     const hasChildren = childEls.length > 0 || childCons.length > 0
     const isOpen = filter
       ? filter.expand.has(path) || expanded.has(path)

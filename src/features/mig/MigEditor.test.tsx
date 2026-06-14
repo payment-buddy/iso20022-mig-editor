@@ -528,6 +528,34 @@ describe("MigEditor", () => {
     ).not.toBeInTheDocument()
   })
 
+  it("counts and hides disabled constraints via 'Hide excluded'", async () => {
+    const user = userEvent.setup()
+    await saveMig({
+      ...MIG,
+      elementOverrides: {
+        "/DocumentTag": {
+          additionalConstraints: {
+            "Off Rule": { definition: "", enabled: false },
+          },
+        },
+      },
+    })
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    // The disabled rule is visible and feeds the toggle's count.
+    const rule = screen.getByRole("treeitem", { name: /constraint Off Rule$/i })
+    expect(within(rule).getByText("disabled")).toBeInTheDocument()
+    const toggle = screen.getByLabelText(/hide excluded \(1\)/i)
+    expect(toggle).toBeEnabled()
+
+    // Toggling on drops the disabled constraint from the tree.
+    await user.click(toggle)
+    expect(
+      screen.queryByRole("treeitem", { name: /constraint Off Rule$/i })
+    ).not.toBeInTheDocument()
+  })
+
   it("adds a MIG-specific constraint, revealing and selecting it in the tree", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)
