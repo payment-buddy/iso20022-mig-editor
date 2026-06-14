@@ -6,6 +6,7 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
+import { loadRevisions } from "@/core/storage/revisionStore"
 import { getMigKey } from "@/core/mig/migKey"
 import { serializeMig } from "@/core/mig/serializeMig"
 import type {
@@ -113,6 +114,10 @@ describe("MigMerge", () => {
       expect((await loadMig("Target:1.0"))?.elementOverrides["Doc/Amt"].maxLength).toBe(12),
     )
     expect(window.location.hash).toBe("#mig/Target%3A1.0")
+    // The merge is recorded in history: the pre-merge baseline + a "Merged" rev.
+    const revs = await loadRevisions("Target:1.0")
+    expect(revs.map((r) => r.summary)).toEqual(["Initial", "Merged"])
+    expect(revs[1].mig.elementOverrides["Doc/Amt"].maxLength).toBe(12)
   })
 
   it("consumes an incoming MIG handed off from the import flow (no upload)", async () => {

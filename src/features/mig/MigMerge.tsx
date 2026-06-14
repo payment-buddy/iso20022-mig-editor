@@ -6,7 +6,9 @@ import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
 import { buildPathOrder } from "@/core/mig/serializeMig"
 import { compareMigs, type FieldChange, type PathDiff } from "@/core/mig/compareMigs"
 import { applyFieldCopy } from "@/core/mig/copyChange"
+import { appendRevision } from "@/core/mig/revisions"
 import { loadMig, saveMig } from "@/core/storage/migStore"
+import { loadRevisions, saveRevisions } from "@/core/storage/revisionStore"
 import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
@@ -104,10 +106,22 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
     setDraft(applyFieldCopy(incoming, draft, path, field.ref))
   }
 
-  const save = () => {
-    saveMig(draft)
-      .then(() => navigate({ name: "mig", key: targetKey }))
-      .catch((err) => console.error("Failed to save merged MIG:", err))
+  const save = async () => {
+    try {
+      await saveMig(draft)
+      // Record the merge in the target's history (when something was actually
+      // taken). Seed the pre-merge state as a baseline if there's no history yet,
+      // so the "Merged" revision diffs against it.
+      if (draft !== saved) {
+        const now = Date.now()
+        const existing = await loadRevisions(targetKey)
+        const seeded = existing.length === 0 ? appendRevision(existing, saved, now) : existing
+        await saveRevisions(targetKey, appendRevision(seeded, draft, now, "Merged"))
+      }
+      navigate({ name: "mig", key: targetKey })
+    } catch (err) {
+      console.error("Failed to save merged MIG:", err)
+    }
   }
   const discard = () => setDraft(saved)
 
