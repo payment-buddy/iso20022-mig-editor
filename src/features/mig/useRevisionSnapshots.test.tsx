@@ -49,6 +49,29 @@ describe("useRevisionSnapshots", () => {
     expect(await loadRevisions("EPC:1.0")).toEqual([])
   })
 
+  it("records nothing for a burst that nets no change (no empty revision)", async () => {
+    const { result, rerender } = renderHook(({ m }) => useRevisionSnapshots("EPC:1.0", m), {
+      initialProps: { m: mig() },
+    })
+    await tick()
+    rerender({ m: mig({ description: "x" }) }) // an edit…
+    rerender({ m: mig() }) // …reverted back to the baseline content
+    await result.current()
+    expect(await loadRevisions("EPC:1.0")).toEqual([]) // no baseline, no "No changes"
+  })
+
+  it("skips a no-op burst when history already exists", async () => {
+    await saveRevisions("EPC:1.0", appendRevision([], mig({ description: "y" }), 1))
+    const { result, rerender } = renderHook(({ m }) => useRevisionSnapshots("EPC:1.0", m), {
+      initialProps: { m: mig({ description: "y" }) },
+    })
+    await tick()
+    rerender({ m: mig({ description: "y", parentMIG: "B:1" }) }) // an edit…
+    rerender({ m: mig({ description: "y" }) }) // …reverted to the last revision's content
+    await result.current()
+    expect(await loadRevisions("EPC:1.0")).toHaveLength(1) // unchanged — no new revision
+  })
+
   it("appends to existing history without re-seeding a baseline", async () => {
     await saveRevisions("EPC:1.0", appendRevision([], mig(), 1))
     const { result, rerender } = renderHook(({ m }) => useRevisionSnapshots("EPC:1.0", m), {

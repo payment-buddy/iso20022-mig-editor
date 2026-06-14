@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react"
-import { appendRevision } from "@/core/mig/revisions"
+import { appendRevision, summarizeChange } from "@/core/mig/revisions"
 import { loadRevisions, saveRevisions } from "@/core/storage/revisionStore"
 import type { MessageImplementationGuide } from "@/core/types/types"
 
@@ -48,6 +48,14 @@ export function useRevisionSnapshots(
     const next = latestRef.current
     // Nothing loaded yet, nothing edited, or unchanged since the last snapshot.
     if (!loadedRef.current || !next || next === lastRef.current) return
+    // A new object reference isn't a real change: an edit reverted within the
+    // burst, or a value set back to its inherited baseline (which auto-clears the
+    // override), lands here semantically identical to the last snapshot. Skip it
+    // so the history never gains an empty "No changes" revision.
+    if (lastRef.current && summarizeChange(lastRef.current, next) === "No changes") {
+      lastRef.current = next
+      return
+    }
     let revs = revisionsRef.current
     if (revs.length === 0 && baselineRef.current) {
       revs = appendRevision(revs, baselineRef.current.mig, baselineRef.current.at)
