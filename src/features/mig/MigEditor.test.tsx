@@ -108,7 +108,9 @@ describe("MigEditor", () => {
 
     // Tree appears once the MIG loads from IndexedDB.
     expect(await screen.findByRole("treeitem", { name: "Document" })).toBeInTheDocument()
-    expect(screen.getByRole("heading", { name: "EPC Guide" })).toBeInTheDocument()
+    // The MIG name is an inline-editable title in the header.
+    expect(screen.getByRole("button", { name: "Edit MIG name" })).toBeInTheDocument()
+    expect(screen.getAllByText("EPC Guide").length).toBeGreaterThan(0)
     // Root is expanded by default.
     expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toBeInTheDocument()
     // Grandchild stays collapsed until its parent is expanded.
@@ -1281,7 +1283,7 @@ describe("MigEditor", () => {
     ])
   })
 
-  it("renames the MIG, re-keys storage, repoints children and re-routes", async () => {
+  it("re-versions the MIG (metadata), re-keys storage, repoints children and re-routes", async () => {
     const user = userEvent.setup()
     const child: MessageImplementationGuide = {
       name: "Child",
@@ -1296,23 +1298,51 @@ describe("MigEditor", () => {
     await screen.findByRole("treeitem", { name: "Document" })
     const meta = screen.getByRole("region", { name: /mig metadata/i })
 
-    await user.click(within(meta).getByRole("button", { name: "Edit Name" }))
-    const input = within(meta).getByRole("textbox", { name: "Name" })
+    await user.click(within(meta).getByRole("button", { name: "Edit Version" }))
+    const input = within(meta).getByRole("textbox", { name: "Version" })
     await user.clear(input)
-    await user.type(input, "EPC Renamed")
+    await user.type(input, "2.0")
     await user.tab()
 
     await waitFor(async () => {
       // Stored under the new key; the old key is gone.
-      expect(await loadMig("EPC Renamed:1.0")).toMatchObject({ name: "EPC Renamed" })
+      expect(await loadMig("EPC Guide:2.0")).toMatchObject({ version: "2.0" })
     })
     expect(await loadMig("EPC Guide:1.0")).toBeNull()
-    // The child's parentMIG followed the rename, and the route points at the new key.
-    expect((await loadMig("Child:1"))?.parentMIG).toBe("EPC Renamed:1.0")
-    expect(window.location.hash).toBe("#mig/EPC%20Renamed%3A1.0")
+    // The child's parentMIG followed the re-key, and the route points at it.
+    expect((await loadMig("Child:1"))?.parentMIG).toBe("EPC Guide:2.0")
+    expect(window.location.hash).toBe("#mig/EPC%20Guide%3A2.0")
   })
 
-  it("rejects a rename that collides with an existing MIG", async () => {
+  it("renames the MIG from the header title, repointing children and re-routing", async () => {
+    const user = userEvent.setup()
+    const child: MessageImplementationGuide = {
+      name: "Child",
+      version: "1",
+      messageIdentifier: "pacs.008.001.10",
+      parentMIG: "EPC Guide:1.0",
+      elementOverrides: {},
+    }
+    await saveMig(MIG)
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    await user.click(screen.getByRole("button", { name: "Edit MIG name" }))
+    const input = screen.getByRole("textbox", { name: "MIG name" })
+    await user.clear(input)
+    await user.type(input, "Header Renamed")
+    await user.tab()
+
+    await waitFor(async () => {
+      expect(await loadMig("Header Renamed:1.0")).toMatchObject({ name: "Header Renamed" })
+    })
+    expect(await loadMig("EPC Guide:1.0")).toBeNull()
+    expect((await loadMig("Child:1"))?.parentMIG).toBe("Header Renamed:1.0")
+    expect(window.location.hash).toBe("#mig/Header%20Renamed%3A1.0")
+  })
+
+  it("surfaces a header rename collision inline", async () => {
     const user = userEvent.setup()
     const taken: MessageImplementationGuide = {
       name: "Taken",
@@ -1324,16 +1354,14 @@ describe("MigEditor", () => {
     await saveMig(taken)
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
-    const meta = screen.getByRole("region", { name: /mig metadata/i })
 
-    await user.click(within(meta).getByRole("button", { name: "Edit Name" }))
-    const input = within(meta).getByRole("textbox", { name: "Name" })
+    await user.click(screen.getByRole("button", { name: "Edit MIG name" }))
+    const input = screen.getByRole("textbox", { name: "MIG name" })
     await user.clear(input)
     await user.type(input, "Taken")
     await user.tab()
 
-    expect(await within(meta).findByRole("alert")).toHaveTextContent(/already exists/i)
-    // Unchanged: still stored under its original key.
+    expect(await screen.findByText(/already exists/i)).toBeInTheDocument()
     expect(await loadMig("EPC Guide:1.0")).toMatchObject({ name: "EPC Guide" })
   })
 

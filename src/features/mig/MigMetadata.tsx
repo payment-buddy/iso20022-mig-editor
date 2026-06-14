@@ -18,9 +18,9 @@ import { InlineSelect } from "@/components/ui/inline-select"
  * Editable MIG metadata block (FUNCTIONALITY §5.7): Description (inline
  * textarea), Parent MIG (eligible-parent dropdown with a link and a not-loaded
  * warning), and the shared element- and constraint-annotation names (values are
- * then filled per target in the detail panels). Name and Version are inline-edit
- * — committing either re-keys the MIG via `onRename` (which re-routes on success
- * and returns an error message on failure).
+ * then filled per target in the detail panels). Version is inline-edit —
+ * committing it (or renaming via the editor header) re-keys the MIG via
+ * `onRename` (which re-routes on success and returns an error message on failure).
  */
 export function MigMetadata({
   mig,
@@ -95,14 +95,7 @@ export function MigMetadata({
 
   return (
     <section aria-label="MIG metadata" className="flex flex-col gap-3">
-      <Row label="Name">
-        <InlineEdit
-          value={mig.name}
-          onCommit={(v) => rename(v, mig.version)}
-          ariaLabel="Name"
-          placeholder="MIG name"
-        />
-      </Row>
+      {/* The MIG name is edited inline in the editor header (same rename flow). */}
       <Row label="Version">
         <InlineEdit
           value={mig.version}

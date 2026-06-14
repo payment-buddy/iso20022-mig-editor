@@ -19,7 +19,9 @@ const isLongText = (s: string) => s.length > LONG_TEXT_CHARS || s.split("\n").le
  *
  * `type="number"` renders a numeric input with the browser's increment/decrement
  * spinner. `display` overrides the non-editing label when it should differ from
- * the raw value (e.g. an empty number field shown as "unbounded").
+ * the raw value (e.g. an empty number field shown as "unbounded"). `textClassName`
+ * overrides the text style of both the label and the editor (e.g. to render a
+ * heading); it's merged over the default `text-sm`.
  */
 export function InlineEdit({
   value,
@@ -29,6 +31,7 @@ export function InlineEdit({
   multiline = false,
   type = "text",
   display,
+  textClassName,
 }: {
   value: string
   onCommit: (next: string) => void
@@ -37,6 +40,7 @@ export function InlineEdit({
   multiline?: boolean
   type?: "text" | "number"
   display?: ReactNode
+  textClassName?: string
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value)
@@ -60,7 +64,7 @@ export function InlineEdit({
     const collapsible = display == null && isLongText(value)
     return (
       <div className="group flex w-full items-start justify-between gap-2 rounded-md border border-transparent px-2 py-1 transition-colors hover:border-border focus-within:border-border">
-        <div className="min-w-0 text-sm">
+        <div className={cn("min-w-0 text-sm", textClassName)}>
           {collapsible ? (
             <>
               <p className={cn("whitespace-pre-wrap", !expanded && "line-clamp-5")}>{value}</p>
@@ -131,7 +135,7 @@ export function InlineEdit({
       onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={onKeyDown}
-      className={cn(className, "h-8")}
+      className={cn(className, "h-8", textClassName)}
     />
   )
 }
