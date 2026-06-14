@@ -119,11 +119,14 @@ export function MigHome() {
   }, [selected, migs.length])
 
   const commitImport = useCallback(
-    (toSave: MessageImplementationGuide[], problems: string[]) => {
+    (toSave: MessageImplementationGuide[], problems: string[], openKey?: string) => {
       Promise.all(toSave.map(saveMig))
         .then(() => {
           setImportErrors(problems)
-          refresh()
+          // A single clean new import opens straight in its editor; otherwise stay
+          // on the (refreshed) list.
+          if (openKey) navigate({ name: "mig", key: openKey })
+          else refresh()
         })
         .catch((err) => console.error("Failed to import MIGs:", err))
     },
@@ -146,7 +149,10 @@ export function MigHome() {
         setPendingImport({ incoming, duplicateKeys, errors: problems })
         return
       }
-      commitImport(incoming, problems)
+      // Exactly one new MIG and nothing rejected → open it in the editor (§5.2).
+      const openKey =
+        incoming.length === 1 && problems.length === 0 ? getMigKey(incoming[0]) : undefined
+      commitImport(incoming, problems, openKey)
     },
     [migs, commitImport],
   )

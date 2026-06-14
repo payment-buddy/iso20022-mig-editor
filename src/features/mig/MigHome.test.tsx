@@ -87,12 +87,13 @@ describe("MigHome", () => {
     expect(await screen.findByText(/no migs yet/i)).toBeInTheDocument()
   })
 
-  it("uploads a MIG YAML, persists it, and lists it", async () => {
+  it("uploads a single new MIG, persists it, and opens its editor", async () => {
     render(<MigHome />)
     await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0"))
 
-    const link = await screen.findByRole("link", { name: /EPC/ })
-    expect(link).toHaveAttribute("href", "#mig/EPC%3A1.0")
+    // A single clean import lands straight in the editor (§5.2).
+    await waitFor(() => expect(window.location.hash).toBe("#mig/EPC%3A1.0"))
+    expect(await loadMig("EPC:1.0")).not.toBeNull()
   })
 
   it("shows a Last modified time per MIG, dashing those with none", async () => {
