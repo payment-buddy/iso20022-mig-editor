@@ -216,6 +216,22 @@ describe("buildMigExportRows — element rows", () => {
     expect(fontColorForKind(r.kind)).toBe("6B7280")
   })
 
+  it("marks a disabled added constraint gray with muted text, like an ISO one", () => {
+    const m = mig("M", {
+      "/Doc/GrpHdr/MsgId": {
+        additionalConstraints: [{ name: "MyRule", definition: "custom" }],
+        constraintOverrides: { MyRule: { disabled: true } },
+      },
+    })
+    const { columns, rows } = buildMigExportRows(m, [], MESSAGE)
+    const r = rows.find(
+      (x) => x.cells[col(columns, "Rule")] === "MyRule (disabled)"
+    )!
+    expect(r.kind).toBe("disabled")
+    expect(fillForKind(r.kind)).toBe("E5E7EB")
+    expect(fontColorForKind(r.kind)).toBe("6B7280")
+  })
+
   it("tints an excluded element row gray with muted text", () => {
     const { columns, rows } = buildMigExportRows(
       mig("M", { "/Doc/Amt": { maxOccurs: 0 } }),

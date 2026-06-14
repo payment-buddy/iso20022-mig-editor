@@ -264,6 +264,35 @@ describe("removeConstraint", () => {
     expect(removeConstraint(before, "/Doc/Other", "A")).toBe(before)
   })
 
+  it("drops a leftover disable overlay for the removed constraint", () => {
+    const before = mig({
+      "/Doc/Amt": {
+        additionalConstraints: [
+          { name: "A", definition: "" },
+          { name: "B", definition: "" },
+        ],
+        constraintOverrides: { A: { disabled: true }, B: { disabled: true } },
+      },
+    })
+    const next = removeConstraint(before, "/Doc/Amt", "A")
+    expect(next.elementOverrides["/Doc/Amt"]).toEqual({
+      additionalConstraints: [{ name: "B", definition: "" }],
+      constraintOverrides: { B: { disabled: true } },
+    })
+  })
+
+  it("prunes the override entry even when only a disable overlay remains", () => {
+    const before = mig({
+      "/Doc/Amt": {
+        additionalConstraints: [{ name: "A", definition: "" }],
+        constraintOverrides: { A: { disabled: true } },
+      },
+    })
+    expect(removeConstraint(before, "/Doc/Amt", "A").elementOverrides).toEqual(
+      {}
+    )
+  })
+
   it("does not mutate the input MIG", () => {
     const before = withConstraints("A")
     removeConstraint(before, "/Doc/Amt", "A")

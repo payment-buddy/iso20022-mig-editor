@@ -134,9 +134,10 @@ export function updateConstraint(
 
 /**
  * Remove a MIG-specific constraint (by `name`) at `path`, returning a new MIG.
- * Prunes the `additionalConstraints` array when it empties, then the override
- * entry entirely when nothing else remains (keeping the MIG minimal, like
- * `clearOverrideField`). No-op if no such additional constraint exists.
+ * Prunes the `additionalConstraints` array when it empties, drops any leftover
+ * `constraintOverrides` entry for the same name (e.g. a disable toggle), then the
+ * override entry entirely when nothing else remains (keeping the MIG minimal,
+ * like `clearOverrideField`). No-op if no such additional constraint exists.
  */
 export function removeConstraint(
   mig: MessageImplementationGuide,
@@ -151,6 +152,15 @@ export function removeConstraint(
   const nextOverride = { ...prev }
   if (remaining.length === 0) delete nextOverride.additionalConstraints
   else nextOverride.additionalConstraints = remaining
+
+  // An added constraint owns its name, so any overlay entry under it (e.g. the
+  // disable flag) is dead once it's gone — prune it, then the map if it empties.
+  if (nextOverride.constraintOverrides?.[name]) {
+    const map = { ...nextOverride.constraintOverrides }
+    delete map[name]
+    if (Object.keys(map).length === 0) delete nextOverride.constraintOverrides
+    else nextOverride.constraintOverrides = map
+  }
 
   const elementOverrides = { ...mig.elementOverrides }
   if (Object.keys(nextOverride).length === 0) delete elementOverrides[path]

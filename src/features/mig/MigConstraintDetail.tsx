@@ -13,6 +13,10 @@ import { ProvenanceDot } from "./ProvenanceDot"
  * properties. The name stays unique within the element — a rename that is blank,
  * unchanged, or already taken by a sibling constraint is rejected (the field
  * reverts). Standard, spec-inherited constraints use the read-only view instead.
+ *
+ * Like ISO/inherited rules, an added rule can also be **disabled** (kept in the
+ * MIG but not enforced) without deleting it — a plain on/off here since an added
+ * constraint has no inherited baseline to reset to.
  */
 export function MigConstraintDetail({
   constraint,
@@ -20,10 +24,12 @@ export function MigConstraintDetail({
   path,
   takenNames,
   annotationNames,
+  disabled,
   onRename,
   onSetDefinition,
   onSetExpression,
   onSetAnnotations,
+  onToggleDisabled,
   onDelete,
 }: {
   constraint: Constraint
@@ -35,10 +41,13 @@ export function MigConstraintDetail({
   takenNames: string[]
   /** Declared MIG-level constraint-annotation names (managed in the metadata block). */
   annotationNames: string[]
+  /** Whether the rule is switched off (kept but not enforced). */
+  disabled: boolean
   onRename: (name: string) => void
   onSetDefinition: (definition: string) => void
   onSetExpression: (expression: string) => void
   onSetAnnotations: (annotations: Record<string, string | null>) => void
+  onToggleDisabled: (value: boolean) => void
   onDelete: () => void
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -152,6 +161,27 @@ export function MigConstraintDetail({
           })}
         </div>
       )}
+
+      <div className="border-t border-border pt-3">
+        <label className="flex items-center gap-2 text-xs font-medium">
+          <input
+            type="checkbox"
+            checked={disabled}
+            onChange={() => onToggleDisabled(!disabled)}
+            className="size-3.5 accent-destructive"
+          />
+          Disable this rule
+        </label>
+        {disabled && (
+          <p
+            role="alert"
+            className="mt-1 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500"
+          >
+            <WarningIcon className="size-3 shrink-0" aria-hidden />
+            A disabled rule is kept in the MIG but not enforced.
+          </p>
+        )}
+      </div>
 
       <div className="border-t border-border pt-3">
         <button

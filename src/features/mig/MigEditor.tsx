@@ -516,6 +516,11 @@ export function MigEditor({
                 path={sel.path}
                 takenNames={takenNames}
                 annotationNames={effective.constraintAnnotationNames ?? []}
+                disabled={
+                  mig.elementOverrides[elementPath]?.constraintOverrides?.[
+                    current
+                  ]?.disabled ?? false
+                }
                 onRename={(name) => {
                   persist(updateConstraint(mig, elementPath, current, { name }))
                   // The path changed; keep the renamed constraint selected.
@@ -534,6 +539,24 @@ export function MigEditor({
                 onSetAnnotations={(annotations) =>
                   persist(
                     updateConstraint(mig, elementPath, current, { annotations })
+                  )
+                }
+                onToggleDisabled={(value) =>
+                  persist(
+                    value
+                      ? setConstraintOverrideField(
+                          mig,
+                          elementPath,
+                          current,
+                          "disabled",
+                          true
+                        )
+                      : clearConstraintOverrideField(
+                          mig,
+                          elementPath,
+                          current,
+                          "disabled"
+                        )
                   )
                 }
                 onDelete={() => {
