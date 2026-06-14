@@ -563,6 +563,39 @@ describe("MigEditor", () => {
     ).toEqual({ StdRule: { disabled: true } })
   })
 
+  it("colours an own-overridden node and shows the legend", async () => {
+    const guide: MessageImplementationGuide = {
+      ...MIG,
+      elementOverrides: { "DocumentTag/GrpHdrTag": { maxLength: 20 } },
+    }
+    await saveMig(guide)
+    render(<MigEditor migKey={getMigKey(guide)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: /Document/ })
+
+    expect(screen.getByText("Overridden here")).toBeInTheDocument()
+    const item = screen.getByRole("treeitem", { name: /GrpHdr/ })
+    expect(item.querySelector(".text-primary")?.textContent).toBe("GrpHdr")
+  })
+
+  it("colours a node overridden only by a parent MIG in the inherited colour", async () => {
+    const parent: MessageImplementationGuide = {
+      name: "Base",
+      version: "1.0",
+      messageIdentifier: "pacs.008.001.10",
+      elementOverrides: { "DocumentTag/GrpHdrTag": { maxLength: 20 } },
+    }
+    const child: MessageImplementationGuide = { ...MIG, parentMIG: getMigKey(parent) }
+    await saveMig(parent)
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: /Document/ })
+
+    const item = screen.getByRole("treeitem", { name: /GrpHdr/ })
+    expect(item.querySelector(".text-violet-600")?.textContent).toBe("GrpHdr")
+    // It isn't this MIG's own override.
+    expect(item.querySelector(".text-primary")).toBeNull()
+  })
+
   it("shows an inherited (parent-MIG) constraint and overlays an expression on it", async () => {
     const user = userEvent.setup()
     const parent: MessageImplementationGuide = {

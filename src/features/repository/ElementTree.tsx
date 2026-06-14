@@ -32,9 +32,14 @@ type FlatNode = {
       /** Effective cardinality (own + inherited override over the base). */
       minOccurs: number
       maxOccurs: number | null
+      /** Whether this MIG (`own`) or a parent (`inherited`) overrides this path. */
+      overrideOrigin: OverrideOrigin
     }
   | { kind: "constraint"; constraint: Constraint; origin: ConstraintOrigin; disabled: boolean }
 )
+
+/** Where an element's override comes from, for tree colouring. */
+type OverrideOrigin = "own" | "inherited" | null
 
 /** The focused/selected node, handed to the detail-panel renderer (selection follows focus). */
 export type SelectedNode =
@@ -227,6 +232,8 @@ function flattenTree(
       hasChildren,
       expanded: isOpen,
       excluded,
+      // Own override wins; otherwise a parent-chain (inherited) override.
+      overrideOrigin: ownOverrides?.[path] ? "own" : effectiveOverrides?.[path] ? "inherited" : null,
     })
     if (!hasChildren || !isOpen) return
     for (const child of childEls) {
@@ -320,6 +327,8 @@ export function ElementTree({
   const filterRef = useRef<HTMLInputElement>(null)
 
   const excludedCount = useMemo(() => countExcluded(root, effective), [root, effective])
+  // Whether to show the override-colour legend (only in a MIG with overrides).
+  const hasOverrides = !!effective && Object.keys(effective).length > 0
   const q = filter.trim().toLowerCase()
   const treeFilter = useMemo(
     () => (q ? buildFilter(root, q, effective) : null),
@@ -531,6 +540,18 @@ export function ElementTree({
           />
           Hide excluded ({excludedCount})
         </label>
+        {hasOverrides && (
+          <div className="flex w-fit items-center gap-3 text-xs text-muted-foreground sm:ml-auto">
+            <span className="flex items-center gap-1">
+              <span className="size-2 rounded-full bg-primary" aria-hidden />
+              Overridden here
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="size-2 rounded-full bg-violet-600 dark:bg-violet-400" aria-hidden />
+              Inherited
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-[3fr_4fr]">
@@ -641,6 +662,15 @@ function TreeNode({
             node.kind === "element" && "font-medium",
             (node.excluded || (node.kind === "constraint" && node.disabled)) &&
               "text-muted-foreground line-through",
+            // Override provenance colour (excluded styling above takes priority).
+            node.kind === "element" &&
+              !node.excluded &&
+              node.overrideOrigin === "own" &&
+              "text-primary",
+            node.kind === "element" &&
+              !node.excluded &&
+              node.overrideOrigin === "inherited" &&
+              "text-violet-600 dark:text-violet-400",
           )}
         >
           {label}
