@@ -45,6 +45,18 @@ const REPO: ERepository = {
       msg("BankStatementV09", "camt.053", "camt.053.001.09"),
     ]),
   ],
+  messageSets: [
+    {
+      name: "Credit Transfer Scheme",
+      definition: "A scheme for credit transfers.",
+      messageIdentifiers: ["pacs.008.001.08", "pacs.002.001.12"],
+    },
+    {
+      name: "Reporting",
+      definition: "",
+      messageIdentifiers: ["camt.053.001.09"],
+    },
+  ],
 }
 
 afterEach(async () => {
@@ -156,5 +168,64 @@ describe("ERepositoryBrowser", () => {
       screen.getByRole("button", { name: /update e-repository/i })
     )
     expect(onUpdate).toHaveBeenCalledOnce()
+  })
+})
+
+describe("ERepositoryBrowser — Message Sets tab", () => {
+  const openSetsTab = async () => {
+    render(<ERepositoryBrowser repo={REPO} onUpdateRepository={vi.fn()} />)
+    await userEvent.click(screen.getByRole("tab", { name: /message sets/i }))
+  }
+
+  it("lists sets when the tab is selected", async () => {
+    render(<ERepositoryBrowser repo={REPO} onUpdateRepository={vi.fn()} />)
+    // Business Areas is the default tab.
+    expect(screen.getByText("Payments Clearing")).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole("tab", { name: "Message Sets" }))
+    expect(screen.getByText("Credit Transfer Scheme")).toBeInTheDocument()
+    expect(screen.getByText("Reporting")).toBeInTheDocument()
+    // The business-area tree is no longer rendered.
+    expect(screen.queryByText("Payments Clearing")).not.toBeInTheDocument()
+  })
+
+  it("expands a set to reveal its member message links", async () => {
+    await openSetsTab()
+    await userEvent.click(
+      screen.getByRole("button", { name: /credit transfer scheme/i })
+    )
+    expect(
+      screen.getByRole("link", { name: /pacs\.008\.001\.08/ })
+    ).toHaveAttribute("href", "#pacs.008.001.08")
+    expect(
+      screen.getByRole("link", { name: /pacs\.002\.001\.12/ })
+    ).toBeInTheDocument()
+  })
+
+  it("filters sets by a member identifier and auto-expands them", async () => {
+    await openSetsTab()
+    await userEvent.type(screen.getByRole("searchbox"), "camt.053")
+    // Only the Reporting set matches, already expanded to show its member.
+    expect(screen.getByText("Reporting")).toBeInTheDocument()
+    expect(screen.queryByText("Credit Transfer Scheme")).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("link", { name: /camt\.053\.001\.09/ })
+    ).toBeInTheDocument()
+  })
+
+  it("flags set members that already have a MIG", async () => {
+    render(
+      <ERepositoryBrowser
+        repo={REPO}
+        onUpdateRepository={vi.fn()}
+        migMessageIds={new Set(["pacs.008.001.08"])}
+      />
+    )
+    await userEvent.click(screen.getByRole("tab", { name: /message sets/i }))
+    await userEvent.click(
+      screen.getByRole("button", { name: /credit transfer scheme/i })
+    )
+    const member = screen.getByRole("link", { name: /pacs\.008\.001\.08/ })
+    expect(within(member).getByText("MIG")).toBeInTheDocument()
   })
 })

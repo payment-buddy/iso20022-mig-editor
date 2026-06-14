@@ -107,6 +107,18 @@ const MINIMAL_XML = `<?xml version="1.0" encoding="UTF-8"?>
             definition="The currency code must be a valid active currency code."
             registrationStatus="Provisionally Registered"/>
     </topLevelDictionaryEntry>
+    <topLevelCatalogueEntry
+            xsi:type="iso20022:MessageSet"
+            name="Credit Transfer Scheme"
+            definition="A scheme for credit transfers."
+            registrationStatus="Registered"
+            messageDefinition="message-definition-1 unknown-id"/>
+    <topLevelCatalogueEntry
+            xsi:type="iso20022:MessageSet"
+            name="Empty Set"
+            definition="No resolvable members."
+            registrationStatus="Registered"
+            messageDefinition="ghost-1 ghost-2"/>
 </model>`
 
 function makeFile(content: string, name = "test.iso20022"): File {
@@ -125,6 +137,17 @@ describe("parseRepository", () => {
     expect(repo.businessAreas[0].name).toBe("Payments Clearing and Settlement")
     expect(repo.businessAreas[0].code).toBe("pacs")
     expect(repo.businessAreas[0].messages).toHaveLength(1)
+  })
+
+  it("parses message sets, resolving members to identifiers", () => {
+    // Unknown refs are dropped; a set with no resolvable members is omitted.
+    expect(repo.messageSets).toEqual([
+      {
+        name: "Credit Transfer Scheme",
+        definition: "A scheme for credit transfers.",
+        messageIdentifiers: ["pacs.008.001.13"],
+      },
+    ])
   })
 
   it("parses message definitions", () => {

@@ -9,6 +9,7 @@ import type {
   ERepository,
   MessageDefinition,
   MessageElement,
+  MessageSet,
   SimpleType,
 } from "@/core/types/types"
 
@@ -18,6 +19,10 @@ export async function parseRepository(file: File): Promise<ERepository> {
   const dataTypes: DataTypes = {} // xmi:id → DataType
   const businessAreas: BusinessArea[] = []
   const codeSets: RepoCodeSet[] = []
+  // MessageSets reference member messages by xmi:id; resolved to identifiers
+  // after parsing (once every message definition is known).
+  const rawMessageSets: { name: string; definition: string; ids: string[] }[] =
+    []
   const messageElementTypes: {
     messageElement: MessageElement
     typeId: string
@@ -50,6 +55,15 @@ export async function parseRepository(file: File): Promise<ERepository> {
             code: attrs["code"] ?? " ",
             messages: [],
           }
+        }
+      } else if (xsiType === "iso20022:MessageSet") {
+        if (attrs["registrationStatus"] !== "Obsolete") {
+          rawMessageSets.push({
+            name: attrs["name"],
+            definition: attrs["definition"] ?? "",
+            // Space-separated list of member message-definition xmi:ids.
+            ids: (attrs["messageDefinition"] ?? "").split(/\s+/).filter(Boolean),
+          })
         }
       }
     } else if (node.name === "topLevelDictionaryEntry") {
@@ -363,5 +377,24 @@ export async function parseRepository(file: File): Promise<ERepository> {
     }
   }
 
-  return { businessAreas, codeSets }
+  // Resolve each MessageSet's member xmi:ids to message identifiers (a message
+  // definition's xmi:id is its root element's id). Refs to messages we didn't
+  // keep (obsolete/unparsed) drop out; empty sets are omitted.
+  const identifierByXmiId = new Map<string, string>()
+  for (const ba of businessAreas)
+    for (const m of ba.messages)
+      identifierByXmiId.set(m.rootElement.id, m.identifier)
+
+  const messageSets: MessageSet[] = rawMessageSets
+    .map((s) => ({
+      name: s.name,
+      definition: s.definition,
+      messageIdentifiers: s.ids
+        .map((id) => identifierByXmiId.get(id))
+        .filter((id): id is string => id !== undefined),
+    }))
+    .filter((s) => s.messageIdentifiers.length > 0)
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  return { businessAreas, codeSets, messageSets }
 }

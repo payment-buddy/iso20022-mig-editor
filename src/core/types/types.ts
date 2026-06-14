@@ -95,12 +95,26 @@ export interface BusinessArea {
   messages: MessageDefinition[]
 }
 
+/**
+ * An ISO 20022 MessageSet: a curated, cross-area collection of message
+ * definitions grouped for a business purpose. Members are referenced by their
+ * identifier (e.g. `pacs.008.001.08`) — not embedded — to keep the stored
+ * repository compact.
+ */
+export interface MessageSet {
+  name: string
+  definition: string
+  messageIdentifiers: string[]
+}
+
 export interface DataTypes {
   [id: string]: DataType
 }
 
 export interface ERepository {
   businessAreas: BusinessArea[]
+  /** Curated cross-area message collections (ISO `MessageSet`s). */
+  messageSets?: MessageSet[]
   /**
    * All ISO `CodeSet`s, indexed for the `WithInList`/`NotWithInList` resolver
    * used when transpiling constraint expressions (`buildCodeListResolver`). The
