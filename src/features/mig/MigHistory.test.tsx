@@ -89,15 +89,32 @@ describe("MigHistory", () => {
     expect(await screen.findByText(/no revisions yet/i)).toBeInTheDocument()
   })
 
-  it("diffs the selected revision against the current MIG", async () => {
+  it("diffs the selected revision against its predecessor", async () => {
     await seedHistory()
     render(<MigHistory migKey="EPC:1.0" repo={emptyRepo} />)
 
-    // Newest revision selected by default == current → no differences.
-    expect(await screen.findByText(/no differences/i)).toBeInTheDocument()
+    // Newest revision selected by default → shows what it changed vs the baseline.
+    expect(await screen.findByText("Amt")).toBeInTheDocument()
+    expect(screen.getByText("Max length")).toBeInTheDocument()
 
-    // Select the baseline → the diff shows the added Doc/Amt override.
+    // The baseline (oldest) has nothing before it.
     await userEvent.click(screen.getByText("Initial"))
+    expect(await screen.findByText(/initial snapshot/i)).toBeInTheDocument()
+    expect(screen.queryByText("Max length")).not.toBeInTheDocument()
+  })
+
+  it("shows what a merge revision changed (vs the pre-merge baseline)", async () => {
+    const base = mig()
+    const merged = mig({ elementOverrides: { "Doc/Amt": { maxLength: 12 } } })
+    let revs = appendRevision([], base, 1000)
+    revs = appendRevision(revs, merged, 2000, "Merged")
+    await saveMig(merged)
+    await saveRevisions("EPC:1.0", revs)
+    render(<MigHistory migKey="EPC:1.0" repo={emptyRepo} />)
+
+    // The newest ("Merged") revision is selected by default and shows its diff,
+    // even though it equals the current MIG.
+    expect(await screen.findByText("Merged")).toBeInTheDocument()
     expect(await screen.findByText("Amt")).toBeInTheDocument()
     expect(screen.getByText("Max length")).toBeInTheDocument()
   })
@@ -129,7 +146,7 @@ describe("MigHistory", () => {
     await saveRevisions("EPC:1.0", appendRevision(appendRevision([], mig(), 1000), current, 2000))
     render(<MigHistory migKey="EPC:1.0" repo={repo} />)
 
-    await userEvent.click(await screen.findByText("Initial"))
+    // Newest revision selected by default → diff vs baseline lists both paths.
     const zeb = await screen.findByText("Doc/Zeb")
     const amt = screen.getByText("Doc/Amt")
     // Schema order → Zeb's card precedes Amt's (alphabetical would be the reverse).

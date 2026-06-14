@@ -65,8 +65,13 @@ export function MigHistory({ migKey, repo }: { migKey: string; repo: ERepository
   }
 
   const ordered = [...revisions].reverse() // newest first
-  const selected = revisions.find((r) => r.id === selectedId) ?? null
-  const diff = selected ? compareMigs(selected.mig, mig, order) : null
+  // Diff a revision against its predecessor — i.e. what *changed at* that
+  // revision (a merge, an edit burst, a revert). The oldest revision has no
+  // predecessor, so it's the initial snapshot.
+  const selectedIndex = revisions.findIndex((r) => r.id === selectedId)
+  const selected = selectedIndex >= 0 ? revisions[selectedIndex] : null
+  const previous = selectedIndex > 0 ? revisions[selectedIndex - 1] : null
+  const diff = selected && previous ? compareMigs(previous.mig, selected.mig, order) : null
 
   const revert = async (rev: Revision) => {
     // Restore the revision's content but keep the current identity (no re-key).
@@ -111,7 +116,15 @@ export function MigHistory({ migKey, repo }: { migKey: string; repo: ERepository
               </li>
             ))}
           </ul>
-          <div className="min-w-0">{diff && <DiffView diff={diff} />}</div>
+          <div className="min-w-0">
+            {diff ? (
+              <DiffView diff={diff} />
+            ) : selected && !previous ? (
+              <p className="text-sm text-muted-foreground">
+                Initial snapshot — there's no earlier revision to compare against.
+              </p>
+            ) : null}
+          </div>
         </div>
       )}
 
@@ -161,18 +174,19 @@ function RevisionRow({
   )
 }
 
-/** Read-only diff of a revision (left) vs the current MIG (right). */
+/** Read-only diff of a revision vs its predecessor — the before (left) / after
+ *  (right) of what changed at that revision. */
 function DiffView({ diff }: { diff: MigComparison }) {
   if (diff.paths.length === 0) {
-    return <p className="text-sm text-muted-foreground">No differences from the current MIG.</p>
+    return <p className="text-sm text-muted-foreground">No changes in this revision.</p>
   }
   const value = (v: string | null) =>
     v === null ? <span className="text-muted-foreground/70 italic">inherits</span> : v
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3 px-3 text-[0.625rem] tracking-wide text-muted-foreground uppercase">
+        <span>Before</span>
         <span>This revision</span>
-        <span>Current</span>
       </div>
       {diff.paths.map((p) => (
         <section key={p.path} className="rounded-md border border-border">
