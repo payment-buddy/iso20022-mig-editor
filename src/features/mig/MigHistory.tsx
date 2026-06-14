@@ -196,7 +196,7 @@ function DiffView({ diff }: { diff: MigComparison }) {
       {diff.paths.map((p) => (
         <section key={p.path} className="rounded-md border border-border">
           <header className="flex items-center gap-2 border-b border-border bg-muted/40 px-3 py-1.5">
-            <span className="font-medium">{p.name}</span>
+            <span className="text-sm font-medium">{p.name}</span>
             <code className="truncate text-[0.625rem] text-muted-foreground">{p.path}</code>
           </header>
           <div className="flex flex-col divide-y divide-border">

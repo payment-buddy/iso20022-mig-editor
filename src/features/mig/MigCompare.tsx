@@ -323,7 +323,7 @@ function ElementCard({
       className="border border-t-0 outline-none first:border-t-0 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-inset"
     >
       <header className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
-        <span className="font-medium">{diff.name}</span>
+        <span className="text-sm font-medium">{diff.name}</span>
         <code className="truncate text-[0.625rem] text-muted-foreground">{diff.path}</code>
         {badge.label && (
           <span className={`ml-auto shrink-0 text-xs font-medium ${badge.className}`}>
