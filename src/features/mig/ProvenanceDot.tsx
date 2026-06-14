@@ -1,10 +1,11 @@
+import { ProvenanceMarker } from "@/components/ProvenanceMarker"
+
 /**
- * Provenance marker for an override field. Shape *and* colour carry the meaning
- * (so colour isn't the only cue — WCAG 1.4.1): a filled **circle** in primary
- * (blue) when the value is overridden in this MIG, a filled **diamond** in violet
- * when it's inherited from a parent MIG, and nothing for an unmarked original.
- * The colours match the element-tree tints. `baseline` is shown in the tooltip
- * (the value that a reset would restore).
+ * Provenance marker for an override field — a thin wrapper around
+ * {@link ProvenanceMarker} that adds the field-level affordances: a tooltip /
+ * `aria-label` describing the provenance, a help cursor, and rendering nothing
+ * for an unmarked original. `baseline` (the value a reset would restore) is
+ * shown in the tooltip.
  */
 export function ProvenanceDot({
   overridden,
@@ -16,22 +17,20 @@ export function ProvenanceDot({
   baseline: string
 }) {
   if (overridden) {
-    const label = `Overridden — inherited: ${baseline}`
     return (
-      <span
-        title={label}
-        aria-label={label}
-        className="size-1.5 shrink-0 cursor-help rounded-full bg-primary"
+      <ProvenanceMarker
+        provenance="own"
+        label={`Overridden — inherited: ${baseline}`}
+        className="cursor-help"
       />
     )
   }
   if (inherited) {
-    const label = `Inherited from a parent MIG: ${baseline}`
     return (
-      <span
-        title={label}
-        aria-label={label}
-        className="size-1.5 shrink-0 rotate-45 cursor-help bg-violet-600 dark:bg-violet-400"
+      <ProvenanceMarker
+        provenance="inherited"
+        label={`Inherited from a parent MIG: ${baseline}`}
+        className="cursor-help"
       />
     )
   }

@@ -569,7 +569,7 @@ describe("MigEditor", () => {
 
     // Expression is inherited from the parent's overlay → violet diamond.
     const inheritedDot = within(panel).getByTitle(/inherited from a parent mig: x > 0/i)
-    expect(inheritedDot).toHaveClass("rotate-45", "bg-violet-600")
+    expect(inheritedDot).toHaveClass("rotate-45", "bg-provenance-inherited")
 
     // Override it here → blue circle, baseline still the inherited value.
     await user.click(within(panel).getByRole("button", { name: "Edit Constraint expression" }))
@@ -578,7 +578,7 @@ describe("MigEditor", () => {
     await user.type(input, "Amt > 0")
     await user.tab()
     const ownDot = within(panel).getByTitle(/overridden — inherited: x > 0/i)
-    expect(ownDot).toHaveClass("rounded-full", "bg-primary")
+    expect(ownDot).toHaveClass("rounded-full", "bg-provenance-own")
   })
 
   it("disables a standard constraint via the toggle", async () => {
@@ -626,7 +626,7 @@ describe("MigEditor", () => {
 
     expect(screen.getByText("Overridden here")).toBeInTheDocument()
     const item = screen.getByRole("treeitem", { name: /GrpHdr/ })
-    expect(item.querySelector(".text-primary")?.textContent).toBe("GrpHdr")
+    expect(item.querySelector(".text-provenance-own")?.textContent).toBe("GrpHdr")
   })
 
   it("filters to changes (and their ancestors) via the 'Only changes' toggle", async () => {
@@ -670,9 +670,9 @@ describe("MigEditor", () => {
     await screen.findByRole("treeitem", { name: /Document/ })
 
     const item = screen.getByRole("treeitem", { name: /GrpHdr/ })
-    expect(item.querySelector(".text-violet-600")?.textContent).toBe("GrpHdr")
+    expect(item.querySelector(".text-provenance-inherited")?.textContent).toBe("GrpHdr")
     // It isn't this MIG's own override.
-    expect(item.querySelector(".text-primary")).toBeNull()
+    expect(item.querySelector(".text-provenance-own")).toBeNull()
   })
 
   it("does not tint an element that has only a constraint override, but tints the constraint", async () => {
@@ -686,11 +686,11 @@ describe("MigEditor", () => {
 
     // The element itself carries no element-field override → no tint.
     const doc = screen.getByRole("treeitem", { name: /Document/ })
-    expect(doc.querySelector(".text-primary")).toBeNull()
-    expect(doc.querySelector(".text-violet-600")).toBeNull()
+    expect(doc.querySelector(".text-provenance-own")).toBeNull()
+    expect(doc.querySelector(".text-provenance-inherited")).toBeNull()
     // The added constraint node is tinted by its own provenance.
     const con = screen.getByRole("treeitem", { name: /constraint mine/i })
-    expect(con.querySelector(".text-primary")?.textContent).toContain("Mine")
+    expect(con.querySelector(".text-provenance-own")?.textContent).toContain("Mine")
   })
 
   it("tints a standard constraint this MIG overlays, leaving untouched ISO rules plain", async () => {
@@ -725,10 +725,10 @@ describe("MigEditor", () => {
     await screen.findByRole("treeitem", { name: /Document/ })
 
     const overlaid = screen.getByRole("treeitem", { name: /constraint stdrule/i })
-    expect(overlaid.querySelector(".text-primary")?.textContent).toContain("StdRule")
+    expect(overlaid.querySelector(".text-provenance-own")?.textContent).toContain("StdRule")
     const plain = screen.getByRole("treeitem", { name: /constraint plain/i })
-    expect(plain.querySelector(".text-primary")).toBeNull()
-    expect(plain.querySelector(".text-violet-600")).toBeNull()
+    expect(plain.querySelector(".text-provenance-own")).toBeNull()
+    expect(plain.querySelector(".text-provenance-inherited")).toBeNull()
   })
 
   it("shows an inherited (parent-MIG) constraint and overlays an expression on it", async () => {
@@ -819,7 +819,7 @@ describe("MigEditor", () => {
     // "inherited" diamond (consistent with the element-tree tint).
     const inheritedDot = within(panel).getByTitle(/inherited from a parent mig: 20/i)
     expect(inheritedDot).toBeInTheDocument()
-    expect(inheritedDot).toHaveClass("rotate-45", "bg-violet-600")
+    expect(inheritedDot).toHaveClass("rotate-45", "bg-provenance-inherited")
     await user.click(within(panel).getByRole("button", { name: "Edit Max length" }))
     expect(within(panel).getByRole("spinbutton", { name: "Max length" })).toHaveValue(20)
 
@@ -833,7 +833,7 @@ describe("MigEditor", () => {
     ).toBe(15)
     const ownDot = within(panel).getByTitle(/overridden — inherited: 20/i)
     expect(ownDot).toBeInTheDocument()
-    expect(ownDot).toHaveClass("rounded-full", "bg-primary")
+    expect(ownDot).toHaveClass("rounded-full", "bg-provenance-own")
 
     // Reset drops the own override → back to inheriting the parent's 20.
     await user.click(within(panel).getByRole("button", { name: /reset to inherited/i }))
@@ -1228,12 +1228,12 @@ describe("MigEditor", () => {
     const panel = screen.getByRole("region", { name: /element details/i })
 
     // Owner is overridden here (over the parent's "ops") → blue dot.
-    expect(within(panel).getByTitle("Overridden — inherited: ops")).toHaveClass("bg-primary")
+    expect(within(panel).getByTitle("Overridden — inherited: ops")).toHaveClass("bg-provenance-own")
     expect(within(panel).getByText("mine")).toBeInTheDocument()
     // Usage is inherited from the parent → violet dot, and its value shows even
     // though the child declares no annotation names of its own.
     expect(within(panel).getByTitle("Inherited from a parent MIG: credit")).toHaveClass(
-      "bg-violet-600",
+      "bg-provenance-inherited",
     )
     expect(within(panel).getByText("credit")).toBeInTheDocument()
   })
@@ -1272,7 +1272,7 @@ describe("MigEditor", () => {
       (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.additionalConstraints,
     ).toEqual([{ name: "New constraint", definition: "", annotations: { Severity: "high" } }])
     // The set value is this MIG's own → a blue provenance dot.
-    expect(within(panel).getByTitle("Overridden — inherited: —")).toHaveClass("bg-primary")
+    expect(within(panel).getByTitle("Overridden — inherited: —")).toHaveClass("bg-provenance-own")
 
     // Removing the name strips the value but leaves the constraint in place.
     await user.click(within(meta).getByRole("button", { name: "Edit Constraint annotations" }))

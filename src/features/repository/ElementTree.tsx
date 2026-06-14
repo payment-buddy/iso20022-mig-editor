@@ -12,6 +12,7 @@ import { CaretRightIcon, CheckIcon, MagnifyingGlassIcon } from "@phosphor-icons/
 import type { Constraint, ElementOverride, ElementOverrides, MessageElement } from "@/core/types/types"
 import { rootPath } from "@/core/erepository/elementPath"
 import { cn } from "@/lib/utils"
+import { ProvenanceMarker } from "@/components/ProvenanceMarker"
 
 /** Number of rows ↕ a PageUp/PageDown jumps. */
 const PAGE = 10
@@ -605,11 +606,11 @@ export function ElementTree({
         {hasOverrides && (
           <div className="flex w-fit items-center gap-3 text-xs text-muted-foreground sm:ml-auto sm:border-l sm:border-border sm:pl-4">
             <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-primary" aria-hidden />
+              <ProvenanceMarker provenance="own" className="size-2" />
               Overridden here
             </span>
             <span className="flex items-center gap-1">
-              <span className="size-2 rotate-45 bg-violet-600 dark:bg-violet-400" aria-hidden />
+              <ProvenanceMarker provenance="inherited" className="size-2" />
               Inherited
             </span>
           </div>
@@ -736,8 +737,8 @@ function TreeNode({
               className={cn(
                 node.kind === "element" && "font-medium",
                 muted && "text-muted-foreground line-through",
-                tint === "own" && "text-primary",
-                tint === "inherited" && "text-violet-600 dark:text-violet-400",
+                tint === "own" && "text-provenance-own",
+                tint === "inherited" && "text-provenance-inherited",
               )}
             >
               {label}
@@ -760,7 +761,9 @@ function TreeNode({
           </span>
         )}
         {node.kind === "constraint" && node.origin === "own" && (
-          <span className="rounded-sm bg-primary/10 px-1 text-[0.625rem] text-primary">added</span>
+          <span className="rounded-sm bg-provenance-own/10 px-1 text-[0.625rem] text-provenance-own">
+            added
+          </span>
         )}
         {node.kind === "constraint" && node.origin === "inherited" && (
           <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">

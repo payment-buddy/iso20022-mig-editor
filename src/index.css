@@ -35,6 +35,10 @@
     --color-primary: var(--primary);
     --color-popover-foreground: var(--popover-foreground);
     --color-popover: var(--popover);
+    /* Provenance tints — shared by the element-tree labels and ProvenanceDot so
+       an overridden ("own") / inherited marker always matches its text. */
+    --color-provenance-own: var(--provenance-own);
+    --color-provenance-inherited: var(--provenance-inherited);
     --color-card-foreground: var(--card-foreground);
     --color-card: var(--card);
     --color-foreground: var(--foreground);
@@ -73,6 +77,8 @@
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
     --radius: 0.45rem;
+    --provenance-own: var(--color-blue-600);
+    --provenance-inherited: var(--color-violet-600);
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary: oklch(0.588 0.158 241.966);
@@ -107,6 +113,8 @@
     --chart-3: oklch(0.439 0 0);
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
+    --provenance-own: var(--color-blue-300);
+    --provenance-inherited: var(--color-violet-400);
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
     --sidebar-primary: oklch(0.685 0.169 237.323);
