@@ -736,8 +736,11 @@ describe("MigEditor", () => {
     await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
     const panel = screen.getByRole("region", { name: /element details/i })
 
-    // Max length inherits the parent's 20 (not the ISO 35), flagged "inherited".
-    expect(within(panel).getByTitle(/inherited from a parent mig: 20/i)).toBeInTheDocument()
+    // Max length inherits the parent's 20 (not the ISO 35), flagged with a violet
+    // "inherited" dot (consistent with the element-tree tint).
+    const inheritedDot = within(panel).getByTitle(/inherited from a parent mig: 20/i)
+    expect(inheritedDot).toBeInTheDocument()
+    expect(inheritedDot).toHaveClass("rounded-full", "bg-violet-600")
     await user.click(within(panel).getByRole("button", { name: "Edit Max length" }))
     expect(within(panel).getByRole("spinbutton", { name: "Max length" })).toHaveValue(20)
 
@@ -749,7 +752,9 @@ describe("MigEditor", () => {
     expect(
       (await loadMig(getMigKey(child)))?.elementOverrides["DocumentTag/GrpHdrTag"]?.maxLength,
     ).toBe(15)
-    expect(within(panel).getByTitle(/overridden — inherited: 20/i)).toBeInTheDocument()
+    const ownDot = within(panel).getByTitle(/overridden — inherited: 20/i)
+    expect(ownDot).toBeInTheDocument()
+    expect(ownDot).toHaveClass("rounded-full", "bg-primary")
 
     // Reset drops the own override → back to inheriting the parent's 20.
     await user.click(within(panel).getByRole("button", { name: /reset to inherited/i }))

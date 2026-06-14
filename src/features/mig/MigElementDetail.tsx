@@ -526,10 +526,10 @@ function NumberOverrideField({
 }
 
 /**
- * One editable override field: a label, plus a state affordance — a primary dot
- * + reset when **overridden here**, or a muted "inherited" badge when the value
- * comes from a parent MIG (otherwise it's the unmarked ISO original). Both
- * carry the baseline in their tooltip.
+ * One editable override field: a label, plus a state affordance — a primary
+ * (blue) dot + reset when **overridden here**, or a violet dot when the value
+ * comes from a parent MIG (otherwise it's the unmarked ISO original). The dot
+ * colours match the element-tree tints. Both carry the baseline in their tooltip.
  */
 function OverrideRow({
   label,
@@ -566,10 +566,8 @@ function OverrideRow({
             <span
               title={`Inherited from a parent MIG: ${baseline}`}
               aria-label={`Inherited from a parent MIG: ${baseline}`}
-              className="cursor-help rounded-sm bg-muted px-1 text-[0.5rem] tracking-wide text-muted-foreground uppercase"
-            >
-              inherited
-            </span>
+              className="size-1.5 shrink-0 cursor-help rounded-full bg-violet-600 dark:bg-violet-400"
+            />
           ) : null}
         </div>
         {overridden && (
