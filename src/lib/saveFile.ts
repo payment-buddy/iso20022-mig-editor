@@ -1,82 +1,27 @@
 // Browser file-saving, shared by the MIG and message-definition exporters.
-// Prefers the File System Access API (the user picks the location and an existing
-// file is overwritten in place — no `" (1)"` suffix) and falls back to an anchor
-// download link where it isn't supported.
+//
+// Uses a classic anchor-download link so saves go through the browser's download
+// manager — they appear in the download history with a working "Show in folder",
+// so the user can always locate the file. (We deliberately do *not* use the File
+// System Access API: it writes directly to a picked location and never shows up
+// in download history, and the browser sandbox never exposes the path to JS. The
+// trade-off is that re-saving the same name yields a `" (1)"` suffix.)
 
 export type SavedFile = { filename: string; content: string | Uint8Array }
-export type FileKind = {
-  mime: string
-  description: string
-  extensions: string[]
-}
+export type FileKind = { mime: string }
 
-export const YAML: FileKind = {
-  mime: "text/yaml",
-  description: "YAML",
-  extensions: [".yaml", ".yml"],
-}
-export const MARKDOWN: FileKind = {
-  mime: "text/markdown",
-  description: "Markdown",
-  extensions: [".md"],
-}
+export const YAML: FileKind = { mime: "text/yaml" }
+export const MARKDOWN: FileKind = { mime: "text/markdown" }
 export const XLSX: FileKind = {
   mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  description: "Excel workbook",
-  extensions: [".xlsx"],
 }
 
 /**
- * Minimal slice of the File System Access API we use — not in every lib.dom, and
- * not supported by every browser, so it's feature-detected at call time.
+ * Save a file via an anchor download link. It lands in the browser's Downloads
+ * folder and appears in the download history (the browser appends `" (1)"` on a
+ * name collision).
  */
-type ShowSaveFilePicker = (options?: {
-  suggestedName?: string
-  types?: { description?: string; accept: Record<string, string[]> }[]
-}) => Promise<{
-  createWritable: () => Promise<{
-    write: (data: string | Uint8Array | Blob) => Promise<void>
-    close: () => Promise<void>
-  }>
-}>
-
-/**
- * Save via `showSaveFilePicker` (File System Access API): the user picks the
- * location and an existing file is overwritten in place — no `" (1)"` suffix.
- * Returns `false` when the API is unavailable so the caller can fall back.
- */
-async function saveViaPicker(
-  file: SavedFile,
-  kind: FileKind
-): Promise<boolean> {
-  const picker = (
-    window as unknown as { showSaveFilePicker?: ShowSaveFilePicker }
-  ).showSaveFilePicker
-  if (!picker) return false
-  try {
-    const handle = await picker({
-      suggestedName: file.filename,
-      types: [
-        {
-          description: kind.description,
-          accept: { [kind.mime]: kind.extensions },
-        },
-      ],
-    })
-    const writable = await handle.createWritable()
-    await writable.write(file.content)
-    await writable.close()
-  } catch (err) {
-    // The user dismissing the dialog is not an error; surface anything else.
-    if ((err as DOMException)?.name !== "AbortError") {
-      console.error("Failed to save file:", err)
-    }
-  }
-  return true
-}
-
-/** Fallback: an anchor download link (the browser may append `" (1)"` on collisions). */
-function saveViaAnchor(file: SavedFile, kind: FileKind): void {
+export function saveTextFile(file: SavedFile, kind: FileKind): void {
   // `content` is a string or fflate `Uint8Array`; both are valid Blob parts (the
   // cast only sidesteps the over-narrow `ArrayBufferLike` vs `ArrayBuffer` lib type).
   const url = URL.createObjectURL(
@@ -87,16 +32,4 @@ function saveViaAnchor(file: SavedFile, kind: FileKind): void {
   a.download = file.filename
   a.click()
   URL.revokeObjectURL(url)
-}
-
-/**
- * Save a text file, preferring the File System Access API (overwrites in place,
- * avoiding `" (1)"` collision suffixes) and falling back to an anchor download
- * link where it isn't supported.
- */
-export async function saveTextFile(
-  file: SavedFile,
-  kind: FileKind
-): Promise<void> {
-  if (!(await saveViaPicker(file, kind))) saveViaAnchor(file, kind)
 }

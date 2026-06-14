@@ -20,27 +20,7 @@ afterEach(() => {
 })
 
 describe("downloadMigs", () => {
-  it("saves via showSaveFilePicker when available (no anchor fallback)", async () => {
-    const write = vi.fn().mockResolvedValue(undefined)
-    const close = vi.fn().mockResolvedValue(undefined)
-    const createWritable = vi.fn().mockResolvedValue({ write, close })
-    const picker = vi.fn().mockResolvedValue({ createWritable })
-    win.showSaveFilePicker = picker
-    const createObjectURL = vi.fn()
-    URL.createObjectURL = createObjectURL
-
-    await downloadMigs([mig("EPC", "1.0")])
-
-    expect(picker).toHaveBeenCalledWith(
-      expect.objectContaining({ suggestedName: "EPC-1.0.yaml" })
-    )
-    expect(write).toHaveBeenCalledWith(expect.stringContaining("name: EPC"))
-    expect(close).toHaveBeenCalled()
-    expect(createObjectURL).not.toHaveBeenCalled() // didn't fall back
-  })
-
-  it("falls back to an anchor download when the picker is unavailable", async () => {
-    delete win.showSaveFilePicker
+  it("downloads via an anchor link with the canonical filename", async () => {
     URL.createObjectURL = vi.fn(() => "blob:fake")
     URL.revokeObjectURL = vi.fn()
     let downloadedName = ""
@@ -56,18 +36,16 @@ describe("downloadMigs", () => {
     expect(downloadedName).toBe("A-1.yaml")
   })
 
-  it("swallows the user cancelling the save dialog (AbortError)", async () => {
-    win.showSaveFilePicker = vi
-      .fn()
-      .mockRejectedValue(
-        Object.assign(new Error("cancelled"), { name: "AbortError" })
-      )
-    const createObjectURL = vi.fn()
-    URL.createObjectURL = createObjectURL
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+  it("uses the download manager even when the File System Access API exists", async () => {
+    // The picker would skip download history, so we deliberately ignore it.
+    const picker = vi.fn()
+    win.showSaveFilePicker = picker
+    URL.createObjectURL = vi.fn(() => "blob:fake")
+    URL.revokeObjectURL = vi.fn()
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {})
 
-    await expect(downloadMigs([mig("A", "1")])).resolves.toBeUndefined()
-    expect(createObjectURL).not.toHaveBeenCalled() // picker was used; no fallback
-    expect(errorSpy).not.toHaveBeenCalled() // cancel is not an error
+    await downloadMigs([mig("A", "1")])
+
+    expect(picker).not.toHaveBeenCalled()
   })
 })
