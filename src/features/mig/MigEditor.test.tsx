@@ -596,6 +596,62 @@ describe("MigEditor", () => {
     expect(item.querySelector(".text-primary")).toBeNull()
   })
 
+  it("does not tint an element that has only a constraint override, but tints the constraint", async () => {
+    const guide: MessageImplementationGuide = {
+      ...MIG,
+      elementOverrides: { DocumentTag: { additionalConstraints: [{ name: "Mine", definition: "" }] } },
+    }
+    await saveMig(guide)
+    render(<MigEditor migKey={getMigKey(guide)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: /Document/ })
+
+    // The element itself carries no element-field override → no tint.
+    const doc = screen.getByRole("treeitem", { name: /Document/ })
+    expect(doc.querySelector(".text-primary")).toBeNull()
+    expect(doc.querySelector(".text-violet-600")).toBeNull()
+    // The added constraint node is tinted by its own provenance.
+    const con = screen.getByRole("treeitem", { name: /constraint mine/i })
+    expect(con.querySelector(".text-primary")?.textContent).toContain("Mine")
+  })
+
+  it("tints a standard constraint this MIG overlays, leaving untouched ISO rules plain", async () => {
+    const repo: ERepository = {
+      businessAreas: [
+        {
+          name: "A",
+          code: "a",
+          definition: "",
+          messages: [
+            {
+              name: "Msg",
+              identifier: "pacs.008.001.10",
+              shortCode: "pacs.008",
+              rootElement: el("Document", {
+                constraints: [
+                  { name: "StdRule", definition: "d" },
+                  { name: "Plain", definition: "d" },
+                ],
+              }),
+            },
+          ],
+        },
+      ],
+    }
+    const guide: MessageImplementationGuide = {
+      ...MIG,
+      elementOverrides: { DocumentTag: { constraintOverrides: { StdRule: { expression: "x > 0" } } } },
+    }
+    await saveMig(guide)
+    render(<MigEditor migKey={getMigKey(guide)} repo={repo} />)
+    await screen.findByRole("treeitem", { name: /Document/ })
+
+    const overlaid = screen.getByRole("treeitem", { name: /constraint stdrule/i })
+    expect(overlaid.querySelector(".text-primary")?.textContent).toContain("StdRule")
+    const plain = screen.getByRole("treeitem", { name: /constraint plain/i })
+    expect(plain.querySelector(".text-primary")).toBeNull()
+    expect(plain.querySelector(".text-violet-600")).toBeNull()
+  })
+
   it("shows an inherited (parent-MIG) constraint and overlays an expression on it", async () => {
     const user = userEvent.setup()
     const parent: MessageImplementationGuide = {

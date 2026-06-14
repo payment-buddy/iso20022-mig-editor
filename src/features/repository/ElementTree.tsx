@@ -9,7 +9,7 @@ import {
   type Ref,
 } from "react"
 import { CaretRightIcon, CheckIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
-import type { Constraint, ElementOverrides, MessageElement } from "@/core/types/types"
+import type { Constraint, ElementOverride, ElementOverrides, MessageElement } from "@/core/types/types"
 import { cn } from "@/lib/utils"
 
 /** Number of rows ↕ a PageUp/PageDown jumps. */
@@ -35,7 +35,14 @@ type FlatNode = {
       /** Whether this MIG (`own`) or a parent (`inherited`) overrides this path. */
       overrideOrigin: OverrideOrigin
     }
-  | { kind: "constraint"; constraint: Constraint; origin: ConstraintOrigin; disabled: boolean }
+  | {
+      kind: "constraint"
+      constraint: Constraint
+      origin: ConstraintOrigin
+      disabled: boolean
+      /** Provenance tint for the constraint node (independent of the element). */
+      overrideOrigin: OverrideOrigin
+    }
 )
 
 /** Where an element's override comes from, for tree colouring. */
@@ -98,33 +105,59 @@ function effectiveOccurs(
 /** Where a constraint shown in the tree comes from. */
 export type ConstraintOrigin = "standard" | "own" | "inherited"
 
+// Override keys that describe the element's *constraints*, not the element field
+// (definition/cardinality/facets/annotations). Element colouring ignores these.
+const CONSTRAINT_ONLY_KEYS = new Set<keyof ElementOverride>([
+  "additionalConstraints",
+  "constraintOverrides",
+])
+
+/** Whether an override touches at least one element field (not just constraints). */
+function hasElementFieldOverride(ov: ElementOverride | undefined): boolean {
+  return ov !== undefined && Object.keys(ov).some((k) => !CONSTRAINT_ONLY_KEYS.has(k as keyof ElementOverride))
+}
+
+/** Element colour provenance: this MIG's own element-field override, else a parent's. */
+function elementOverrideOrigin(
+  path: string,
+  ownOverrides: ElementOverrides | undefined,
+  effectiveOverrides: ElementOverrides | undefined,
+): OverrideOrigin {
+  if (hasElementFieldOverride(ownOverrides?.[path])) return "own"
+  if (hasElementFieldOverride(effectiveOverrides?.[path])) return "inherited"
+  return null
+}
+
 /**
  * An element's constraints as shown in the tree: the standard (ISO) ones, then
  * the additional ones from the **effective** override (so a parent MIG's added
- * constraints are visible too), each tagged with its origin — `own` when this
- * MIG declares it, otherwise `inherited`.
+ * constraints are visible too). `origin` drives the read-only vs editable detail
+ * panel; `colour` is the provenance tint — `own` when this MIG adds or overlays
+ * the rule, `inherited` when only a parent does, `null` for an untouched ISO rule.
  */
 function constraintsAt(
   path: string,
   el: MessageElement,
   ownOverrides: ElementOverrides | undefined,
   effectiveOverrides: ElementOverrides | undefined,
-): { constraint: Constraint; origin: ConstraintOrigin; disabled: boolean }[] {
-  const overrides = effectiveOverrides?.[path]?.constraintOverrides
-  const disabled = (name: string) => overrides?.[name]?.disabled ?? false
-  const standard = el.constraints.map((constraint) => ({
-    constraint,
-    origin: "standard" as const,
-    disabled: disabled(constraint.name),
-  }))
-  const ownNames = new Set(
-    (ownOverrides?.[path]?.additionalConstraints ?? []).map((c) => c.name),
-  )
-  const additional = (effectiveOverrides?.[path]?.additionalConstraints ?? []).map((constraint) => ({
-    constraint,
-    origin: ownNames.has(constraint.name) ? ("own" as const) : ("inherited" as const),
-    disabled: disabled(constraint.name),
-  }))
+): { constraint: Constraint; origin: ConstraintOrigin; disabled: boolean; colour: OverrideOrigin }[] {
+  const ownOv = ownOverrides?.[path]
+  const effOv = effectiveOverrides?.[path]
+  const disabled = (name: string) => effOv?.constraintOverrides?.[name]?.disabled ?? false
+  const colourOf = (name: string, origin: ConstraintOrigin): OverrideOrigin => {
+    if (origin === "own" || ownOv?.constraintOverrides?.[name] !== undefined) return "own"
+    if (origin === "inherited" || effOv?.constraintOverrides?.[name] !== undefined) return "inherited"
+    return null
+  }
+  const ownNames = new Set((ownOv?.additionalConstraints ?? []).map((c) => c.name))
+  const standard = el.constraints.map((constraint) => {
+    const origin = "standard" as const
+    return { constraint, origin, disabled: disabled(constraint.name), colour: colourOf(constraint.name, origin) }
+  })
+  const additional = (effOv?.additionalConstraints ?? []).map((constraint) => {
+    const origin = ownNames.has(constraint.name) ? ("own" as const) : ("inherited" as const)
+    return { constraint, origin, disabled: disabled(constraint.name), colour: colourOf(constraint.name, origin) }
+  })
   return [...standard, ...additional]
 }
 
@@ -232,19 +265,21 @@ function flattenTree(
       hasChildren,
       expanded: isOpen,
       excluded,
-      // Own override wins; otherwise a parent-chain (inherited) override.
-      overrideOrigin: ownOverrides?.[path] ? "own" : effectiveOverrides?.[path] ? "inherited" : null,
+      // Coloured only for element-field overrides (constraint-only entries don't
+      // tint the element); own override wins over an inherited one.
+      overrideOrigin: elementOverrideOrigin(path, ownOverrides, effectiveOverrides),
     })
     if (!hasChildren || !isOpen) return
     for (const child of childEls) {
       walk(child, `${path}/${child.xmlTag}`, level + 1, path, excluded)
     }
-    for (const { constraint, origin, disabled } of childCons) {
+    for (const { constraint, origin, disabled, colour } of childCons) {
       out.push({
         kind: "constraint",
         constraint,
         origin,
         disabled,
+        overrideOrigin: colour,
         path: `${path}/${constraint.name}`,
         level: level + 1,
         parentPath: path,
@@ -657,24 +692,25 @@ function TreeNode({
         ) : (
           <span className="inline-block size-4 shrink-0" aria-hidden />
         )}
-        <span
-          className={cn(
-            node.kind === "element" && "font-medium",
-            (node.excluded || (node.kind === "constraint" && node.disabled)) &&
-              "text-muted-foreground line-through",
-            // Override provenance colour (excluded styling above takes priority).
-            node.kind === "element" &&
-              !node.excluded &&
-              node.overrideOrigin === "own" &&
-              "text-primary",
-            node.kind === "element" &&
-              !node.excluded &&
-              node.overrideOrigin === "inherited" &&
-              "text-violet-600 dark:text-violet-400",
-          )}
-        >
-          {label}
-        </span>
+        {(() => {
+          // Excluded element / disabled constraint → muted strike-through (wins).
+          const muted = node.excluded || (node.kind === "constraint" && node.disabled)
+          // Override provenance tint (elements: element-field overrides only;
+          // constraints: their own provenance), suppressed under the muted style.
+          const tint = muted ? null : node.overrideOrigin
+          return (
+            <span
+              className={cn(
+                node.kind === "element" && "font-medium",
+                muted && "text-muted-foreground line-through",
+                tint === "own" && "text-primary",
+                tint === "inherited" && "text-violet-600 dark:text-violet-400",
+              )}
+            >
+              {label}
+            </span>
+          )
+        })()}
         {node.kind === "element" && (
           <span className="text-xs text-muted-foreground">
             {cardinality(node.minOccurs, node.maxOccurs)}
