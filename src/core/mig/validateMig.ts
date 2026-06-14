@@ -4,6 +4,7 @@
 // Advisory only (all warnings). Pure.
 
 import { looseningWarning, patternWarning } from "./fieldValidation"
+import { isExternalCodeSet } from "@/core/erepository/codeSet"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import type {
   ElementOverride,
@@ -188,10 +189,15 @@ function elementDiagnostics(
 
   // Allowed values must stay a subset of the inherited/standard code set.
   if (ownHas("allowedValues") && own.allowedValues != null) {
-    const base = inh("allowedValues")
+    const inheritedList = inh("allowedValues")
+    const base = inheritedList
       ? (inherited!.allowedValues ?? [])
       : element.codes.map((c) => c.codeName)
-    if (base.length > 0) {
+    // External code sets are open: the ISO snapshot isn't exhaustive, so listing
+    // values beyond it isn't an inconsistency. A MIG ancestor that *restricted*
+    // the list is still meaningful, so only waive the check against the ISO set.
+    const openExternal = !inheritedList && isExternalCodeSet(element)
+    if (base.length > 0 && !openExternal) {
       const set = new Set(base)
       const extra = own.allowedValues.filter((v) => !set.has(v))
       if (extra.length > 0)

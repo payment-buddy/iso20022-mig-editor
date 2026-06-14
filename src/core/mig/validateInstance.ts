@@ -8,6 +8,7 @@
 import { createValueValidator } from "./fieldValidation"
 import { resolveConstraints } from "./constraints"
 import { evaluateExpression, parseExpression } from "./expression"
+import { isExternalCodeSet } from "@/core/erepository/codeSet"
 import { rootPath } from "@/core/erepository/elementPath"
 import type {
   ElementOverride,
@@ -64,11 +65,15 @@ function leafErrors(
   if (facet) errors.push(facet)
 
   // Allowed codes / values (the MIG-restricted list, else the ISO code set).
-  const codes =
-    override && "allowedValues" in override
-      ? (override.allowedValues ?? [])
-      : el.codes.map((c) => c.codeName)
-  if (codes.length > 0 && !codes.includes(value)) {
+  const restricted = override !== undefined && "allowedValues" in override
+  const codes = restricted
+    ? (override!.allowedValues ?? [])
+    : el.codes.map((c) => c.codeName)
+  // External code sets are open: the ISO snapshot isn't exhaustive, so a value
+  // beyond it isn't a violation. A MIG that *restricted* the list is still
+  // enforced, so only waive the check against the ISO set.
+  const openExternal = !restricted && isExternalCodeSet(el)
+  if (codes.length > 0 && !openExternal && !codes.includes(value)) {
     errors.push(`"${value}" is not an allowed value.`)
   }
 

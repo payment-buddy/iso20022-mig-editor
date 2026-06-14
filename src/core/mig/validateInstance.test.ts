@@ -54,6 +54,12 @@ const MESSAGE: MessageDefinition = {
         minOccurs: 0,
         codes: codes("ACTV", "INAC"),
       }),
+      el("Purp", {
+        baseType: "CodeSet",
+        type: "ExternalPurpose1Code",
+        minOccurs: 0,
+        codes: codes("CASH", "SALA"),
+      }),
       // Optional choice: exactly one of OrgId / PrvtId (each mandatory within the branch).
       el("Pty", {
         isChoice: true,
@@ -164,6 +170,42 @@ describe("validateMessageInstance", () => {
       expect.objectContaining({
         path: "/Doc/Amt",
         message: expect.stringMatching(/above the maximum 1000/i),
+      })
+    )
+  })
+
+  it("accepts a value beyond the snapshot for an external code set", () => {
+    // ExternalPurpose1Code is open-ended — SUPP isn't in the snapshot but is valid.
+    expect(
+      run(
+        node("Doc", {
+          children: [
+            leaf("GrpHdr", "x"),
+            leaf("Amt", "500"),
+            leaf("Purp", "SUPP"),
+          ],
+        })
+      )
+    ).toEqual([])
+  })
+
+  it("still enforces a MIG restriction on an external code set", () => {
+    // The MIG narrows Purp to {CASH}; SUPP now violates that explicit list.
+    expect(
+      run(
+        node("Doc", {
+          children: [
+            leaf("GrpHdr", "x"),
+            leaf("Amt", "500"),
+            leaf("Purp", "SUPP"),
+          ],
+        }),
+        { "/Doc/Purp": { allowedValues: ["CASH"] } }
+      )
+    ).toContainEqual(
+      expect.objectContaining({
+        path: "/Doc/Purp",
+        message: expect.stringMatching(/not an allowed value/i),
       })
     )
   })

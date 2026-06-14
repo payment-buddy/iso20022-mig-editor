@@ -49,6 +49,11 @@ const MESSAGE: MessageDefinition = {
       el("GrpHdr", { baseType: "Text", maxLength: 35 }), // mandatory (minOccurs 1)
       el("Amt", { baseType: "Amount", fractionDigits: 2 }),
       el("Sts", { baseType: "CodeSet", codes: codes("ACTV", "INAC") }),
+      el("Purp", {
+        baseType: "CodeSet",
+        type: "ExternalPurpose1Code",
+        codes: codes("CASH", "SALA"),
+      }),
       el("Opt", { minOccurs: 0 }), // optional
     ],
   }),
@@ -142,6 +147,27 @@ describe("validateMigConsistency", () => {
       message: expect.stringMatching(/outside the standard set: NEW/i),
     })
     expect(run({ "/Doc/Sts": { allowedValues: ["ACTV"] } })).toEqual([]) // subset is fine
+  })
+
+  it("allows values beyond the ISO snapshot for an external code set", () => {
+    // ExternalPurpose1Code is open-ended — adding a code outside the snapshot
+    // isn't an inconsistency.
+    expect(run({ "/Doc/Purp": { allowedValues: ["CASH", "SUPP"] } })).toEqual(
+      []
+    )
+  })
+
+  it("still flags values outside an inherited restriction on an external set", () => {
+    // A MIG ancestor narrowed the list; re-widening past it is meaningful.
+    const inherited: ElementOverrides = {
+      "/Doc/Purp": { allowedValues: ["CASH"] },
+    }
+    expect(
+      run({ "/Doc/Purp": { allowedValues: ["CASH", "SUPP"] } }, inherited)[0]
+    ).toMatchObject({
+      field: "Allowed values",
+      message: expect.stringMatching(/outside the standard set: SUPP/i),
+    })
   })
 
   it("loosens against the inherited baseline, not just ISO", () => {
