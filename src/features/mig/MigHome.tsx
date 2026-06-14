@@ -26,8 +26,9 @@ import {
   migsForResolution,
   type DuplicateResolution,
 } from "@/core/mig/importDuplicates"
-import { deleteMig, loadAllMigs, saveMig } from "@/core/storage/migStore"
-import { deleteRevisions, loadLatestRevisionTimes } from "@/core/storage/revisionStore"
+import { loadAllMigs, saveMig } from "@/core/storage/migStore"
+import { loadLatestRevisionTimes } from "@/core/storage/revisionStore"
+import { loadTrashCount, trashMig } from "@/core/storage/trashStore"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { formatLocalDateTime } from "@/lib/datetime"
@@ -63,6 +64,7 @@ export function MigHome() {
   const [focusedKey, setFocusedKey] = useState<string | null>(null)
   const [anchorKey, setAnchorKey] = useState<string | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [trashCount, setTrashCount] = useState(0)
   const [importErrors, setImportErrors] = useState<string[]>([])
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
 
@@ -97,11 +99,12 @@ export function MigHome() {
   const selectedMigs = migs.filter((m) => selected.has(getMigKey(m)))
 
   const refresh = useCallback(() => {
-    Promise.all([loadAllMigs(), loadLatestRevisionTimes()])
-      .then(([loaded, times]) => {
+    Promise.all([loadAllMigs(), loadLatestRevisionTimes(), loadTrashCount()])
+      .then(([loaded, times, trashed]) => {
         loaded.sort((a, b) => getMigKey(a).localeCompare(getMigKey(b)))
         setMigs(loaded)
         setLastModified(times)
+        setTrashCount(trashed)
       })
       .catch((err) => console.error("Failed to load MIGs:", err))
   }, [])
@@ -299,12 +302,10 @@ export function MigHome() {
 
   const confirmDelete = async () => {
     setDeleteOpen(false)
-    await Promise.all(
-      deleteTargets.map(async (key) => {
-        await deleteMig(key)
-        await deleteRevisions(key) // drop the MIG's revision history too
-      }),
-    )
+    // Soft delete: move the targets (with their history) to the Trash, where they
+    // can be restored or permanently deleted.
+    const now = Date.now()
+    await Promise.all(deleteTargets.map((key) => trashMig(key, now)))
     setSelected(new Set())
     refresh()
   }
@@ -350,6 +351,12 @@ export function MigHome() {
     <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="mr-auto text-base font-semibold tracking-tight">Message Implementation Guides</h1>
+        <Button variant="outline" size="sm" asChild>
+          <a href={hashFor({ name: "trash" })}>
+            <TrashIcon data-icon="inline-start" aria-hidden />
+            Trash{trashCount > 0 ? ` (${trashCount})` : ""}
+          </a>
+        </Button>
         <Button variant="outline" size="sm" asChild>
           <a href={hashFor({ name: "browse" })}>
             <TreeStructureIcon data-icon="inline-start" aria-hidden />
@@ -517,7 +524,7 @@ export function MigHome() {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title={`Delete ${deleteTargets.length} MIG${deleteTargets.length === 1 ? "" : "s"}?`}
-        description="This permanently removes the selected MIG(s) from this browser. This cannot be undone."
+        description="They move to the Trash (with their revision history), where you can restore or permanently delete them."
         confirmLabel="Delete"
         destructive
         onConfirm={confirmDelete}

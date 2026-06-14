@@ -12,6 +12,10 @@ describe("parseHash", () => {
     expect(parseHash("#browse")).toEqual({ name: "browse" })
   })
 
+  it("parses trash", () => {
+    expect(parseHash("#trash")).toEqual({ name: "trash" })
+  })
+
   it("parses a mig key, decoding the colon-version", () => {
     expect(parseHash("#mig/EPC-SCTInst%3A2023")).toEqual({
       name: "mig",
@@ -52,6 +56,7 @@ describe("hashFor", () => {
   it("serializes each route", () => {
     expect(hashFor({ name: "home" })).toBe("#")
     expect(hashFor({ name: "browse" })).toBe("#browse")
+    expect(hashFor({ name: "trash" })).toBe("#trash")
     expect(hashFor({ name: "message", code: "pacs.008.001.08" })).toBe("#pacs.008.001.08")
     expect(hashFor({ name: "mig", key: "EPC-SCTInst:2023" })).toBe("#mig/EPC-SCTInst%3A2023")
     expect(hashFor({ name: "compare", a: "A:1", b: "B:2" })).toBe("#compare/A%3A1/B%3A2")
@@ -64,6 +69,7 @@ describe("round-trip", () => {
   const routes: Route[] = [
     { name: "home" },
     { name: "browse" },
+    { name: "trash" },
     { name: "message", code: "pacs.008.001.08" },
     { name: "mig", key: "EPC-SCTInst:2023" },
     { name: "compare", a: "EPC:1.0", b: "CSM:2.0" },

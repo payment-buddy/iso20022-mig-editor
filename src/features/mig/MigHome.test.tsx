@@ -7,6 +7,7 @@ import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadAllMigs, loadMig, saveMig } from "@/core/storage/migStore"
 import { saveRevisions } from "@/core/storage/revisionStore"
+import { loadTrash } from "@/core/storage/trashStore"
 import { formatLocalDateTime } from "@/lib/datetime"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { MigHome } from "./MigHome"
@@ -323,7 +324,7 @@ describe("MigHome", () => {
     expect(within(dialog).queryByRole("button", { name: /merge/i })).not.toBeInTheDocument()
   })
 
-  it("deletes the selection after confirming", async () => {
+  it("moves the selection to the trash after confirming (and bumps the Trash count)", async () => {
     await renderWith(migObj("A", "1"), migObj("B", "1"))
     await userEvent.click(within(rowFor("A")).getByRole("checkbox"))
     await userEvent.click(screen.getByRole("button", { name: "Delete" }))
@@ -331,7 +332,11 @@ describe("MigHome", () => {
     const dialog = screen.getByRole("alertdialog")
     await userEvent.click(within(dialog).getByRole("button", { name: "Delete" }))
 
+    // A leaves the list (B stays), and lands in the trash.
     await waitFor(() => expect(screen.queryByRole("link", { name: "A" })).not.toBeInTheDocument())
     expect(screen.getByRole("link", { name: "B" })).toBeInTheDocument()
+    expect((await loadTrash()).map((t) => t.mig.name)).toEqual(["A"])
+    // The header Trash link shows the count.
+    expect(await screen.findByRole("link", { name: /trash \(1\)/i })).toBeInTheDocument()
   })
 })

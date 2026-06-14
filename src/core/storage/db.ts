@@ -1,12 +1,13 @@
-// Raw IndexedDB wrapper (no dependency). One database, three object stores.
+// Raw IndexedDB wrapper (no dependency). One database, four object stores.
 // See IMPLEMENTATION_PLAN.md §0/Phase 0 and FUNCTIONALITY.md §3/§10.
 
 const DB_NAME = "iso20022"
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 export const STORE_EREPOSITORY = "eRepository"
 export const STORE_MIG = "mig"
 export const STORE_REVISION = "revision"
+export const STORE_TRASH = "trash"
 
 let dbPromise: Promise<IDBDatabase> | null = null
 
@@ -30,6 +31,10 @@ export function openDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_REVISION)) {
         db.createObjectStore(STORE_REVISION)
+      }
+      // v2: soft-deleted MIGs (a self-contained record per key — see trashStore).
+      if (!db.objectStoreNames.contains(STORE_TRASH)) {
+        db.createObjectStore(STORE_TRASH)
       }
     }
     request.onsuccess = () => resolve(request.result)

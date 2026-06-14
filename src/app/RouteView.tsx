@@ -5,6 +5,7 @@ import { MigEditor } from "@/features/mig/MigEditor"
 import { MigHistory } from "@/features/mig/MigHistory"
 import { MigCompare } from "@/features/mig/MigCompare"
 import { MigMerge } from "@/features/mig/MigMerge"
+import { MigTrash } from "@/features/mig/MigTrash"
 import type { ERepository } from "@/core/types/types"
 import type { Route } from "./routes"
 
@@ -34,5 +35,7 @@ export function RouteView({
       return <MigCompare keyA={route.a} keyB={route.b} repo={repo} />
     case "merge":
       return <MigMerge key={route.key} targetKey={route.key} repo={repo} />
+    case "trash":
+      return <MigTrash />
   }
 }
