@@ -14,6 +14,7 @@ import type { ERepository, MessageImplementationGuide } from "@/core/types/types
 import { hashFor, navigate } from "@/app/routes"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { cn } from "@/lib/utils"
+import { formatLocalDateTime } from "@/lib/datetime"
 
 /**
  * Revision history for one MIG (IMPLEMENTATION_PLAN Phase 2). Lists the MIG's
@@ -159,7 +160,7 @@ function RevisionRow({
       )}
     >
       <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left outline-none">
-        <div className="text-xs font-medium">{new Date(rev.at).toLocaleString()}</div>
+        <div className="text-xs font-medium">{formatLocalDateTime(rev.at)}</div>
         <div className="truncate text-xs text-muted-foreground">{rev.summary}</div>
       </button>
       <button

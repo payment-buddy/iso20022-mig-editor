@@ -3,7 +3,13 @@ import { afterEach, describe, expect, it } from "vitest"
 import type { Revision } from "@/core/mig/revisions"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { deleteDatabase } from "./db"
-import { deleteRevisions, loadRevisions, renameRevisions, saveRevisions } from "./revisionStore"
+import {
+  deleteRevisions,
+  loadLatestRevisionTimes,
+  loadRevisions,
+  renameRevisions,
+  saveRevisions,
+} from "./revisionStore"
 
 const mig = (name: string, version: string): MessageImplementationGuide => ({
   name,
@@ -55,5 +61,14 @@ describe("revision persistence", () => {
     await saveRevisions("EPC:1.0", [rev("a", mig("EPC", "1.0"))])
     await renameRevisions("EPC:1.0", "EPC:1.0")
     expect(await loadRevisions("EPC:1.0")).toHaveLength(1)
+  })
+
+  it("reports the latest revision time per MIG", async () => {
+    await saveRevisions("A:1", [
+      { ...rev("a0", mig("A", "1")), at: 100 },
+      { ...rev("a1", mig("A", "1")), at: 200 },
+    ])
+    await saveRevisions("B:1", [{ ...rev("b0", mig("B", "1")), at: 50 }])
+    expect(await loadLatestRevisionTimes()).toEqual({ "A:1": 200, "B:1": 50 })
   })
 })
