@@ -136,4 +136,22 @@ describe("validateMigConsistency", () => {
     expect(d).toHaveLength(2)
     expect(d.map((x) => x.elementName).sort()).toEqual(["Amt", "GrpHdr"])
   })
+
+  it("flags disabling a rule as looser than the original", () => {
+    const d = run({ "Doc/GrpHdr": { constraintOverrides: { R1: { disabled: true } } } })
+    expect(d).toContainEqual(
+      expect.objectContaining({
+        path: "Doc/GrpHdr",
+        field: "Constraint",
+        message: expect.stringMatching(/disables the "R1" rule.*looser/i),
+      }),
+    )
+  })
+
+  it("does not re-flag a rule an ancestor already disabled, nor a re-enable", () => {
+    const inherited = { "Doc/GrpHdr": { constraintOverrides: { R1: { disabled: true } } } }
+    // Own silently inherits the disable → nothing; own re-enables → not looser.
+    expect(run({ "Doc/GrpHdr": { constraintOverrides: { R1: { disabled: true } } } }, inherited)).toEqual([])
+    expect(run({ "Doc/GrpHdr": { constraintOverrides: { R1: { disabled: false } } } }, inherited)).toEqual([])
+  })
 })

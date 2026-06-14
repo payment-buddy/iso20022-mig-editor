@@ -140,9 +140,19 @@ export function MigStandardConstraintDetail({
             </button>
           )}
         </label>
-        <p className="mt-1 text-[0.625rem] text-muted-foreground">
-          A disabled rule is skipped during validation.
-        </p>
+        {disabledEffective ? (
+          <p
+            role="alert"
+            className="mt-1 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500"
+          >
+            <WarningIcon className="size-3 shrink-0" aria-hidden />
+            Disabling this rule is looser than the original.
+          </p>
+        ) : (
+          <p className="mt-1 text-[0.625rem] text-muted-foreground">
+            A disabled rule is skipped during validation.
+          </p>
+        )}
       </div>
     </DetailPanel>
   )

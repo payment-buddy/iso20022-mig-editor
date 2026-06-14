@@ -114,6 +114,15 @@ function elementDiagnostics(
     }
   }
 
+  // Disabling a rule drops a restriction — looser, unless an ancestor already
+  // disabled it (then this MIG adds nothing).
+  for (const [name, co] of Object.entries(own.constraintOverrides ?? {})) {
+    const inhDisabled = inherited?.constraintOverrides?.[name]?.disabled === true
+    if (co.disabled === true && !inhDisabled) {
+      add("Constraint", `Disables the "${name}" rule — looser than the original.`)
+    }
+  }
+
   return out
 }
 
