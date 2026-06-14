@@ -21,7 +21,7 @@ export function RouteView({
 }) {
   switch (route.name) {
     case "home":
-      return <MigHome />
+      return <MigHome repo={repo} />
     case "browse":
       return (
         <ERepositoryBrowser

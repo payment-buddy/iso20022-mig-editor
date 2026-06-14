@@ -15,14 +15,24 @@ import { loadAllMigs, loadMig, saveMig } from "@/core/storage/migStore"
 import { saveRevisions } from "@/core/storage/revisionStore"
 import { loadTrash } from "@/core/storage/trashStore"
 import { formatLocalDateTime } from "@/lib/datetime"
-import type { MessageImplementationGuide } from "@/core/types/types"
+import type {
+  ERepository,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 import { MigHome } from "./MigHome"
 import { takePendingMerge } from "./pendingMerge"
-import { downloadMigs } from "./downloadMigs"
+import { downloadMigs, downloadMigsExcel } from "./downloadMigs"
 
-// The download side-effect is exercised separately; here we assert the back-up
-// affordance wires to it (and avoids jsdom's missing URL.createObjectURL).
-vi.mock("./downloadMigs", () => ({ downloadMigs: vi.fn() }))
+// The download side-effects are exercised separately; here we assert the export
+// affordances wire to them (and avoid jsdom's missing URL.createObjectURL).
+vi.mock("./downloadMigs", () => ({
+  downloadMigs: vi.fn(),
+  downloadMigsExcel: vi.fn(),
+}))
+
+// An empty repository is enough: the message resolver is only invoked inside the
+// (mocked) download, so it never runs here.
+const REPO: ERepository = { businessAreas: [] }
 
 function migYaml(
   name: string,
@@ -77,7 +87,7 @@ function migObj(
 /** Seed storage, then mount and wait for the rows to load. */
 async function renderWith(...migs: MessageImplementationGuide[]) {
   await Promise.all(migs.map(saveMig))
-  render(<MigHome />)
+  render(<MigHome repo={REPO} />)
   await screen.findByRole("grid")
 }
 
@@ -93,12 +103,12 @@ afterEach(async () => {
 
 describe("MigHome", () => {
   it("shows an empty state before any MIG is uploaded", async () => {
-    render(<MigHome />)
+    render(<MigHome repo={REPO} />)
     expect(await screen.findByText(/no migs yet/i)).toBeInTheDocument()
   })
 
   it("uploads a single new MIG, persists it, and opens its editor", async () => {
-    render(<MigHome />)
+    render(<MigHome repo={REPO} />)
     await userEvent.upload(
       screen.getByLabelText("MIG YAML file"),
       migFile("EPC", "1.0")
@@ -150,7 +160,7 @@ describe("MigHome", () => {
   })
 
   it("uploads an array of MIGs from one file", async () => {
-    render(<MigHome />)
+    render(<MigHome repo={REPO} />)
     const yaml =
       "- name: A\n  version: '1'\n  messageIdentifier: x\n  elementOverrides: {}\n" +
       "- name: B\n  version: '1'\n  messageIdentifier: x\n  elementOverrides: {}\n"
@@ -165,7 +175,7 @@ describe("MigHome", () => {
 
   it("rejects a malformed upload and surfaces a readable error", async () => {
     const user = userEvent.setup()
-    render(<MigHome />)
+    render(<MigHome repo={REPO} />)
     // Missing messageIdentifier → the schema rejects it.
     const bad = new File(
       ["name: Oops\nversion: '1'\nelementOverrides: {}\n"],
@@ -280,6 +290,24 @@ describe("MigHome", () => {
     expect(screen.getByText("2 selected")).toBeInTheDocument()
     expect(rowFor("A")).toHaveAttribute("aria-selected", "true")
     expect(rowFor("B")).toHaveAttribute("aria-selected", "true")
+  })
+
+  it("Excel exports the selected MIGs (disabled with none selected)", async () => {
+    const user = userEvent.setup()
+    vi.mocked(downloadMigsExcel).mockClear()
+    await renderWith(migObj("A", "1"), migObj("B", "1"))
+
+    const excel = screen.getByRole("button", { name: /excel/i })
+    expect(excel).toBeDisabled()
+
+    await user.click(within(rowFor("A")).getByRole("checkbox"))
+    expect(excel).toBeEnabled()
+    await user.click(excel)
+
+    expect(downloadMigsExcel).toHaveBeenCalledTimes(1)
+    const [migs, allMigs] = vi.mocked(downloadMigsExcel).mock.calls[0]
+    expect(migs.map((m) => m.name)).toEqual(["A"])
+    expect(allMigs).toHaveLength(2)
   })
 
   it("Space toggles the focused row; Ctrl+A selects all", async () => {

@@ -1,7 +1,7 @@
 import { buildMigMarkdown } from "@/core/mig/migMarkdown"
-import { buildMigCsv } from "@/core/mig/migCsv"
+import { buildMigsXlsx, buildMigXlsx } from "@/core/mig/migXlsx"
 import { serializeMig, serializeMigs } from "@/core/mig/serializeMig"
-import { CSV, MARKDOWN, saveTextFile, YAML } from "@/lib/saveFile"
+import { MARKDOWN, saveTextFile, XLSX, YAML } from "@/lib/saveFile"
 import type {
   MessageDefinition,
   MessageImplementationGuide,
@@ -54,13 +54,31 @@ export async function downloadMigMarkdown(
 }
 
 /**
- * Trigger a browser download of a MIG's CSV — the ISO message tree flattened with
- * the MIG's effective rules (opens in Excel).
+ * Trigger a browser download of a MIG's Excel workbook — the ISO message tree
+ * flattened with the MIG's effective rules, rows tinted by constraint provenance.
  */
-export async function downloadMigCsv(
+export async function downloadMigExcel(
   mig: MessageImplementationGuide,
   allMigs: MessageImplementationGuide[],
   message: MessageDefinition
 ): Promise<void> {
-  await saveTextFile(buildMigCsv(mig, allMigs, message), CSV)
+  await saveTextFile(buildMigXlsx(mig, allMigs, message), XLSX)
+}
+
+/**
+ * Trigger a browser download of several MIGs as one Excel workbook (one sheet per
+ * MIG). `messageFor` resolves each MIG's ISO message; MIGs whose message can't be
+ * resolved are skipped. No-op when nothing resolves.
+ */
+export async function downloadMigsExcel(
+  migs: MessageImplementationGuide[],
+  allMigs: MessageImplementationGuide[],
+  messageFor: (mig: MessageImplementationGuide) => MessageDefinition | null
+): Promise<void> {
+  const entries = migs.flatMap((mig) => {
+    const message = messageFor(mig)
+    return message ? [{ mig, message }] : []
+  })
+  const file = buildMigsXlsx(entries, allMigs)
+  if (file) await saveTextFile(file, XLSX)
 }

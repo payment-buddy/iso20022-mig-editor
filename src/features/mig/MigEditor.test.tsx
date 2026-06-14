@@ -21,7 +21,7 @@ import type {
 } from "@/core/types/types"
 import { MigEditor } from "./MigEditor"
 import {
-  downloadMigCsv,
+  downloadMigExcel,
   downloadMigMarkdown,
   downloadMigs,
 } from "./downloadMigs"
@@ -31,7 +31,7 @@ import {
 vi.mock("./downloadMigs", () => ({
   downloadMigs: vi.fn(),
   downloadMigMarkdown: vi.fn(),
-  downloadMigCsv: vi.fn(),
+  downloadMigExcel: vi.fn(),
 }))
 
 function el(name: string, props: Partial<MessageElement> = {}): MessageElement {
@@ -168,17 +168,17 @@ describe("MigEditor", () => {
     )
   })
 
-  it("exports a CSV from the Export menu", async () => {
+  it("exports an Excel workbook from the Export menu", async () => {
     const user = userEvent.setup()
-    vi.mocked(downloadMigCsv).mockClear()
+    vi.mocked(downloadMigExcel).mockClear()
     await saveMig(MIG)
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
 
     await user.click(screen.getByRole("button", { name: /export/i }))
-    await user.click(await screen.findByRole("menuitem", { name: /csv/i }))
-    expect(downloadMigCsv).toHaveBeenCalledTimes(1)
-    expect(downloadMigCsv).toHaveBeenCalledWith(
+    await user.click(await screen.findByRole("menuitem", { name: /excel/i }))
+    expect(downloadMigExcel).toHaveBeenCalledTimes(1)
+    expect(downloadMigExcel).toHaveBeenCalledWith(
       expect.objectContaining({ name: "EPC Guide" }),
       expect.any(Array),
       expect.objectContaining({ identifier: "pacs.008.001.10" })

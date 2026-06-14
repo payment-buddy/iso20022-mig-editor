@@ -3,7 +3,7 @@
 // file is overwritten in place — no `" (1)"` suffix) and falls back to an anchor
 // download link where it isn't supported.
 
-export type SavedFile = { filename: string; content: string }
+export type SavedFile = { filename: string; content: string | Uint8Array }
 export type FileKind = {
   mime: string
   description: string
@@ -20,10 +20,10 @@ export const MARKDOWN: FileKind = {
   description: "Markdown",
   extensions: [".md"],
 }
-export const CSV: FileKind = {
-  mime: "text/csv",
-  description: "CSV",
-  extensions: [".csv"],
+export const XLSX: FileKind = {
+  mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  description: "Excel workbook",
+  extensions: [".xlsx"],
 }
 
 /**
@@ -35,7 +35,7 @@ type ShowSaveFilePicker = (options?: {
   types?: { description?: string; accept: Record<string, string[]> }[]
 }) => Promise<{
   createWritable: () => Promise<{
-    write: (data: string) => Promise<void>
+    write: (data: string | Uint8Array | Blob) => Promise<void>
     close: () => Promise<void>
   }>
 }>
@@ -77,7 +77,11 @@ async function saveViaPicker(
 
 /** Fallback: an anchor download link (the browser may append `" (1)"` on collisions). */
 function saveViaAnchor(file: SavedFile, kind: FileKind): void {
-  const url = URL.createObjectURL(new Blob([file.content], { type: kind.mime }))
+  // `content` is a string or fflate `Uint8Array`; both are valid Blob parts (the
+  // cast only sidesteps the over-narrow `ArrayBufferLike` vs `ArrayBuffer` lib type).
+  const url = URL.createObjectURL(
+    new Blob([file.content as BlobPart], { type: kind.mime })
+  )
   const a = document.createElement("a")
   a.href = url
   a.download = file.filename

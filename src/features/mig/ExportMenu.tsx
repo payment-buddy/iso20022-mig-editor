@@ -8,16 +8,16 @@ import {
 import { Button } from "@/components/ui/button"
 
 /**
- * Header "Export" menu grouping the secondary report exports (Markdown, CSV). A
+ * Header "Export" menu grouping the secondary report exports (Markdown, Excel). A
  * hand-rolled popover (no dropdown-library dependency): closes on select, Escape,
  * or an outside click; ↑/↓/Home/End move between items.
  */
 export function ExportMenu({
   onMarkdown,
-  onCsv,
+  onExcel,
 }: {
   onMarkdown: () => void
-  onCsv: () => void
+  onExcel: () => void
 }) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -113,8 +113,8 @@ export function ExportMenu({
           />
           <MenuItem
             icon={TableIcon}
-            label="CSV"
-            onSelect={() => select(onCsv)}
+            label="Excel"
+            onSelect={() => select(onExcel)}
           />
         </div>
       )}

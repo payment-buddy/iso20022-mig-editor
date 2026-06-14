@@ -43,7 +43,7 @@ import { MigDiagnostics } from "./MigDiagnostics"
 import { ExportMenu } from "./ExportMenu"
 import { ValidateInstanceDialog } from "./ValidateInstanceDialog"
 import {
-  downloadMigCsv,
+  downloadMigExcel,
   downloadMigMarkdown,
   downloadMigs,
 } from "./downloadMigs"
@@ -218,7 +218,7 @@ export function MigEditor({
             onMarkdown={() =>
               downloadMigMarkdown(mig, allMigs, resolved.current)
             }
-            onCsv={() => downloadMigCsv(mig, allMigs, resolved.current)}
+            onExcel={() => downloadMigExcel(mig, allMigs, resolved.current)}
           />
           <Button
             size="sm"

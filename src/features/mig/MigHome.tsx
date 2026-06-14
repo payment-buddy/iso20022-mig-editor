@@ -1,31 +1,47 @@
-import {type KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo, useRef, useState,} from "react"
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import {
   CaretDownIcon,
   CaretUpIcon,
   DownloadSimpleIcon,
   GitDiffIcon,
+  TableIcon,
   TrashIcon,
   TreeStructureIcon,
   UploadSimpleIcon,
   WarningIcon,
   XIcon,
 } from "@phosphor-icons/react"
-import {Button} from "@/components/ui/button"
-import {ConfirmDialog} from "@/components/ui/confirm-dialog"
-import {getMigKey} from "@/core/mig/migKey"
-import {shortCodeForIdentifier} from "@/core/erepository/messageIdentifier"
-import {duplicateKeysOf, type DuplicateResolution, migsForResolution,} from "@/core/mig/importDuplicates"
-import {loadAllMigs, saveMig} from "@/core/storage/migStore"
-import {loadLatestRevisionTimes} from "@/core/storage/revisionStore"
-import {loadTrashCount, trashMig} from "@/core/storage/trashStore"
-import type {MessageImplementationGuide} from "@/core/types/types"
-import {hashFor, navigate} from "@/app/routes"
-import {formatLocalDateTime} from "@/lib/datetime"
-import {cn} from "@/lib/utils"
-import {parseMigYaml} from "./parseMigYaml"
-import {ImportDuplicateDialog} from "./ImportDuplicateDialog"
-import {setPendingMerge} from "./pendingMerge"
-import {downloadMigs} from "./downloadMigs"
+import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { getMigKey } from "@/core/mig/migKey"
+import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
+import {
+  duplicateKeysOf,
+  type DuplicateResolution,
+  migsForResolution,
+} from "@/core/mig/importDuplicates"
+import { loadAllMigs, saveMig } from "@/core/storage/migStore"
+import { loadLatestRevisionTimes } from "@/core/storage/revisionStore"
+import { loadTrashCount, trashMig } from "@/core/storage/trashStore"
+import { resolveMessage } from "@/core/erepository/resolveMessage"
+import type {
+  ERepository,
+  MessageImplementationGuide,
+} from "@/core/types/types"
+import { hashFor, navigate } from "@/app/routes"
+import { formatLocalDateTime } from "@/lib/datetime"
+import { cn } from "@/lib/utils"
+import { parseMigYaml } from "./parseMigYaml"
+import { ImportDuplicateDialog } from "./ImportDuplicateDialog"
+import { setPendingMerge } from "./pendingMerge"
+import { downloadMigs, downloadMigsExcel } from "./downloadMigs"
 
 type PendingImport = {
   incoming: MessageImplementationGuide[]
@@ -52,7 +68,7 @@ function keysBetween(keys: string[], a: string, b: string): string[] {
   return i <= j ? keys.slice(i, j + 1) : keys.slice(j, i + 1)
 }
 
-export function MigHome() {
+export function MigHome({ repo }: { repo: ERepository }) {
   const [migs, setMigs] = useState<MessageImplementationGuide[]>([])
   const [lastModified, setLastModified] = useState<Record<string, number>>({})
   const [sort, setSort] = useState<{ col: SortCol; dir: 1 | -1 }>({
@@ -109,6 +125,15 @@ export function MigHome() {
   const activeKey =
     focusedKey && keys.includes(focusedKey) ? focusedKey : (keys[0] ?? null)
   const selectedMigs = migs.filter((m) => selected.has(getMigKey(m)))
+
+  // Export the selection as one Excel workbook (a sheet per MIG), resolving each
+  // MIG's ISO message from the repository.
+  const exportExcel = () =>
+    void downloadMigsExcel(
+      selectedMigs,
+      migs,
+      (m) => resolveMessage(repo, m.messageIdentifier)?.current ?? null
+    )
 
   const refresh = useCallback(() => {
     Promise.all([loadAllMigs(), loadLatestRevisionTimes(), loadTrashCount()])
@@ -470,6 +495,15 @@ export function MigHome() {
             >
               <DownloadSimpleIcon data-icon="inline-start" aria-hidden />
               Download
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selected.size === 0}
+              onClick={exportExcel}
+            >
+              <TableIcon data-icon="inline-start" aria-hidden />
+              Excel
             </Button>
             {/* Wrapper carries the hint: a disabled button doesn't fire hover. */}
             <span title={compareHint} className="inline-flex">
