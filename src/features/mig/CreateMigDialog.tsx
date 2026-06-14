@@ -1,6 +1,7 @@
 import { useId, useState, type FormEvent } from "react"
 import { Dialog } from "radix-ui"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button-variants"
 import { getMigKey } from "@/core/mig/migKey"
 import { loadAllMigs, saveMig } from "@/core/storage/migStore"
 import { navigate } from "@/app/routes"
