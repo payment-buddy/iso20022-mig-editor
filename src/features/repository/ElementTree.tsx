@@ -609,7 +609,7 @@ export function ElementTree({
               Overridden here
             </span>
             <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-violet-600 dark:bg-violet-400" aria-hidden />
+              <span className="size-2 rotate-45 bg-violet-600 dark:bg-violet-400" aria-hidden />
               Inherited
             </span>
           </div>
