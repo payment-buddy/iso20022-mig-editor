@@ -100,6 +100,24 @@ describe("MigHome", () => {
     expect(screen.getByText("—")).toBeInTheDocument()
   })
 
+  it("sorts rows by a column header, flipping direction on re-click", async () => {
+    const user = userEvent.setup()
+    await renderWith(migObj("Bravo", "1.0"), migObj("Alpha", "2.0"), migObj("Charlie", "1.5"))
+    const names = () =>
+      within(screen.getByRole("grid"))
+        .getAllByRole("link")
+        .map((l) => l.textContent)
+
+    // Default: by name, ascending.
+    expect(names()).toEqual(["Alpha", "Bravo", "Charlie"])
+
+    // By Version ascending (1.0, 1.5, 2.0), then descending on re-click.
+    await user.click(screen.getByRole("button", { name: /sort by version/i }))
+    expect(names()).toEqual(["Bravo", "Charlie", "Alpha"])
+    await user.click(screen.getByRole("button", { name: /sort by version/i }))
+    expect(names()).toEqual(["Alpha", "Charlie", "Bravo"])
+  })
+
   it("uploads an array of MIGs from one file", async () => {
     render(<MigHome />)
     const yaml =
