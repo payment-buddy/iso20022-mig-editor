@@ -330,6 +330,27 @@ describe("MigEditor", () => {
     expect(redoBtn()).toBeDisabled()
   })
 
+  it("disables the Undo button while a text field is focused", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const undoBtn = () => screen.getByRole("button", { name: "Undo" })
+
+    // Build history so Undo would otherwise be enabled.
+    await user.click(screen.getByRole("button", { name: "Edit Description" }))
+    await user.type(
+      screen.getByRole("textbox", { name: "Description" }),
+      "note"
+    )
+    await user.click(screen.getByRole("treeitem", { name: "Document" }))
+    expect(undoBtn()).toBeEnabled()
+
+    // Focusing a text field disables it (defer to native text-undo).
+    await user.click(screen.getByRole("button", { name: "Edit Description" }))
+    expect(undoBtn()).toBeDisabled()
+  })
+
   it("leaves Ctrl-Z to the browser while a text field is focused", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

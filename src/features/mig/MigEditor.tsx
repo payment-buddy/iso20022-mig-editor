@@ -91,6 +91,9 @@ export function MigEditor({
   // `past` and clear `future`; undo/redo move the current state between them.
   const [past, setPast] = useState<MessageImplementationGuide[]>([])
   const [future, setFuture] = useState<MessageImplementationGuide[]>([])
+  // Whether a text field is focused — undo there belongs to the browser, so the
+  // buttons are disabled (mirrors the keyboard guard).
+  const [editingText, setEditingText] = useState(false)
   const treeRef = useRef<ElementTreeHandle>(null)
   // Latest undo/redo closures, so the once-registered key handler stays current.
   const historyRef = useRef<{ undo: () => void; redo: () => void }>(null)
@@ -166,6 +169,21 @@ export function MigEditor({
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
+  }, [])
+
+  // Track whether focus is in a text field, so the Undo/Redo buttons disable
+  // there (consistent with the keyboard guard). `focusout.relatedTarget` is the
+  // element about to receive focus — including `null` when focus leaves entirely.
+  useEffect(() => {
+    const onFocusIn = (e: FocusEvent) => setEditingText(isTextEditing(e.target))
+    const onFocusOut = (e: FocusEvent) =>
+      setEditingText(isTextEditing(e.relatedTarget))
+    document.addEventListener("focusin", onFocusIn)
+    document.addEventListener("focusout", onFocusOut)
+    return () => {
+      document.removeEventListener("focusin", onFocusIn)
+      document.removeEventListener("focusout", onFocusOut)
+    }
   }, [])
 
   // Rename (name and/or version) → a new identity key: write under the new key,
@@ -268,13 +286,14 @@ export function MigEditor({
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <div className="flex items-center gap-1">
+          {/* Undo/redo are keyboard-first; hide the buttons on small screens. */}
+          <div className="hidden items-center gap-1 sm:flex">
             <Button
               variant="outline"
               size="icon"
               aria-label="Undo"
               title="Undo (Ctrl/⌘ Z)"
-              disabled={past.length === 0}
+              disabled={past.length === 0 || editingText}
               onClick={undo}
             >
               <ArrowUUpLeftIcon aria-hidden />
@@ -284,7 +303,7 @@ export function MigEditor({
               size="icon"
               aria-label="Redo"
               title="Redo (Ctrl/⌘ ⇧ Z)"
-              disabled={future.length === 0}
+              disabled={future.length === 0 || editingText}
               onClick={redo}
             >
               <ArrowUUpRightIcon aria-hidden />
