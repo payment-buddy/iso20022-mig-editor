@@ -129,6 +129,32 @@ describe("searchMessages", () => {
     expect(con?.xmlPath).toBe("/Document/Purp")
   })
 
+  it("anchors a whole word when the query has an edge space", () => {
+    // "party" is the last word of the Dbtr definition (no trailing char).
+    const whole = searchMessages(repo, "party ")
+    expect(whole.some((h) => h.field === "definition")).toBe(true)
+
+    // A prefix that isn't a whole word matches nothing once anchored…
+    expect(searchMessages(repo, "part ")).toEqual([])
+    // …but the same prefix without the space still matches (unchanged behavior).
+    expect(
+      searchMessages(repo, "part").some((h) => h.field === "definition")
+    ).toBe(true)
+
+    // Leading and both-edge spaces also anchor (Debtor element name == "Debtor").
+    expect(searchMessages(repo, " debtor").some((h) => h.field === "name")).toBe(
+      true
+    )
+    expect(
+      searchMessages(repo, " debtor ").some((h) => h.field === "name")
+    ).toBe(true)
+  })
+
+  it("ignores edge spaces when gating on the minimum query length", () => {
+    expect(searchMessages(repo, "ab ")).toEqual([])
+    expect(searchMessages(repo, " ab ")).toEqual([])
+  })
+
   it("prewarms the index in the background and reports readiness", async () => {
     // A fresh repo object starts unindexed; prewarm builds and caches it.
     const fresh: ERepository = {

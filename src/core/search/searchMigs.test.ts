@@ -121,4 +121,19 @@ describe("searchMigs", () => {
     // 'party' appears only in the base message definition, never in the override.
     expect(searchMigs(repo, [mig], "party")).toEqual([])
   })
+
+  it("anchors a whole word when the query has an edge space", () => {
+    // "domestic" is the last word of the Usage annotation value.
+    const whole = searchMigs(repo, [mig], "domestic ")
+    expect(whole).toHaveLength(1)
+    expect(whole[0].field).toBe("annotation")
+
+    // A prefix that isn't a whole word matches nothing once anchored…
+    expect(searchMigs(repo, [mig], "domesti ")).toEqual([])
+    // …but the same prefix without the space still matches (unchanged behavior).
+    expect(searchMigs(repo, [mig], "domesti")[0].field).toBe("annotation")
+
+    // A leading space anchors the start (override definition "Local debtor…").
+    expect(searchMigs(repo, [mig], " local")[0].field).toBe("definition")
+  })
 })

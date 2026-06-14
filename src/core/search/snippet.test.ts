@@ -20,4 +20,25 @@ describe("makeSnippet", () => {
     expect(s.match).toBe("")
     expect(s.before).toBe("hello world")
   })
+
+  it("highlights only the trimmed word for an edge-space (boundary) query", () => {
+    // Trailing-space query anchors the end of a value with no trailing space.
+    expect(makeSnippet("Amount", "amount ")).toEqual({
+      before: "",
+      match: "Amount",
+      after: "",
+    })
+    // Mid-value boundary match still highlights just the word, not the space.
+    expect(makeSnippet("Total amount due", "amount ")).toEqual({
+      before: "Total ",
+      match: "amount",
+      after: " due",
+    })
+    // Both-edge query against a standalone word.
+    expect(makeSnippet("Amount", " amount ")).toEqual({
+      before: "",
+      match: "Amount",
+      after: "",
+    })
+  })
 })

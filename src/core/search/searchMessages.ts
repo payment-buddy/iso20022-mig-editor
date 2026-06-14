@@ -30,7 +30,9 @@ import { makeSnippet } from "./snippet"
 import {
   constraintText,
   FIELD_RANK,
+  matchesQuery,
   MIN_QUERY,
+  normalizeQuery,
   type HitField,
   type MessageHit,
   type ValueCluster,
@@ -153,10 +155,17 @@ function familiesOf(repo: ERepository): Family[] {
 function indexFamily(family: Family, out: ElementRecord[]): void {
   const latest = family.versions[family.versions.length - 1]
   const walk = (el: MessageElement, path: string) => {
-    const hay = fieldsOf(el)
-      .map((f) => f.value)
-      .join("   ")
-      .toLowerCase()
+    // Sentinel spaces wrap the haystack so an edge-boundary query (e.g. `amount `)
+    // matches a field value at the very start/end of the haystack, not just at an
+    // interior field join — matching `matchesQuery`'s semantics without a
+    // per-keystroke allocation in the hot scan.
+    const hay =
+      " " +
+      fieldsOf(el)
+        .map((f) => f.value)
+        .join("   ")
+        .toLowerCase() +
+      " "
     out.push({
       shortCode: family.shortCode,
       area: family.area,
@@ -270,7 +279,7 @@ function clustersAcrossVersions(
     const el = elementAtPath(v.rootElement, xmlPath)
     if (!el) continue
     const value = fieldValue(el, field, detail)
-    if (!value || !value.toLowerCase().includes(q)) continue
+    if (!value || !matchesQuery(value.toLowerCase(), q)) continue
     const ck = clusterKey(value)
     const entry = map.get(ck)
     if (entry) {
@@ -310,8 +319,9 @@ export function searchMessages(
   query: string,
   limit = 100
 ): MessageHit[] {
-  const q = query.trim().toLowerCase()
-  if (q.length < MIN_QUERY) return []
+  // Keep edge spaces for word-boundary matching; gate on the trimmed length.
+  const q = normalizeQuery(query)
+  if (q.trim().length < MIN_QUERY) return []
 
   const index = getIndex(repo)
 
@@ -338,7 +348,7 @@ export function searchMessages(
     // Name-prefix boost computed once per record, not per comparison.
     const namePrefix = r.el.name.toLowerCase().startsWith(q) ? 0 : 1
     for (const m of fieldsOf(r.el)) {
-      if (m.value.toLowerCase().includes(q))
+      if (matchesQuery(m.value.toLowerCase(), q))
         candidates.push({
           record: r,
           field: m.field,

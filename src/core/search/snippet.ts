@@ -18,6 +18,10 @@ export interface Snippet {
  * Slice `value` to a window around the first case-insensitive occurrence of
  * `query`, splitting it into before/match/after for highlighting. With no match
  * (e.g. a blank query) it returns a clipped head of the value as `before`.
+ *
+ * An edge space in `query` anchors a word boundary (see `matchesQuery`): the
+ * match is located against the value wrapped in sentinel spaces, but only the
+ * trimmed word — never the edge spaces — is highlighted.
  */
 export function makeSnippet(
   value: string,
@@ -25,7 +29,12 @@ export function makeSnippet(
   window = WINDOW
 ): Snippet {
   const q = query.toLowerCase()
-  const i = q ? value.toLowerCase().indexOf(q) : -1
+  const lower = value.toLowerCase()
+  // Locate the boundary-correct match in the sentinel-wrapped value, then
+  // highlight just the trimmed word at that position in the original value.
+  const token = q.trim()
+  const at = token ? (" " + lower + " ").indexOf(q) : -1
+  const i = at === -1 ? -1 : lower.indexOf(token, Math.max(0, at - 1))
   if (i === -1) {
     const head = value.slice(0, window * 2)
     return {
@@ -35,10 +44,10 @@ export function makeSnippet(
     }
   }
   const start = Math.max(0, i - window)
-  const end = Math.min(value.length, i + q.length + window)
+  const end = Math.min(value.length, i + token.length + window)
   return {
     before: (start > 0 ? "…" : "") + value.slice(start, i),
-    match: value.slice(i, i + q.length),
-    after: value.slice(i + q.length, end) + (end < value.length ? "…" : ""),
+    match: value.slice(i, i + token.length),
+    after: value.slice(i + token.length, end) + (end < value.length ? "…" : ""),
   }
 }

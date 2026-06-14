@@ -19,7 +19,9 @@ import {
   constraintText,
   FIELD_RANK,
   lastSegment,
+  matchesQuery,
   MIN_QUERY,
+  normalizeQuery,
   type HitField,
   type MigHit,
 } from "./search"
@@ -47,8 +49,9 @@ export function searchMigs(
   query: string,
   limit = 100
 ): MigHit[] {
-  const q = query.trim().toLowerCase()
-  if (q.length < MIN_QUERY) return []
+  // Keep edge spaces for word-boundary matching; gate on the trimmed length.
+  const q = normalizeQuery(query)
+  if (q.trim().length < MIN_QUERY) return []
 
   // Resolve each target message once per call (multiple MIGs may share one).
   const messageCache = new Map<string, MessageDefinition | undefined>()
@@ -76,7 +79,7 @@ export function searchMigs(
       value: string,
       where?: { xmlPath: string; detail?: string }
     ) => {
-      if (!value || !value.toLowerCase().includes(q)) return
+      if (!value || !matchesQuery(value.toLowerCase(), q)) return
       hits.push({
         ...base,
         field,

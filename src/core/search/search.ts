@@ -99,6 +99,30 @@ export function hitTargetPath(
 /** Minimum query length — below this the searches return nothing (too broad). */
 export const MIN_QUERY = 3
 
+/**
+ * Normalize a raw query for matching: case-fold only, deliberately **keeping
+ * edge spaces**. A leading and/or trailing space lets the user anchor a *whole
+ * word* (a word boundary) instead of a prefix; an interior space stays a phrase
+ * search. The `MIN_QUERY` gate is applied to the trimmed length, so a query that
+ * is only a word plus a space (e.g. `"ab "`) still counts as its trimmed length.
+ */
+export function normalizeQuery(raw: string): string {
+  return raw.toLowerCase()
+}
+
+/**
+ * Does the already-lowercased `lowerText` contain the normalized query `q`? An
+ * edge space in `q` is treated as a word boundary that also matches the *start
+ * or end* of the value: we test against `lowerText` wrapped in sentinel spaces.
+ * So `" amount "` matches the field `Amount` and the phrase `amount due`, but not
+ * `amounts`. For a query with no edge spaces this is exactly `lowerText.includes(q)`
+ * — a wrapping space can only create matches for a query that itself starts or
+ * ends with a space.
+ */
+export function matchesQuery(lowerText: string, q: string): boolean {
+  return (" " + lowerText + " ").includes(q)
+}
+
 // --- Result shapes ---
 
 /** One message version that holds a given value, for a chip link. */
