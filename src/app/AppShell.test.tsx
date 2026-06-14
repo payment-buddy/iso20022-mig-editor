@@ -62,6 +62,14 @@ describe("AppShell", () => {
     ).not.toBeInTheDocument()
   })
 
+  it("links to the project source on GitHub, next to the theme toggle (new tab)", () => {
+    renderShell({ name: "home" })
+    const link = screen.getByRole("link", { name: /view source on github/i })
+    expect(link).toHaveAttribute("href", "https://github.com/payment-buddy/iso20022-mig-editor")
+    expect(link).toHaveAttribute("target", "_blank")
+    expect(link).toHaveAttribute("rel", "noreferrer")
+  })
+
   it("cycles the theme toggle system → light", async () => {
     renderShell({ name: "home" })
     const toggle = screen.getByRole("button", { name: /theme: system/i })

@@ -1,9 +1,19 @@
 import { Fragment, type ReactNode } from "react"
-import { CaretRightIcon, DesktopIcon, HouseIcon, MoonIcon, SunIcon } from "@phosphor-icons/react"
+import {
+  CaretRightIcon,
+  DesktopIcon,
+  GithubLogoIcon,
+  HouseIcon,
+  MoonIcon,
+  SunIcon,
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
 import { breadcrumbsFor } from "./breadcrumbs"
 import { hashFor, type Route } from "./routes"
+
+/** Project source — opened from the header GitHub link. */
+const GITHUB_URL = "https://github.com/payment-buddy/iso20022-mig-editor"
 
 export function AppShell({ route, children }: { route: Route; children: ReactNode }) {
   const crumbs = breadcrumbsFor(route)
@@ -20,6 +30,17 @@ export function AppShell({ route, children }: { route: Route; children: ReactNod
         </a>
 
         <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            title="View source on GitHub"
+            aria-label="View source on GitHub"
+          >
+            <a href={GITHUB_URL} target="_blank" rel="noreferrer">
+              <GithubLogoIcon aria-hidden />
+            </a>
+          </Button>
           <ThemeToggle />
         </div>
       </header>
