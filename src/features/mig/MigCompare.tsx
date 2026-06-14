@@ -301,7 +301,7 @@ function ElementCard({
       ref={ref}
       tabIndex={0}
       aria-label={diff.name}
-      className="border-b outline-none last:border-b-0 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-inset"
+      className="group/card border-b outline-none last:border-b-0 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-inset"
     >
       <header className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <span className="text-sm font-medium">{diff.name}</span>
@@ -345,7 +345,7 @@ function FieldRow({
   return (
     <div className={`group ${COLS}`}>
       <Cell label={field.label} value={field.a} side="a" kind={field.kind} />
-      <div className="flex items-center justify-center gap-0.5 border-x bg-muted/10 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+      <div className="flex items-center justify-center gap-0.5 border-x bg-muted/10 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 group-focus-visible/card:opacity-100">
         <CopyButton
           dir="right"
           disabled={!canToB}
