@@ -15,8 +15,7 @@ import { Button } from "@/components/ui/button"
 import { parseMigYaml } from "./parseMigYaml"
 import { peekPendingMerge, takePendingMerge } from "./pendingMerge"
 import { useDiffCardNav } from "./useDiffCardNav"
-
-const COLS = "grid grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)]"
+import { COLS, Cell, Home, Notice } from "./diffView"
 
 /**
  * Merge an uploaded MIG into an existing one. Works
@@ -324,40 +323,6 @@ function ElementCard({
   )
 }
 
-/** One side's value, tinted by the kind of change it carries (current = a,
- * incoming = b): removed → red on current, added → green on incoming, changed →
- * blue on both. A null value means that MIG doesn't set the field. */
-function Cell({
-  label,
-  value,
-  side,
-  kind,
-}: {
-  label: string
-  value: string | null
-  side: "a" | "b"
-  kind: FieldChange["kind"]
-}) {
-  const tinted =
-    kind === "changed" || (kind === "removed" && side === "a") || (kind === "added" && side === "b")
-  const tint =
-    !tinted || value === null
-      ? ""
-      : kind === "added"
-        ? "bg-emerald-500/10"
-        : kind === "removed"
-          ? "bg-destructive/10"
-          : "bg-blue-500/10"
-  return (
-    <div className={`px-3 py-1.5 text-sm ${tint}`}>
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="break-words">
-        {value === null ? <span className="italic text-muted-foreground/70">inherits</span> : value}
-      </div>
-    </div>
-  )
-}
-
 function Alert({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -370,19 +335,3 @@ function Alert({ children }: { children: React.ReactNode }) {
   )
 }
 
-function Notice({ title, children }: { title: string; children?: React.ReactNode }) {
-  return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-2 p-6">
-      <h1 className="text-base font-semibold tracking-tight">{title}</h1>
-      {children && <p className="text-sm text-muted-foreground">{children}</p>}
-    </div>
-  )
-}
-
-function Home() {
-  return (
-    <a href={hashFor({ name: "home" })} className="text-primary underline-offset-4 hover:underline">
-      Home
-    </a>
-  )
-}

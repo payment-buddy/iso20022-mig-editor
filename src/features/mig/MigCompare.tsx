@@ -19,6 +19,7 @@ import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useDiffCardNav } from "./useDiffCardNav"
+import { COLS, Cell, Home, Notice } from "./diffView"
 
 type Loaded = {
   a: MessageImplementationGuide | null
@@ -27,10 +28,6 @@ type Loaded = {
 
 type CopyDir = "a-to-b" | "b-to-a"
 type CopyFn = (path: string, ref: FieldRef, dir: CopyDir) => void
-
-// Shared 3-column template so the A/B headers line up with the field rows; the
-// middle column is the gutter that holds the copy buttons.
-const COLS = "grid grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)]"
 
 /**
  * Compare two MIGs. Loads both by key, resolves the message
@@ -398,58 +395,3 @@ function CopyButton({
   )
 }
 
-function Cell({
-  label,
-  value,
-  side,
-  kind,
-}: {
-  label: string
-  value: string | null
-  side: "a" | "b"
-  kind: FieldChange["kind"]
-}) {
-  // Tint the side that carries the change: removed → left (A) in red, added →
-  // right (B) in green, changed in both → blue on both sides. A `null` value
-  // means this MIG doesn't set the field.
-  const tinted =
-    kind === "changed" || (kind === "removed" && side === "a") || (kind === "added" && side === "b")
-  const tint =
-    !tinted || value === null
-      ? ""
-      : kind === "added"
-        ? "bg-emerald-500/10"
-        : kind === "removed"
-          ? "bg-destructive/10"
-          : "bg-blue-500/10"
-
-  return (
-    <div className={`px-3 py-1.5 text-sm ${tint}`}>
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="break-words">
-        {value === null ? (
-          <span className="italic text-muted-foreground/70">inherits</span>
-        ) : (
-          value
-        )}
-      </div>
-    </div>
-  )
-}
-
-function Notice({ title, children }: { title: string; children?: React.ReactNode }) {
-  return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-2 p-6">
-      <h1 className="text-base font-semibold tracking-tight">{title}</h1>
-      {children && <p className="text-sm text-muted-foreground">{children}</p>}
-    </div>
-  )
-}
-
-function Home() {
-  return (
-    <a href={hashFor({ name: "home" })} className="text-primary underline-offset-4 hover:underline">
-      Home
-    </a>
-  )
-}
