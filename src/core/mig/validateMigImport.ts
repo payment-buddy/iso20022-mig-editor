@@ -16,6 +16,7 @@ const constraint = z.object({
 const constraintOverride = z.object({
   definition: z.string().nullable().optional(),
   expression: z.string().nullable().optional(),
+  disabled: z.boolean().optional(),
 })
 
 const elementOverride = z.object({

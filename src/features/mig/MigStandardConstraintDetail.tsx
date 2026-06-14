@@ -23,6 +23,8 @@ export function MigStandardConstraintDetail({
   onClearDefinition,
   onSetExpression,
   onClearExpression,
+  onSetDisabled,
+  onClearDisabled,
 }: {
   /** The base standard/inherited constraint (its ISO/ancestor name + fields). */
   constraint: Constraint
@@ -38,6 +40,8 @@ export function MigStandardConstraintDetail({
   onClearDefinition: () => void
   onSetExpression: (value: string | null) => void
   onClearExpression: () => void
+  onSetDisabled: (value: boolean) => void
+  onClearDisabled: () => void
 }) {
   // Effective + inherited-baseline for one overlay field. The inherited baseline
   // is a parent's overlay if it sets the field, else the ISO constraint's own
@@ -64,6 +68,17 @@ export function MigStandardConstraintDetail({
     else onSetExpression(value)
   }
   const expressionWarnings = validateConstraintExpression(expression.text, element)
+
+  // Disable toggle (tri-state): the rule is off when the effective override says
+  // so; toggling back to the inherited baseline drops the override.
+  const disabledBaseline = inherited && "disabled" in inherited ? !!inherited.disabled : false
+  const disabledOverridden = override !== undefined && "disabled" in override
+  const disabledEffective = disabledOverridden ? !!override.disabled : disabledBaseline
+  const toggleDisabled = () => {
+    const value = !disabledEffective
+    if (value === disabledBaseline) onClearDisabled()
+    else onSetDisabled(value)
+  }
 
   return (
     <DetailPanel label="Constraint details">
@@ -104,6 +119,31 @@ export function MigStandardConstraintDetail({
           </p>
         ))}
       </OverrideField>
+
+      <div className="border-t border-border pt-3">
+        <label className="flex items-center gap-2 text-xs font-medium">
+          <input
+            type="checkbox"
+            checked={disabledEffective}
+            onChange={toggleDisabled}
+            className="size-3.5 accent-destructive"
+          />
+          Disable this rule
+          {disabledOverridden && (
+            <button
+              type="button"
+              onClick={onClearDisabled}
+              className="ml-auto flex items-center gap-1 rounded-sm text-[0.625rem] text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/30"
+            >
+              <ArrowCounterClockwiseIcon className="size-3" aria-hidden />
+              Reset to inherited
+            </button>
+          )}
+        </label>
+        <p className="mt-1 text-[0.625rem] text-muted-foreground">
+          A disabled rule is skipped during validation.
+        </p>
+      </div>
     </DetailPanel>
   )
 }

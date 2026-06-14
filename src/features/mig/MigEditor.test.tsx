@@ -529,6 +529,40 @@ describe("MigEditor", () => {
     ).toEqual({ StdRule: { expression: "Amt > 0" } })
   })
 
+  it("disables a standard constraint via the toggle", async () => {
+    const user = userEvent.setup()
+    const repo: ERepository = {
+      businessAreas: [
+        {
+          name: "A",
+          code: "a",
+          definition: "",
+          messages: [
+            {
+              name: "Msg",
+              identifier: "pacs.008.001.10",
+              shortCode: "pacs.008",
+              rootElement: el("Document", {
+                constraints: [{ name: "StdRule", definition: "Spec rule" }],
+              }),
+            },
+          ],
+        },
+      ],
+    }
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={repo} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    await user.click(screen.getByRole("treeitem", { name: /constraint stdrule/i }))
+
+    const panel = screen.getByRole("region", { name: /constraint details/i })
+    await user.click(within(panel).getByRole("checkbox", { name: /disable this rule/i }))
+
+    expect(
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.constraintOverrides,
+    ).toEqual({ StdRule: { disabled: true } })
+  })
+
   it("shows an inherited (parent-MIG) constraint and overlays an expression on it", async () => {
     const user = userEvent.setup()
     const parent: MessageImplementationGuide = {

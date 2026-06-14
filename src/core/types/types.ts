@@ -124,6 +124,8 @@ export interface ElementOverride {
 export interface ConstraintOverride {
   definition?: string | null
   expression?: string | null
+  /** Switch the rule off (presence = set; absent inherits; a child can re-enable with `false`). */
+  disabled?: boolean
 }
 
 /** Map of `xmlPath` → override. */

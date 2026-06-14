@@ -233,6 +233,12 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                   onClearExpression={() =>
                     persist(clearConstraintOverrideField(mig, elementPath, name, "expression"))
                   }
+                  onSetDisabled={(disabled) =>
+                    persist(setConstraintOverrideField(mig, elementPath, name, "disabled", disabled))
+                  }
+                  onClearDisabled={() =>
+                    persist(clearConstraintOverrideField(mig, elementPath, name, "disabled"))
+                  }
                 />
               )
             }

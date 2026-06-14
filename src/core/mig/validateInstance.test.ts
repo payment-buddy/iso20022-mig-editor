@@ -199,5 +199,15 @@ describe("validateMessageInstance", () => {
       // A passing overlay produces no diagnostic.
       expect(run(valid(), { Doc: { constraintOverrides: { StdRule: { expression: "Amt > 100" } } } })).toEqual([])
     })
+
+    it("skips a disabled rule even when its expression would fail", () => {
+      const overrides = {
+        Doc: {
+          additionalConstraints: [{ name: "R", definition: "", expression: "Amt > 600" }],
+          constraintOverrides: { R: { disabled: true } },
+        },
+      }
+      expect(run(valid(), overrides)).toEqual([])
+    })
   })
 })

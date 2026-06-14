@@ -33,7 +33,7 @@ type FlatNode = {
       minOccurs: number
       maxOccurs: number | null
     }
-  | { kind: "constraint"; constraint: Constraint; origin: ConstraintOrigin }
+  | { kind: "constraint"; constraint: Constraint; origin: ConstraintOrigin; disabled: boolean }
 )
 
 /** The focused/selected node, handed to the detail-panel renderer (selection follows focus). */
@@ -104,10 +104,13 @@ function constraintsAt(
   el: MessageElement,
   ownOverrides: ElementOverrides | undefined,
   effectiveOverrides: ElementOverrides | undefined,
-): { constraint: Constraint; origin: ConstraintOrigin }[] {
+): { constraint: Constraint; origin: ConstraintOrigin; disabled: boolean }[] {
+  const overrides = effectiveOverrides?.[path]?.constraintOverrides
+  const disabled = (name: string) => overrides?.[name]?.disabled ?? false
   const standard = el.constraints.map((constraint) => ({
     constraint,
     origin: "standard" as const,
+    disabled: disabled(constraint.name),
   }))
   const ownNames = new Set(
     (ownOverrides?.[path]?.additionalConstraints ?? []).map((c) => c.name),
@@ -115,6 +118,7 @@ function constraintsAt(
   const additional = (effectiveOverrides?.[path]?.additionalConstraints ?? []).map((constraint) => ({
     constraint,
     origin: ownNames.has(constraint.name) ? ("own" as const) : ("inherited" as const),
+    disabled: disabled(constraint.name),
   }))
   return [...standard, ...additional]
 }
@@ -228,11 +232,12 @@ function flattenTree(
     for (const child of childEls) {
       walk(child, `${path}/${child.xmlTag}`, level + 1, path, excluded)
     }
-    for (const { constraint, origin } of childCons) {
+    for (const { constraint, origin, disabled } of childCons) {
       out.push({
         kind: "constraint",
         constraint,
         origin,
+        disabled,
         path: `${path}/${constraint.name}`,
         level: level + 1,
         parentPath: path,
@@ -634,7 +639,8 @@ function TreeNode({
         <span
           className={cn(
             node.kind === "element" && "font-medium",
-            node.excluded && "text-muted-foreground line-through",
+            (node.excluded || (node.kind === "constraint" && node.disabled)) &&
+              "text-muted-foreground line-through",
           )}
         >
           {label}
@@ -660,6 +666,11 @@ function TreeNode({
         {node.kind === "constraint" && node.origin === "inherited" && (
           <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
             inherited
+          </span>
+        )}
+        {node.kind === "constraint" && node.disabled && (
+          <span className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
+            disabled
           </span>
         )}
       </div>

@@ -98,8 +98,8 @@ function walk(
   // overlaid expression as well as MIG-added ones — `resolveConstraints` applies
   // any `constraintOverrides`. A syntax error (surfaced in the editor) or an
   // indeterminate result (unsupported function, bad regex) is skipped here.
-  for (const { constraint } of resolveConstraints(el, overrides[path])) {
-    if (!constraint.expression) continue
+  for (const { constraint, disabled } of resolveConstraints(el, overrides[path])) {
+    if (disabled || !constraint.expression) continue
     const parsed = parseExpression(constraint.expression)
     if (!parsed.ok) continue
     const result = evaluateExpression(parsed.ast, node)

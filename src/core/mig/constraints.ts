@@ -9,6 +9,8 @@ export interface ResolvedConstraint {
   constraint: Constraint
   /** Where the base constraint comes from. */
   source: "standard" | "additional"
+  /** The rule is switched off by a `constraintOverrides` entry. */
+  disabled: boolean
 }
 
 /** Apply a constraint override entry onto a base constraint (key-presence; `null` clears). */
@@ -34,11 +36,20 @@ export function resolveConstraints(
   el: MessageElement,
   override: ElementOverride | undefined,
 ): ResolvedConstraint[] {
+  const disabled = (name: string) => override?.constraintOverrides?.[name]?.disabled ?? false
   const standard = el.constraints.map(
-    (c): ResolvedConstraint => ({ constraint: overlay(c, override), source: "standard" }),
+    (c): ResolvedConstraint => ({
+      constraint: overlay(c, override),
+      source: "standard",
+      disabled: disabled(c.name),
+    }),
   )
   const additional = (override?.additionalConstraints ?? []).map(
-    (c): ResolvedConstraint => ({ constraint: overlay(c, override), source: "additional" }),
+    (c): ResolvedConstraint => ({
+      constraint: overlay(c, override),
+      source: "additional",
+      disabled: disabled(c.name),
+    }),
   )
   return [...standard, ...additional]
 }

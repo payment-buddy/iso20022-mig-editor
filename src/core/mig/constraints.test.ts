@@ -81,4 +81,14 @@ describe("resolveConstraints", () => {
     const [r] = resolveConstraints(el([base]), undefined)
     expect(r.constraint).toBe(base)
   })
+
+  it("reports the disabled flag from the overlay", () => {
+    const out = resolveConstraints(el([constraint("On"), constraint("Off")]), {
+      constraintOverrides: { Off: { disabled: true } },
+    })
+    expect(out.map((r) => [r.constraint.name, r.disabled])).toEqual([
+      ["On", false],
+      ["Off", true],
+    ])
+  })
 })
