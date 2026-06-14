@@ -125,7 +125,8 @@ describe("MessageExplorer", () => {
 
     const panel = screen.getByRole("region", { name: /constraint details/i })
     expect(within(panel).getByText("Must not be empty.")).toBeInTheDocument()
-    expect(within(panel).getByText("DocumentTag/SupplementaryDataRule")).toBeInTheDocument()
+    // The XML path points at the element that owns the rule, not the rule path.
+    expect(within(panel).getByText("DocumentTag")).toBeInTheDocument()
   })
 
   it("navigates the tree with arrow keys, expanding and selecting (selection follows focus)", async () => {

@@ -114,8 +114,8 @@ function ConstraintDetail({ constraint, path }: { constraint: Constraint; path: 
         {constraint.name}
       </div>
       <Field label="Kind">Constraint (rule)</Field>
-      <Field label="Path">
-        <code className="text-xs">{path}</code>
+      <Field label="XML path">
+        <code className="text-xs">{path.slice(0, path.lastIndexOf("/"))}</code>
       </Field>
       {constraint.definition && (
         <Field label="Definition">
