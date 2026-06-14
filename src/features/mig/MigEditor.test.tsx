@@ -1174,20 +1174,21 @@ describe("MigEditor", () => {
     expect(saved?.elementOverrides["DocumentTag"]).toBeUndefined()
   })
 
-  it("marks element annotation fields with a provenance dot", async () => {
+  it("shows inherited annotation fields with a provenance dot, even when this MIG declares no names", async () => {
     const user = userEvent.setup()
+    // The parent declares the names and sets both values; the child redeclares
+    // nothing and only overrides one — the effective names come from the parent.
     const parent: MessageImplementationGuide = {
       name: "Base",
       version: "1.0",
       messageIdentifier: "pacs.008.001.10",
       elementAnnotationNames: ["Owner", "Usage"],
-      elementOverrides: { "DocumentTag/GrpHdrTag": { annotations: { Usage: "credit" } } },
+      elementOverrides: { "DocumentTag/GrpHdrTag": { annotations: { Owner: "ops", Usage: "credit" } } },
     }
     const child: MessageImplementationGuide = {
       ...MIG,
       parentMIG: getMigKey(parent),
-      elementAnnotationNames: ["Owner", "Usage"],
-      elementOverrides: { "DocumentTag/GrpHdrTag": { annotations: { Owner: "ops" } } },
+      elementOverrides: { "DocumentTag/GrpHdrTag": { annotations: { Owner: "mine" } } },
     }
     await saveMig(parent)
     await saveMig(child)
@@ -1196,9 +1197,11 @@ describe("MigEditor", () => {
     await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
     const panel = screen.getByRole("region", { name: /element details/i })
 
-    // Owner is set in this MIG → blue dot.
-    expect(within(panel).getByTitle("Overridden — inherited: —")).toHaveClass("bg-primary")
-    // Usage is inherited from the parent → violet dot, and its value shows.
+    // Owner is overridden here (over the parent's "ops") → blue dot.
+    expect(within(panel).getByTitle("Overridden — inherited: ops")).toHaveClass("bg-primary")
+    expect(within(panel).getByText("mine")).toBeInTheDocument()
+    // Usage is inherited from the parent → violet dot, and its value shows even
+    // though the child declares no annotation names of its own.
     expect(within(panel).getByTitle("Inherited from a parent MIG: credit")).toHaveClass(
       "bg-violet-600",
     )

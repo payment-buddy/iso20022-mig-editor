@@ -119,9 +119,12 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
   // inherited/overridden-here affordances and reset targets.
   const parent = mig.parentMIG ? allMigs.find((m) => getMigKey(m) === mig.parentMIG) : undefined
   const inheritedOverrides = parent ? effectiveMig(parent, allMigs).mig.elementOverrides : {}
-  // Effective overrides (own + inherited chain) — drive the tree's cardinality
-  // and excluded styling.
-  const effectiveOverrides = effectiveMig(mig, allMigs).mig.elementOverrides
+  // Effective MIG (own + inherited chain): its overrides drive the tree's
+  // cardinality/excluded styling, and its merged annotation-name lists drive
+  // which annotation fields the detail panels show (so an inherited annotation is
+  // visible even when this MIG doesn't redeclare its name).
+  const effective = effectiveMig(mig, allMigs).mig
+  const effectiveOverrides = effective.elementOverrides
 
   // Advisory loosening/consistency diagnostics across the whole MIG.
   const diagnostics = validateMigConsistency(mig, inheritedOverrides, resolved.current)
@@ -183,7 +186,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                 path={sel.path}
                 override={mig.elementOverrides[sel.path]}
                 inherited={inheritedOverrides[sel.path]}
-                propertyNames={mig.elementAnnotationNames ?? []}
+                propertyNames={effective.elementAnnotationNames ?? []}
                 onSet={(field, value) => persist(setOverrideField(mig, sel.path, field, value))}
                 onClear={(field) => persist(clearOverrideField(mig, sel.path, field))}
                 onAddConstraint={() => {
@@ -257,7 +260,7 @@ export function MigEditor({ migKey, repo }: { migKey: string; repo: ERepository 
                 element={owner}
                 path={sel.path}
                 takenNames={takenNames}
-                annotationNames={mig.constraintAnnotationNames ?? []}
+                annotationNames={effective.constraintAnnotationNames ?? []}
                 onRename={(name) => {
                   persist(updateConstraint(mig, elementPath, current, { name }))
                   // The path changed; keep the renamed constraint selected.
