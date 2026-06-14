@@ -1,11 +1,12 @@
 import { useState } from "react"
-import { CheckIcon, PlusIcon } from "@phosphor-icons/react"
+import { CheckIcon, ExportIcon, PlusIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { CreateMigDialog } from "@/features/mig/CreateMigDialog"
 import { resolveMessage, type ResolvedMessage } from "@/core/erepository/resolveMessage"
 import type { Constraint, ERepository, MessageElement } from "@/core/types/types"
 import { hashFor } from "@/app/routes"
 import { cn } from "@/lib/utils"
+import { downloadMessageYaml } from "./downloadMessage"
 import { DetailPanel, ElementTree, Field } from "./ElementTree"
 
 /** Read-only message explorer (bare minimum) with a detail panel. */
@@ -54,10 +55,16 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
           </div>
           <p className="text-xs text-muted-foreground">{area.name}</p>
         </div>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <PlusIcon data-icon="inline-start" aria-hidden />
-          Create MIG
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => void downloadMessageYaml(current)}>
+            <ExportIcon data-icon="inline-start" aria-hidden />
+            Export YAML
+          </Button>
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <PlusIcon data-icon="inline-start" aria-hidden />
+            Create MIG
+          </Button>
+        </div>
       </div>
 
       <CreateMigDialog
