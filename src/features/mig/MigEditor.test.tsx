@@ -1381,6 +1381,24 @@ describe("MigEditor", () => {
     expect(saved?.parentMIG).toBe("Base:1.0")
   })
 
+  it("links the parent MIG name to its page", async () => {
+    const parent: MessageImplementationGuide = {
+      name: "Base",
+      version: "1.0",
+      messageIdentifier: "pacs.008.001.10",
+      elementOverrides: {},
+    }
+    const child: MessageImplementationGuide = { ...MIG, parentMIG: getMigKey(parent) }
+    await saveMig(parent)
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    const meta = screen.getByRole("region", { name: /mig metadata/i })
+
+    const link = within(meta).getByRole("link", { name: "Base 1.0" })
+    expect(link).toHaveAttribute("href", "#mig/Base%3A1.0")
+  })
+
   it("warns when the parent MIG isn't loaded", async () => {
     const child: MessageImplementationGuide = { ...MIG, name: "Child", parentMIG: "Ghost:1.0" }
     await saveMig(child)

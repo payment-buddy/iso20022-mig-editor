@@ -116,20 +116,21 @@ export function MigMetadata({
             options={options}
             onCommit={setParent}
             ariaLabel="Parent MIG"
+            // The selected parent's name links to its own MIG page.
+            renderValue={(label) => (
+              <a
+                href={hashFor({ name: "mig", key: parentKey })}
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                {label}
+              </a>
+            )}
           />
           {parentKey && !parentLoaded && (
             <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500">
               <WarningIcon className="size-3.5 shrink-0" aria-hidden />
               References “{parentKey}”, which isn’t loaded.
             </p>
-          )}
-          {parentKey && (
-            <a
-              href={hashFor({ name: "mig", key: parentKey })}
-              className="w-fit text-xs text-primary underline-offset-4 hover:underline"
-            >
-              View parent
-            </a>
           )}
         </div>
       </Row>

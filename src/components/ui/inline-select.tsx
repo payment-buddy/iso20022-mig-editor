@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react"
+import { useState, type KeyboardEvent, type ReactNode } from "react"
 import { PencilSimpleIcon } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 
@@ -9,17 +9,22 @@ export type SelectOption = { value: string; label: string }
  * selected option's label with a pencil button (on hover/focus); clicking it
  * reveals the `<select>`. Picking an option commits and returns to the label;
  * Esc or blur closes without committing. An empty value reads as `<none>`.
+ *
+ * `renderValue` wraps the non-editing label (e.g. as a link); the pencil still
+ * edits.
  */
 export function InlineSelect({
   value,
   options,
   onCommit,
   ariaLabel,
+  renderValue,
 }: {
   value: string
   options: SelectOption[]
   onCommit: (next: string) => void
   ariaLabel: string
+  renderValue?: (label: string) => ReactNode
 }) {
   const [editing, setEditing] = useState(false)
 
@@ -28,7 +33,7 @@ export function InlineSelect({
     return (
       <div className="group flex w-full items-start justify-between gap-2 rounded-md border border-transparent px-2 py-1 transition-colors hover:border-border focus-within:border-border">
         <span className={cn("min-w-0 text-sm", !value && "text-muted-foreground italic")}>
-          {value ? label : "<none>"}
+          {value ? (renderValue ? renderValue(label) : label) : "<none>"}
         </span>
         <button
           type="button"
