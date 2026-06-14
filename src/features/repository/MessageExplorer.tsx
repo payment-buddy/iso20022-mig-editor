@@ -42,14 +42,17 @@ function MessageView({ resolved }: { resolved: ResolvedMessage }) {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
       <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">{area.name}</p>
+        <div className="space-y-0.5">
+          <p className="text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
+            Message Definition
+          </p>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-base font-semibold tracking-tight">{current.name}</h1>
             <code className="rounded-sm bg-muted px-1 text-[0.625rem] text-muted-foreground">
               {current.identifier}
             </code>
           </div>
+          <p className="text-xs text-muted-foreground">{area.name}</p>
         </div>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
           <PlusIcon data-icon="inline-start" aria-hidden />
