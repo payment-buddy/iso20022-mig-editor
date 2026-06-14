@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-} from "react"
+import {type KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo, useRef, useState,} from "react"
 import {
   CaretDownIcon,
   CaretUpIcon,
@@ -17,25 +10,22 @@ import {
   WarningIcon,
   XIcon,
 } from "@phosphor-icons/react"
-import { Button } from "@/components/ui/button"
-import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import { getMigKey } from "@/core/mig/migKey"
-import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
-import {
-  duplicateKeysOf,
-  migsForResolution,
-  type DuplicateResolution,
-} from "@/core/mig/importDuplicates"
-import { loadAllMigs, saveMig } from "@/core/storage/migStore"
-import { loadLatestRevisionTimes } from "@/core/storage/revisionStore"
-import { loadTrashCount, trashMig } from "@/core/storage/trashStore"
-import type { MessageImplementationGuide } from "@/core/types/types"
-import { hashFor, navigate } from "@/app/routes"
-import { formatLocalDateTime } from "@/lib/datetime"
-import { parseMigYaml } from "./parseMigYaml"
-import { ImportDuplicateDialog } from "./ImportDuplicateDialog"
-import { setPendingMerge } from "./pendingMerge"
-import { downloadMigs } from "./downloadMigs"
+import {Button} from "@/components/ui/button"
+import {ConfirmDialog} from "@/components/ui/confirm-dialog"
+import {getMigKey} from "@/core/mig/migKey"
+import {shortCodeForIdentifier} from "@/core/erepository/messageIdentifier"
+import {duplicateKeysOf, type DuplicateResolution, migsForResolution,} from "@/core/mig/importDuplicates"
+import {loadAllMigs, saveMig} from "@/core/storage/migStore"
+import {loadLatestRevisionTimes} from "@/core/storage/revisionStore"
+import {loadTrashCount, trashMig} from "@/core/storage/trashStore"
+import type {MessageImplementationGuide} from "@/core/types/types"
+import {hashFor, navigate} from "@/app/routes"
+import {formatLocalDateTime} from "@/lib/datetime"
+import {cn} from "@/lib/utils"
+import {parseMigYaml} from "./parseMigYaml"
+import {ImportDuplicateDialog} from "./ImportDuplicateDialog"
+import {setPendingMerge} from "./pendingMerge"
+import {downloadMigs} from "./downloadMigs"
 
 type PendingImport = {
   incoming: MessageImplementationGuide[]
@@ -265,7 +255,7 @@ export function MigHome() {
         : { col, dir: SORT_DEFAULT_DIR[col] }
     )
 
-  const sortHeader = (col: SortCol, label: string) => {
+  const sortHeader = (col: SortCol, label: string, widthClass?: string) => {
     const active = sort.col === col
     return (
       <th
@@ -273,7 +263,10 @@ export function MigHome() {
         aria-sort={
           active ? (sort.dir === 1 ? "ascending" : "descending") : "none"
         }
-        className="border-b border-border px-2 py-1.5 font-medium"
+        className={cn(
+          "border-b border-border px-2 py-1.5 font-medium",
+          widthClass
+        )}
       >
         <button
           type="button"
@@ -396,7 +389,7 @@ export function MigHome() {
   )
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6 xl:max-w-4xl">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6 xl:max-w-6xl">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="mr-auto text-base font-semibold tracking-tight">
           Message Implementation Guides
@@ -521,10 +514,10 @@ export function MigHome() {
                     onChange={toggleAll}
                   />
                 </th>
-                {sortHeader("name", "Name")}
-                {sortHeader("version", "Version")}
-                {sortHeader("message", "Message")}
-                {sortHeader("modified", "Last modified")}
+                {sortHeader("name", "Name", "w-2/5")}
+                {sortHeader("version", "Version", "w-1/5")}
+                {sortHeader("message", "Message", "w-1/5")}
+                {sortHeader("modified", "Last modified", "w-1/5")}
               </tr>
             </thead>
             <tbody onKeyDown={onKeyDown}>
