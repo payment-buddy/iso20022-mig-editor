@@ -8,6 +8,7 @@
 
 import { getMigKey } from "./migKey"
 import { resolveConstraints } from "./constraints"
+import { rootPath } from "@/core/erepository/elementPath"
 import type { EffectiveMig } from "./effectiveMig"
 import type {
   Constraint,
@@ -253,7 +254,7 @@ export function diffMig(effective: EffectiveMig, message: MessageDefinition): Mi
     }
     for (const child of el.elements) walk(child, `${path}/${child.xmlTag}`)
   }
-  walk(message.rootElement, message.rootElement.xmlTag)
+  walk(message.rootElement, rootPath(message.rootElement))
 
   for (const [path, ov] of Object.entries(overrides)) {
     if (!seen.has(path)) elements.push(diffOrphan(path, ov))

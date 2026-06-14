@@ -36,7 +36,7 @@ describe("migMarkdown", () => {
       diff({
         elements: [
           {
-            path: "Doc/GrpHdr",
+            path: "/Doc/GrpHdr",
             name: "GrpHdr",
             excluded: false,
             orphan: false,
@@ -55,7 +55,7 @@ describe("migMarkdown", () => {
       }),
     )
     expect(md).toContain("### GrpHdr")
-    expect(md).toContain("`Doc/GrpHdr`")
+    expect(md).toContain("`/Doc/GrpHdr`")
     expect(md).toContain("| Field | ISO | This MIG | Change |")
     expect(md).toContain("| Max length | 35 | 20 | tightened |")
     expect(md).toContain("- **R** — must \\| hold") // pipe escaped in the cell
@@ -68,7 +68,7 @@ describe("migMarkdown", () => {
       diff({
         elements: [
           {
-            path: "Doc/GrpHdr",
+            path: "/Doc/GrpHdr",
             name: "GrpHdr",
             excluded: false,
             orphan: false,
@@ -89,7 +89,7 @@ describe("migMarkdown", () => {
     const md = migMarkdown(
       diff({
         elements: [
-          { path: "Doc/Amt", name: "Amt", excluded: true, orphan: false, changes: [], constraints: [] },
+          { path: "/Doc/Amt", name: "Amt", excluded: true, orphan: false, changes: [], constraints: [] },
         ],
       }),
     )
@@ -149,7 +149,7 @@ describe("buildMigMarkdown", () => {
       name: "EPC",
       version: "1.0",
       messageIdentifier: "pacs.008.001.08",
-      elementOverrides: { "Doc/GrpHdr": { maxLength: 20 } },
+      elementOverrides: { "/Doc/GrpHdr": { maxLength: 20 } },
     }
     const file = buildMigMarkdown(mig, [mig], message)
     expect(file.filename).toBe("EPC-1.0.md")

@@ -96,15 +96,15 @@ afterEach(async () => {
 
 describe("MigCompare", () => {
   it("reports identical MIGs with nothing to compare", async () => {
-    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
-    const b = mig("B", { "Doc/Amt": { maxLength: 18 } })
+    const a = mig("A", { "/Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "/Doc/Amt": { maxLength: 18 } })
     await renderCompare(a, b)
     expect(await screen.findByText(/identical overrides/i)).toBeInTheDocument()
   })
 
   it("shows a changed element with both column values", async () => {
-    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
-    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    const a = mig("A", { "/Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
     expect(await screen.findByText(/1 element differs/i)).toBeInTheDocument()
@@ -115,8 +115,8 @@ describe("MigCompare", () => {
   })
 
   it("marks a field absent in one MIG as inherited", async () => {
-    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
-    const b = mig("B", { "Doc/Amt": { maxLength: 18, minLength: 1 } })
+    const a = mig("A", { "/Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "/Doc/Amt": { maxLength: 18, minLength: 1 } })
     await renderCompare(a, b)
 
     const card = await screen.findByRole("region", { name: /Amt — changed/i })
@@ -125,15 +125,15 @@ describe("MigCompare", () => {
   })
 
   it("warns when the two MIGs target different messages", async () => {
-    const a = mig("A", { "Doc/Amt": { maxLength: 18 } }, "pacs.008.001.08")
-    const b = mig("B", { "Doc/Amt": { maxLength: 12 } }, "pacs.009.001.08")
+    const a = mig("A", { "/Doc/Amt": { maxLength: 18 } }, "pacs.008.001.08")
+    const b = mig("B", { "/Doc/Amt": { maxLength: 12 } }, "pacs.009.001.08")
     await renderCompare(a, b)
     expect(await screen.findByText(/target different messages/i)).toBeInTheDocument()
   })
 
   it("copies a field from A to B and resolves the difference in the draft", async () => {
-    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
-    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    const a = mig("A", { "/Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
     const card = await screen.findByRole("region", { name: /Amt — changed/i })
@@ -144,8 +144,8 @@ describe("MigCompare", () => {
   })
 
   it("does not persist a copy until Save is clicked", async () => {
-    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
-    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    const a = mig("A", { "/Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
     const card = await screen.findByRole("region", { name: /Amt — changed/i })
@@ -153,19 +153,19 @@ describe("MigCompare", () => {
 
     // Still in the draft only — storage is unchanged, and the UI flags it.
     expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument()
-    expect((await loadMig(getMigKey(b)))?.elementOverrides["Doc/Amt"].maxLength).toBe(12)
+    expect((await loadMig(getMigKey(b)))?.elementOverrides["/Doc/Amt"].maxLength).toBe(12)
 
     await userEvent.click(screen.getByRole("button", { name: /^save$/i }))
 
     await waitFor(async () =>
-      expect((await loadMig(getMigKey(b)))?.elementOverrides["Doc/Amt"].maxLength).toBe(18),
+      expect((await loadMig(getMigKey(b)))?.elementOverrides["/Doc/Amt"].maxLength).toBe(18),
     )
     expect(screen.queryByText(/unsaved changes/i)).not.toBeInTheDocument()
   })
 
   it("persists a B→A copy on Save", async () => {
-    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
-    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    const a = mig("A", { "/Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
     const card = await screen.findByRole("region", { name: /Amt — changed/i })
@@ -173,13 +173,13 @@ describe("MigCompare", () => {
     await userEvent.click(screen.getByRole("button", { name: /^save$/i }))
 
     await waitFor(async () =>
-      expect((await loadMig(getMigKey(a)))?.elementOverrides["Doc/Amt"].maxLength).toBe(12),
+      expect((await loadMig(getMigKey(a)))?.elementOverrides["/Doc/Amt"].maxLength).toBe(12),
     )
   })
 
   it("disables Save until there are edits and reverts them with Discard", async () => {
-    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
-    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    const a = mig("A", { "/Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
     expect(await screen.findByRole("button", { name: /^save$/i })).toBeDisabled()
@@ -193,13 +193,13 @@ describe("MigCompare", () => {
     // Back to the original difference, Save disabled, storage untouched.
     expect(await screen.findByRole("region", { name: /Amt — changed/i })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled()
-    expect((await loadMig(getMigKey(b)))?.elementOverrides["Doc/Amt"].maxLength).toBe(12)
+    expect((await loadMig(getMigKey(b)))?.elementOverrides["/Doc/Amt"].maxLength).toBe(12)
   })
 
   it("guards the Back link when there are unsaved changes", async () => {
     window.location.hash = "compare/A%3A1.0/B%3A1.0"
-    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
-    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    const a = mig("A", { "/Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
     const card = await screen.findByRole("region", { name: /Amt — changed/i })
@@ -216,8 +216,8 @@ describe("MigCompare", () => {
   })
 
   it("lets the Back link through when there are no unsaved changes", async () => {
-    const a = mig("A", { "Doc/Amt": { maxLength: 18 } })
-    const b = mig("B", { "Doc/Amt": { maxLength: 12 } })
+    const a = mig("A", { "/Doc/Amt": { maxLength: 18 } })
+    const b = mig("B", { "/Doc/Amt": { maxLength: 12 } })
     await renderCompare(a, b)
 
     await screen.findByRole("region", { name: /Amt — changed/i })
@@ -231,7 +231,7 @@ describe("MigCompare", () => {
       el("Doc", [el("Amt"), el("Extra")]),
       el("Doc", [el("Amt")]),
     )
-    const a = mig("A", { "Doc/Extra": { maxLength: 5 } }, "pacs.008.001.08")
+    const a = mig("A", { "/Doc/Extra": { maxLength: 5 } }, "pacs.008.001.08")
     const b = mig("B", {}, "pacs.008.001.09")
     await renderCompare(a, b, repo)
 
@@ -244,8 +244,8 @@ describe("MigCompare", () => {
 
   it("allows copying in both directions when both versions have the element", async () => {
     const repo = repoWithVersions(el("Doc", [el("Amt")]), el("Doc", [el("Amt")]))
-    const a = mig("A", { "Doc/Amt": { maxLength: 18 } }, "pacs.008.001.08")
-    const b = mig("B", { "Doc/Amt": { maxLength: 12 } }, "pacs.008.001.09")
+    const a = mig("A", { "/Doc/Amt": { maxLength: 18 } }, "pacs.008.001.08")
+    const b = mig("B", { "/Doc/Amt": { maxLength: 12 } }, "pacs.008.001.09")
     await renderCompare(a, b, repo)
 
     const card = await screen.findByRole("region", { name: /Amt — changed/i })

@@ -126,7 +126,7 @@ describe("buildMigCsvRows — element rows", () => {
 
   it("applies a MIG overlay onto an ISO constraint (effective expression, MIG source)", () => {
     const m = mig("M", {
-      "Doc/GrpHdr/MsgId": { constraintOverrides: { Format: { expression: "matches(., '[A-Z]+')" } } },
+      "/Doc/GrpHdr/MsgId": { constraintOverrides: { Format: { expression: "matches(., '[A-Z]+')" } } },
     })
     const { columns, rows } = buildMigCsvRows(m, [], MESSAGE)
     const r = rows.find((x) => x[col(columns, "Rule")] === "Format")!
@@ -135,7 +135,7 @@ describe("buildMigCsvRows — element rows", () => {
   })
 
   it("marks a disabled ISO constraint in the Rule column", () => {
-    const m = mig("M", { "Doc/GrpHdr/MsgId": { constraintOverrides: { Format: { disabled: true } } } })
+    const m = mig("M", { "/Doc/GrpHdr/MsgId": { constraintOverrides: { Format: { disabled: true } } } })
     const { columns, rows } = buildMigCsvRows(m, [], MESSAGE)
     const r = rows.find((x) => x[col(columns, "Rule")] === "Format (disabled)")!
     expect(r[col(columns, "Source")]).toBe("M")
@@ -143,7 +143,7 @@ describe("buildMigCsvRows — element rows", () => {
 
   it("renders element annotations as a single multiline cell before Source", () => {
     const { columns, rows } = buildMigCsvRows(
-      mig("M", { "Doc/Amt": { annotations: { Purpose: "Payment", Note: "x" } } }),
+      mig("M", { "/Doc/Amt": { annotations: { Purpose: "Payment", Note: "x" } } }),
       [],
       MESSAGE,
     )
@@ -155,7 +155,7 @@ describe("buildMigCsvRows — element rows", () => {
 describe("buildMigCsvRows — overrides", () => {
   it("emits a Multiplicity rule with the overridden value", () => {
     const { columns, rows } = buildMigCsvRows(
-      mig("M", { "Doc/Amt": { minOccurs: 1 } }),
+      mig("M", { "/Doc/Amt": { minOccurs: 1 } }),
       [],
       MESSAGE,
     )
@@ -166,7 +166,7 @@ describe("buildMigCsvRows — overrides", () => {
 
   it("emits a Type rule with the overridden type in the Type format", () => {
     const { columns, rows } = buildMigCsvRows(
-      mig("M", { "Doc/GrpHdr/MsgId": { maxLength: 20 } }),
+      mig("M", { "/Doc/GrpHdr/MsgId": { maxLength: 20 } }),
       [],
       MESSAGE,
     )
@@ -178,7 +178,7 @@ describe("buildMigCsvRows — overrides", () => {
   it("emits added constraints sourced to this MIG", () => {
     const { columns, rows } = buildMigCsvRows(
       mig("M", {
-        "Doc/Amt": { additionalConstraints: [{ name: "Positive", definition: "Must be > 0" }] },
+        "/Doc/Amt": { additionalConstraints: [{ name: "Positive", definition: "Must be > 0" }] },
       }),
       [],
       MESSAGE,
@@ -191,7 +191,7 @@ describe("buildMigCsvRows — overrides", () => {
   it("fills the Expression column for a constraint", () => {
     const { columns, rows } = buildMigCsvRows(
       mig("M", {
-        "Doc/Amt": { additionalConstraints: [{ name: "R", definition: "d", expression: "a > 0" }] },
+        "/Doc/Amt": { additionalConstraints: [{ name: "R", definition: "d", expression: "a > 0" }] },
       }),
       [],
       MESSAGE,
@@ -205,13 +205,13 @@ describe("buildMigCsvRows — overrides", () => {
 describe("buildMigCsvRows — provenance and annotations", () => {
   const parent = mig(
     "Base",
-    { "Doc/Amt": { additionalConstraints: [{ name: "Inherited", definition: "From base" }] } },
+    { "/Doc/Amt": { additionalConstraints: [{ name: "Inherited", definition: "From base" }] } },
     { version: "1.0" },
   )
   const leaf = mig(
     "Leaf",
     {
-      "Doc/Amt": {
+      "/Doc/Amt": {
         additionalConstraints: [
           { name: "Own", definition: "From leaf", annotations: { Usage: "Mandatory" } },
         ],
@@ -231,12 +231,12 @@ describe("buildMigCsvRows — provenance and annotations", () => {
   it("strips the message identifier / short code from the Source MIG name", () => {
     const base = mig(
       "pacs.008 Base",
-      { "Doc/Amt": { additionalConstraints: [{ name: "Inh", definition: "x" }] } },
+      { "/Doc/Amt": { additionalConstraints: [{ name: "Inh", definition: "x" }] } },
       { version: "1.0" },
     )
     const top = mig(
       "pacs.008.001.08 EPC SCT",
-      { "Doc/Amt": { additionalConstraints: [{ name: "Mine", definition: "y" }] } },
+      { "/Doc/Amt": { additionalConstraints: [{ name: "Mine", definition: "y" }] } },
       { version: "2.0", parentMIG: "pacs.008 Base:1.0" },
     )
     const { columns, rows } = buildMigCsvRows(top, [top, base], MESSAGE)
@@ -258,7 +258,7 @@ describe("buildMigCsv", () => {
   it("renders RFC4180 CSV, quoting fields with commas or quotes", () => {
     const { content, filename } = buildMigCsv(
       mig("M", {
-        "Doc/Amt": { additionalConstraints: [{ name: "R", definition: 'a, b and "c"' }] },
+        "/Doc/Amt": { additionalConstraints: [{ name: "R", definition: 'a, b and "c"' }] },
       }),
       [],
       MESSAGE,

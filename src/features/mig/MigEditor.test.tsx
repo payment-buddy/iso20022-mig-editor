@@ -193,7 +193,7 @@ describe("MigEditor", () => {
     await user.tab() // blur commits
 
     // Persisted as a tri-state override keyed by xmlPath, and flagged overridden.
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.definition).toBe(
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.definition).toBe(
       "House rule",
     )
     // Overridden state is conveyed by a dot whose tooltip names the baseline.
@@ -201,7 +201,7 @@ describe("MigEditor", () => {
 
     // Reset removes the override entirely.
     await user.click(within(panel).getByRole("button", { name: /reset to inherited/i }))
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]).toBeUndefined()
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]).toBeUndefined()
     expect(within(panel).queryByTitle(/overridden/i)).not.toBeInTheDocument()
   })
 
@@ -242,7 +242,7 @@ describe("MigEditor", () => {
 
     expect(within(panel).getByRole("alert")).toHaveTextContent(/max 1 is below min 2/i)
     // The value is still accepted (advisory, non-blocking).
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.minOccurs).toBe(2)
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.minOccurs).toBe(2)
   })
 
   it("warns when an element is excluded (max 0) but min occurs still requires it", async () => {
@@ -277,7 +277,7 @@ describe("MigEditor", () => {
     await user.clear(minInput)
     await user.type(minInput, "0")
     await user.tab()
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.minOccurs).toBe(0)
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.minOccurs).toBe(0)
 
     // Max occurs: baseline 1 → unbounded (empty number field, stored as null).
     await user.click(within(panel).getByRole("button", { name: "Edit Max occurs" }))
@@ -285,19 +285,19 @@ describe("MigEditor", () => {
     await user.clear(maxInput)
     await user.tab()
     const saved = await loadMig(getMigKey(MIG))
-    const override = saved?.elementOverrides["DocumentTag"]
+    const override = saved?.elementOverrides["/DocumentTag"]
     expect(override && "maxOccurs" in override).toBe(true)
     expect(override?.maxOccurs).toBeNull()
 
     // Both fields are now overridden → two reset actions; the first resets Min occurs.
     const resets = within(panel).getAllByRole("button", { name: /reset to inherited/i })
     await user.click(resets[0])
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.minOccurs).toBeUndefined()
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.minOccurs).toBeUndefined()
   })
 
   it("shows the effective cardinality in the tree (own override)", async () => {
     // GrpHdr is [1..1] in ISO; overriding maxOccurs to 5 shows [1..5] in the tree.
-    await saveMig({ ...MIG, elementOverrides: { "DocumentTag/GrpHdrTag": { maxOccurs: 5 } } })
+    await saveMig({ ...MIG, elementOverrides: { "/DocumentTag/GrpHdrTag": { maxOccurs: 5 } } })
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
     const grpHdr = screen.getByRole("treeitem", { name: "GrpHdr" })
@@ -309,7 +309,7 @@ describe("MigEditor", () => {
       name: "Base",
       version: "1",
       messageIdentifier: "pacs.008.001.10",
-      elementOverrides: { "DocumentTag/GrpHdrTag": { maxOccurs: 3 } },
+      elementOverrides: { "/DocumentTag/GrpHdrTag": { maxOccurs: 3 } },
     }
     const child: MessageImplementationGuide = {
       name: "Child",
@@ -330,7 +330,7 @@ describe("MigEditor", () => {
   it("counts and hides elements excluded via a maxOccurs:0 override", async () => {
     const user = userEvent.setup()
     // Exclude CdtTrfTxInf by overriding its effective maxOccurs to 0.
-    await saveMig({ ...MIG, elementOverrides: { "DocumentTag/CdtTrfTxInfTag": { maxOccurs: 0 } } })
+    await saveMig({ ...MIG, elementOverrides: { "/DocumentTag/CdtTrfTxInfTag": { maxOccurs: 0 } } })
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
 
@@ -362,7 +362,7 @@ describe("MigEditor", () => {
 
     // Persisted as a MIG-specific (additional) constraint on the root path.
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.additionalConstraints,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.additionalConstraints,
     ).toEqual([{ name: "New constraint", definition: "" }])
   })
 
@@ -383,7 +383,7 @@ describe("MigEditor", () => {
     await add()
 
     const names = (await loadMig(getMigKey(MIG)))?.elementOverrides[
-      "DocumentTag"
+      "/DocumentTag"
     ]?.additionalConstraints?.map((c) => c.name)
     expect(names).toEqual(["New constraint", "New constraint 2"])
   })
@@ -407,7 +407,7 @@ describe("MigEditor", () => {
     await user.tab() // blur commits
 
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.additionalConstraints,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.additionalConstraints,
     ).toEqual([{ name: "New constraint", definition: "Must reference a settlement date" }])
   })
 
@@ -430,7 +430,7 @@ describe("MigEditor", () => {
 
     // Expression is stored as an optional field alongside name/definition.
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.additionalConstraints,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.additionalConstraints,
     ).toEqual([{ name: "New constraint", definition: "", expression: "Amt > 0" }])
   })
 
@@ -452,7 +452,7 @@ describe("MigEditor", () => {
 
     // Renamed in storage and re-selected in the tree under its new path.
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.additionalConstraints,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.additionalConstraints,
     ).toEqual([{ name: "Settlement rule", definition: "" }])
     const node = await screen.findByRole("treeitem", { name: /constraint settlement rule$/i })
     expect(node).toHaveAttribute("aria-selected", "true")
@@ -482,7 +482,7 @@ describe("MigEditor", () => {
     await user.tab()
 
     const names = (await loadMig(getMigKey(MIG)))?.elementOverrides[
-      "DocumentTag"
+      "/DocumentTag"
     ]?.additionalConstraints?.map((c) => c.name)
     expect(names).toEqual(["New constraint", "New constraint 2"])
   })
@@ -528,7 +528,7 @@ describe("MigEditor", () => {
     await user.tab()
 
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.constraintOverrides,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.constraintOverrides,
     ).toEqual({ StdRule: { expression: "Amt > 0" } })
   })
 
@@ -557,7 +557,7 @@ describe("MigEditor", () => {
       name: "Base",
       version: "1.0",
       messageIdentifier: "pacs.008.001.10",
-      elementOverrides: { DocumentTag: { constraintOverrides: { StdRule: { expression: "x > 0" } } } },
+      elementOverrides: { "/DocumentTag": { constraintOverrides: { StdRule: { expression: "x > 0" } } } },
     }
     const child: MessageImplementationGuide = { ...MIG, parentMIG: getMigKey(parent) }
     await saveMig(parent)
@@ -611,14 +611,14 @@ describe("MigEditor", () => {
     await user.click(within(panel).getByRole("checkbox", { name: /disable this rule/i }))
 
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.constraintOverrides,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.constraintOverrides,
     ).toEqual({ StdRule: { disabled: true } })
   })
 
   it("colours an own-overridden node and shows the legend", async () => {
     const guide: MessageImplementationGuide = {
       ...MIG,
-      elementOverrides: { "DocumentTag/GrpHdrTag": { maxLength: 20 } },
+      elementOverrides: { "/DocumentTag/GrpHdrTag": { maxLength: 20 } },
     }
     await saveMig(guide)
     render(<MigEditor migKey={getMigKey(guide)} repo={REPO} />)
@@ -634,7 +634,7 @@ describe("MigEditor", () => {
     const guide: MessageImplementationGuide = {
       ...MIG,
       elementOverrides: {
-        "DocumentTag/GrpHdrTag": {
+        "/DocumentTag/GrpHdrTag": {
           maxLength: 20,
           additionalConstraints: [{ name: "MyRule", definition: "" }],
         },
@@ -661,7 +661,7 @@ describe("MigEditor", () => {
       name: "Base",
       version: "1.0",
       messageIdentifier: "pacs.008.001.10",
-      elementOverrides: { "DocumentTag/GrpHdrTag": { maxLength: 20 } },
+      elementOverrides: { "/DocumentTag/GrpHdrTag": { maxLength: 20 } },
     }
     const child: MessageImplementationGuide = { ...MIG, parentMIG: getMigKey(parent) }
     await saveMig(parent)
@@ -678,7 +678,7 @@ describe("MigEditor", () => {
   it("does not tint an element that has only a constraint override, but tints the constraint", async () => {
     const guide: MessageImplementationGuide = {
       ...MIG,
-      elementOverrides: { DocumentTag: { additionalConstraints: [{ name: "Mine", definition: "" }] } },
+      elementOverrides: { "/DocumentTag": { additionalConstraints: [{ name: "Mine", definition: "" }] } },
     }
     await saveMig(guide)
     render(<MigEditor migKey={getMigKey(guide)} repo={REPO} />)
@@ -718,7 +718,7 @@ describe("MigEditor", () => {
     }
     const guide: MessageImplementationGuide = {
       ...MIG,
-      elementOverrides: { DocumentTag: { constraintOverrides: { StdRule: { expression: "x > 0" } } } },
+      elementOverrides: { "/DocumentTag": { constraintOverrides: { StdRule: { expression: "x > 0" } } } },
     }
     await saveMig(guide)
     render(<MigEditor migKey={getMigKey(guide)} repo={repo} />)
@@ -738,7 +738,7 @@ describe("MigEditor", () => {
       version: "1.0",
       messageIdentifier: "pacs.008.001.10",
       elementOverrides: {
-        DocumentTag: { additionalConstraints: [{ name: "InhRule", definition: "Inherited rule" }] },
+        "/DocumentTag": { additionalConstraints: [{ name: "InhRule", definition: "Inherited rule" }] },
       },
     }
     const child: MessageImplementationGuide = { ...MIG, parentMIG: getMigKey(parent) }
@@ -760,7 +760,7 @@ describe("MigEditor", () => {
 
     // The overlay lands on the child MIG, keyed by the inherited rule's name.
     expect(
-      (await loadMig(getMigKey(child)))?.elementOverrides["DocumentTag"]?.constraintOverrides,
+      (await loadMig(getMigKey(child)))?.elementOverrides["/DocumentTag"]?.constraintOverrides,
     ).toEqual({ InhRule: { expression: "Amt > 0" } })
   })
 
@@ -786,7 +786,7 @@ describe("MigEditor", () => {
     expect(
       screen.queryByRole("treeitem", { name: /constraint new constraint$/i }),
     ).not.toBeInTheDocument()
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]).toBeUndefined()
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]).toBeUndefined()
     expect(screen.getByRole("treeitem", { name: "Document" })).toHaveAttribute(
       "aria-selected",
       "true",
@@ -799,7 +799,7 @@ describe("MigEditor", () => {
       name: "Base",
       version: "1",
       messageIdentifier: "pacs.008.001.10",
-      elementOverrides: { "DocumentTag/GrpHdrTag": { maxLength: 20 } },
+      elementOverrides: { "/DocumentTag/GrpHdrTag": { maxLength: 20 } },
     }
     const child: MessageImplementationGuide = {
       name: "Child",
@@ -829,7 +829,7 @@ describe("MigEditor", () => {
     await user.type(input, "15")
     await user.tab()
     expect(
-      (await loadMig(getMigKey(child)))?.elementOverrides["DocumentTag/GrpHdrTag"]?.maxLength,
+      (await loadMig(getMigKey(child)))?.elementOverrides["/DocumentTag/GrpHdrTag"]?.maxLength,
     ).toBe(15)
     const ownDot = within(panel).getByTitle(/overridden — inherited: 20/i)
     expect(ownDot).toBeInTheDocument()
@@ -838,7 +838,7 @@ describe("MigEditor", () => {
     // Reset drops the own override → back to inheriting the parent's 20.
     await user.click(within(panel).getByRole("button", { name: /reset to inherited/i }))
     expect(
-      (await loadMig(getMigKey(child)))?.elementOverrides["DocumentTag/GrpHdrTag"],
+      (await loadMig(getMigKey(child)))?.elementOverrides["/DocumentTag/GrpHdrTag"],
     ).toBeUndefined()
     expect(within(panel).getByTitle(/inherited from a parent mig: 20/i)).toBeInTheDocument()
   })
@@ -867,7 +867,7 @@ describe("MigEditor", () => {
     await user.type(input, "2")
     await user.tab()
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/RateTag"]?.fractionDigits,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/RateTag"]?.fractionDigits,
     ).toBe(2)
   })
 
@@ -962,7 +962,7 @@ describe("MigEditor", () => {
     await user.type(maxLen, "20")
     await user.tab()
 
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/GrpHdrTag"]?.maxLength).toBe(
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/GrpHdrTag"]?.maxLength).toBe(
       20,
     )
   })
@@ -989,7 +989,7 @@ describe("MigEditor", () => {
     await user.tab()
 
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/RateTag"]?.maxInclusive,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/RateTag"]?.maxInclusive,
     ).toBe(99.99)
   })
 
@@ -1011,7 +1011,7 @@ describe("MigEditor", () => {
     await user.type(within(panel).getByRole("textbox", { name: "Pattern" }), "\\d\\d\\d")
     await user.tab()
 
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/GrpHdrTag"]?.pattern).toBe(
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/GrpHdrTag"]?.pattern).toBe(
       "\\d\\d\\d",
     )
   })
@@ -1033,7 +1033,7 @@ describe("MigEditor", () => {
     const panel = screen.getByRole("region", { name: /element details/i })
     await user.click(within(panel).getByRole("button", { name: "Edit Allowed values" }))
     await user.click(within(panel).getByRole("button", { name: "Remove INAC" }))
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/StsTag"]?.allowedValues).toEqual([
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/StsTag"]?.allowedValues).toEqual([
       "ACTV",
     ])
 
@@ -1042,7 +1042,7 @@ describe("MigEditor", () => {
       within(panel).getByRole("textbox", { name: /add to allowed values/i }),
       "PEND{Enter}",
     )
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/StsTag"]?.allowedValues).toEqual([
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/StsTag"]?.allowedValues).toEqual([
       "ACTV",
       "PEND",
     ])
@@ -1065,7 +1065,7 @@ describe("MigEditor", () => {
     const panel = screen.getByRole("region", { name: /element details/i })
     await user.click(within(panel).getByRole("button", { name: "Edit Examples" }))
     await user.click(within(panel).getByRole("button", { name: "Remove 2.0" }))
-    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag/RateTag"]?.examples).toEqual([
+    expect((await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag/RateTag"]?.examples).toEqual([
       "1.5",
     ])
   })
@@ -1126,7 +1126,7 @@ describe("MigEditor", () => {
   it("surfaces loosening diagnostics in the consistency banner/drawer", async () => {
     const user = userEvent.setup()
     // GrpHdr maxLength 35 → overriding to 50 loosens it.
-    await saveMig({ ...MIG, elementOverrides: { "DocumentTag/GrpHdrTag": { maxLength: 50 } } })
+    await saveMig({ ...MIG, elementOverrides: { "/DocumentTag/GrpHdrTag": { maxLength: 50 } } })
     render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
     await screen.findByRole("treeitem", { name: "Document" })
 
@@ -1193,7 +1193,7 @@ describe("MigEditor", () => {
     await user.type(within(panel).getByRole("textbox", { name: "Usage value" }), "debit only")
     await user.tab()
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.annotations,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.annotations,
     ).toEqual({ Usage: "debit only" })
 
     // Removing the name in metadata drops it everywhere (cascades to overrides).
@@ -1201,7 +1201,7 @@ describe("MigEditor", () => {
     await user.click(within(meta).getByRole("button", { name: "Remove Usage" }))
     const saved = await loadMig(getMigKey(MIG))
     expect(saved?.elementAnnotationNames).toBeUndefined()
-    expect(saved?.elementOverrides["DocumentTag"]).toBeUndefined()
+    expect(saved?.elementOverrides["/DocumentTag"]).toBeUndefined()
   })
 
   it("shows inherited annotation fields with a provenance dot, even when this MIG declares no names", async () => {
@@ -1213,12 +1213,12 @@ describe("MigEditor", () => {
       version: "1.0",
       messageIdentifier: "pacs.008.001.10",
       elementAnnotationNames: ["Owner", "Usage"],
-      elementOverrides: { "DocumentTag/GrpHdrTag": { annotations: { Owner: "ops", Usage: "credit" } } },
+      elementOverrides: { "/DocumentTag/GrpHdrTag": { annotations: { Owner: "ops", Usage: "credit" } } },
     }
     const child: MessageImplementationGuide = {
       ...MIG,
       parentMIG: getMigKey(parent),
-      elementOverrides: { "DocumentTag/GrpHdrTag": { annotations: { Owner: "mine" } } },
+      elementOverrides: { "/DocumentTag/GrpHdrTag": { annotations: { Owner: "mine" } } },
     }
     await saveMig(parent)
     await saveMig(child)
@@ -1269,7 +1269,7 @@ describe("MigEditor", () => {
     await user.type(within(panel).getByRole("textbox", { name: "Severity value" }), "high")
     await user.tab()
     expect(
-      (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.additionalConstraints,
+      (await loadMig(getMigKey(MIG)))?.elementOverrides["/DocumentTag"]?.additionalConstraints,
     ).toEqual([{ name: "New constraint", definition: "", annotations: { Severity: "high" } }])
     // The set value is this MIG's own → a blue provenance dot.
     expect(within(panel).getByTitle("Overridden — inherited: —")).toHaveClass("bg-primary")
@@ -1279,7 +1279,7 @@ describe("MigEditor", () => {
     await user.click(within(meta).getByRole("button", { name: "Remove Severity" }))
     const saved = await loadMig(getMigKey(MIG))
     expect(saved?.constraintAnnotationNames).toBeUndefined()
-    expect(saved?.elementOverrides["DocumentTag"]?.additionalConstraints).toEqual([
+    expect(saved?.elementOverrides["/DocumentTag"]?.additionalConstraints).toEqual([
       { name: "New constraint", definition: "" },
     ])
   })

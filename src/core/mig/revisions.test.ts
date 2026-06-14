@@ -16,8 +16,8 @@ describe("summarizeChange", () => {
   })
 
   it("counts added / changed / removed override paths", () => {
-    const prev = mig({ elementOverrides: { "Doc/A": { maxLength: 5 }, "Doc/B": { minOccurs: 1 } } })
-    const next = mig({ elementOverrides: { "Doc/A": { maxLength: 9 }, "Doc/C": { minOccurs: 0 } } })
+    const prev = mig({ elementOverrides: { "/Doc/A": { maxLength: 5 }, "/Doc/B": { minOccurs: 1 } } })
+    const next = mig({ elementOverrides: { "/Doc/A": { maxLength: 9 }, "/Doc/C": { minOccurs: 0 } } })
     // A changed, C added, B removed.
     expect(summarizeChange(prev, next)).toBe("1 changed, 1 added, 1 removed")
   })
@@ -30,7 +30,7 @@ describe("summarizeChange", () => {
   })
 
   it("combines metadata and override changes", () => {
-    const next = mig({ description: "x", elementOverrides: { "Doc/A": { maxLength: 5 } } })
+    const next = mig({ description: "x", elementOverrides: { "/Doc/A": { maxLength: 5 } } })
     expect(summarizeChange(mig(), next)).toBe("description; 1 added")
   })
 })

@@ -13,6 +13,7 @@
 //     2-space indent, trailing newline.
 
 import { stringify } from "yaml"
+import { rootPath } from "@/core/erepository/elementPath"
 import {
   CONSTRAINT_OVERRIDE_PROPERTY_ORDER,
   CONSTRAINT_PROPERTY_ORDER,
@@ -41,8 +42,8 @@ const UNKNOWN = Number.MAX_SAFE_INTEGER
 
 /**
  * Build a `xmlPath → document-ordinal` index by walking the message tree in
- * order. Paths match the `elementOverrides` keys (root `xmlTag`, then
- * `${path}/${child.xmlTag}`). Pass to `serializeMig` for schema-ordered output.
+ * order. Paths match the `elementOverrides` keys (absolute: `/${root.xmlTag}`,
+ * then `${path}/${child.xmlTag}`). Pass to `serializeMig` for schema-ordered output.
  */
 export function buildPathOrder(root: MessageElement): Map<string, number> {
   const order = new Map<string, number>()
@@ -51,7 +52,7 @@ export function buildPathOrder(root: MessageElement): Map<string, number> {
     order.set(path, i++)
     for (const child of el.elements) walk(child, `${path}/${child.xmlTag}`)
   }
-  walk(root, root.xmlTag)
+  walk(root, rootPath(root))
   return order
 }
 

@@ -10,6 +10,7 @@ import {
 } from "react"
 import { CaretRightIcon, CheckIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
 import type { Constraint, ElementOverride, ElementOverrides, MessageElement } from "@/core/types/types"
+import { rootPath } from "@/core/erepository/elementPath"
 import { cn } from "@/lib/utils"
 
 /** Number of rows ↕ a PageUp/PageDown jumps. */
@@ -168,7 +169,7 @@ function countExcluded(root: MessageElement, overrides: ElementOverrides | undef
     if (isOwnExcluded(path, el, overrides)) n++
     for (const child of el.elements) walk(child, `${path}/${child.xmlTag}`)
   }
-  walk(root, root.xmlTag)
+  walk(root, rootPath(root))
   return n
 }
 
@@ -220,7 +221,7 @@ function buildFilter(
     if (descMatch) expand.add(path)
     return selfMatch || descMatch
   }
-  visit(root, root.xmlTag)
+  visit(root, rootPath(root))
   return { keep, expand }
 }
 
@@ -298,7 +299,7 @@ function flattenTree(
       })
     }
   }
-  walk(root, root.xmlTag, 0, null, false)
+  walk(root, rootPath(root), 0, null, false)
   return out
 }
 
@@ -362,7 +363,7 @@ export function ElementTree({
   const [showXmlTags, setShowXmlTags] = useState(false)
   // Root is expanded by default; expansion is keyed by xmlPath so the keyboard
   // handler can drive it centrally (each node no longer owns its open state).
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set([root.xmlTag]))
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set([rootPath(root)]))
   const [focusedPath, setFocusedPath] = useState<string | null>(null)
   const [filter, setFilter] = useState("")
   const [hideExcluded, setHideExcluded] = useState(false)
@@ -423,11 +424,13 @@ export function ElementTree({
   const pendingFocus = useRef<string | null>(null)
   const select = (path: string) => {
     // Open every ancestor so the target is reachable (its parent may be collapsed).
+    // Paths are absolute, so parts[0] is "" and parts[1] is the root — the first
+    // real ancestor prefix is parts[0..2] (e.g. "/Document").
     const parts = path.split("/")
-    if (parts.length > 1) {
+    if (parts.length > 2) {
       setExpanded((prev) => {
         const next = new Set(prev)
-        for (let i = 1; i < parts.length; i++) next.add(parts.slice(0, i).join("/"))
+        for (let i = 2; i < parts.length; i++) next.add(parts.slice(0, i).join("/"))
         return next
       })
     }

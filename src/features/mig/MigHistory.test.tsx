@@ -69,7 +69,7 @@ const mig = (over: Partial<MessageImplementationGuide> = {}): MessageImplementat
 
 const seedHistory = async () => {
   const base = mig()
-  const edited = mig({ elementOverrides: { "Doc/Amt": { maxLength: 20 } } })
+  const edited = mig({ elementOverrides: { "/Doc/Amt": { maxLength: 20 } } })
   let revs = appendRevision([], base, 1000)
   revs = appendRevision(revs, edited, 2000)
   await saveMig(edited)
@@ -105,7 +105,7 @@ describe("MigHistory", () => {
 
   it("shows what a merge revision changed (vs the pre-merge baseline)", async () => {
     const base = mig()
-    const merged = mig({ elementOverrides: { "Doc/Amt": { maxLength: 12 } } })
+    const merged = mig({ elementOverrides: { "/Doc/Amt": { maxLength: 12 } } })
     let revs = appendRevision([], base, 1000)
     revs = appendRevision(revs, merged, 2000, "Merged")
     await saveMig(merged)
@@ -141,14 +141,14 @@ describe("MigHistory", () => {
   it("orders the diff by message schema order, not alphabetically", async () => {
     // Message lists Zeb before Amt; current sets both, baseline neither.
     const repo = repoWith(el("Doc", [el("Zeb"), el("Amt")]))
-    const current = mig({ elementOverrides: { "Doc/Amt": { maxLength: 5 }, "Doc/Zeb": { maxLength: 7 } } })
+    const current = mig({ elementOverrides: { "/Doc/Amt": { maxLength: 5 }, "/Doc/Zeb": { maxLength: 7 } } })
     await saveMig(current)
     await saveRevisions("EPC:1.0", appendRevision(appendRevision([], mig(), 1000), current, 2000))
     render(<MigHistory migKey="EPC:1.0" repo={repo} />)
 
     // Newest revision selected by default → diff vs baseline lists both paths.
-    const zeb = await screen.findByText("Doc/Zeb")
-    const amt = screen.getByText("Doc/Amt")
+    const zeb = await screen.findByText("/Doc/Zeb")
+    const amt = screen.getByText("/Doc/Amt")
     // Schema order → Zeb's card precedes Amt's (alphabetical would be the reverse).
     expect(zeb.compareDocumentPosition(amt) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })

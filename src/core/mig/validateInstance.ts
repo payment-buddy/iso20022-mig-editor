@@ -8,6 +8,7 @@
 import { createValueValidator } from "./fieldValidation"
 import { resolveConstraints } from "./constraints"
 import { evaluateExpression, parseExpression } from "./expression"
+import { rootPath } from "@/core/erepository/elementPath"
 import type {
   ElementOverride,
   ElementOverrides,
@@ -208,12 +209,12 @@ export function validateMessageInstance(
   const rootEl = message.rootElement
   if (root.localName !== rootEl.xmlTag) {
     out.push({
-      path: rootEl.xmlTag,
+      path: rootPath(rootEl),
       elementName: rootEl.name,
       message: `Root <${root.localName}> does not match the message root <${rootEl.xmlTag}>.`,
     })
     return out
   }
-  walk(rootEl, root, rootEl.xmlTag, effectiveOverrides, out)
+  walk(rootEl, root, rootPath(rootEl), effectiveOverrides, out)
   return out
 }

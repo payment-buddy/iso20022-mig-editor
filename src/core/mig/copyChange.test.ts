@@ -6,7 +6,7 @@ function mig(overrides: ElementOverrides, name = "M"): MessageImplementationGuid
   return { name, version: "1.0", messageIdentifier: "pacs.008.001.08", elementOverrides: overrides }
 }
 
-const P = "Doc/Amt"
+const P = "/Doc/Amt"
 
 describe("applyFieldCopy — scalar fields", () => {
   it("copies a declared value into the target", () => {

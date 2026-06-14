@@ -65,14 +65,14 @@ function run(overrides: ElementOverrides, inherited: ElementOverrides = {}) {
 
 describe("validateMigConsistency", () => {
   it("returns nothing for a clean (tightening) MIG", () => {
-    expect(run({ "Doc/GrpHdr": { maxLength: 20 } })).toEqual([]) // tighter than 35
+    expect(run({ "/Doc/GrpHdr": { maxLength: 20 } })).toEqual([]) // tighter than 35
   })
 
   it("flags a loosened facet against the ISO baseline", () => {
-    const d = run({ "Doc/GrpHdr": { maxLength: 50 } })
+    const d = run({ "/Doc/GrpHdr": { maxLength: 50 } })
     expect(d).toEqual([
       {
-        path: "Doc/GrpHdr",
+        path: "/Doc/GrpHdr",
         elementName: "GrpHdr",
         field: "Max length",
         message: expect.stringMatching(/above 35/i),
@@ -81,67 +81,67 @@ describe("validateMigConsistency", () => {
   })
 
   it("flags a lowered min facet", () => {
-    expect(run({ "Doc/GrpHdr": { minOccurs: 0 } })[0]).toMatchObject({
+    expect(run({ "/Doc/GrpHdr": { minOccurs: 0 } })[0]).toMatchObject({
       field: "Min occurs",
       message: expect.stringMatching(/below 1/i),
     })
   })
 
   it("flags empty ranges, including an exclusion that still requires the element", () => {
-    expect(run({ "Doc/GrpHdr": { minLength: 10, maxLength: 5 } })[0]).toMatchObject({
+    expect(run({ "/Doc/GrpHdr": { minLength: 10, maxLength: 5 } })[0]).toMatchObject({
       field: "Max length",
       message: expect.stringMatching(/length: max 5 is below min 10/i),
     })
     // A positive max below min occurs.
-    expect(run({ "Doc/GrpHdr": { minOccurs: 2, maxOccurs: 1 } })[0]).toMatchObject({
+    expect(run({ "/Doc/GrpHdr": { minOccurs: 2, maxOccurs: 1 } })[0]).toMatchObject({
       field: "Max occurs",
       message: expect.stringMatching(/occurs: max 1 is below min 2/i),
     })
     // Excluding (max 0) a mandatory element (min 1) leaves min > max → flagged.
-    expect(run({ "Doc/GrpHdr": { maxOccurs: 0 } })[0]).toMatchObject({
+    expect(run({ "/Doc/GrpHdr": { maxOccurs: 0 } })[0]).toMatchObject({
       field: "Max occurs",
       message: expect.stringMatching(/occurs: max 0 is below min 1/i),
     })
     // A clean exclusion of an optional element (min already 0) is fine.
-    expect(run({ "Doc/Opt": { maxOccurs: 0 } })).toEqual([])
+    expect(run({ "/Doc/Opt": { maxOccurs: 0 } })).toEqual([])
   })
 
   it("flags an invalid pattern and a non-subset allowed-values list", () => {
-    expect(run({ "Doc/GrpHdr": { pattern: "[" } })[0]).toMatchObject({
+    expect(run({ "/Doc/GrpHdr": { pattern: "[" } })[0]).toMatchObject({
       field: "Pattern",
       message: expect.stringMatching(/invalid pattern/i),
     })
-    expect(run({ "Doc/Sts": { allowedValues: ["ACTV", "NEW"] } })[0]).toMatchObject({
+    expect(run({ "/Doc/Sts": { allowedValues: ["ACTV", "NEW"] } })[0]).toMatchObject({
       field: "Allowed values",
       message: expect.stringMatching(/outside the standard set: NEW/i),
     })
-    expect(run({ "Doc/Sts": { allowedValues: ["ACTV"] } })).toEqual([]) // subset is fine
+    expect(run({ "/Doc/Sts": { allowedValues: ["ACTV"] } })).toEqual([]) // subset is fine
   })
 
   it("loosens against the inherited baseline, not just ISO", () => {
-    const inherited: ElementOverrides = { "Doc/GrpHdr": { maxLength: 20 } }
+    const inherited: ElementOverrides = { "/Doc/GrpHdr": { maxLength: 20 } }
     // 30 is tighter than ISO 35 but looser than the inherited 20 → flagged.
-    expect(run({ "Doc/GrpHdr": { maxLength: 30 } }, inherited)[0]).toMatchObject({
+    expect(run({ "/Doc/GrpHdr": { maxLength: 30 } }, inherited)[0]).toMatchObject({
       field: "Max length",
       message: expect.stringMatching(/above 20/i),
     })
   })
 
   it("ignores override paths absent from the message", () => {
-    expect(run({ "Doc/Ghost": { minOccurs: 0 } })).toEqual([])
+    expect(run({ "/Doc/Ghost": { minOccurs: 0 } })).toEqual([])
   })
 
   it("aggregates diagnostics across paths", () => {
-    const d = run({ "Doc/GrpHdr": { maxLength: 50 }, "Doc/Amt": { fractionDigits: 5 } })
+    const d = run({ "/Doc/GrpHdr": { maxLength: 50 }, "/Doc/Amt": { fractionDigits: 5 } })
     expect(d).toHaveLength(2)
     expect(d.map((x) => x.elementName).sort()).toEqual(["Amt", "GrpHdr"])
   })
 
   it("flags disabling a rule as looser than the original", () => {
-    const d = run({ "Doc/GrpHdr": { constraintOverrides: { R1: { disabled: true } } } })
+    const d = run({ "/Doc/GrpHdr": { constraintOverrides: { R1: { disabled: true } } } })
     expect(d).toContainEqual(
       expect.objectContaining({
-        path: "Doc/GrpHdr",
+        path: "/Doc/GrpHdr",
         field: "Constraint",
         message: expect.stringMatching(/disables the "R1" rule.*looser/i),
       }),
@@ -149,9 +149,9 @@ describe("validateMigConsistency", () => {
   })
 
   it("does not re-flag a rule an ancestor already disabled, nor a re-enable", () => {
-    const inherited = { "Doc/GrpHdr": { constraintOverrides: { R1: { disabled: true } } } }
+    const inherited = { "/Doc/GrpHdr": { constraintOverrides: { R1: { disabled: true } } } }
     // Own silently inherits the disable → nothing; own re-enables → not looser.
-    expect(run({ "Doc/GrpHdr": { constraintOverrides: { R1: { disabled: true } } } }, inherited)).toEqual([])
-    expect(run({ "Doc/GrpHdr": { constraintOverrides: { R1: { disabled: false } } } }, inherited)).toEqual([])
+    expect(run({ "/Doc/GrpHdr": { constraintOverrides: { R1: { disabled: true } } } }, inherited)).toEqual([])
+    expect(run({ "/Doc/GrpHdr": { constraintOverrides: { R1: { disabled: false } } } }, inherited)).toEqual([])
   })
 })

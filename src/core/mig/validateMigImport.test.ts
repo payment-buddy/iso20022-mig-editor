@@ -17,7 +17,7 @@ describe("validateMigImport", () => {
     const mig = {
       ...base,
       elementOverrides: {
-        "Doc/Amt": { maxLength: null, additionalConstraints: [{ name: "R", definition: "" }] },
+        "/Doc/Amt": { maxLength: null, additionalConstraints: [{ name: "R", definition: "" }] },
       },
     }
     expect(validateMigImport(mig)).toEqual({ ok: true, mig })
@@ -27,7 +27,7 @@ describe("validateMigImport", () => {
     const mig = {
       ...base,
       elementOverrides: {
-        "Doc/Amt": { constraintOverrides: { R1: { expression: "a > 0" }, R2: { expression: null } } },
+        "/Doc/Amt": { constraintOverrides: { R1: { expression: "a > 0" }, R2: { expression: null } } },
       },
     }
     expect(validateMigImport(mig)).toEqual({ ok: true, mig })
@@ -49,11 +49,11 @@ describe("validateMigImport", () => {
   it("reports the path of a wrongly typed override facet", () => {
     const result = validateMigImport({
       ...base,
-      elementOverrides: { "Doc/Amt": { maxLength: "thirty" } },
+      elementOverrides: { "/Doc/Amt": { maxLength: "thirty" } },
     })
     expect(result.ok).toBe(false)
     if (result.ok) return
-    expect(result.errors[0]).toMatch(/elementOverrides\.Doc\/Amt\.maxLength/)
+    expect(result.errors[0]).toMatch(/elementOverrides\.\/Doc\/Amt\.maxLength/)
   })
 
   it("rejects non-objects", () => {

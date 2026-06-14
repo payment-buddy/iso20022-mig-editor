@@ -75,35 +75,35 @@ const only = (elementOverrides: ElementOverrides): ElementDiff => diffOf(element
 
 describe("diffMig field classification", () => {
   it("classifies a narrowed bound as tightened, a widened one as loosened", () => {
-    expect(only({ "Doc/GrpHdr": { maxLength: 20 } }).changes).toEqual([
+    expect(only({ "/Doc/GrpHdr": { maxLength: 20 } }).changes).toEqual([
       { label: "Max length", kind: "tightened", baseline: "35", value: "20" },
     ])
-    expect(only({ "Doc/GrpHdr": { maxLength: 50 } }).changes[0].kind).toBe("loosened")
-    expect(only({ "Doc/GrpHdr": { minOccurs: 0 } }).changes[0].kind).toBe("loosened")
+    expect(only({ "/Doc/GrpHdr": { maxLength: 50 } }).changes[0].kind).toBe("loosened")
+    expect(only({ "/Doc/GrpHdr": { minOccurs: 0 } }).changes[0].kind).toBe("loosened")
   })
 
   it("classifies a removed (null) constraint", () => {
-    const change = only({ "Doc/GrpHdr": { maxLength: null } }).changes[0]
+    const change = only({ "/Doc/GrpHdr": { maxLength: null } }).changes[0]
     expect(change).toMatchObject({ label: "Max length", kind: "removed", value: "none" })
   })
 
   it("marks maxOccurs 0 as excluded and skips field changes", () => {
-    const d = only({ "Doc/Amt": { maxOccurs: 0 } })
+    const d = only({ "/Doc/Amt": { maxOccurs: 0 } })
     expect(d.excluded).toBe(true)
     expect(d.changes).toEqual([])
   })
 
   it("treats an allowed-values subset as tightened, a non-subset as loosened", () => {
-    expect(only({ "Doc/Sts": { allowedValues: ["ACTV"] } }).changes[0].kind).toBe("tightened")
-    expect(only({ "Doc/Sts": { allowedValues: ["ACTV", "NEW"] } }).changes[0].kind).toBe("loosened")
+    expect(only({ "/Doc/Sts": { allowedValues: ["ACTV"] } }).changes[0].kind).toBe("tightened")
+    expect(only({ "/Doc/Sts": { allowedValues: ["ACTV", "NEW"] } }).changes[0].kind).toBe("loosened")
   })
 
   it("classifies pattern add / change / remove", () => {
-    expect(only({ "Doc/GrpHdr": { pattern: "[A-Z]+" } }).changes[0].kind).toBe("added")
+    expect(only({ "/Doc/GrpHdr": { pattern: "[A-Z]+" } }).changes[0].kind).toBe("added")
   })
 
   it("treats definition as an informational change and annotations as added", () => {
-    const d = only({ "Doc/GrpHdr": { definition: "Bank rule", annotations: { Usage: "debit" } } })
+    const d = only({ "/Doc/GrpHdr": { definition: "Bank rule", annotations: { Usage: "debit" } } })
     expect(d.changes).toEqual([
       { label: "Definition", kind: "changed", baseline: "Group header", value: "Bank rule" },
       { label: "Usage", kind: "added", baseline: "—", value: "debit" },
@@ -112,7 +112,7 @@ describe("diffMig field classification", () => {
 
   it("carries additional constraints with expression and annotations", () => {
     const d = only({
-      "Doc/GrpHdr": {
+      "/Doc/GrpHdr": {
         additionalConstraints: [
           { name: "R", definition: "must hold", expression: "x > 0", annotations: { Severity: "high" } },
         ],
@@ -131,7 +131,7 @@ describe("diffMig field classification", () => {
 
   it("carries an overlaid standard constraint and marks a disabled one", () => {
     const d = only({
-      "Doc/GrpHdr": {
+      "/Doc/GrpHdr": {
         constraintOverrides: { StdRule: { expression: "x > 0" }, OffRule: { disabled: true } },
       },
     })
@@ -148,16 +148,16 @@ describe("diffMig field classification", () => {
 describe("diffMig structure", () => {
   it("emits elements in message schema order and counts loosenings", () => {
     const diff = diffOf({
-      "Doc/Sts": { allowedValues: ["ACTV", "NEW"] }, // loosened
-      "Doc/GrpHdr": { maxLength: 20 }, // tightened
+      "/Doc/Sts": { allowedValues: ["ACTV", "NEW"] }, // loosened
+      "/Doc/GrpHdr": { maxLength: 20 }, // tightened
     })
     expect(diff.elements.map((e) => e.name)).toEqual(["GrpHdr", "Sts"]) // GrpHdr precedes Sts
     expect(diff.loosenings).toBe(1)
   })
 
   it("reports an override path that isn't in the message as an orphan", () => {
-    const diff = diffOf({ "Doc/Ghost": { minOccurs: 0 } })
-    expect(diff.elements[0]).toMatchObject({ path: "Doc/Ghost", name: "Ghost", orphan: true })
+    const diff = diffOf({ "/Doc/Ghost": { minOccurs: 0 } })
+    expect(diff.elements[0]).toMatchObject({ path: "/Doc/Ghost", name: "Ghost", orphan: true })
   })
 
   it("lists parent keys and merges the chain for the diff", () => {
@@ -165,14 +165,14 @@ describe("diffMig structure", () => {
       name: "Base",
       version: "1",
       messageIdentifier: "pacs.008.001.08",
-      elementOverrides: { "Doc/GrpHdr": { maxLength: 30 } },
+      elementOverrides: { "/Doc/GrpHdr": { maxLength: 30 } },
     }
     const leaf: MessageImplementationGuide = {
       name: "EPC",
       version: "1.0",
       messageIdentifier: "pacs.008.001.08",
       parentMIG: "Base:1",
-      elementOverrides: { "Doc/GrpHdr": { minOccurs: 1, maxLength: 20 } },
+      elementOverrides: { "/Doc/GrpHdr": { minOccurs: 1, maxLength: 20 } },
     }
     const diff = diffMig(effectiveMig(leaf, [leaf, parent]), MESSAGE)
     expect(diff.mig.parents).toEqual(["Base:1"])

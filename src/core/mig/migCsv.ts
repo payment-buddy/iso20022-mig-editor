@@ -18,6 +18,7 @@
 
 import { effectiveMig } from "./effectiveMig"
 import { resolveConstraints } from "./constraints"
+import { rootPath } from "@/core/erepository/elementPath"
 import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
 import type {
   Constraint,
@@ -264,7 +265,7 @@ export function buildMigCsvRows(
     }
   }
 
-  walk(message.rootElement, 0, message.rootElement.xmlTag, [message.rootElement.name])
+  walk(message.rootElement, 0, rootPath(message.rootElement), [message.rootElement.name])
   return { columns, rows }
 }
 

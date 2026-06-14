@@ -85,37 +85,37 @@ describe("validateMessageInstance", () => {
     // No GrpHdr/Amt (both required), two Sts (max 1).
     const d = run(node("Doc", { children: [leaf("Sts", "ACTV"), leaf("Sts", "INAC")] }))
     expect(d).toContainEqual(
-      expect.objectContaining({ path: "Doc/GrpHdr", message: expect.stringMatching(/minimum is 1/i) }),
+      expect.objectContaining({ path: "/Doc/GrpHdr", message: expect.stringMatching(/minimum is 1/i) }),
     )
     expect(d).toContainEqual(
-      expect.objectContaining({ path: "Doc/Amt", message: expect.stringMatching(/minimum is 1/i) }),
+      expect.objectContaining({ path: "/Doc/Amt", message: expect.stringMatching(/minimum is 1/i) }),
     )
     expect(d).toContainEqual(
-      expect.objectContaining({ path: "Doc/Sts", message: expect.stringMatching(/maximum is 1/i) }),
+      expect.objectContaining({ path: "/Doc/Sts", message: expect.stringMatching(/maximum is 1/i) }),
     )
   })
 
   it("flags an element the MIG excludes but the instance still contains", () => {
-    const d = run(valid(), { "Doc/Sts": { maxOccurs: 0 } })
-    expect(d[0]).toMatchObject({ path: "Doc/Sts", message: expect.stringMatching(/excluded.*appears 1/i) })
+    const d = run(valid(), { "/Doc/Sts": { maxOccurs: 0 } })
+    expect(d[0]).toMatchObject({ path: "/Doc/Sts", message: expect.stringMatching(/excluded.*appears 1/i) })
   })
 
   it("flags a value outside the code set, length, and inclusive range", () => {
     expect(run(node("Doc", { children: [leaf("GrpHdr", "x"), leaf("Amt", "500"), leaf("Sts", "ZZZ")] })))
-      .toContainEqual(expect.objectContaining({ path: "Doc/Sts", message: expect.stringMatching(/not an allowed value/i) }))
+      .toContainEqual(expect.objectContaining({ path: "/Doc/Sts", message: expect.stringMatching(/not an allowed value/i) }))
     expect(run(node("Doc", { children: [leaf("GrpHdr", "x".repeat(40)), leaf("Amt", "500")] })))
-      .toContainEqual(expect.objectContaining({ path: "Doc/GrpHdr", message: expect.stringMatching(/max length 35/i) }))
+      .toContainEqual(expect.objectContaining({ path: "/Doc/GrpHdr", message: expect.stringMatching(/max length 35/i) }))
     expect(run(node("Doc", { children: [leaf("GrpHdr", "x"), leaf("Amt", "2000")] })))
-      .toContainEqual(expect.objectContaining({ path: "Doc/Amt", message: expect.stringMatching(/above the maximum 1000/i) }))
+      .toContainEqual(expect.objectContaining({ path: "/Doc/Amt", message: expect.stringMatching(/above the maximum 1000/i) }))
   })
 
   it("validates against the effective (tightened) MIG facets", () => {
     // MIG tightens GrpHdr maxLength to 5; a length-8 value violates it.
     const d = run(node("Doc", { children: [leaf("GrpHdr", "12345678"), leaf("Amt", "500")] }), {
-      "Doc/GrpHdr": { maxLength: 5 },
+      "/Doc/GrpHdr": { maxLength: 5 },
     })
     expect(d).toContainEqual(
-      expect.objectContaining({ path: "Doc/GrpHdr", message: expect.stringMatching(/max length 5/i) }),
+      expect.objectContaining({ path: "/Doc/GrpHdr", message: expect.stringMatching(/max length 5/i) }),
     )
   })
 
@@ -136,7 +136,7 @@ describe("validateMessageInstance", () => {
       ],
     })
     expect(run(doc)).toContainEqual(
-      expect.objectContaining({ path: "Doc/Pty", message: expect.stringMatching(/only one branch.*OrgId, PrvtId/i) }),
+      expect.objectContaining({ path: "/Doc/Pty", message: expect.stringMatching(/only one branch.*OrgId, PrvtId/i) }),
     )
   })
 
@@ -145,20 +145,20 @@ describe("validateMessageInstance", () => {
       children: [leaf("GrpHdr", "x"), leaf("Amt", "500"), node("Pty")],
     })
     expect(run(doc)).toContainEqual(
-      expect.objectContaining({ path: "Doc/Pty", message: expect.stringMatching(/requires one of: OrgId, PrvtId/i) }),
+      expect.objectContaining({ path: "/Doc/Pty", message: expect.stringMatching(/requires one of: OrgId, PrvtId/i) }),
     )
   })
 
   it("flags an element not declared in the message", () => {
     const d = run(node("Doc", { children: [leaf("GrpHdr", "x"), leaf("Amt", "500"), leaf("Bogus", "y")] }))
     expect(d).toContainEqual(
-      expect.objectContaining({ path: "Doc", message: expect.stringMatching(/unexpected element <Bogus>/i) }),
+      expect.objectContaining({ path: "/Doc", message: expect.stringMatching(/unexpected element <Bogus>/i) }),
     )
   })
 
   describe("MIG-added constraint expressions", () => {
     const constraint = (expression: string, definition = "Amount must exceed 600"): ElementOverrides => ({
-      Doc: { additionalConstraints: [{ name: "AmtRule", definition, expression }] },
+      "/Doc": { additionalConstraints: [{ name: "AmtRule", definition, expression }] },
     })
 
     it("flags a constraint whose expression is false, pointing at the constraint node", () => {
@@ -166,7 +166,7 @@ describe("validateMessageInstance", () => {
       const d = run(valid(), constraint("Amt > 600"))
       expect(d).toContainEqual({
         kind: "constraint",
-        path: "Doc/AmtRule",
+        path: "/Doc/AmtRule",
         elementName: "AmtRule",
         message: "Amount must exceed 600",
       })
@@ -182,27 +182,27 @@ describe("validateMessageInstance", () => {
     })
 
     it("skips a constraint with no expression, a syntax error, or an unsupported function", () => {
-      expect(run(valid(), { Doc: { additionalConstraints: [{ name: "X", definition: "" }] } })).toEqual([])
+      expect(run(valid(), { "/Doc": { additionalConstraints: [{ name: "X", definition: "" }] } })).toEqual([])
       expect(run(valid(), constraint("Amt >"))).toEqual([]) // syntax error → skipped
       expect(run(valid(), constraint("contains(Sts, 'A')"))).toEqual([]) // indeterminate → skipped
     })
 
     it("evaluates an expression overlaid on a standard (ISO) constraint", () => {
       // StdRule has no expression by default; the overlay adds one that fails.
-      const d = run(valid(), { Doc: { constraintOverrides: { StdRule: { expression: "Amt > 600" } } } })
+      const d = run(valid(), { "/Doc": { constraintOverrides: { StdRule: { expression: "Amt > 600" } } } })
       expect(d).toContainEqual({
         kind: "constraint",
-        path: "Doc/StdRule",
+        path: "/Doc/StdRule",
         elementName: "StdRule",
         message: "Std doc rule",
       })
       // A passing overlay produces no diagnostic.
-      expect(run(valid(), { Doc: { constraintOverrides: { StdRule: { expression: "Amt > 100" } } } })).toEqual([])
+      expect(run(valid(), { "/Doc": { constraintOverrides: { StdRule: { expression: "Amt > 100" } } } })).toEqual([])
     })
 
     it("skips a disabled rule even when its expression would fail", () => {
       const overrides = {
-        Doc: {
+        "/Doc": {
           additionalConstraints: [{ name: "R", definition: "", expression: "Amt > 600" }],
           constraintOverrides: { R: { disabled: true } },
         },

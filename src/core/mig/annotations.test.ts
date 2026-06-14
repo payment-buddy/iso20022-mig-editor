@@ -35,22 +35,22 @@ describe("removeAnnotation", () => {
     const base = mig({
       elementAnnotationNames: ["Usage", "Mandate"],
       elementOverrides: {
-        "Doc/Amt": { annotations: { Usage: "debit", Mandate: "x" } },
-        "Doc/Dt": { annotations: { Usage: "credit" }, minOccurs: 0 },
+        "/Doc/Amt": { annotations: { Usage: "debit", Mandate: "x" } },
+        "/Doc/Dt": { annotations: { Usage: "credit" }, minOccurs: 0 },
       },
     })
     const next = removeAnnotation(base, "Usage")
 
     expect(next.elementAnnotationNames).toEqual(["Mandate"])
-    expect(next.elementOverrides["Doc/Amt"].annotations).toEqual({ Mandate: "x" })
+    expect(next.elementOverrides["/Doc/Amt"].annotations).toEqual({ Mandate: "x" })
     // Dt's annotations become empty → pruned, but other fields remain.
-    expect(next.elementOverrides["Doc/Dt"]).toEqual({ minOccurs: 0 })
+    expect(next.elementOverrides["/Doc/Dt"]).toEqual({ minOccurs: 0 })
   })
 
   it("prunes an override that becomes empty", () => {
     const base = mig({
       elementAnnotationNames: ["Usage"],
-      elementOverrides: { "Doc/Amt": { annotations: { Usage: "x" } } },
+      elementOverrides: { "/Doc/Amt": { annotations: { Usage: "x" } } },
     })
     const next = removeAnnotation(base, "Usage")
     expect(next.elementOverrides).toEqual({})
@@ -60,10 +60,10 @@ describe("removeAnnotation", () => {
   it("does not mutate the input", () => {
     const base = mig({
       elementAnnotationNames: ["Usage"],
-      elementOverrides: { "Doc/Amt": { annotations: { Usage: "x" } } },
+      elementOverrides: { "/Doc/Amt": { annotations: { Usage: "x" } } },
     })
     removeAnnotation(base, "Usage")
-    expect(base.elementOverrides["Doc/Amt"].annotations).toEqual({ Usage: "x" })
+    expect(base.elementOverrides["/Doc/Amt"].annotations).toEqual({ Usage: "x" })
   })
 })
 
@@ -87,7 +87,7 @@ describe("removeConstraintAnnotation", () => {
     const base = mig({
       constraintAnnotationNames: ["Severity", "Owner"],
       elementOverrides: {
-        "Doc/Amt": {
+        "/Doc/Amt": {
           additionalConstraints: [
             { name: "Rule A", definition: "", annotations: { Severity: "high", Owner: "x" } },
             { name: "Rule B", definition: "", annotations: { Severity: "low" } },
@@ -98,7 +98,7 @@ describe("removeConstraintAnnotation", () => {
     const next = removeConstraintAnnotation(base, "Severity")
 
     expect(next.constraintAnnotationNames).toEqual(["Owner"])
-    const list = next.elementOverrides["Doc/Amt"].additionalConstraints
+    const list = next.elementOverrides["/Doc/Amt"].additionalConstraints
     expect(list?.[0].annotations).toEqual({ Owner: "x" })
     // Rule B's annotations become empty → pruned, the constraint stays.
     expect(list?.[1]).toEqual({ name: "Rule B", definition: "" })
@@ -108,14 +108,14 @@ describe("removeConstraintAnnotation", () => {
     const base = mig({
       constraintAnnotationNames: ["Severity"],
       elementOverrides: {
-        "Doc/Amt": {
+        "/Doc/Amt": {
           additionalConstraints: [{ name: "Rule A", definition: "", annotations: { Severity: "x" } }],
         },
       },
     })
     const next = removeConstraintAnnotation(base, "Severity")
     expect("constraintAnnotationNames" in next).toBe(false)
-    expect(next.elementOverrides["Doc/Amt"].additionalConstraints).toEqual([
+    expect(next.elementOverrides["/Doc/Amt"].additionalConstraints).toEqual([
       { name: "Rule A", definition: "" },
     ])
   })
@@ -124,13 +124,13 @@ describe("removeConstraintAnnotation", () => {
     const base = mig({
       constraintAnnotationNames: ["Severity"],
       elementOverrides: {
-        "Doc/Amt": {
+        "/Doc/Amt": {
           additionalConstraints: [{ name: "Rule A", definition: "", annotations: { Severity: "x" } }],
         },
       },
     })
     removeConstraintAnnotation(base, "Severity")
-    expect(base.elementOverrides["Doc/Amt"].additionalConstraints?.[0].annotations).toEqual({
+    expect(base.elementOverrides["/Doc/Amt"].additionalConstraints?.[0].annotations).toEqual({
       Severity: "x",
     })
   })

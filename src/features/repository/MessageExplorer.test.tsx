@@ -107,7 +107,7 @@ describe("MessageExplorer", () => {
     await userEvent.click(screen.getByRole("treeitem", { name: "CdtTrfTxInf" }))
 
     const panel = screen.getByRole("region", { name: /element details/i })
-    expect(within(panel).getByText("DocumentTag/CdtTrfTxInfTag")).toBeInTheDocument()
+    expect(within(panel).getByText("/DocumentTag/CdtTrfTxInfTag")).toBeInTheDocument()
   })
 
   it("toggles tree labels between element names and XML tags", async () => {
@@ -126,7 +126,7 @@ describe("MessageExplorer", () => {
     const panel = screen.getByRole("region", { name: /constraint details/i })
     expect(within(panel).getByText("Must not be empty.")).toBeInTheDocument()
     // The XML path points at the element that owns the rule, not the rule path.
-    expect(within(panel).getByText("DocumentTag")).toBeInTheDocument()
+    expect(within(panel).getByText("/DocumentTag")).toBeInTheDocument()
   })
 
   it("navigates the tree with arrow keys, expanding and selecting (selection follows focus)", async () => {
@@ -141,7 +141,7 @@ describe("MessageExplorer", () => {
     // ↓ moves to the first child and the detail panel follows.
     await user.keyboard("{ArrowDown}")
     expect(screen.getByRole("treeitem", { name: "GrpHdr" })).toHaveFocus()
-    expect(within(panel).getByText("DocumentTag/GrpHdrTag")).toBeInTheDocument()
+    expect(within(panel).getByText("/DocumentTag/GrpHdrTag")).toBeInTheDocument()
 
     // ↓ to CdtTrfTxInf, → expands it, → again steps into its first child.
     await user.keyboard("{ArrowDown}")
