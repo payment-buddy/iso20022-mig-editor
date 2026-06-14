@@ -576,7 +576,7 @@ export function ElementTree({
           Hide excluded ({excludedCount})
         </label>
         {hasOverrides && (
-          <div className="flex w-fit items-center gap-3 text-xs text-muted-foreground sm:ml-auto">
+          <div className="flex w-fit items-center gap-3 text-xs text-muted-foreground sm:ml-auto sm:border-l sm:border-border sm:pl-4">
             <span className="flex items-center gap-1">
               <span className="size-2 rounded-full bg-primary" aria-hidden />
               Overridden here
