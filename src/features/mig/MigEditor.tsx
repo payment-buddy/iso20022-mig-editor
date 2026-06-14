@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import {
+  ArrowUUpLeftIcon,
+  ArrowUUpRightIcon,
   ClockCounterClockwiseIcon,
   DownloadSimpleIcon,
   ShieldCheckIcon,
@@ -266,6 +268,28 @@ export function MigEditor({
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Undo"
+              title="Undo (Ctrl/⌘ Z)"
+              disabled={past.length === 0}
+              onClick={undo}
+            >
+              <ArrowUUpLeftIcon aria-hidden />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Redo"
+              title="Redo (Ctrl/⌘ ⇧ Z)"
+              disabled={future.length === 0}
+              onClick={redo}
+            >
+              <ArrowUUpRightIcon aria-hidden />
+            </Button>
+          </div>
           <Button variant="outline" size="sm" asChild>
             <a href={hashFor({ name: "history", key: migKey })}>
               <ClockCounterClockwiseIcon data-icon="inline-start" aria-hidden />

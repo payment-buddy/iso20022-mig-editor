@@ -295,6 +295,41 @@ describe("MigEditor", () => {
     )
   })
 
+  it("undoes and redoes via the header buttons (disabled when empty)", async () => {
+    const user = userEvent.setup()
+    await saveMig(MIG)
+    render(<MigEditor migKey={getMigKey(MIG)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+
+    const undoBtn = () => screen.getByRole("button", { name: "Undo" })
+    const redoBtn = () => screen.getByRole("button", { name: "Redo" })
+    // Nothing to undo or redo yet.
+    expect(undoBtn()).toBeDisabled()
+    expect(redoBtn()).toBeDisabled()
+
+    // Commit an edit → undo becomes available.
+    await user.click(screen.getByRole("button", { name: "Edit Description" }))
+    await user.type(
+      screen.getByRole("textbox", { name: "Description" }),
+      "Via buttons"
+    )
+    await user.click(screen.getByRole("treeitem", { name: "Document" }))
+    expect(undoBtn()).toBeEnabled()
+
+    // Undo button reverts and enables redo.
+    await user.click(undoBtn())
+    await waitFor(() =>
+      expect(screen.queryByText("Via buttons")).not.toBeInTheDocument()
+    )
+    expect(undoBtn()).toBeDisabled()
+    expect(redoBtn()).toBeEnabled()
+
+    // Redo button restores.
+    await user.click(redoBtn())
+    await screen.findByText("Via buttons")
+    expect(redoBtn()).toBeDisabled()
+  })
+
   it("leaves Ctrl-Z to the browser while a text field is focused", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)
