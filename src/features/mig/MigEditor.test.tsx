@@ -626,6 +626,33 @@ describe("MigEditor", () => {
     expect(item.querySelector(".text-primary")?.textContent).toBe("GrpHdr")
   })
 
+  it("filters to changes (and their ancestors) via the 'Only changes' toggle", async () => {
+    const user = userEvent.setup()
+    const guide: MessageImplementationGuide = {
+      ...MIG,
+      elementOverrides: {
+        "DocumentTag/GrpHdrTag": {
+          maxLength: 20,
+          additionalConstraints: [{ name: "MyRule", definition: "" }],
+        },
+      },
+    }
+    await saveMig(guide)
+    render(<MigEditor migKey={getMigKey(guide)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    // An unchanged sibling is visible before filtering.
+    expect(screen.getByRole("treeitem", { name: /Rate/ })).toBeInTheDocument()
+
+    await user.click(screen.getByRole("checkbox", { name: /only changes/i }))
+
+    // The changed element, its added constraint, and the ancestor remain…
+    expect(screen.getByRole("treeitem", { name: "Document" })).toBeInTheDocument()
+    expect(screen.getByRole("treeitem", { name: /GrpHdr/ })).toBeInTheDocument()
+    expect(screen.getByRole("treeitem", { name: /constraint myrule/i })).toBeInTheDocument()
+    // …while unchanged siblings are filtered out.
+    expect(screen.queryByRole("treeitem", { name: /Rate/ })).not.toBeInTheDocument()
+  })
+
   it("colours a node overridden only by a parent MIG in the inherited colour", async () => {
     const parent: MessageImplementationGuide = {
       name: "Base",

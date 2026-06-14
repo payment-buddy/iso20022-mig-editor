@@ -184,25 +184,34 @@ function matchesQuery(text: string, q: string): boolean {
 }
 
 /**
- * Compute the kept/expanded paths for a query. An element is kept when it (or
- * any descendant element/constraint) matches; ancestors of a match are kept and
- * auto-expanded so the match is visible. `q` must already be lower-cased.
+ * Compute the kept/expanded paths for the active filters: a text query and/or
+ * "changes only" (elements/constraints the MIG overrides — own or inherited). A
+ * node "matches" when it satisfies every active filter; an element is kept when
+ * it or any descendant matches, and ancestors of a match are kept and
+ * auto-expanded so the match — and the structure leading to it — stays visible.
+ * `q` must already be lower-cased (empty = no text filter).
  */
 function buildFilter(
   root: MessageElement,
   q: string,
-  overrides: ElementOverrides | undefined,
+  changesOnly: boolean,
+  ownOverrides: ElementOverrides | undefined,
+  effectiveOverrides: ElementOverrides | undefined,
 ): TreeFilter {
   const keep = new Set<string>()
   const expand = new Set<string>()
   const visit = (el: MessageElement, path: string): boolean => {
-    const selfMatch = matchesQuery(el.name, q) || matchesQuery(el.xmlTag, q)
+    const textMatch = q === "" || matchesQuery(el.name, q) || matchesQuery(el.xmlTag, q)
+    const changeMatch =
+      !changesOnly || elementOverrideOrigin(path, ownOverrides, effectiveOverrides) !== null
+    const selfMatch = textMatch && changeMatch
     let descMatch = false
     for (const child of el.elements) {
       if (visit(child, `${path}/${child.xmlTag}`)) descMatch = true
     }
-    for (const { constraint } of constraintsAt(path, el, overrides, overrides)) {
-      if (matchesQuery(constraint.name, q)) {
+    for (const { constraint, colour } of constraintsAt(path, el, ownOverrides, effectiveOverrides)) {
+      const conMatch = (q === "" || matchesQuery(constraint.name, q)) && (!changesOnly || colour !== null)
+      if (conMatch) {
         keep.add(`${path}/${constraint.name}`)
         descMatch = true
       }
@@ -357,17 +366,22 @@ export function ElementTree({
   const [focusedPath, setFocusedPath] = useState<string | null>(null)
   const [filter, setFilter] = useState("")
   const [hideExcluded, setHideExcluded] = useState(false)
+  const [changesOnly, setChangesOnly] = useState(false)
 
   const nodeRefs = useRef(new Map<string, HTMLElement>())
   const filterRef = useRef<HTMLInputElement>(null)
 
   const excludedCount = useMemo(() => countExcluded(root, effective), [root, effective])
-  // Whether to show the override-colour legend (only in a MIG with overrides).
+  // Whether to show the override-colour legend + "changes only" toggle (only in a
+  // MIG with overrides).
   const hasOverrides = !!effective && Object.keys(effective).length > 0
+  // Ignore a lingering "changes only" toggle once there's nothing to filter on.
+  const changesActive = changesOnly && hasOverrides
   const q = filter.trim().toLowerCase()
   const treeFilter = useMemo(
-    () => (q ? buildFilter(root, q, effective) : null),
-    [root, q, effective],
+    () =>
+      q || changesActive ? buildFilter(root, q, changesActive, elementOverrides, effective) : null,
+    [root, q, changesActive, elementOverrides, effective],
   )
   const flatNodes = useMemo(
     () => flattenTree(root, expanded, treeFilter, hideExcluded, elementOverrides, effective),
@@ -576,6 +590,16 @@ export function ElementTree({
           Hide excluded ({excludedCount})
         </label>
         {hasOverrides && (
+          <label className="flex w-fit items-center gap-1.5 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={changesOnly}
+              onChange={(e) => setChangesOnly(e.target.checked)}
+            />
+            Only changes
+          </label>
+        )}
+        {hasOverrides && (
           <div className="flex w-fit items-center gap-3 text-xs text-muted-foreground sm:ml-auto sm:border-l sm:border-border sm:pl-4">
             <span className="flex items-center gap-1">
               <span className="size-2 rounded-full bg-primary" aria-hidden />
@@ -592,7 +616,9 @@ export function ElementTree({
       <div className="grid gap-4 md:grid-cols-[3fr_4fr]">
         {noMatches ? (
           <p className="px-1 py-8 text-center text-sm text-muted-foreground">
-            No elements or constraints match “{filter.trim()}”.
+            {q
+              ? `No elements or constraints match “${filter.trim()}”.`
+              : "No changed elements or constraints."}
           </p>
         ) : (
           <ul
