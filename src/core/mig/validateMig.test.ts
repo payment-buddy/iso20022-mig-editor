@@ -157,17 +157,15 @@ describe("validateMigConsistency", () => {
     )
   })
 
-  it("still flags values outside an inherited restriction on an external set", () => {
-    // A MIG ancestor narrowed the list; re-widening past it is meaningful.
+  it("never flags an external code set, even against an inherited list", () => {
+    // The set is open regardless of any iso/inherited code list, so adding a
+    // value beyond an inherited overlay is still not an inconsistency.
     const inherited: ElementOverrides = {
       "/Doc/Purp": { allowedValues: ["CASH"] },
     }
     expect(
-      run({ "/Doc/Purp": { allowedValues: ["CASH", "SUPP"] } }, inherited)[0]
-    ).toMatchObject({
-      field: "Allowed values",
-      message: expect.stringMatching(/outside the standard set: SUPP/i),
-    })
+      run({ "/Doc/Purp": { allowedValues: ["CASH", "SUPP"] } }, inherited)
+    ).toEqual([])
   })
 
   it("loosens against the inherited baseline, not just ISO", () => {

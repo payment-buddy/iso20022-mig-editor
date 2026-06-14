@@ -187,17 +187,19 @@ function elementDiagnostics(
   if (ownHas("pattern"))
     add("Pattern", patternWarning(own.pattern ?? null), "consistency")
 
-  // Allowed values must stay a subset of the inherited/standard code set.
-  if (ownHas("allowedValues") && own.allowedValues != null) {
-    const inheritedList = inh("allowedValues")
-    const base = inheritedList
+  // Allowed values must stay a subset of the inherited/standard code set —
+  // except for external code sets, whose listed codes (the ISO snapshot, or an
+  // inherited overlay of it) are never exhaustive, so values beyond them are
+  // legitimate. Skip the subset check entirely for those.
+  if (
+    ownHas("allowedValues") &&
+    own.allowedValues != null &&
+    !isExternalCodeSet(element)
+  ) {
+    const base = inh("allowedValues")
       ? (inherited!.allowedValues ?? [])
       : element.codes.map((c) => c.codeName)
-    // External code sets are open: the ISO snapshot isn't exhaustive, so listing
-    // values beyond it isn't an inconsistency. A MIG ancestor that *restricted*
-    // the list is still meaningful, so only waive the check against the ISO set.
-    const openExternal = !inheritedList && isExternalCodeSet(element)
-    if (base.length > 0 && !openExternal) {
+    if (base.length > 0) {
       const set = new Set(base)
       const extra = own.allowedValues.filter((v) => !set.has(v))
       if (extra.length > 0)
