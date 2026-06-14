@@ -449,18 +449,7 @@ export function MigHome() {
                       {mig.messageIdentifier}
                     </td>
                     <td className="border-b border-border px-2 py-1.5 whitespace-nowrap text-muted-foreground">
-                      {lastModified[key] !== undefined ? (
-                        <a
-                          href={hashFor({ name: "history", key })}
-                          tabIndex={-1}
-                          title="Revision history"
-                          className="text-primary underline-offset-4 hover:underline"
-                        >
-                          {formatLocalDateTime(lastModified[key])}
-                        </a>
-                      ) : (
-                        "—"
-                      )}
+                      {lastModified[key] !== undefined ? formatLocalDateTime(lastModified[key]) : "—"}
                     </td>
                   </tr>
                 )

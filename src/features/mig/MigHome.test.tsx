@@ -7,6 +7,7 @@ import userEvent from "@testing-library/user-event"
 import { deleteDatabase } from "@/core/storage/db"
 import { loadAllMigs, loadMig, saveMig } from "@/core/storage/migStore"
 import { saveRevisions } from "@/core/storage/revisionStore"
+import { formatLocalDateTime } from "@/lib/datetime"
 import type { MessageImplementationGuide } from "@/core/types/types"
 import { MigHome } from "./MigHome"
 import { takePendingMerge } from "./pendingMerge"
@@ -88,15 +89,14 @@ describe("MigHome", () => {
     expect(link).toHaveAttribute("href", "#mig/EPC%3A1.0")
   })
 
-  it("links a MIG's Last modified time to its history, dashing those with none", async () => {
+  it("shows a Last modified time per MIG, dashing those with none", async () => {
     await saveRevisions("EPC:1.0", [
       { id: "r0", at: 1_700_000_000_000, mig: migObj("EPC", "1.0"), summary: "Initial" },
     ])
     await renderWith(migObj("EPC", "1.0"), migObj("CSM", "2.0"))
 
-    const link = screen.getByTitle("Revision history")
-    expect(link).toHaveAttribute("href", "#history/EPC%3A1.0")
-    // The MIG with no revisions shows a dash instead.
+    // The timestamp is plain text (not a link); MIGs without history show a dash.
+    expect(screen.getByText(formatLocalDateTime(1_700_000_000_000))).toBeInTheDocument()
     expect(screen.getByText("—")).toBeInTheDocument()
   })
 
