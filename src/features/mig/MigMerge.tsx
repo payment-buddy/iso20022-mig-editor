@@ -267,7 +267,9 @@ function ElementCard({
     <section aria-label={`${diff.name} — ${KIND_BADGE[diff.kind]}`} className="border border-t-0">
       <header className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <span className="text-sm font-medium">{diff.name}</span>
-        <code className="truncate text-[0.625rem] text-muted-foreground">{diff.path}</code>
+        <code title={diff.path} className="truncate text-[0.625rem] text-muted-foreground">
+          {diff.path}
+        </code>
         <span className="ml-auto shrink-0 text-xs font-medium text-muted-foreground">
           {disabled ? "not in current version" : KIND_BADGE[diff.kind]}
         </span>
