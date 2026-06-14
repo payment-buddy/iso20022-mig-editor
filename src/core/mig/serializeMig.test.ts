@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { parse } from "yaml"
+import { parse, parseAllDocuments } from "yaml"
 import type {
   ElementOverrides,
   MessageElement,
@@ -244,10 +244,18 @@ describe("buildPathOrder", () => {
 })
 
 describe("serializeMigs", () => {
-  it("emits a YAML array of canonical MIGs", () => {
+  it("emits a multi-document YAML stream of canonical MIGs", () => {
     const out = serializeMigs([mig({ name: "A" }), mig({ name: "B" })])
-    const parsed = parse(out)
+    expect(out).toContain("\n---\n")
+    const parsed = parseAllDocuments(out).map((doc) => doc.toJS())
     expect(parsed).toHaveLength(2)
     expect(parsed[0]).toMatchObject({ formatVersion: 1, name: "A" })
+    expect(parsed[1]).toMatchObject({ formatVersion: 1, name: "B" })
+  })
+
+  it("makes each document byte-identical to the standalone export", () => {
+    const a = mig({ name: "A" })
+    const out = serializeMigs([a, mig({ name: "B" })])
+    expect(out.startsWith(serializeMig(a))).toBe(true)
   })
 })

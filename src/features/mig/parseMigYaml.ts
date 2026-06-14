@@ -1,4 +1,4 @@
-import { parse } from "yaml"
+import { parseAllDocuments } from "yaml"
 import { validateMigImport } from "@/core/mig/validateMigImport"
 import type { MessageImplementationGuide } from "@/core/types/types"
 
@@ -8,21 +8,35 @@ export type ParseResult = {
 }
 
 /**
- * Parse MIG YAML text into validated MIGs. Accepts a single MIG or an array
- * (bulk/backup form). Each entry is checked with `validateMigImport` (Zod):
- * valid MIGs are returned, malformed ones are skipped and reported as readable
- * error lines for the caller to surface. An empty file yields no MIGs, no errors.
+ * Parse MIG YAML text into validated MIGs. Accepts a single MIG, a
+ * multi-document stream (`---`-separated, the bulk/backup form), or the legacy
+ * single-document YAML array. Each entry is checked with `validateMigImport`
+ * (Zod): valid MIGs are returned, malformed ones are skipped and reported as
+ * readable error lines for the caller to surface. An empty file yields no MIGs,
+ * no errors.
  */
 export function parseMigYaml(text: string): ParseResult {
-  let parsed: unknown
+  let docs
   try {
-    parsed = parse(text)
+    docs = parseAllDocuments(text)
   } catch {
     return { migs: [], errors: ["The file isn't valid YAML."] }
   }
-  if (parsed == null) return { migs: [], errors: [] }
+  if (docs.some((doc) => doc.errors.length > 0)) {
+    return { migs: [], errors: ["The file isn't valid YAML."] }
+  }
 
-  const items = Array.isArray(parsed) ? parsed : [parsed]
+  // One MIG per document; a legacy backup is a single document holding a YAML
+  // array of MIGs, so flatten arrays. Empty documents are ignored.
+  const items: unknown[] = []
+  for (const doc of docs) {
+    const value = doc.toJS()
+    if (value == null) continue
+    if (Array.isArray(value)) items.push(...value)
+    else items.push(value)
+  }
+  if (items.length === 0) return { migs: [], errors: [] }
+
   const migs: MessageImplementationGuide[] = []
   const errors: string[] = []
   items.forEach((item, i) => {

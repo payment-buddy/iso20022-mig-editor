@@ -18,7 +18,15 @@ describe("parseMigYaml", () => {
     expect(migs[0]).toMatchObject({ name: "EPC", version: "1.0" })
   })
 
-  it("parses an array of MIGs", () => {
+  it("parses a multi-document stream of MIGs", () => {
+    const { migs, errors } = parseMigYaml(
+      yaml("A", "1") + "---\n" + yaml("B", "1")
+    )
+    expect(errors).toEqual([])
+    expect(migs.map((m) => m.name)).toEqual(["A", "B"])
+  })
+
+  it("still parses the legacy single-document array of MIGs", () => {
     const { migs } = parseMigYaml(item("A", "1") + item("B", "1"))
     expect(migs.map((m) => m.name)).toEqual(["A", "B"])
   })

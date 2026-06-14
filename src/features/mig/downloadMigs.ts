@@ -9,10 +9,11 @@ import type {
 
 /**
  * Build the YAML download for one or many MIGs (canonical form):
- * a single MIG → its own object named `<name>-<version>.yaml`; many → an array
- * in `MessageImplementationGuides.yaml`. Returns `null` for an empty selection.
- * `pathOrder` (from `buildPathOrder`) schema-orders a single MIG's overrides;
- * the array form falls back to alphabetical path order.
+ * a single MIG → its own object named `<name>-<version>.yaml`; many → a
+ * `---`-separated multi-document stream in `MessageImplementationGuides.yaml`.
+ * Returns `null` for an empty selection. `pathOrder` (from `buildPathOrder`)
+ * schema-orders a single MIG's overrides; the bulk form falls back to
+ * alphabetical path order.
  */
 export function buildMigDownload(
   migs: MessageImplementationGuide[],

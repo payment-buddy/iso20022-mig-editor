@@ -9,7 +9,9 @@
 
 ## 1. File conventions
 
-- **One MIG per file.** The array form is reserved for backup / bulk export, never the committed artifact.
+- **One MIG per file.** Bulk export bundles several MIGs as a `---`-separated multi-document YAML stream (each
+  document byte-identical to its standalone file); this form is reserved for backup / bulk export, never the
+  committed artifact. Import also still accepts the legacy single-document YAML array.
 - **`formatVersion`** at the top — migration anchor for future format changes.
 - **No volatile metadata** in the file (no `createdAt` / `updatedAt` / `author`). Git history and the in-app edit
   history cover that; timestamps would churn `git blame`.

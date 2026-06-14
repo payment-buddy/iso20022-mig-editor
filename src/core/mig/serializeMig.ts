@@ -229,12 +229,18 @@ export function serializeMig(
   )
 }
 
-/** Serialize many MIGs as a single YAML array (backup/bulk form). */
+/**
+ * Serialize many MIGs as a multi-document YAML stream (backup/bulk form): each
+ * MIG is its own document, separated by `---`. This keeps every document
+ * byte-identical to its standalone `serializeMig` output, so bulk and single
+ * exports diff cleanly against each other.
+ */
 export function serializeMigs(migs: MessageImplementationGuide[]): string {
-  return withTrailingNewline(
-    stringify(
-      migs.map((m) => canonicalMig(m, undefined)),
-      STRINGIFY_OPTIONS
+  return migs
+    .map((m) =>
+      withTrailingNewline(
+        stringify(canonicalMig(m, undefined), STRINGIFY_OPTIONS)
+      )
     )
-  )
+    .join("---\n")
 }
