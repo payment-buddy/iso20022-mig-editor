@@ -288,7 +288,7 @@ function ComparePanel({
 const KIND_BADGE: Record<PathDiff["kind"], { label: string; className: string }> = {
   added: { label: "", className: "text-emerald-700 dark:text-emerald-400" },
   removed: { label: "", className: "text-destructive" },
-  changed: { label: "changed", className: "text-amber-700 dark:text-amber-500" },
+  changed: { label: "changed", className: "text-blue-700 dark:text-blue-400" },
 }
 
 function ElementCard({
@@ -427,7 +427,8 @@ function Cell({
   kind: FieldChange["kind"]
 }) {
   // Tint the side that carries the change: removed → left (A), added → right (B),
-  // changed → both. A `null` value means this MIG doesn't set the field.
+  // changed in both → blue on both sides. A `null` value means this MIG doesn't
+  // set the field.
   const tinted =
     kind === "changed" || (kind === "removed" && side === "a") || (kind === "added" && side === "b")
   const tint =
@@ -437,7 +438,7 @@ function Cell({
         ? "bg-emerald-500/10"
         : kind === "removed"
           ? "bg-destructive/10"
-          : "bg-amber-500/10"
+          : "bg-blue-500/10"
 
   return (
     <div className={`px-3 py-1.5 text-sm ${tint}`}>
