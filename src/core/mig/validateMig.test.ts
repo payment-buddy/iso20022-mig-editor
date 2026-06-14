@@ -88,14 +88,11 @@ describe("validateMigConsistency", () => {
   })
 
   it("tags consistency issues distinctly from loosening", () => {
-    // Empty range, invalid pattern and out-of-set values are consistency issues…
+    // Empty range and invalid pattern are consistency issues…
     expect(
       run({ "/Doc/GrpHdr": { minLength: 10, maxLength: 5 } })[0].kind
     ).toBe("consistency")
     expect(run({ "/Doc/GrpHdr": { pattern: "[" } })[0].kind).toBe("consistency")
-    expect(
-      run({ "/Doc/Sts": { allowedValues: ["ACTV", "NEW"] } })[0].kind
-    ).toBe("consistency")
     // …while a relaxed facet or a disabled rule is loosening.
     expect(run({ "/Doc/GrpHdr": { maxLength: 50 } })[0].kind).toBe("loosening")
     expect(
@@ -135,34 +132,34 @@ describe("validateMigConsistency", () => {
     expect(run({ "/Doc/Opt": { maxOccurs: 0 } })).toEqual([])
   })
 
-  it("flags an invalid pattern and a non-subset allowed-values list", () => {
+  it("flags an invalid pattern", () => {
     expect(run({ "/Doc/GrpHdr": { pattern: "[" } })[0]).toMatchObject({
       field: "Pattern",
       message: expect.stringMatching(/invalid pattern/i),
     })
-    expect(
-      run({ "/Doc/Sts": { allowedValues: ["ACTV", "NEW"] } })[0]
-    ).toMatchObject({
-      field: "Allowed values",
-      message: expect.stringMatching(/outside the standard set: NEW/i),
-    })
-    expect(run({ "/Doc/Sts": { allowedValues: ["ACTV"] } })).toEqual([]) // subset is fine
   })
 
-  it("allows values beyond the ISO snapshot for an external code set", () => {
-    // ExternalPurpose1Code is open-ended — adding a code outside the snapshot
-    // isn't an inconsistency.
+  it("never flags an allowed-values list against the ISO code set", () => {
+    // An override's listed codes are never checked for membership in the
+    // standard set — values beyond the ISO snapshot are legitimate.
+    expect(run({ "/Doc/Sts": { allowedValues: ["ACTV", "NEW"] } })).toEqual([])
+    expect(run({ "/Doc/Sts": { allowedValues: ["ACTV"] } })).toEqual([])
+    // …including open-ended external code sets.
     expect(run({ "/Doc/Purp": { allowedValues: ["CASH", "SUPP"] } })).toEqual(
       []
     )
   })
 
-  it("never flags an external code set, even against an inherited list", () => {
-    // The set is open regardless of any iso/inherited code list, so adding a
-    // value beyond an inherited overlay is still not an inconsistency.
+  it("never flags an allowed-values list against an inherited list", () => {
+    // Adding a value beyond an inherited overlay is not an inconsistency,
+    // regardless of whether the element is an external code set.
     const inherited: ElementOverrides = {
+      "/Doc/Sts": { allowedValues: ["ACTV"] },
       "/Doc/Purp": { allowedValues: ["CASH"] },
     }
+    expect(
+      run({ "/Doc/Sts": { allowedValues: ["ACTV", "NEW"] } }, inherited)
+    ).toEqual([])
     expect(
       run({ "/Doc/Purp": { allowedValues: ["CASH", "SUPP"] } }, inherited)
     ).toEqual([])

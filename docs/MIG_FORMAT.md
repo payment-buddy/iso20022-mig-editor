@@ -149,8 +149,15 @@ overrides the entire inherited chain *and* any standard-imposed bound for that f
 Chain example (EPC → CSM → bank): EPC sets `RmtInf/Ustrd.maxLength: 70`. The bank writing `maxLength: null` removes the
 length constraint entirely (no max length) — distinct from omitting the key (inherit `70`).
 
-For `allowedValues` specifically, `null` removes the MIG-imposed value list (no value restriction). For a CodeSet
-element the valid universe remains the ISO code set, so in practice this equals "any standard code."
+For `allowedValues`, the tri-state governs how an **instance value** is validated against the set: a **set** list
+restricts the value to that list; **`null`** cancels allowed-values validation (any value accepted); **absent** validates
+against the inherited list, or the ISO code set when no ancestor set one. (External code sets are open-ended — the ISO
+snapshot isn't exhaustive — so the absent-case check against that snapshot is waived; a value beyond it isn't flagged
+unless a MIG explicitly restricts the list.)
+
+The **items of an `allowedValues` list are themselves never validated against the inherited/ISO code set** — a MIG may
+legitimately list values outside the standard set, for any element (external code set or not). Each item is checked only
+for `pattern` / `length` well-formedness, and the consistency validator does not flag a non-subset list.
 
 ### Implementation consequences
 
@@ -194,7 +201,7 @@ elementOverrides:
     maxOccurs: 0                 # excluded
   # Credit Transfer Transaction › Charge Bearer
   /Document/FIToFICstmrCdtTrf/CdtTrfTxInf/ChrgBr:
-    allowedValues: null          # remove EPC's value-list restriction (any ISO code)
+    allowedValues: null          # remove EPC's value-list restriction (no value check)
   # Credit Transfer Transaction › Remittance Information › Unstructured
   /Document/FIToFICstmrCdtTrf/CdtTrfTxInf/RmtInf/Ustrd:
     maxLength: 140

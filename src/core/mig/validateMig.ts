@@ -4,7 +4,6 @@
 // Advisory only (all warnings). Pure.
 
 import { looseningWarning, patternWarning } from "./fieldValidation"
-import { isExternalCodeSet } from "@/core/erepository/codeSet"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import type {
   ElementOverride,
@@ -17,8 +16,8 @@ import type {
 /**
  * `loosening` — the MIG relaxes the message (a dropped restriction); often
  * intentional, so it's advisory and kept out of the editor's "issues" banner.
- * `consistency` — an internal contradiction (empty range, invalid pattern,
- * values outside the standard set); a genuine problem.
+ * `consistency` — an internal contradiction (empty range, invalid pattern);
+ * a genuine problem.
  */
 export type DiagnosticKind = "loosening" | "consistency"
 
@@ -187,29 +186,10 @@ function elementDiagnostics(
   if (ownHas("pattern"))
     add("Pattern", patternWarning(own.pattern ?? null), "consistency")
 
-  // Allowed values must stay a subset of the inherited/standard code set —
-  // except for external code sets, whose listed codes (the ISO snapshot, or an
-  // inherited overlay of it) are never exhaustive, so values beyond them are
-  // legitimate. Skip the subset check entirely for those.
-  if (
-    ownHas("allowedValues") &&
-    own.allowedValues != null &&
-    !isExternalCodeSet(element)
-  ) {
-    const base = inh("allowedValues")
-      ? (inherited!.allowedValues ?? [])
-      : element.codes.map((c) => c.codeName)
-    if (base.length > 0) {
-      const set = new Set(base)
-      const extra = own.allowedValues.filter((v) => !set.has(v))
-      if (extra.length > 0)
-        add(
-          "Allowed values",
-          `Adds values outside the standard set: ${extra.join(", ")}`,
-          "consistency"
-        )
-    }
-  }
+  // Allowed values are intentionally NOT validated against the inherited/ISO
+  // code set: an override's listed codes are never checked for membership in the
+  // standard set (external or not). Such lists are only validated against simple
+  // facets (pattern/length) elsewhere, at edit time. See `fieldValidation.ts`.
 
   // Disabling a rule drops a restriction — looser, unless an ancestor already
   // disabled it (then this MIG adds nothing).
