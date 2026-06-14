@@ -122,6 +122,35 @@ const child = (node: XmlNode, name: string): XmlNode | undefined =>
 const quote = (value: string): string => `'${value.replace(/'/g, "''")}'`
 
 /**
+ * True iff `expr` is exactly a single `not( … )` whose opening paren matches the
+ * final character — so peeling it is sound double-negation removal, not a mistaken
+ * grab of `not(A) or B`. String literals (single-quoted, `''`-escaped) are skipped
+ * so a `)` inside a value doesn't throw off the paren balance.
+ */
+function isSingleNot(expr: string): boolean {
+  if (!expr.startsWith("not(")) return false
+  let depth = 0
+  let inStr = false
+  for (let i = 3; i < expr.length; i++) {
+    const c = expr[i]
+    if (inStr) {
+      if (c === "'") {
+        if (expr[i + 1] === "'") i++ // escaped quote
+        else inStr = false
+      }
+      continue
+    }
+    if (c === "'") inStr = true
+    else if (c === "(") depth++
+    else if (c === ")" && --depth === 0) return i === expr.length - 1
+  }
+  return false
+}
+
+/** Negate `expr`, collapsing `not(not(x))` to `x`. */
+const negate = (expr: string): string => (isSingleNot(expr) ? expr.slice(4, -1) : `not(${expr})`)
+
+/**
  * Convert an operand path (`/Status/Code`, `/Amt/@Ccy`) to a relative DSL path.
  * Returns `null` for forms the DSL can't represent (index predicates, empty).
  * Final shape is still re-validated by re-parsing the whole expression.
@@ -171,11 +200,11 @@ function uniformityPath(l: string, r: string): string | null {
 type Resolver = (codeSetName: string) => string[] | undefined
 
 /** Expand a code-set membership to `(p = 'a' or p = 'b' …)`, negated for NOT-in. */
-function expandList(left: string, codes: string[], negate: boolean): Rendered {
+function expandList(left: string, codes: string[], negated: boolean): Rendered {
   const terms = codes.map((c) => `${left} = ${quote(c)}`).join(" or ")
   // not(...) self-groups; a single term needs no parens; a multi-term OR is
   // pre-grouped so callers treat it as atomic (compound:false).
-  if (negate) return { expr: `not(${terms})`, compound: false }
+  if (negated) return { expr: `not(${terms})`, compound: false }
   return { expr: codes.length === 1 ? terms : `(${terms})`, compound: false }
 }
 
@@ -200,7 +229,7 @@ function renderRule(rule: XmlNode, resolve?: Resolver): Rendered | null {
       // (see `dslPath`).
       const left = dslPath(leftRaw, true)
       if (!left) return null
-      return { expr: type === "Presence" ? left : `not(${left})`, compound: false }
+      return { expr: type === "Presence" ? left : negate(left), compound: false }
     }
     case "EqualToValue":
     case "DifferentFromValue": {
@@ -287,9 +316,10 @@ export function ruleDefinitionToDsl(xml: string, opts: TranspileOptions = {}): T
     if (!onCondition) return fail("ComplexRule without onCondition")
     const cond = renderBlock(onCondition, resolve)
     if (!cond) return fail("onCondition uses an unsupported rule/connector")
-    // cond ⟹ must  ≡  not(cond) or must. not(...) self-groups its argument; the
-    // must side is wrapped only when compound, for readability.
-    dsl = `not(${cond.expr}) or ${must.compound ? `(${must.expr})` : must.expr}`
+    // cond ⟹ must  ≡  not(cond) or must. `negate` self-groups and collapses a
+    // doubly-negated condition (an Absence onCondition), so `not(not(x))` → `x`.
+    // The must side is wrapped only when compound, for readability.
+    dsl = `${negate(cond.expr)} or ${must.compound ? `(${must.expr})` : must.expr}`
   }
 
   // Final guard: never emit DSL that doesn't parse cleanly.

@@ -90,6 +90,38 @@ describe("ruleDefinitionToDsl — supported shapes", () => {
     expect(dsl(xml)).toBe("not(ChequeMaturityDate)")
   })
 
+  it("collapses not(not(x)) from an Absence onCondition", () => {
+    const xml = complex(
+      `<mustBe><connector>AND</connector>${presence("/Tx/Amt")}</mustBe>`,
+      `<onCondition><connector>AND</connector>` +
+        `<BooleanRule xsi:type="Absence"><leftOperand>/Grp/Amt</leftOperand></BooleanRule>` +
+        `</onCondition>`,
+    )
+    expect(dsl(xml)).toBe("Grp/Amt or Tx/Amt")
+  })
+
+  it("does not over-collapse: a compound negated condition keeps its outer not()", () => {
+    const xml = complex(
+      `<mustBe><connector>AND</connector>${presence("/M")}</mustBe>`,
+      `<onCondition><connector>AND</connector>` +
+        `<BooleanRule xsi:type="Absence"><leftOperand>/A</leftOperand></BooleanRule>` +
+        `<BooleanRule xsi:type="Absence"><leftOperand>/B</leftOperand></BooleanRule>` +
+        `</onCondition>`,
+    )
+    expect(dsl(xml)).toBe("not(not(A) and not(B)) or M")
+  })
+
+  it("peels not() correctly when the inner has a ')' inside a string literal", () => {
+    const xml = complex(
+      `<mustBe><connector>AND</connector>${presence("/M")}</mustBe>`,
+      `<onCondition><connector>AND</connector>` +
+        `<BooleanRule xsi:type="NotWithInList"><leftOperand>/Cd</leftOperand><rightOperand>L</rightOperand></BooleanRule>` +
+        `</onCondition>`,
+    )
+    const r = ruleDefinitionToDsl(xml, { resolveCodeList: () => ["a)b"] })
+    expect(r.ok && r.dsl).toBe("Cd = 'a)b' or M")
+  })
+
   it("DifferentFromValue becomes !=", () => {
     const xml = simple(
       `<mustBe><connector>AND</connector>` +
