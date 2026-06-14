@@ -7,6 +7,7 @@
 // reads like the message. Pure — feeds the Markdown renderer (and could feed CSV).
 
 import { getMigKey } from "./migKey"
+import { resolveConstraints } from "./constraints"
 import type { EffectiveMig } from "./effectiveMig"
 import type {
   Constraint,
@@ -32,6 +33,10 @@ export type ConstraintInfo = {
   definition: string
   expression?: string
   annotations: { name: string; value: string }[]
+  /** `added` = a MIG-added rule; `standard` = an overlaid ISO/inherited rule. */
+  source: "added" | "standard"
+  /** The rule is switched off by the MIG. */
+  disabled?: boolean
 }
 
 export type ElementDiff = {
@@ -109,7 +114,11 @@ const subsetOf = (a: string[], b: string[]) => {
 const summarize = (xs: string[]) =>
   xs.length === 0 ? "none" : xs.length > 8 ? `${xs.slice(0, 8).join(", ")}, … (${xs.length})` : xs.join(", ")
 
-function toConstraintInfo(c: Constraint): ConstraintInfo {
+function toConstraintInfo(
+  c: Constraint,
+  source: "added" | "standard",
+  disabled: boolean,
+): ConstraintInfo {
   return {
     name: c.name,
     definition: c.definition,
@@ -117,7 +126,21 @@ function toConstraintInfo(c: Constraint): ConstraintInfo {
     annotations: Object.entries(c.annotations ?? {})
       .filter(([, v]) => v != null && v !== "")
       .map(([name, v]) => ({ name, value: v as string })),
+    source,
+    ...(disabled ? { disabled: true } : {}),
   }
+}
+
+/**
+ * The constraints to report for an overridden element: every MIG-added rule, plus
+ * any standard/inherited rule the MIG overlays (changed expression/definition, or
+ * disabled). Each carries its effective fields and disabled state.
+ */
+function constraintInfos(el: MessageElement, ov: ElementOverride): ConstraintInfo[] {
+  const overlaid = new Set(Object.keys(ov.constraintOverrides ?? {}))
+  return resolveConstraints(el, ov)
+    .filter((r) => r.source === "additional" || overlaid.has(r.constraint.name))
+    .map((r) => toConstraintInfo(r.constraint, r.source === "additional" ? "added" : "standard", r.disabled))
 }
 
 /** Field-level changes for one overridden element vs its ISO baseline. */
@@ -186,7 +209,7 @@ function diffElement(el: MessageElement, path: string, ov: ElementOverride): Ele
     excluded: false,
     orphan: false,
     changes,
-    constraints: (ov.additionalConstraints ?? []).map(toConstraintInfo),
+    constraints: constraintInfos(el, ov),
   }
 }
 
@@ -209,7 +232,10 @@ function diffOrphan(path: string, ov: ElementOverride): ElementDiff {
     excluded: "maxOccurs" in ov && ov.maxOccurs === 0,
     orphan: true,
     changes,
-    constraints: (ov.additionalConstraints ?? []).map(toConstraintInfo),
+    // No ISO element to overlay onto for an orphan path — only added rules.
+    constraints: (ov.additionalConstraints ?? []).map((c) =>
+      toConstraintInfo(c, "added", ov.constraintOverrides?.[c.name]?.disabled ?? false),
+    ),
   }
 }
 

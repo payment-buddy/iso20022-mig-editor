@@ -47,7 +47,15 @@ const MESSAGE: MessageDefinition = {
   rootElement: el("Doc", {
     elements: [
       el("Amt", { baseType: "Amount" }),
-      el("GrpHdr", { baseType: "Text", maxLength: 35, definition: "Group header" }),
+      el("GrpHdr", {
+        baseType: "Text",
+        maxLength: 35,
+        definition: "Group header",
+        constraints: [
+          { name: "StdRule", definition: "std" },
+          { name: "OffRule", definition: "off" },
+        ],
+      }),
       el("Sts", { baseType: "CodeSet", codes: codes("ACTV", "INAC", "PEND") }),
     ],
   }),
@@ -116,8 +124,24 @@ describe("diffMig field classification", () => {
         definition: "must hold",
         expression: "x > 0",
         annotations: [{ name: "Severity", value: "high" }],
+        source: "added",
       },
     ])
+  })
+
+  it("carries an overlaid standard constraint and marks a disabled one", () => {
+    const d = only({
+      "Doc/GrpHdr": {
+        constraintOverrides: { StdRule: { expression: "x > 0" }, OffRule: { disabled: true } },
+      },
+    })
+    // GrpHdr's ISO constraints (defined in the test message below) are StdRule + OffRule.
+    expect(d.constraints).toContainEqual(
+      expect.objectContaining({ name: "StdRule", expression: "x > 0", source: "standard" }),
+    )
+    expect(d.constraints).toContainEqual(
+      expect.objectContaining({ name: "OffRule", source: "standard", disabled: true }),
+    )
   })
 })
 

@@ -124,6 +124,23 @@ describe("buildMigCsvRows — element rows", () => {
     expect(r.slice(0, 8)).toEqual(["", "", "", "", "", "", "", ""])
   })
 
+  it("applies a MIG overlay onto an ISO constraint (effective expression, MIG source)", () => {
+    const m = mig("M", {
+      "Doc/GrpHdr/MsgId": { constraintOverrides: { Format: { expression: "matches(., '[A-Z]+')" } } },
+    })
+    const { columns, rows } = buildMigCsvRows(m, [], MESSAGE)
+    const r = rows.find((x) => x[col(columns, "Rule")] === "Format")!
+    expect(r[col(columns, "Source")]).toBe("M") // overlaid → sourced to the MIG, not ISO
+    expect(r[col(columns, "Expression")]).toBe("matches(., '[A-Z]+')")
+  })
+
+  it("marks a disabled ISO constraint in the Rule column", () => {
+    const m = mig("M", { "Doc/GrpHdr/MsgId": { constraintOverrides: { Format: { disabled: true } } } })
+    const { columns, rows } = buildMigCsvRows(m, [], MESSAGE)
+    const r = rows.find((x) => x[col(columns, "Rule")] === "Format (disabled)")!
+    expect(r[col(columns, "Source")]).toBe("M")
+  })
+
   it("renders element annotations as a single multiline cell before Source", () => {
     const { columns, rows } = buildMigCsvRows(
       mig("M", { "Doc/Amt": { annotations: { Purpose: "Payment", Note: "x" } } }),

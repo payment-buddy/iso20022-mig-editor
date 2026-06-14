@@ -29,7 +29,11 @@ function renderElement(e: ElementDiff): string[] {
   if (e.constraints.length > 0) {
     lines.push("", "**Constraints**", "")
     for (const con of e.constraints) {
-      lines.push(con.definition ? `- **${con.name}** — ${cell(con.definition)}` : `- **${con.name}**`)
+      // Tag overlays on standard/inherited rules and disabled rules.
+      const tag = con.disabled ? " _(disabled)_" : con.source === "standard" ? " _(overridden)_" : ""
+      lines.push(
+        con.definition ? `- **${con.name}**${tag} — ${cell(con.definition)}` : `- **${con.name}**${tag}`,
+      )
       if (con.expression) lines.push(`  - Expression: \`${cell(con.expression)}\``)
       for (const a of con.annotations) lines.push(`  - ${cell(a.name)}: ${cell(a.value)}`)
     }

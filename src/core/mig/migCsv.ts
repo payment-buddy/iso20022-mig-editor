@@ -1,7 +1,9 @@
 // Export a MIG as CSV (FUNCTIONALITY §10 — "Markdown + CSV", CSV opens in Excel).
 // The whole ISO message tree is flattened in document order: one row per element
-// (structure + ISO type), then one row per rule (ISO constraints, the MIG's
-// multiplicity/type overrides, and added constraints) with its provenance. Pure.
+// (structure + ISO type), then one row per rule (ISO constraints — with any MIG
+// expression/definition overlay or disable applied — the MIG's multiplicity/type
+// overrides, and added constraints) with its provenance. A disabled rule is
+// marked "(disabled)" in the Rule column. Pure.
 //
 // Layout — common columns describe the element and are blank on rule rows
 // (`Path` is an indented multiline name tree, root skipped; `Annotations` holds
@@ -15,6 +17,7 @@
 // Computed from the effective parent chain (ancestor→leaf, leaf = this MIG).
 
 import { effectiveMig } from "./effectiveMig"
+import { resolveConstraints } from "./constraints"
 import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
 import type {
   Constraint,
@@ -185,9 +188,14 @@ export function buildMigCsvRows(
     annotations: string[],
   ): string[] => [...blankCommon, source, rule, definition, expression, ...annotations]
 
+  // A disabled rule is marked in the Rule column.
+  const ruleName = (name: string, disabled: boolean) => (disabled ? `${name} (disabled)` : name)
+
   const walk = (el: MessageElement, level: number, path: string, names: string[]) => {
     const ov = overrides[path]
     const iso = isoFacets(el)
+    // Effective constraints (standard + added) with any overlay/disable applied.
+    const resolved = resolveConstraints(el, ov)
 
     rows.push([
       String(level),
@@ -202,9 +210,15 @@ export function buildMigCsvRows(
       ...blankAnnotations,
     ])
 
-    // ISO-defined constraints.
-    for (const c of el.constraints) {
-      rows.push(ruleRow("ISO", c.name, c.definition, c.expression ?? "", annotationCells(c)))
+    // ISO-defined constraints, with any MIG overlay (expression/definition/
+    // disable) applied. Source stays "ISO" until this MIG (or an ancestor)
+    // overlays the rule.
+    for (const { constraint: c, disabled } of resolved.filter((r) => r.source === "standard")) {
+      const overlaid = ov?.constraintOverrides?.[c.name] !== undefined
+      const source = overlaid
+        ? sourceFor(path, (o) => o.constraintOverrides?.[c.name] !== undefined)
+        : "ISO"
+      rows.push(ruleRow(source, ruleName(c.name, disabled), c.definition, c.expression ?? "", annotationCells(c)))
     }
 
     if (ov) {
@@ -238,10 +252,10 @@ export function buildMigCsvRows(
         )
       }
 
-      // Added constraints.
-      for (const c of ov.additionalConstraints ?? []) {
+      // Added constraints (effective: this MIG's plus inherited), overlay applied.
+      for (const { constraint: c, disabled } of resolved.filter((r) => r.source === "additional")) {
         const source = sourceFor(path, (o) => (o.additionalConstraints ?? []).some((x) => x.name === c.name))
-        rows.push(ruleRow(source, c.name, c.definition, c.expression ?? "", annotationCells(c)))
+        rows.push(ruleRow(source, ruleName(c.name, disabled), c.definition, c.expression ?? "", annotationCells(c)))
       }
     }
 

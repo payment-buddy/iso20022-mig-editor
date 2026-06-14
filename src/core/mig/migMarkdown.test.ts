@@ -47,6 +47,7 @@ describe("migMarkdown", () => {
                 definition: "must | hold",
                 expression: "x > 0",
                 annotations: [{ name: "Severity", value: "high" }],
+                source: "added",
               },
             ],
           },
@@ -60,6 +61,28 @@ describe("migMarkdown", () => {
     expect(md).toContain("- **R** — must \\| hold") // pipe escaped in the cell
     expect(md).toContain("  - Expression: `x > 0`")
     expect(md).toContain("  - Severity: high")
+  })
+
+  it("tags an overlaid standard constraint and a disabled one", () => {
+    const md = migMarkdown(
+      diff({
+        elements: [
+          {
+            path: "Doc/GrpHdr",
+            name: "GrpHdr",
+            excluded: false,
+            orphan: false,
+            changes: [],
+            constraints: [
+              { name: "Refined", definition: "d", expression: "x > 0", annotations: [], source: "standard" },
+              { name: "Off", definition: "d", annotations: [], source: "standard", disabled: true },
+            ],
+          },
+        ],
+      }),
+    )
+    expect(md).toContain("- **Refined** _(overridden)_ — d")
+    expect(md).toContain("- **Off** _(disabled)_ — d")
   })
 
   it("renders an excluded element without a table", () => {
