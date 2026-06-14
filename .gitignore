@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Errata generator output (build artifacts)
+tools/errata/out/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
