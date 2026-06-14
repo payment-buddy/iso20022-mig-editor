@@ -90,8 +90,8 @@ export interface ERepository {
 }
 
 // --- Message Implementation Guide (MIG) ---
-// A MIG is a named, versioned overlay on one message definition (ported from the
-// legacy model). Constraint fields are tri-state (FUNCTIONALITY.md §10 /
+// A MIG is a named, versioned overlay on one message definition. Constraint
+// fields are tri-state (FUNCTIONALITY.md §10 /
 // MIG_FORMAT.md): absent = inherit, `null` = remove the constraint, value = set.
 // These are plain interfaces today; a Zod validator is added at the import
 // boundary in Phase 3 (see IMPLEMENTATION_PLAN.md §0/§1.1). Additional

@@ -171,7 +171,7 @@ export function MigElementDetail({
     ? (override?.allowedValues ?? [])
     : baseAllowedValues
   const commitAllowed = (values: string[]) => {
-    // Empty or back-to-inherited means "no override" (matches the legacy model).
+    // Empty or back-to-inherited means "no override"
     if (values.length === 0 || arraysEqual(values, baseAllowedValues)) onClear("allowedValues")
     else onSet("allowedValues", values)
   }

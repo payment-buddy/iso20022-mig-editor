@@ -6,7 +6,7 @@ export type ParseResult = { migs: MessageImplementationGuide[]; errors: string[]
 
 /**
  * Parse MIG YAML text into validated MIGs. Accepts a single MIG or an array
- * (legacy/backup form). Each entry is checked with `validateMigImport` (Zod):
+ * (bulk/backup form). Each entry is checked with `validateMigImport` (Zod):
  * valid MIGs are returned, malformed ones are skipped and reported as readable
  * error lines for the caller to surface. An empty file yields no MIGs, no errors.
  */

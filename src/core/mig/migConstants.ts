@@ -1,4 +1,4 @@
-// Canonical serialization order for MIG YAML export (ported from legacy).
+// Canonical serialization order for MIG YAML export.
 // Used by the export normalization in Phase 5; the data model itself lives in
 // src/core/types/types.ts.
 
