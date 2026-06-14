@@ -65,7 +65,7 @@ export function App() {
   }
 
   return (
-    <AppShell route={route}>
+    <AppShell>
       <RouteView
         route={route}
         repo={gate.repo}
