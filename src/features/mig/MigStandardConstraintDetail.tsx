@@ -4,6 +4,7 @@ import type { Constraint, ConstraintOverride, MessageElement } from "@/core/type
 import { validateConstraintExpression } from "@/core/mig/expression"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
+import { ProvenanceDot } from "./ProvenanceDot"
 
 /**
  * Detail panel for a standard (ISO) or inherited constraint (FUNCTIONALITY §5.7).
@@ -222,37 +223,4 @@ function OverrideField({
       {children}
     </div>
   )
-}
-
-/** Blue dot for an own override, violet for an inherited value, nothing for ISO. */
-function ProvenanceDot({
-  overridden,
-  inherited,
-  baseline,
-}: {
-  overridden: boolean
-  inherited: boolean
-  baseline: string
-}) {
-  if (overridden) {
-    const label = `Overridden — inherited: ${baseline}`
-    return (
-      <span
-        title={label}
-        aria-label={label}
-        className="size-1.5 shrink-0 cursor-help rounded-full bg-primary"
-      />
-    )
-  }
-  if (inherited) {
-    const label = `Inherited from a parent MIG: ${baseline}`
-    return (
-      <span
-        title={label}
-        aria-label={label}
-        className="size-1.5 shrink-0 cursor-help rounded-full bg-violet-600 dark:bg-violet-400"
-      />
-    )
-  }
-  return null
 }

@@ -1174,6 +1174,37 @@ describe("MigEditor", () => {
     expect(saved?.elementOverrides["DocumentTag"]).toBeUndefined()
   })
 
+  it("marks element annotation fields with a provenance dot", async () => {
+    const user = userEvent.setup()
+    const parent: MessageImplementationGuide = {
+      name: "Base",
+      version: "1.0",
+      messageIdentifier: "pacs.008.001.10",
+      elementAnnotationNames: ["Owner", "Usage"],
+      elementOverrides: { "DocumentTag/GrpHdrTag": { annotations: { Usage: "credit" } } },
+    }
+    const child: MessageImplementationGuide = {
+      ...MIG,
+      parentMIG: getMigKey(parent),
+      elementAnnotationNames: ["Owner", "Usage"],
+      elementOverrides: { "DocumentTag/GrpHdrTag": { annotations: { Owner: "ops" } } },
+    }
+    await saveMig(parent)
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(child)} repo={REPO} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    await user.click(screen.getByRole("treeitem", { name: "GrpHdr" }))
+    const panel = screen.getByRole("region", { name: /element details/i })
+
+    // Owner is set in this MIG → blue dot.
+    expect(within(panel).getByTitle("Overridden — inherited: —")).toHaveClass("bg-primary")
+    // Usage is inherited from the parent → violet dot, and its value shows.
+    expect(within(panel).getByTitle("Inherited from a parent MIG: credit")).toHaveClass(
+      "bg-violet-600",
+    )
+    expect(within(panel).getByText("credit")).toBeInTheDocument()
+  })
+
   it("declares constraint-annotation names in metadata and edits per-constraint values", async () => {
     const user = userEvent.setup()
     await saveMig(MIG)

@@ -10,6 +10,7 @@ import {
 import { EditableList } from "@/components/ui/editable-list"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
+import { ProvenanceDot } from "./ProvenanceDot"
 
 /** Base types that carry a length facet (FUNCTIONALITY §5.7). */
 const LENGTH_BASE_TYPES = new Set(["Text", "CodeSet", "IdentifierSet", "Binary"])
@@ -412,19 +413,35 @@ export function MigElementDetail({
           <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
             Annotations
           </div>
-          {propertyNames.map((name) => (
-            <div key={name} className="flex items-start gap-2">
-              <div className="w-28 shrink-0 pt-1.5 text-xs font-medium break-words">{name}</div>
-              <div className="min-w-0 flex-1">
-                <InlineEdit
-                  value={customValues[name] ?? ""}
-                  onCommit={(v) => setCustomValue(name, v)}
-                  ariaLabel={`${name} value`}
-                  placeholder="—"
-                />
+          {propertyNames.map((name) => {
+            // Annotations have no ISO baseline: a value is set by this MIG (own)
+            // or inherited from a parent; show the effective value + provenance.
+            const ownVal = override?.annotations?.[name]
+            const inhVal = inherited?.annotations?.[name]
+            const overridden = ownVal != null && ownVal !== ""
+            const inheritedHere = !overridden && inhVal != null && inhVal !== ""
+            const value = (overridden ? ownVal : inheritedHere ? inhVal : "") ?? ""
+            return (
+              <div key={name} className="flex items-start gap-2">
+                <div className="flex w-28 shrink-0 items-center gap-1.5 pt-1.5 text-xs font-medium break-words">
+                  {name}
+                  <ProvenanceDot
+                    overridden={overridden}
+                    inherited={inheritedHere}
+                    baseline={inhVal || "—"}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <InlineEdit
+                    value={value}
+                    onCommit={(v) => setCustomValue(name, v)}
+                    ariaLabel={`${name} value`}
+                    placeholder="—"
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -556,19 +573,7 @@ function OverrideRow({
           <span className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
             {label}
           </span>
-          {overridden ? (
-            <span
-              title={`Overridden — inherited: ${baseline}`}
-              aria-label={`Overridden — inherited: ${baseline}`}
-              className="size-1.5 shrink-0 cursor-help rounded-full bg-primary"
-            />
-          ) : inherited ? (
-            <span
-              title={`Inherited from a parent MIG: ${baseline}`}
-              aria-label={`Inherited from a parent MIG: ${baseline}`}
-              className="size-1.5 shrink-0 cursor-help rounded-full bg-violet-600 dark:bg-violet-400"
-            />
-          ) : null}
+          <ProvenanceDot overridden={overridden} inherited={inherited} baseline={baseline} />
         </div>
         {overridden && (
           <button
