@@ -90,7 +90,7 @@ export function kindOf(node: ExprNode): ValueKind {
     case "compare":
       return "boolean"
     case "call":
-      if (node.name === "not" || node.name === "matches") return "boolean"
+      if (node.name === "not" || node.name === "matches" || node.name === "all-equal") return "boolean"
       if (CARDINALITY_FUNCTIONS.has(node.name)) return "boolean"
       if (node.name === "count") return "number"
       return "unknown"

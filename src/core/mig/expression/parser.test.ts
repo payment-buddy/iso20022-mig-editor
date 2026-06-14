@@ -174,6 +174,12 @@ describe("parseExpression — function argument checks", () => {
     expect(err("at-least-one(A, 5)").message).toMatch(/not literals/)
   })
 
+  it("accepts all-equal() of a path; rejects wrong arity or a literal", () => {
+    expect(parseExpression("all-equal(Item/Amount/@Ccy)").ok).toBe(true)
+    expect(err("all-equal(A, B)").message).toMatch(/all-equal\(\) takes exactly one/)
+    expect(err("all-equal('x')").message).toMatch(/all-equal\(\) expects a path/)
+  })
+
   it("treats a presence-cardinality call as boolean (so count() rejects it)", () => {
     expect(err("count(exactly-one(A, B))").message).toMatch(/path expression/)
     expect(parseExpression("not(at-most-one(A, B))").ok).toBe(true)

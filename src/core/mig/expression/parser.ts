@@ -206,7 +206,7 @@ class Parser {
 
 /**
  * Per-function argument checks for the functions with defined semantics
- * (`not`, `matches`, `count`, and the presence-cardinality trio). Any other
+ * (`not`, `matches`, `count`, `all-equal`, and the presence-cardinality trio). Any other
  * function name parses with any arity (the open set requested). Checks reject only
  * clearly-wrong arguments (`kindOf` `unknown` always passes), keeping this
  * advisory and false-positive-free.
@@ -243,14 +243,14 @@ function validateCallArgs(call: Call): void {
     return
   }
 
-  if (call.name === "count") {
+  if (call.name === "count" || call.name === "all-equal") {
     if (call.args.length !== 1) {
-      throw new ExprSyntaxError("count() takes exactly one argument", call.start, call.end)
+      throw new ExprSyntaxError(`${call.name}() takes exactly one argument`, call.start, call.end)
     }
     const arg = call.args[0]
     const k = kindOf(arg)
     if (k === "string" || k === "number" || k === "boolean") {
-      throw new ExprSyntaxError("count() expects a path expression", arg.start, arg.end)
+      throw new ExprSyntaxError(`${call.name}() expects a path expression`, arg.start, arg.end)
     }
     return
   }

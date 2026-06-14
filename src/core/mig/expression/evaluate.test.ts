@@ -101,6 +101,15 @@ describe("evaluateExpression — boolean operators", () => {
     expect(evalOk("exactly-one(Id, SchmeNm)", othr)).toBe(false) // 2
   })
 
+  it("all-equal is true iff all node values match (vacuously for 0 or 1)", () => {
+    const mk = (...ccys: string[]) =>
+      node("Doc", { children: ccys.map((c) => node("Cd", { text: c })) })
+    expect(evalOk("all-equal(Cd)", mk("EUR", "EUR"))).toBe(true)
+    expect(evalOk("all-equal(Cd)", mk("EUR", "USD"))).toBe(false)
+    expect(evalOk("all-equal(Cd)", mk("EUR"))).toBe(true)
+    expect(evalOk("all-equal(Cd)", mk())).toBe(true)
+  })
+
   it("cardinality counts a repeating element once (present, not occurrences)", () => {
     const ctx = node("Doc", {
       children: [node("A"), node("A"), node("B", { text: "x" })],

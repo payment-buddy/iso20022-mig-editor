@@ -176,6 +176,13 @@ function evalCall(name: string, args: ExprNode[], context: EvalNode): Value {
       }
       return { kind: "bool", value: re.test(input) }
     }
+    case "all-equal": {
+      const v = evalNode(args[0], context)
+      if (v.kind !== "nodes") throw new EvalError("all-equal() expects a node-set")
+      const vals = v.nodes.map((n) => n.value)
+      // Vacuously true for 0 or 1 nodes — "all occurrences are equal".
+      return { kind: "bool", value: vals.every((x) => x === vals[0]) }
+    }
     case "at-least-one":
     case "at-most-one":
     case "exactly-one": {
