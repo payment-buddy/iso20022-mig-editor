@@ -92,7 +92,7 @@ export function MigStandardConstraintDetail({
         {constraint.name}
       </div>
       <Field label="XML path">
-        <code className="text-xs">{path}</code>
+        <code className="text-xs">{path.slice(0, path.lastIndexOf("/"))}</code>
       </Field>
 
       <OverrideField

@@ -84,7 +84,7 @@ export function MigConstraintDetail({
         </div>
       </div>
       <Field label="XML path">
-        <code className="text-xs">{path}</code>
+        <code className="text-xs">{path.slice(0, path.lastIndexOf("/"))}</code>
       </Field>
       <div>
         <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
