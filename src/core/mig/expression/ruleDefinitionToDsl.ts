@@ -34,11 +34,11 @@
 //   • WithInList/NotWithInList — expanded to `(p = 'a' or p = 'b' …)` when a
 //     `resolveCodeList` is supplied; skipped (fail closed) without one, since the
 //     path-only DSL can't name a code-set.
-//   • Index predicates — the DSL path grammar has no predicate syntax. `[1]` (a
-//     specific occurrence) is always skipped. `[*]` (any occurrence) is dropped
-//     only in an existence context (Presence/Absence), where it is provably
-//     equivalent; in a comparison its universal intent ≠ the DSL's existential
-//     general-comparison semantics, so it is skipped (see `dslPath`).
+//   • Index predicates — the DSL path grammar has no predicate syntax. In an
+//     existence context (Presence/Absence) the provably-equivalent markers are
+//     dropped: `[*]` (any occurrence) and a trailing leaf `[1]` (`Item[1]` exists
+//     ⟺ `Item` exists). Everywhere else — a specific occurrence in a comparison,
+//     a non-leaf `[1]`, or any higher index `[2]` — is skipped (see `dslPath`).
 //   • Non-XML expressions (some are free text) and any unrecognised structure.
 // As a final guard the emitted DSL is re-parsed with `parseExpression`; if it
 // doesn't parse cleanly we skip rather than hand back broken output.
@@ -123,18 +123,20 @@ const quote = (value: string): string => `'${value.replace(/'/g, "''")}'`
  * Returns `null` for forms the DSL can't represent (index predicates, empty).
  * Final shape is still re-validated by re-parsing the whole expression.
  *
- * `stripStar` drops the `[*]` "any-occurrence" marker. That is only sound in an
- * existence context (Presence/Absence), where `¬∃ = ∀¬` makes the DSL's
- * existential path semantics equivalent to `[*]`'s universal intent. In a
- * comparison it is NOT sound (`Item[*]/Ccy = 'EUR'` means *every* item, but the
- * existential `Item/Ccy = 'EUR'` means *some* item), so there `[*]` is left to
- * fail the `[` check below and skip the rule.
+ * `existence` enables two occurrence-marker drops that are sound *only* in an
+ * existence context (Presence/Absence), where `¬∃ = ∀¬`:
+ *   • `[*]` (any occurrence) — `not(Item[*]/X)` ≡ `not(Item/X)`.
+ *   • a trailing leaf `[1]` — `Item[1]` exists ⟺ `Item` exists.
+ * Neither holds in a comparison (`Item[*]/Ccy = 'EUR'` means *every* item, but
+ * existential `Item/Ccy = 'EUR'` means *some*; `Item[1]/Ccy` names one specific
+ * occurrence), so there the marker is left to fail the `[` check and skip the
+ * rule. A non-leaf `[1]` (`A[1]/B`) or a higher index (`[2]`) is never dropped.
  */
-function dslPath(raw: string | undefined, stripStar = false): string | null {
+function dslPath(raw: string | undefined, existence = false): string | null {
   if (raw == null) return null
   let p = raw.trim()
   if (p.startsWith("/")) p = p.slice(1)
-  if (stripStar) p = p.replace(/\[\*\]/g, "")
+  if (existence) p = p.replace(/\[\*\]/g, "").replace(/\[1\]$/, "")
   if (p === "" || p.includes("[")) return null
   return p
 }
@@ -158,7 +160,8 @@ function renderRule(rule: XmlNode, resolve?: Resolver): Rendered | null {
   switch (type) {
     case "Presence":
     case "Absence": {
-      // Existence context — `[*]` is safe to drop (see `dslPath`).
+      // Existence context — `[*]` and a trailing leaf `[1]` are safe to drop
+      // (see `dslPath`).
       const left = dslPath(leftRaw, true)
       if (!left) return null
       return { expr: type === "Presence" ? left : `not(${left})`, compound: false }

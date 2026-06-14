@@ -55,6 +55,34 @@ describe("ruleDefinitionToDsl — supported shapes", () => {
     expect(dsl(xml)).toBe("Availability/Type and not(Removal)")
   })
 
+  it("drops a trailing leaf [1] in a presence/absence path (first occurrence ⟺ present)", () => {
+    const xml = simple(
+      `<mustBe><connector>AND</connector>` +
+        presence("/OriginalPaymentInformationAndStatus[1]") +
+        `<BooleanRule xsi:type="Absence"><leftOperand>/Removal[1]</leftOperand></BooleanRule>` +
+        `</mustBe>`,
+    )
+    expect(dsl(xml)).toBe("OriginalPaymentInformationAndStatus and not(Removal)")
+  })
+
+  it("does NOT drop [1] mid-path, before an attribute, or a higher index", () => {
+    // mid-path: "first A's B" ≠ "any A's B"
+    expect(skip(simple(`<mustBe><connector>AND</connector>${presence("/A[1]/B")}</mustBe>`))).toMatch(/unsupported/)
+    // attribute leaf: "first Amt's @Ccy" ≠ "any Amt's @Ccy"
+    expect(skip(simple(`<mustBe><connector>AND</connector>${presence("/Amt[1]/@Ccy")}</mustBe>`))).toMatch(/unsupported/)
+    // a specific later occurrence is genuinely unrepresentable
+    expect(skip(simple(`<mustBe><connector>AND</connector>${presence("/A[2]")}</mustBe>`))).toMatch(/unsupported/)
+  })
+
+  it("does NOT drop [1] in a comparison operand (specific occurrence, not existence)", () => {
+    const xml = simple(
+      `<mustBe><connector>AND</connector>` +
+        `<BooleanRule xsi:type="EqualToNode"><leftOperand>/Item[1]/@Ccy</leftOperand>` +
+        `<rightOperand>/Total/@Ccy</rightOperand></BooleanRule></mustBe>`,
+    )
+    expect(skip(xml)).toMatch(/unsupported/)
+  })
+
   it("Absence becomes not(path)", () => {
     const xml = simple(
       `<mustBe><connector>AND</connector>` +
@@ -144,7 +172,7 @@ describe("ruleDefinitionToDsl — fail closed", () => {
     expect(skip(xml)).toMatch(/unsupported/)
   })
 
-  it("skips a specific occurrence index [1] everywhere", () => {
+  it("skips a non-leaf [1] (the index isn't on the final step)", () => {
     const xml = simple(
       `<mustBe><connector>AND</connector>${presence("/Item[1]/Amount")}</mustBe>`,
     )
