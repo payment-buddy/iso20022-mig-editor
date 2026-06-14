@@ -5,6 +5,7 @@ import { validateConstraintExpression } from "@/core/mig/expression"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
+import { ProvenanceDot } from "./ProvenanceDot"
 
 /**
  * Editable detail panel for a MIG-specific (additional) constraint
@@ -125,19 +126,26 @@ export function MigConstraintDetail({
           <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
             Annotations
           </div>
-          {annotationNames.map((name) => (
-            <div key={name} className="flex items-start gap-2">
-              <div className="w-28 shrink-0 pt-1.5 text-xs font-medium break-words">{name}</div>
-              <div className="min-w-0 flex-1">
-                <InlineEdit
-                  value={annotationValues[name] ?? ""}
-                  onCommit={(v) => setAnnotation(name, v)}
-                  ariaLabel={`${name} value`}
-                  placeholder="—"
-                />
+          {annotationNames.map((name) => {
+            const value = annotationValues[name] ?? ""
+            return (
+              <div key={name} className="flex items-start gap-2">
+                <div className="flex w-28 shrink-0 items-center gap-1.5 pt-1.5 text-xs font-medium break-words">
+                  {name}
+                  {/* An added constraint is wholly this MIG's, so a set value is own. */}
+                  <ProvenanceDot overridden={value !== ""} baseline="—" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <InlineEdit
+                    value={value}
+                    onCommit={(v) => setAnnotation(name, v)}
+                    ariaLabel={`${name} value`}
+                    placeholder="—"
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

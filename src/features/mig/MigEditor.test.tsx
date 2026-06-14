@@ -1238,6 +1238,8 @@ describe("MigEditor", () => {
     expect(
       (await loadMig(getMigKey(MIG)))?.elementOverrides["DocumentTag"]?.additionalConstraints,
     ).toEqual([{ name: "New constraint", definition: "", annotations: { Severity: "high" } }])
+    // The set value is this MIG's own → a blue provenance dot.
+    expect(within(panel).getByTitle("Overridden — inherited: —")).toHaveClass("bg-primary")
 
     // Removing the name strips the value but leaves the constraint in place.
     await user.click(within(meta).getByRole("button", { name: "Edit Constraint annotations" }))
