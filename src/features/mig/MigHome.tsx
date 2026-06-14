@@ -27,6 +27,7 @@ import {
   type DuplicateResolution,
   migsForResolution,
 } from "@/core/mig/importDuplicates"
+import { normalizeMig } from "@/core/mig/normalizeMig"
 import { loadAllMigs, saveMig } from "@/core/storage/migStore"
 import { loadLatestRevisionTimes } from "@/core/storage/revisionStore"
 import { loadTrashCount, trashMig } from "@/core/storage/trashStore"
@@ -162,7 +163,13 @@ export function MigHome({ repo }: { repo: ERepository }) {
       problems: string[],
       openKey?: string
     ) => {
-      Promise.all(toSave.map(saveMig))
+      // Slim imported MIGs the same way the editor slims edits: drop overrides
+      // equal to their inherited/ISO baseline. Resolve baselines against the
+      // stored MIGs plus this batch, so a parent uploaded alongside its child is
+      // found. `repo` provides the ISO standard.
+      const pool = [...migs, ...toSave]
+      const normalized = toSave.map((m) => normalizeMig(m, repo, pool))
+      Promise.all(normalized.map(saveMig))
         .then(() => {
           setImportErrors(problems)
           // A single clean new import opens straight in its editor; otherwise stay
@@ -172,7 +179,7 @@ export function MigHome({ repo }: { repo: ERepository }) {
         })
         .catch((err) => console.error("Failed to import MIGs:", err))
     },
-    [refresh]
+    [migs, repo, refresh]
   )
 
   const handleFiles = useCallback(

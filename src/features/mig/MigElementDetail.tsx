@@ -92,6 +92,9 @@ export function MigElementDetail({
   const inheritedHere = (field: keyof ElementOverride) =>
     !has(field) && inh(field)
   // Baseline number = the parent's value if it sets one, else the ISO standard.
+  // NOTE: these per-field baseline rules are mirrored by `core/mig/baseline.ts`
+  // (`fieldBaseline`), which `normalizeMig` uses to slim imported MIGs the same
+  // way these `commit*` handlers slim edits. Keep the two in sync.
   const numBaseline = (
     field: keyof ElementOverride,
     iso: number | null
