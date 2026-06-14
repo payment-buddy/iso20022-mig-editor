@@ -122,7 +122,7 @@ export function RepositoryUpload({
               Parsing {fileName ? <span className="font-medium">{fileName}</span> : "file"}…
             </p>
             <p className="text-xs text-muted-foreground">
-              Large repositories can take a few seconds.
+              This can take a few seconds.
             </p>
           </>
         ) : (
