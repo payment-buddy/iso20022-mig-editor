@@ -91,7 +91,7 @@ describe("MigMerge", () => {
       migFile(mig("Incoming", { "/Doc/Amt": { maxLength: 12 } })),
     )
 
-    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    const card = await screen.findByRole("region", { name: /Amt/i })
     expect(within(card).getByText("18")).toBeInTheDocument()
     expect(within(card).getByText("12")).toBeInTheDocument()
   })
@@ -104,7 +104,7 @@ describe("MigMerge", () => {
       migFile(mig("Incoming", { "/Doc/Amt": { maxLength: 12 } })),
     )
 
-    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    const card = await screen.findByRole("region", { name: /Amt/i })
     expect(screen.getByRole("button", { name: /^save$/i })).toBeDisabled() // not dirty yet
 
     await userEvent.click(within(card).getByRole("button", { name: /take incoming max length/i }))
@@ -126,7 +126,7 @@ describe("MigMerge", () => {
     await renderMerge(target)
 
     // Diff shown straight away, without the upload step.
-    const card = await screen.findByRole("region", { name: /Amt — changed/i })
+    const card = await screen.findByRole("region", { name: /Amt/i })
     expect(within(card).getByText("12")).toBeInTheDocument()
   })
 
@@ -152,7 +152,7 @@ describe("MigMerge", () => {
       migFile(mig("Incoming", { "/Doc/Amt": { maxLength: 18 }, "/Doc/Extra": { maxLength: 5 } })),
     )
 
-    const card = await screen.findByRole("region", { name: /Extra — only in incoming/i })
+    const card = await screen.findByRole("region", { name: /Extra/i })
     expect(within(card).getByRole("button")).toBeDisabled()
   })
 

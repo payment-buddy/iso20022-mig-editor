@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeftIcon, ArrowLineLeftIcon, FloppyDiskIcon, GitMergeIcon, UploadSimpleIcon, WarningIcon } from "@phosphor-icons/react"
+import { ArrowLeftIcon, CaretDoubleLeftIcon, FloppyDiskIcon, GitMergeIcon, UploadSimpleIcon, WarningIcon } from "@phosphor-icons/react"
 import { resolveMessage } from "@/core/erepository/resolveMessage"
 import { elementAtPath } from "@/core/erepository/elementPath"
 import { shortCodeForIdentifier } from "@/core/erepository/messageIdentifier"
@@ -14,6 +14,7 @@ import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
 import { parseMigYaml } from "./parseMigYaml"
 import { peekPendingMerge, takePendingMerge } from "./pendingMerge"
+import { useDiffCardNav } from "./useDiffCardNav"
 
 const COLS = "grid grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)]"
 
@@ -129,16 +130,11 @@ export function MigMerge({ targetKey, repo }: { targetKey: string; repo: EReposi
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <GitMergeIcon className="size-3.5" aria-hidden />
-            Merge into · {draft.messageIdentifier}
-          </p>
-          <h1 className="text-base font-semibold tracking-tight">
-            {draft.name} <span className="text-muted-foreground">{draft.version}</span>
-          </h1>
-        </div>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="flex items-center gap-2 text-base font-semibold tracking-tight">
+          <GitMergeIcon className="size-5 text-muted-foreground" aria-hidden />
+          Merge MIGs
+        </h1>
         <div className="flex shrink-0 items-center gap-2">
           {dirty && (
             <span className="text-xs text-amber-700 dark:text-amber-500">Unsaved merge</span>
@@ -221,63 +217,89 @@ function MergePanel({
   canTake: (path: string) => boolean
   onTake: (path: string, field: FieldChange) => void
 }) {
+  const { containerRef, cardRefs, onKeyDown } = useDiffCardNav()
+
   return (
-    <div className="flex flex-col gap-3">
-      <div className="text-xs text-muted-foreground">
-        {diff.paths.length} element{diff.paths.length === 1 ? "" : "s"} differ · hover a row and take
-        the incoming value
+    <div
+      ref={containerRef}
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+      className="flex flex-col gap-3 outline-none"
+    >
+      {/* Column headers: current (target, left) vs incoming (right) sit above the
+          table like a label for each column. */}
+      <div className={`${COLS} -mb-1 text-sm font-semibold tracking-tight`}>
+        <div className="truncate pb-1.5">
+          Current · {diff.a.name}{" "}
+          <span className="text-sm font-medium text-muted-foreground">{diff.a.version}</span>
+        </div>
+        <div />
+        <div className="truncate pb-1.5">
+          Incoming · {incoming.name}{" "}
+          <span className="text-sm font-medium text-muted-foreground">{incoming.version}</span>
+        </div>
       </div>
 
-      {/* Column headers: current (target) vs incoming. */}
-      <div className={`${COLS} overflow-hidden rounded-t-md border border-b-0 text-xs font-medium`}>
-        <div className="truncate px-3 py-1.5">
-          Current · {diff.a.name} <span className="text-muted-foreground">{diff.a.version}</span>
-        </div>
-        <div className="border-x bg-muted/20 text-center text-muted-foreground">take</div>
-        <div className="truncate px-3 py-1.5">
-          Incoming · {incoming.name} <span className="text-muted-foreground">{incoming.version}</span>
-        </div>
+      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span>
+          {diff.paths.length === 1 ? "1 element differs" : `${diff.paths.length} elements differ`}
+        </span>
+        <span className="hidden sm:inline">
+          <kbd className="rounded border px-1">j</kbd>/<kbd className="rounded border px-1">k</kbd>{" "}
+          to step · hover a row to take the incoming value
+        </span>
       </div>
 
-      <div className="-mt-3 flex flex-col">
-        {diff.paths.map((p) => (
-          <ElementCard key={p.path} diff={p} disabled={!canTake(p.path)} onTake={onTake} />
+      <div className="flex flex-col overflow-hidden rounded-md border">
+        {diff.paths.map((p, i) => (
+          <ElementCard
+            key={p.path}
+            diff={p}
+            disabled={!canTake(p.path)}
+            onTake={onTake}
+            ref={(el) => {
+              cardRefs.current[i] = el
+            }}
+          />
         ))}
       </div>
     </div>
   )
 }
 
-const KIND_BADGE: Record<PathDiff["kind"], string> = {
-  added: "only in incoming",
-  removed: "only in current",
-  changed: "changed",
-}
-
 function ElementCard({
   diff,
   disabled,
   onTake,
+  ref,
 }: {
   diff: PathDiff
   disabled: boolean
   onTake: (path: string, field: FieldChange) => void
+  ref: (el: HTMLElement | null) => void
 }) {
   return (
-    <section aria-label={`${diff.name} — ${KIND_BADGE[diff.kind]}`} className="border border-t-0">
+    <section
+      ref={ref}
+      tabIndex={0}
+      aria-label={diff.name}
+      className="border-b outline-none last:border-b-0 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-inset"
+    >
       <header className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <span className="text-sm font-medium">{diff.name}</span>
         <code title={diff.path} className="truncate text-[0.625rem] text-muted-foreground">
           {diff.path}
         </code>
-        <span className="ml-auto shrink-0 text-xs font-medium text-muted-foreground">
-          {disabled ? "not in current version" : KIND_BADGE[diff.kind]}
-        </span>
+        {disabled && (
+          <span className="ml-auto shrink-0 text-xs font-medium text-amber-700 dark:text-amber-500">
+            not in current version
+          </span>
+        )}
       </header>
       <div className="flex flex-col divide-y">
         {diff.fields.map((f) => (
           <div key={f.label} className={`group ${COLS}`}>
-            <Cell label={f.label} value={f.a} />
+            <Cell label={f.label} value={f.a} side="a" kind={f.kind} />
             <div className="flex items-center justify-center border-x bg-muted/10 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
               <button
                 type="button"
@@ -291,10 +313,10 @@ function ElementCard({
                 title={disabled ? "This version has no element at this path" : "Take incoming value"}
                 className="rounded p-0.5 text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-30"
               >
-                <ArrowLineLeftIcon className="size-3.5" aria-hidden />
+                <CaretDoubleLeftIcon className="size-3.5" aria-hidden />
               </button>
             </div>
-            <Cell label={f.label} value={f.b} accent />
+            <Cell label={f.label} value={f.b} side="b" kind={f.kind} />
           </div>
         ))}
       </div>
@@ -302,9 +324,30 @@ function ElementCard({
   )
 }
 
-/** One side's value, tri-state aware. The incoming side is tinted when present. */
-function Cell({ label, value, accent = false }: { label: string; value: string | null; accent?: boolean }) {
-  const tint = accent && value !== null ? "bg-emerald-500/10" : ""
+/** One side's value, tinted by the kind of change it carries (current = a,
+ * incoming = b): removed → red on current, added → green on incoming, changed →
+ * blue on both. A null value means that MIG doesn't set the field. */
+function Cell({
+  label,
+  value,
+  side,
+  kind,
+}: {
+  label: string
+  value: string | null
+  side: "a" | "b"
+  kind: FieldChange["kind"]
+}) {
+  const tinted =
+    kind === "changed" || (kind === "removed" && side === "a") || (kind === "added" && side === "b")
+  const tint =
+    !tinted || value === null
+      ? ""
+      : kind === "added"
+        ? "bg-emerald-500/10"
+        : kind === "removed"
+          ? "bg-destructive/10"
+          : "bg-blue-500/10"
   return (
     <div className={`px-3 py-1.5 text-sm ${tint}`}>
       <span className="text-xs text-muted-foreground">{label}</span>

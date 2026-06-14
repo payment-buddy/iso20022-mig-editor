@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import {
   ArrowCounterClockwiseIcon,
   ArrowLeftIcon,
@@ -18,6 +18,7 @@ import type { ERepository, MessageImplementationGuide } from "@/core/types/types
 import { hashFor, navigate } from "@/app/routes"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { useDiffCardNav } from "./useDiffCardNav"
 
 type Loaded = {
   a: MessageImplementationGuide | null
@@ -219,26 +220,18 @@ function ComparePanel({
   copy: CopyFn
   canCopy: (dir: CopyDir, path: string) => boolean
 }) {
-  const cardRefs = useRef<(HTMLElement | null)[]>([])
-
-  // j/k and ↑/↓ step focus between changed elements.
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    const dir = e.key === "j" || e.key === "ArrowDown" ? 1 : e.key === "k" || e.key === "ArrowUp" ? -1 : 0
-    if (dir === 0) return
-    e.preventDefault()
-    const cards = cardRefs.current.filter(Boolean) as HTMLElement[]
-    const active = document.activeElement
-    const at = cards.findIndex((c) => c === active)
-    const next = cards[Math.max(0, Math.min(cards.length - 1, (at < 0 ? -1 : at) + dir))]
-    next?.focus()
-    next?.scrollIntoView({ block: "nearest" })
-  }
+  const { containerRef, cardRefs, onKeyDown } = useDiffCardNav()
 
   const aLabel = `${diff.a.name} ${diff.a.version}`
   const bLabel = `${diff.b.name} ${diff.b.version}`
 
   return (
-    <div className="flex flex-col gap-3" onKeyDown={onKeyDown}>
+    <div
+      ref={containerRef}
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+      className="flex flex-col gap-3 outline-none"
+    >
 
       {/* Column headers: MIG A (left) vs MIG B (right) sit above the table like a label
           for each column — underlined only, not boxed into the table. */}
