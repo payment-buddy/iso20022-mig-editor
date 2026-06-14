@@ -4,7 +4,7 @@ import type { Diagnostic } from "@/core/mig/validateMig"
 import { cn } from "@/lib/utils"
 
 /**
- * Advisory consistency banner (FUNCTIONALITY §5.7): "<subject> has N issues",
+ * Advisory consistency banner: "<subject> has N issues",
  * expanding to a drawer that lists each loosening/consistency diagnostic
  * (element, field, message, path). Clicking one selects its element via
  * `onSelect`. Renders nothing when the MIG is clean. `subject` defaults to "This

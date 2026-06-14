@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils"
 import { formatLocalDateTime } from "@/lib/datetime"
 
 /**
- * Revision history for one MIG (IMPLEMENTATION_PLAN Phase 2). Lists the MIG's
+ * Revision history for one MIG. Lists the MIG's
  * auto-saved revisions (newest first); selecting one shows the semantic diff of
  * that revision vs the current state (what reverting would undo) via
  * `compareMigs`. Revert restores the revision's document content under the

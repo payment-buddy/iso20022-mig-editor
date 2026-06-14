@@ -1,14 +1,14 @@
-// Canonical MIG → YAML serialization, conforming to MIG_FORMAT.md.
+// Canonical MIG → YAML serialization (deterministic, diff-stable form).
 //
 // The contract (not optional — it's what keeps diffs stable):
-//   - `formatVersion: 1` first, then keys in MIG_PROPERTY_ORDER (§3).
+//   - `formatVersion: 1` first, then keys in MIG_PROPERTY_ORDER.
 //   - `elementOverrides` ordered by message **schema (document) order**, parents
 //     before children, via a `pathOrder` index; unknown paths sort last.
 //   - Each override / constraint orders its keys per the property-order constants.
 //   - `additionalConstraints` sorted by name; each `annotations` map ordered by
 //     its declared-name list then alphabetically.
 //   - Absent keys omitted and empty arrays/maps dropped, but explicit `null` is
-//     **preserved** (tri-state "remove the constraint" — §5).
+//     **preserved** (tri-state "remove the constraint").
 //   - `lineWidth: 0`, multi-line strings as block literals, no anchors/aliases,
 //     2-space indent, trailing newline.
 
@@ -29,7 +29,7 @@ import type {
 } from "@/core/types/types"
 
 // The lib's defaults already render multi-line strings as block literals (`|`)
-// while keeping single-line strings plain/quoted — exactly MIG_FORMAT.md. We only
+// while keeping single-line strings plain/quoted. We only
 // override line-wrapping, anchors, and indent.
 const STRINGIFY_OPTIONS = {
   lineWidth: 0,
@@ -187,7 +187,7 @@ function canonicalMig(
 const withTrailingNewline = (s: string) => s.replace(/\n*$/, "\n")
 
 /**
- * Serialize one MIG to canonical YAML (MIG_FORMAT.md). Pass `pathOrder`
+ * Serialize one MIG to canonical YAML. Pass `pathOrder`
  * (from `buildPathOrder`) to order overrides by message schema order; without
  * it, overrides fall back to alphabetical path order.
  */

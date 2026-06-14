@@ -1,4 +1,4 @@
-// Phase 2: resolve a parsed expression's location paths against the element tree.
+// Resolve a parsed expression's location paths against the element tree.
 //
 // A constraint's paths are relative to the element it's attached to (its
 // "owner"). Each step matches a child by `xmlTag`; an attribute step (`@Ccy`)

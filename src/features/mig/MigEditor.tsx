@@ -44,7 +44,7 @@ import { downloadMigCsv, downloadMigMarkdown, downloadMigs } from "./downloadMig
 type Status = "loading" | "missing" | "ready"
 
 /**
- * MIG Editor (FUNCTIONALITY §5.7). Loads the MIG by key, resolves its message in
+ * MIG Editor. Loads the MIG by key, resolves its message in
  * the e-Repository, and shows the editable metadata block plus the element tree.
  * The inline-edit detail panel lands in a later slice.
  */

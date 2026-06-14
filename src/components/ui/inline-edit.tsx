@@ -8,7 +8,7 @@ const LONG_TEXT_CHARS = 300
 const isLongText = (s: string) => s.length > LONG_TEXT_CHARS || s.split("\n").length > 5
 
 /**
- * Inline-edit text field (FUNCTIONALITY §10 inline-edit model). The value is
+ * Inline-edit text field. The value is
  * plain text with a pencil button that appears on hover/focus; clicking it
  * switches to an input/textarea (an explicit affordance, so the field can't be
  * edited by accident). Commits on blur, cancels on Esc; single-line also commits

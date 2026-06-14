@@ -8,8 +8,8 @@ import { DetailPanel, Field } from "@/features/repository/ElementTree"
 import { ProvenanceDot } from "./ProvenanceDot"
 
 /**
- * Editable detail panel for a MIG-specific (additional) constraint
- * (FUNCTIONALITY §5.7): inline-edit name, definition, expression and custom
+ * Editable detail panel for a MIG-specific (additional) constraint:
+ * inline-edit name, definition, expression and custom
  * properties. The name stays unique within the element — a rename that is blank,
  * unchanged, or already taken by a sibling constraint is rejected (the field
  * reverts). Standard, spec-inherited constraints use the read-only view instead.
@@ -56,7 +56,7 @@ export function MigConstraintDetail({
   const commitExpression = (text: string) => {
     if (text !== expression) onSetExpression(text)
   }
-  // Advisory syntax + path checks (never block editing/export, per §5.7): paths
+  // Advisory syntax + path checks (never block editing/export): paths
   // must resolve to nested elements/attributes of this constraint's element.
   const expressionWarnings = validateConstraintExpression(expression, element)
 

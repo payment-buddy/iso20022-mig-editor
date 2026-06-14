@@ -1,4 +1,4 @@
-// Duplicate handling for MIG import (FUNCTIONALITY §5.2). Incoming MIGs are keyed
+// Duplicate handling for MIG import. Incoming MIGs are keyed
 // by `name:version`; when a key already exists the user resolves how to bring it
 // in — skip the duplicates, upload them as a new (version-bumped) identity, or
 // overwrite the existing ones. Pure; the dialog/list wiring lives in the UI.

@@ -8,7 +8,7 @@ import { hashFor } from "@/app/routes"
 import { cn } from "@/lib/utils"
 import { DetailPanel, ElementTree, Field } from "./ElementTree"
 
-/** Read-only message explorer (FUNCTIONALITY §5.4, bare minimum) with a detail panel. */
+/** Read-only message explorer (bare minimum) with a detail panel. */
 export function MessageExplorer({ repo, code }: { repo: ERepository; code: string }) {
   const resolved = resolveMessage(repo, code)
 

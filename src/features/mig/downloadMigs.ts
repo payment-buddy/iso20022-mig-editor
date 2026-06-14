@@ -4,7 +4,7 @@ import { serializeMig, serializeMigs } from "@/core/mig/serializeMig"
 import type { MessageDefinition, MessageImplementationGuide } from "@/core/types/types"
 
 /**
- * Build the YAML download for one or many MIGs (canonical MIG_FORMAT.md form):
+ * Build the YAML download for one or many MIGs (canonical form):
  * a single MIG → its own object named `<name>-<version>.yaml`; many → an array
  * in `MessageImplementationGuides.yaml`. Returns `null` for an empty selection.
  * `pathOrder` (from `buildPathOrder`) schema-orders a single MIG's overrides;

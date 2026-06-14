@@ -18,7 +18,7 @@ import { peekPendingMerge, takePendingMerge } from "./pendingMerge"
 const COLS = "grid grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)]"
 
 /**
- * Merge an uploaded MIG into an existing one (FUNCTIONALITY §5.2 / §10). Works
+ * Merge an uploaded MIG into an existing one. Works
  * like Compare: it diffs the stored target (current) against the uploaded MIG
  * (incoming) side-by-side and lets you copy individual incoming changes into a
  * draft of the current MIG (resolved fields drop out of the diff). Save persists

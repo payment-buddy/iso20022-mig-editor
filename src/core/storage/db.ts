@@ -1,5 +1,4 @@
 // Raw IndexedDB wrapper (no dependency). One database, four object stores.
-// See IMPLEMENTATION_PLAN.md §0/Phase 0 and FUNCTIONALITY.md §3/§10.
 
 const DB_NAME = "iso20022"
 const DB_VERSION = 2

@@ -7,7 +7,7 @@ import { DetailPanel, Field } from "@/features/repository/ElementTree"
 import { ProvenanceDot } from "./ProvenanceDot"
 
 /**
- * Detail panel for a standard (ISO) or inherited constraint (FUNCTIONALITY §5.7).
+ * Detail panel for a standard (ISO) or inherited constraint.
  * The name is read-only (the rule's identity), but the MIG can overlay its
  * **definition** and a formal **expression** — tri-state like every other
  * override (absent = inherit, value = set), each with a "Reset to inherited"

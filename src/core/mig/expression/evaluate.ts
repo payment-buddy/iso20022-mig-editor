@@ -1,4 +1,4 @@
-// Phase 3: evaluate a parsed constraint expression against a message instance.
+// Evaluate a parsed constraint expression against a message instance.
 //
 // The expression is a boolean predicate (see `ast.ts`) whose paths are relative
 // to the element the constraint is attached to — the "context node". We adopt a

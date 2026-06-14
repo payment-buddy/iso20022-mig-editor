@@ -5,7 +5,7 @@ type MigIdentity = Pick<MessageImplementationGuide, "name" | "version" | "messag
 
 /**
  * Eligible parents for `current`: other stored MIGs that target the **same
- * message** and whose selection would not create a cycle (FUNCTIONALITY §5.7).
+ * message** and whose selection would not create a cycle.
  * A candidate is rejected when it already descends from `current` — making it
  * the parent would close a loop.
  */

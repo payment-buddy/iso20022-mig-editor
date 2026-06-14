@@ -1,4 +1,4 @@
-// Export a MIG as CSV (FUNCTIONALITY §10 — "Markdown + CSV", CSV opens in Excel).
+// Export a MIG as CSV (opens in Excel).
 // The whole ISO message tree is flattened in document order: one row per element
 // (structure + ISO type), then one row per rule (ISO constraints — with any MIG
 // expression/definition overlay or disable applied — the MIG's multiplicity/type

@@ -66,8 +66,8 @@ export type FacetDirection = "min" | "max"
 
 /**
  * Advisory warning when a numeric facet override loosens its baseline (the
- * inherited/original limit): a `min` facet below it, or a `max` facet above it
- * (FUNCTIONALITY §5.7). `null` within the baseline, or when either side is
+ * inherited/original limit): a `min` facet below it, or a `max` facet above it.
+ * `null` within the baseline, or when either side is
  * unconstrained (raising or adding a limit only tightens).
  */
 export function looseningWarning(
@@ -93,7 +93,7 @@ export function rangeWarning(
   return `${label}: max ${max} is below min ${min}.`
 }
 
-/** Warning when a pattern override isn't a valid regular expression (FUNCTIONALITY §5.7). */
+/** Warning when a pattern override isn't a valid regular expression. */
 export function patternWarning(pattern: string | null): string | null {
   if (pattern == null || pattern === "") return null
   try {

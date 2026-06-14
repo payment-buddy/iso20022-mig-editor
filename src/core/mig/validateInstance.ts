@@ -1,4 +1,4 @@
-// Message-instance validation (IMPLEMENTATION_PLAN Phase 6). Walk a parsed
+// Message-instance validation. Walk a parsed
 // message XML against the ISO message definition + the effective MIG, reporting
 // cardinality / exclusion / code / length / pattern / inclusive-range / digit
 // violations — plus MIG-added constraint expressions — with their schema xmlPath

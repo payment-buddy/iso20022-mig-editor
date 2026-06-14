@@ -2,7 +2,7 @@
 //
 // A MIG inherits from its parent chain; the **effective** overlay applied to the
 // ISO message is the chain merged ancestor → leaf, the leaf winning per field.
-// The merge is **key-presence**, not `??` (FUNCTIONALITY §10 / CLAUDE.md): a
+// The merge is **key-presence**, not `??`: a
 // descendant's explicit `null` ("remove the constraint") must beat an ancestor's
 // value, so a plain `{ ...ancestor, ...descendant }` spread (which only copies
 // keys that are present) is exactly right — `??` would wrongly treat `null` as

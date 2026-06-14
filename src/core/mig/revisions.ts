@@ -1,4 +1,4 @@
-// Revision history model (IMPLEMENTATION_PLAN Phase 2). A MIG's history is an
+// Revision history model. A MIG's history is an
 // append-only list of full snapshots, each with a timestamp and a one-line change
 // summary (computed once, against the previous revision). Pure — persistence is
 // `core/storage/revisionStore.ts`, snapshotting is the editor's debounced hook.

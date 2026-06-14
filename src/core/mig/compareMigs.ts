@@ -1,11 +1,11 @@
-// Semantic diff of two MIGs (FUNCTIONALITY §5.8 / Phase 4 Compare). Unlike
+// Semantic diff of two MIGs. Unlike
 // `migDiff.ts` (which diffs an *effective* MIG against the ISO baseline for the
 // Markdown export), this compares the **declared** `elementOverrides` of two MIGs
 // to each other — answering "how do these two documents differ". Pure; the
 // Compare screen renders the result side-by-side, showing only differing
 // elements.
 //
-// Override fields are tri-state (CLAUDE.md / MIG_FORMAT.md): absent = inherit,
+// Override fields are tri-state: absent = inherit,
 // `null` = clear the inherited constraint, value = set. The comparison preserves
 // that distinction via key-presence — a field absent in one MIG (`a`/`b` = null
 // in a FieldChange) reads as "inherits", a stored `null` renders as "cleared".

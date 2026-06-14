@@ -149,7 +149,7 @@ export function MigHome() {
         setPendingImport({ incoming, duplicateKeys, errors: problems })
         return
       }
-      // Exactly one new MIG and nothing rejected → open it in the editor (§5.2).
+      // Exactly one new MIG and nothing rejected → open it in the editor.
       const openKey =
         incoming.length === 1 && problems.length === 0 ? getMigKey(incoming[0]) : undefined
       commitImport(incoming, problems, openKey)

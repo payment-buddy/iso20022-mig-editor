@@ -4,8 +4,8 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 /**
- * Resolution prompt for a MIG import that collides with existing MIGs
- * (FUNCTIONALITY §5.2). Lists the duplicates and offers Skip / Upload as new /
+ * Resolution prompt for a MIG import that collides with existing MIGs.
+ * Lists the duplicates and offers Skip / Upload as new /
  * Overwrite; Esc or Cancel aborts the whole import. `duplicates` are display
  * labels (e.g. "EPC 1.0").
  */

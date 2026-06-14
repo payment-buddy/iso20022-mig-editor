@@ -1,4 +1,4 @@
-// Zod validation for imported MIG YAML (IMPLEMENTATION_PLAN Phase 3 / §0). The
+// Zod validation for imported MIG YAML. The
 // schema mirrors the `MessageImplementationGuide` interface in `types.ts` and is
 // pinned to it with `satisfies z.ZodType<…>`, so a drift between the two is a
 // compile error. Unknown keys (e.g. the exported `formatVersion`) are stripped.

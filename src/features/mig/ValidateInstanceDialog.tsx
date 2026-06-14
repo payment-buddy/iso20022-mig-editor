@@ -10,7 +10,7 @@ type Result = { kind: "error"; error: string } | { kind: "ok"; diagnostics: Inst
 
 /**
  * Validate a message-instance XML against the resolved message + the effective
- * MIG (IMPLEMENTATION_PLAN Phase 6): paste or upload an XML, see the violations
+ * MIG: paste or upload an XML, see the violations
  * (cardinality / exclusion / codes / lengths / patterns / ranges), and click one
  * to jump to its element in the tree via `onNavigate`.
  */

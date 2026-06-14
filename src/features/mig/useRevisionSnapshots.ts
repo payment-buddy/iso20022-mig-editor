@@ -6,8 +6,7 @@ import type { MessageImplementationGuide } from "@/core/types/types"
 const DEBOUNCE_MS = 1500
 
 /**
- * Auto-snapshot a MIG's edits into its revision history (IMPLEMENTATION_PLAN
- * Phase 2). Watches the live `mig`; after a burst of edits settles (~1.5 s idle)
+ * Auto-snapshot a MIG's edits into its revision history. Watches the live `mig`; after a burst of edits settles (~1.5 s idle)
  * it appends a revision, and it **flushes on unmount** so navigating away / re-
  * keying commits a pending burst. The state as first loaded is the baseline:
  * it's stored (as the first revision) only once a real edit lands, so a view-only

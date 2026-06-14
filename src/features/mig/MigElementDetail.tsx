@@ -12,7 +12,7 @@ import { InlineEdit } from "@/components/ui/inline-edit"
 import { DetailPanel, Field } from "@/features/repository/ElementTree"
 import { ProvenanceDot } from "./ProvenanceDot"
 
-/** Base types that carry a length facet (FUNCTIONALITY §5.7). */
+/** Base types that carry a length facet. */
 const LENGTH_BASE_TYPES = new Set(["Text", "CodeSet", "IdentifierSet", "Binary"])
 
 /** Base types that carry an inclusive-range facet (values may be decimals). */
@@ -31,7 +31,7 @@ const arraysEqual = (a: string[], b: string[]) =>
   a.length === b.length && a.every((v, i) => v === b[i])
 
 /**
- * Element detail/edit panel for the MIG Editor (FUNCTIONALITY §5.7). Read-only
+ * Element detail/edit panel for the MIG Editor. Read-only
  * identity fields plus editable override fields, each showing its inherited
  * baseline with an overridden flag + reset-to-inherited affordance. This slice
  * covers **Definition**, **Min/Max Occurs**, and **Min/Max Length** (the latter
@@ -107,7 +107,7 @@ export function MigElementDetail({
   const totalDigits = numField("totalDigits", element.totalDigits)
   const fractionDigits = numField("fractionDigits", element.fractionDigits)
 
-  // Loosening / range warnings (advisory, FUNCTIONALITY §5.7).
+  // Loosening / range warnings (advisory).
   const minOccursWarn = looseningWarning("min occurs", minOccurs.baseline, minOccurs.effective, "min")
   // Any max occurs below min occurs is flagged — including `maxOccurs: 0`
   // (exclusion) while min still requires the element. Set min occurs to 0 too for

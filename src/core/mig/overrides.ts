@@ -6,7 +6,7 @@ import type {
 } from "@/core/types/types"
 
 // Immutable helpers for editing a MIG's element overrides. Override fields are
-// tri-state (MIG_FORMAT.md / CLAUDE.md): absent = inherit, `null` = remove the
+// tri-state: absent = inherit, `null` = remove the
 // constraint, value = set. These use key-presence, never `??`, so a stored
 // `null` is preserved rather than collapsed into "inherit".
 

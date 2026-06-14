@@ -91,7 +91,7 @@ describe("MigHome", () => {
     render(<MigHome />)
     await userEvent.upload(screen.getByLabelText("MIG YAML file"), migFile("EPC", "1.0"))
 
-    // A single clean import lands straight in the editor (§5.2).
+    // A single clean import lands straight in the editor.
     await waitFor(() => expect(window.location.hash).toBe("#mig/EPC%3A1.0"))
     expect(await loadMig("EPC:1.0")).not.toBeNull()
   })

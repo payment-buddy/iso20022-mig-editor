@@ -324,7 +324,7 @@ function toSelected(node: FlatNode): SelectedNode {
 }
 
 /**
- * Keyboard-first element tree (FUNCTIONALITY §5.6 / §10): roving-tabindex ARIA
+ * Keyboard-first element tree: roving-tabindex ARIA
  * `tree` with a filter box, Show-XML-tags and Hide-excluded toggles, and a
  * detail pane wired to selection-follows-focus via `renderDetail`. Shared by the
  * read-only Message Explorer and the MIG Editor.
@@ -524,7 +524,7 @@ export function ElementTree({
 
   // Focus the filter on "/" or Ctrl/Cmd+F. Unlike the e-Repository browser this
   // tree drops collapsed subtrees from the DOM, so native find can't reach them
-  // — we bind Ctrl/Cmd+F too (FUNCTIONALITY §10, editor-tree behavior).
+  // — we bind Ctrl/Cmd+F too (editor-tree behavior).
   useEffect(() => {
     const handler = (e: globalThis.KeyboardEvent) => {
       const cmdF = (e.metaKey || e.ctrlKey) && e.key === "f"

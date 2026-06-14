@@ -15,7 +15,7 @@ import { InlineEdit } from "@/components/ui/inline-edit"
 import { InlineSelect } from "@/components/ui/inline-select"
 
 /**
- * Editable MIG metadata block (FUNCTIONALITY §5.7): Description (inline
+ * Editable MIG metadata block: Description (inline
  * textarea), Parent MIG (eligible-parent dropdown with a link and a not-loaded
  * warning), and the shared element- and constraint-annotation names (values are
  * then filled per target in the detail panels). Version is inline-edit —

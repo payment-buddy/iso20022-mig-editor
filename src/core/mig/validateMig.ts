@@ -1,5 +1,4 @@
-// Consolidated MIG consistency check (FUNCTIONALITY §5.7 / IMPLEMENTATION_PLAN
-// Phase 3). A MIG should only *tighten* the message; this flags where it loosens
+// Consolidated MIG consistency check. A MIG should only *tighten* the message; this flags where it loosens
 // or is internally inconsistent, across every path it overrides — the same
 // per-field rules the editor shows, aggregated for the diagnostics drawer.
 // Advisory only (all warnings). Pure.

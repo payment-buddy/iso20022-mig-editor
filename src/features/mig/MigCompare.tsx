@@ -32,7 +32,7 @@ type CopyFn = (path: string, ref: FieldRef, dir: CopyDir) => void
 const COLS = "grid grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)]"
 
 /**
- * Compare two MIGs (FUNCTIONALITY §5.8). Loads both by key, resolves the message
+ * Compare two MIGs. Loads both by key, resolves the message
  * for schema-order alignment, and renders a side-by-side diff of their *declared*
  * overrides — showing only elements (and fields) that differ. Each field can be
  * copied across to the other MIG (hover-revealed buttons); the copy persists and

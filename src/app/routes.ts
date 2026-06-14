@@ -1,5 +1,5 @@
-// Typed hash-router model. No dependency — the whole app has ~5 routes
-// (FUNCTIONALITY.md §4). The hash is the single source of truth.
+// Typed hash-router model. No dependency — the whole app has a handful of routes.
+// The hash is the single source of truth.
 
 export type Route =
   | { name: "home" } // MIG list
