@@ -50,8 +50,10 @@ export function MigStandardConstraintDetail({
   const field = <K extends keyof ConstraintOverride>(key: K, base: string | null) => {
     const baseline = inherited && key in inherited ? (inherited[key] ?? null) : base
     const overridden = override !== undefined && key in override
+    // No own override, but a parent sets it → the value is inherited here.
+    const inheritedHere = !overridden && inherited !== undefined && key in inherited
     const effective = overridden ? (override[key] ?? null) : baseline
-    return { baseline, overridden, text: effective ?? "" }
+    return { baseline, overridden, inherited: inheritedHere, text: effective ?? "" }
   }
 
   const definition = field("definition", constraint.definition)
@@ -73,6 +75,8 @@ export function MigStandardConstraintDetail({
   // so; toggling back to the inherited baseline drops the override.
   const disabledBaseline = inherited && "disabled" in inherited ? !!inherited.disabled : false
   const disabledOverridden = override !== undefined && "disabled" in override
+  const disabledInherited =
+    !disabledOverridden && inherited !== undefined && "disabled" in inherited
   const disabledEffective = disabledOverridden ? !!override.disabled : disabledBaseline
   const toggleDisabled = () => {
     const value = !disabledEffective
@@ -90,7 +94,13 @@ export function MigStandardConstraintDetail({
         <code className="text-xs">{path}</code>
       </Field>
 
-      <OverrideField label="Definition" overridden={definition.overridden} onReset={onClearDefinition}>
+      <OverrideField
+        label="Definition"
+        overridden={definition.overridden}
+        inherited={definition.inherited}
+        baseline={definition.baseline || "—"}
+        onReset={onClearDefinition}
+      >
         <InlineEdit
           value={definition.text}
           onCommit={commitDefinition}
@@ -100,7 +110,13 @@ export function MigStandardConstraintDetail({
         />
       </OverrideField>
 
-      <OverrideField label="Expression" overridden={expression.overridden} onReset={onClearExpression}>
+      <OverrideField
+        label="Expression"
+        overridden={expression.overridden}
+        inherited={expression.inherited}
+        baseline={expression.baseline || "none"}
+        onReset={onClearExpression}
+      >
         <InlineEdit
           value={expression.text}
           onCommit={commitExpression}
@@ -129,6 +145,11 @@ export function MigStandardConstraintDetail({
             className="size-3.5 accent-destructive"
           />
           Disable this rule
+          <ProvenanceDot
+            overridden={disabledOverridden}
+            inherited={disabledInherited}
+            baseline={disabledBaseline ? "disabled" : "enabled"}
+          />
           {disabledOverridden && (
             <button
               type="button"
@@ -158,22 +179,35 @@ export function MigStandardConstraintDetail({
   )
 }
 
-/** A labelled field with a "Reset to inherited" affordance shown when overridden. */
+/**
+ * A labelled override field: a primary (blue) dot + reset when overridden here, a
+ * violet dot when the value is inherited from a parent MIG (matching the
+ * element-tree tints and the element detail panel), else unmarked (ISO original).
+ */
 function OverrideField({
   label,
   overridden,
+  inherited = false,
+  baseline,
   onReset,
   children,
 }: {
   label: string
   overridden: boolean
+  inherited?: boolean
+  baseline: string
   onReset: () => void
   children: ReactNode
 }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-2">
-        <div className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">{label}</div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
+            {label}
+          </span>
+          <ProvenanceDot overridden={overridden} inherited={inherited} baseline={baseline} />
+        </div>
         {overridden && (
           <button
             type="button"
@@ -188,4 +222,37 @@ function OverrideField({
       {children}
     </div>
   )
+}
+
+/** Blue dot for an own override, violet for an inherited value, nothing for ISO. */
+function ProvenanceDot({
+  overridden,
+  inherited,
+  baseline,
+}: {
+  overridden: boolean
+  inherited: boolean
+  baseline: string
+}) {
+  if (overridden) {
+    const label = `Overridden — inherited: ${baseline}`
+    return (
+      <span
+        title={label}
+        aria-label={label}
+        className="size-1.5 shrink-0 cursor-help rounded-full bg-primary"
+      />
+    )
+  }
+  if (inherited) {
+    const label = `Inherited from a parent MIG: ${baseline}`
+    return (
+      <span
+        title={label}
+        aria-label={label}
+        className="size-1.5 shrink-0 cursor-help rounded-full bg-violet-600 dark:bg-violet-400"
+      />
+    )
+  }
+  return null
 }

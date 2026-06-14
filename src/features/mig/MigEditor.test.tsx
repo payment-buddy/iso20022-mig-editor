@@ -529,6 +529,55 @@ describe("MigEditor", () => {
     ).toEqual({ StdRule: { expression: "Amt > 0" } })
   })
 
+  it("shows provenance dots in the constraint overlay panel", async () => {
+    const user = userEvent.setup()
+    const repo: ERepository = {
+      businessAreas: [
+        {
+          name: "A",
+          code: "a",
+          definition: "",
+          messages: [
+            {
+              name: "Msg",
+              identifier: "pacs.008.001.10",
+              shortCode: "pacs.008",
+              rootElement: el("Document", {
+                constraints: [{ name: "StdRule", definition: "Spec rule" }],
+              }),
+            },
+          ],
+        },
+      ],
+    }
+    const parent: MessageImplementationGuide = {
+      name: "Base",
+      version: "1.0",
+      messageIdentifier: "pacs.008.001.10",
+      elementOverrides: { DocumentTag: { constraintOverrides: { StdRule: { expression: "x > 0" } } } },
+    }
+    const child: MessageImplementationGuide = { ...MIG, parentMIG: getMigKey(parent) }
+    await saveMig(parent)
+    await saveMig(child)
+    render(<MigEditor migKey={getMigKey(child)} repo={repo} />)
+    await screen.findByRole("treeitem", { name: "Document" })
+    await user.click(screen.getByRole("treeitem", { name: /constraint stdrule/i }))
+    const panel = screen.getByRole("region", { name: /constraint details/i })
+
+    // Expression is inherited from the parent's overlay → violet dot.
+    const inheritedDot = within(panel).getByTitle(/inherited from a parent mig: x > 0/i)
+    expect(inheritedDot).toHaveClass("rounded-full", "bg-violet-600")
+
+    // Override it here → blue dot, baseline still the inherited value.
+    await user.click(within(panel).getByRole("button", { name: "Edit Constraint expression" }))
+    const input = within(panel).getByRole("textbox", { name: "Constraint expression" })
+    await user.clear(input)
+    await user.type(input, "Amt > 0")
+    await user.tab()
+    const ownDot = within(panel).getByTitle(/overridden — inherited: x > 0/i)
+    expect(ownDot).toHaveClass("rounded-full", "bg-primary")
+  })
+
   it("disables a standard constraint via the toggle", async () => {
     const user = userEvent.setup()
     const repo: ERepository = {
