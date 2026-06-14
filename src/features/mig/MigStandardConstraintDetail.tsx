@@ -91,7 +91,7 @@ export function MigStandardConstraintDetail({
         <CheckIcon className="size-3.5 text-muted-foreground" aria-hidden />
         {constraint.name}
       </div>
-      <Field label="Path">
+      <Field label="XML path">
         <code className="text-xs">{path}</code>
       </Field>
 

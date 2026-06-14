@@ -83,7 +83,7 @@ export function MigConstraintDetail({
           />
         </div>
       </div>
-      <Field label="Path">
+      <Field label="XML path">
         <code className="text-xs">{path}</code>
       </Field>
       <div>
