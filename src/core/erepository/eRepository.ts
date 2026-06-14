@@ -1,8 +1,10 @@
 import sax from "sax"
 import { unzipToStream } from "@/core/utils/unzip"
+import type { RepoCodeSet } from "@/core/mig/expression/codeListResolver"
 import type {
   BusinessArea,
   ComplexType,
+  Constraint,
   DataTypes,
   ERepository,
   MessageDefinition,
@@ -15,6 +17,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
 
   const dataTypes: DataTypes = {} // xmi:id → DataType
   const businessAreas: BusinessArea[] = []
+  const codeSets: RepoCodeSet[] = []
   const messageElementTypes: {
     messageElement: MessageElement
     typeId: string
@@ -22,6 +25,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
   let businessArea: BusinessArea | null = null
   let complexType: ComplexType | null = null
   let simpleType: SimpleType | null = null
+  let codeSet: RepoCodeSet | null = null
   let messageElement: MessageElement | null = null
   let messageDefinition: MessageDefinition | null = null
   let exampleText: string | null = null
@@ -83,6 +87,17 @@ export async function parseRepository(file: File): Promise<ERepository> {
           currencyIdentifierSet: attrs["currencyIdentifierSet"] ?? null,
         }
         dataTypes[attrs["xmi:id"]] = simpleType
+        // CodeSets are also captured separately (with name/trace and code names,
+        // which the SimpleType/Code model drops) for the WithInList resolver.
+        if (xsiType === "iso20022:CodeSet") {
+          codeSet = {
+            id: attrs["xmi:id"],
+            name: attrs["name"],
+            trace: attrs["trace"],
+            codes: [],
+          }
+          codeSets.push(codeSet)
+        }
       }
     }
 
@@ -217,11 +232,22 @@ export async function parseRepository(file: File): Promise<ERepository> {
           definition: attrs["definition"],
         })
       }
+      // A validation-rule CodeSet's codes carry only `name` (no `codeName`); the
+      // wire value is resolved via `trace` later, so capture them regardless.
+      if (codeSet && attrs["name"]) {
+        codeSet.codes.push({
+          name: attrs["name"],
+          codeName: attrs["codeName"],
+        })
+      }
     } else if (node.name === "constraint") {
-      const constraint = {
+      const constraint: Constraint = {
         name: attrs["name"],
         definition: attrs["definition"],
       }
+      // The raw ISO RuleDefinition XML (SAX has already entity-decoded it); the
+      // DSL form is derived later in `enrichMessageDsl`.
+      if (attrs["expression"]) constraint.isoExpression = attrs["expression"]
       if (messageElement) {
         messageElement.constraints.push(constraint)
       } else if (simpleType) {
@@ -250,6 +276,7 @@ export async function parseRepository(file: File): Promise<ERepository> {
     } else if (name === "topLevelDictionaryEntry") {
       complexType = null
       simpleType = null
+      codeSet = null
     } else if (name === "messageDefinition") {
       messageDefinition = null
     } else if (name === "messageElement" || name === "messageBuildingBlock") {
@@ -336,5 +363,5 @@ export async function parseRepository(file: File): Promise<ERepository> {
     }
   }
 
-  return { businessAreas }
+  return { businessAreas, codeSets }
 }

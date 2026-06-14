@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import type { ERepository, MessageDefinition } from "@/core/types/types"
+import type {
+  ERepository,
+  MessageDefinition,
+  MessageElement,
+} from "@/core/types/types"
 import { resolveMessage } from "./resolveMessage"
 
 function msg(
@@ -47,5 +51,82 @@ describe("resolveMessage", () => {
 
   it("returns null for an unknown code", () => {
     expect(resolveMessage(REPO, "nope.999")).toBeNull()
+  })
+})
+
+describe("resolveMessage — DSL enrichment", () => {
+  function leaf(name: string, xmlTag: string): MessageElement {
+    return {
+      id: xmlTag,
+      name,
+      xmlTag,
+      isAttribute: false,
+      definition: "",
+      minOccurs: 0,
+      maxOccurs: 1,
+      typeId: "",
+      type: "",
+      baseType: null,
+      minInclusive: null,
+      maxInclusive: null,
+      totalDigits: null,
+      fractionDigits: null,
+      length: null,
+      minLength: null,
+      maxLength: null,
+      pattern: null,
+      baseValue: null,
+      codes: [],
+      constraints: [],
+      examples: [],
+      elements: [],
+    }
+  }
+
+  function repoWithRule(): ERepository {
+    const root = leaf("Document", "Doc")
+    root.elements = [leaf("MessageId", "MsgId")]
+    root.constraints = [
+      {
+        name: "R1",
+        definition: "rule",
+        isoExpression:
+          '<RuleDefinition><SimpleRule><mustBe><BooleanRule xsi:type="Presence"><leftOperand>/MessageId</leftOperand></BooleanRule></mustBe></SimpleRule></RuleDefinition>',
+      },
+    ]
+    return {
+      businessAreas: [
+        {
+          name: "Payments",
+          code: "pacs",
+          definition: "",
+          messages: [
+            {
+              name: "Msg",
+              shortCode: "pacs.001",
+              identifier: "pacs.001.001.01",
+              rootElement: root,
+            },
+          ],
+        },
+      ],
+    }
+  }
+
+  it("fills the constraint's DSL expression from its raw ISO expression", () => {
+    const repo = repoWithRule()
+    const r = resolveMessage(repo, "pacs.001.001.01")!
+    expect(r.current.rootElement.constraints[0].expression).toBe("MsgId")
+    // Raw form is preserved alongside the derived DSL.
+    expect(r.current.rootElement.constraints[0].isoExpression).toContain(
+      "RuleDefinition"
+    )
+  })
+
+  it("is idempotent across repeated resolves (memoized)", () => {
+    const repo = repoWithRule()
+    resolveMessage(repo, "pacs.001.001.01")
+    const again = resolveMessage(repo, "pacs.001.001.01")!
+    expect(again.current.rootElement.constraints[0].expression).toBe("MsgId")
   })
 })

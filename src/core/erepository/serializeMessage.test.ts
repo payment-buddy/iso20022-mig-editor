@@ -148,6 +148,28 @@ describe("serializeMessage", () => {
     ])
   })
 
+  it("emits a constraint's DSL expression but not its raw ISO form", () => {
+    const parsed = parse(
+      serializeMessage(
+        message(
+          el({
+            constraints: [
+              {
+                name: "R1",
+                definition: "rule",
+                expression: "GrpHdr/MsgId",
+                isoExpression: "<RuleDefinition>…</RuleDefinition>",
+              },
+            ],
+          })
+        )
+      )
+    )
+    expect(parsed.rootElement.constraints).toEqual([
+      { name: "R1", definition: "rule", expression: "GrpHdr/MsgId" },
+    ])
+  })
+
   it("renders multi-line definitions as block literals without reflowing", () => {
     const text =
       "Line one of the definition.\nLine two continues without wrapping."

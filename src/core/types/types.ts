@@ -1,10 +1,24 @@
 // Core data model for the ISO 20022 e-Repository
 
+import type { RepoCodeSet } from "@/core/mig/expression/codeListResolver"
+
 export interface Constraint {
   name: string
   definition: string
-  /** Optional formal rule expression (MIG-added constraints; absent on parsed ones). */
+  /**
+   * Formal rule expression in this app's path DSL. For a standard (ISO)
+   * constraint it is *derived* from `isoExpression` at message-resolve time (see
+   * `enrichMessageDsl`) and is absent when the ISO rule can't be transpiled; for
+   * a MIG-added constraint it is authored directly. Consumed by
+   * `validateInstance` and emitted in the message/MIG YAML.
+   */
   expression?: string
+  /**
+   * The raw ISO 20022 `RuleDefinition` XML blob as parsed from the repository
+   * (the standard's `expression` attribute). Kept verbatim — the DSL `expression`
+   * above is computed from it. Absent on MIG-added constraints.
+   */
+  isoExpression?: string
   annotations?: Record<string, string | null>
 }
 
@@ -87,6 +101,13 @@ export interface DataTypes {
 
 export interface ERepository {
   businessAreas: BusinessArea[]
+  /**
+   * All ISO `CodeSet`s, indexed for the `WithInList`/`NotWithInList` resolver
+   * used when transpiling constraint expressions (`buildCodeListResolver`). The
+   * in-app `Code`/`SimpleType` model drops the `name`/`trace` these need, so they
+   * are captured separately at parse time.
+   */
+  codeSets?: RepoCodeSet[]
 }
 
 // --- Message Implementation Guide (MIG) ---

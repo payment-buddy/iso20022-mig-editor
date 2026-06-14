@@ -42,6 +42,10 @@
 //     dropped: `[*]` (any occurrence) and a trailing leaf `[1]` (`Item[1]` exists
 //     ⟺ `Item` exists). Everywhere else — a specific occurrence in a comparison,
 //     a non-leaf `[1]`, or any higher index `[2]` — is skipped (see `dslPath`).
+//   • Prose-valued comparisons — an EqualToValue/DifferentFromValue whose right
+//     operand is a human description (`sum of /…`, `number of occurrences of …`)
+//     rather than a literal; transpiling it would yield an always-false
+//     `path = 'prose'`, so it's skipped (see `looksLikeProse`).
 //   • Non-XML expressions (some are free text) and any unrecognised structure.
 // As a final guard the emitted DSL is re-parsed with `parseExpression`; if it
 // doesn't parse cleanly we skip rather than hand back broken output.
@@ -122,6 +126,18 @@ const child = (node: XmlNode, name: string): XmlNode | undefined =>
 
 /** Single-quote a DSL string literal, doubling embedded quotes. */
 const quote = (value: string): string => `'${value.replace(/'/g, "''")}'`
+
+/**
+ * Whether a value-comparison right operand looks like *prose* rather than a real
+ * literal. ISO sometimes stores a human description where a fixed value belongs
+ * — e.g. `sum of /CreditTransferTransactionInformation/InterbankSettlementAmount`
+ * or `number of occurrences of …`. A legitimate comparison literal is a single
+ * token (a code, number, boolean, date, currency, message id…); none contain
+ * whitespace or a path separator, while every prose value in the repository
+ * does. Transpiling prose to `path = 'prose'` yields valid-but-always-false DSL,
+ * so we fail closed on it.
+ */
+const looksLikeProse = (value: string): boolean => /\s|\//.test(value)
 
 /**
  * True iff `expr` is exactly a single `not( … )` whose opening paren matches the
@@ -244,10 +260,13 @@ function renderRule(rule: XmlNode, resolve?: Resolver): Rendered | null {
     case "DifferentFromValue": {
       const left = dslPath(leftRaw)
       if (!left) return null
-      const value = child(rule, "rightOperand")?.text
-      if (value == null) return null
+      const value = child(rule, "rightOperand")?.text?.trim()
+      if (value == null || value === "") return null
+      // A prose "value" (a description, not a literal) would yield an
+      // always-false comparison — skip it (fail closed).
+      if (looksLikeProse(value)) return null
       const op = type === "EqualToValue" ? "=" : "!="
-      return { expr: `${left} ${op} ${quote(value.trim())}`, compound: false }
+      return { expr: `${left} ${op} ${quote(value)}`, compound: false }
     }
     case "EqualToNode": {
       const lr = (leftRaw ?? "").trim()

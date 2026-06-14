@@ -21,7 +21,7 @@ import {
   buildCodeListResolver,
   parseExpression,
   validateExpressionPaths,
-  type RepoCodeSet,
+  resolveOperands,
 } from "@/core/mig/expression"
 import type { MessageElement } from "@/core/types/types"
 
@@ -41,22 +41,6 @@ const unesc = (s: string): string =>
 const attrsOf = (s: string): Record<string, string> =>
   Object.fromEntries([...s.matchAll(/([\w:]+)="(.*?)"/g)].map((m) => [m[1], m[2]]))
 
-/** Index all CodeSets from raw XML (the runtime model drops name/trace). */
-function buildResolver(raw: string) {
-  const codeSets: RepoCodeSet[] = []
-  for (const m of raw.matchAll(
-    /<topLevelDictionaryEntry\b([^>]*?xsi:type="iso20022:CodeSet"[^>]*)>([\s\S]*?)<\/topLevelDictionaryEntry>/g,
-  )) {
-    const a = attrsOf(m[1])
-    const codes = [...m[2].matchAll(/<code\b([^>]*?)\/?>/g)].map((c) => {
-      const ca = attrsOf(c[1])
-      return { name: ca.name, codeName: ca.codeName }
-    })
-    codeSets.push({ id: a["xmi:id"], name: a.name, trace: a.trace, codes })
-  }
-  return buildCodeListResolver(codeSets)
-}
-
 /** Map (constraint name + definition) → its raw XML expression(s). */
 function buildExprMap(raw: string): Map<string, string[]> {
   const map = new Map<string, string[]>()
@@ -71,51 +55,9 @@ function buildExprMap(raw: string): Map<string, string[]> {
   return map
 }
 
-/** Split a path step into element/attribute name and an optional `[*]`/`[n]` marker. */
-function splitStep(step: string): { name: string; marker: string } {
-  const m = /^(.*?)(\[\*\]|\[\d+\])?$/.exec(step)!
-  return { name: m[1], marker: m[2] ?? "" }
-}
-
-/**
- * Resolve each path operand of an XML rule against the schema, doing two things
- * the runtime transpiler can't:
- *   • translate ISO element *names* (`GroupHeader`) to the DSL's `xmlTag`s (`GrpHdr`)
- *   • drop a `[1]`/`[*]` marker on any maxOccurs==1 element (a singleton node-set's
- *     existential value is the specific occurrence — safe in any context)
- * Only operands starting with "/" are paths; literals and code-set names are left
- * alone. A step that doesn't resolve is emitted as-is, so validation flags it.
- */
-function resolveOperands(owner: MessageElement, xml: string): string {
-  return xml.replace(
-    /<(left|right)Operand>(\/[^<]*)<\/\1Operand>/g,
-    (_w, side, path) => `<${side}Operand>${resolvePath(owner, path)}</${side}Operand>`,
-  )
-}
-
-function resolvePath(owner: MessageElement, path: string): string {
-  const steps = path.replace(/^\//, "").split("/")
-  let current: MessageElement | null = owner
-  const out: string[] = []
-  for (const raw of steps) {
-    const { name, marker } = splitStep(raw)
-    const isAttr = name.startsWith("@")
-    const plain = isAttr ? name.slice(1) : name
-    const child: MessageElement | undefined = current?.elements.find(
-      (c) => c.name === plain && c.isAttribute === isAttr,
-    )
-    if (!child) {
-      out.push(name + marker) // unresolved — leave for the validator to flag
-      current = null
-      continue
-    }
-    const tag = (isAttr ? "@" : "") + child.xmlTag
-    const drop = child.maxOccurs === 1 && (marker === "[1]" || marker === "[*]")
-    out.push(drop ? tag : tag + marker)
-    current = child
-  }
-  return "/" + out.join("/")
-}
+// Schema-aware operand resolution (ISO name → xmlTag, [1]/[*] strip on
+// singletons) is shared with the runtime via `resolveOperands` from
+// `@/core/mig/expression`.
 
 type Attempt =
   | { ok: true; dsl: string; pathValid: boolean; pathErrors: string[] }
@@ -175,10 +117,10 @@ function processConstraint(
 function main() {
   const code = process.argv[2] ?? "pacs.008"
   const raw = readFileSync(REPO_PATH, "utf8")
-  const resolve = buildResolver(raw)
   const exprMap = buildExprMap(raw)
 
   return parseRepository(new File([Buffer.from(raw)], "eRepository.iso20022")).then((repo) => {
+    const resolve = buildCodeListResolver(repo.codeSets ?? [])
     const r = resolveMessage(repo, code)
     if (!r) throw new Error(`message not found: ${code}`)
 

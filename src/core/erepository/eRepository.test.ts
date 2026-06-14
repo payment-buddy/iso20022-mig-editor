@@ -338,3 +338,56 @@ describe("parseRepository — isChoice", () => {
     expect(bb.elements[0].baseType).toBe("Text")
   })
 })
+
+describe("parseRepository — constraint expressions & code sets", () => {
+  // A constraint with a raw ISO RuleDefinition (entity-encoded in the attribute,
+  // as it is in the real repository), plus a real and a validation-rule CodeSet.
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xmi="http://www.omg.org/XMI"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:iso20022="urn:iso:std:iso:20022:2013:ecore">
+  <topLevelCatalogueEntry xsi:type="iso20022:BusinessArea"
+      name="Payments" code="pacs" definition="Payments" registrationStatus="Registered">
+    <messageDefinition xmi:id="md1" name="Payment" xmlTag="Pmt" definition="Payment" registrationStatus="Registered">
+      <messageDefinitionIdentifier businessArea="pacs" messageFunctionality="001" flavour="001" version="1"/>
+      <messageBuildingBlock xmi:id="bb1" name="Block" xmlTag="Blk" definition="A block" complexType="ct1"/>
+    </messageDefinition>
+  </topLevelCatalogueEntry>
+  <topLevelDictionaryEntry xsi:type="iso20022:MessageComponent" xmi:id="ct1" name="Comp" definition="comp">
+    <messageElement xmi:id="me1" name="Field" xmlTag="Fld" definition="f" minOccurs="0" maxOccurs="1" simpleType="st1"/>
+    <constraint name="HasExpr" definition="A formal rule"
+        expression="&lt;RuleDefinition&gt;&lt;SimpleRule&gt;&lt;mustBe&gt;&lt;BooleanRule xsi:type=&quot;Presence&quot;&gt;&lt;leftOperand&gt;/Field&lt;/leftOperand&gt;&lt;/BooleanRule&gt;&lt;/mustBe&gt;&lt;/SimpleRule&gt;&lt;/RuleDefinition&gt;"/>
+    <constraint name="NoExpr" definition="Prose only"/>
+  </topLevelDictionaryEntry>
+  <topLevelDictionaryEntry xsi:type="iso20022:Text" xmi:id="st1" name="Max35Text" definition="text"/>
+  <topLevelDictionaryEntry xsi:type="iso20022:CodeSet" xmi:id="cs-real" name="RealCode" definition="real">
+    <code name="Received" codeName="RCVD"/>
+  </topLevelDictionaryEntry>
+  <topLevelDictionaryEntry xsi:type="iso20022:CodeSet" xmi:id="cs-rule" name="ValidationRule1Code" definition="rule" trace="cs-real">
+    <code name="Received"/>
+  </topLevelDictionaryEntry>
+</model>`
+
+  it("stores the raw ISO expression on the constraint, decoded", async () => {
+    const repo = await parseRepository(makeFile(xml))
+    const block = repo.businessAreas[0].messages[0].rootElement.elements[0]
+    const hasExpr = block.constraints.find((c) => c.name === "HasExpr")!
+    expect(hasExpr.isoExpression).toContain("<RuleDefinition>")
+    expect(hasExpr.isoExpression).toContain('xsi:type="Presence"')
+    // The DSL form is derived later (resolveMessage), not at parse time.
+    expect(hasExpr.expression).toBeUndefined()
+    const noExpr = block.constraints.find((c) => c.name === "NoExpr")!
+    expect(noExpr.isoExpression).toBeUndefined()
+  })
+
+  it("captures code sets with name/trace and name-only validation codes", async () => {
+    const repo = await parseRepository(makeFile(xml))
+    const sets = repo.codeSets ?? []
+    const real = sets.find((s) => s.name === "RealCode")!
+    expect(real.codes).toEqual([{ name: "Received", codeName: "RCVD" }])
+    const rule = sets.find((s) => s.name === "ValidationRule1Code")!
+    expect(rule.trace).toBe("cs-real")
+    // Validation-rule codes carry only `name`; the wire value is resolved via trace.
+    expect(rule.codes).toEqual([{ name: "Received", codeName: undefined }])
+  })
+})

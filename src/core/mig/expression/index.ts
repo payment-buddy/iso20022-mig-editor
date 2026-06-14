@@ -31,6 +31,11 @@ export {
   type RepoCode,
   type RepoCodeSet,
 } from "./codeListResolver"
+export {
+  enrichMessageDsl,
+  resolveOperands,
+  transpileConstraintExpression,
+} from "./transpileMessage"
 
 import { parseExpression } from "./parser"
 import { validateExpressionPaths } from "./paths"

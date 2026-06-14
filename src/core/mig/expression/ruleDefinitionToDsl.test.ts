@@ -149,6 +149,34 @@ describe("ruleDefinitionToDsl — supported shapes", () => {
     expect(dsl(xml)).toBe("Tp != 'OPEN'")
   })
 
+  it("skips a value comparison whose right operand is prose, not a literal", () => {
+    // Real pacs.008 shape: the "value" is a description of a sum, not a code.
+    const sumXml = simple(
+      `<mustBe><connector>AND</connector>` +
+        `<BooleanRule xsi:type="EqualToValue"><leftOperand>/TtlIntrBkSttlmAmt</leftOperand>` +
+        `<rightOperand>sum of /CreditTransferTransactionInformation/InterbankSettlementAmount</rightOperand>` +
+        `</BooleanRule></mustBe>`
+    )
+    expect(skip(sumXml)).toMatch(/unsupported/)
+    // A space-containing description is likewise skipped.
+    const wordsXml = simple(
+      `<mustBe><connector>AND</connector>` +
+        `<BooleanRule xsi:type="EqualToValue"><leftOperand>/Nb</leftOperand>` +
+        `<rightOperand>number of occurrences of CreditTransferTransactionInformation</rightOperand>` +
+        `</BooleanRule></mustBe>`
+    )
+    expect(skip(wordsXml)).toMatch(/unsupported/)
+  })
+
+  it("still accepts a multi-word-free literal value (codes, ids, dotted)", () => {
+    const xml = simple(
+      `<mustBe><connector>AND</connector>` +
+        `<BooleanRule xsi:type="EqualToValue"><leftOperand>/Tp</leftOperand>` +
+        `<rightOperand>pacs.003</rightOperand></BooleanRule></mustBe>`
+    )
+    expect(dsl(xml)).toBe("Tp = 'pacs.003'")
+  })
+
   it("EqualToNode compares two paths, attributes via @", () => {
     const xml = simple(
       `<mustBe><connector>AND</connector>` +
