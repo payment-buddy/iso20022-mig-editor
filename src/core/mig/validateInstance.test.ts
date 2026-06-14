@@ -43,6 +43,8 @@ const MESSAGE: MessageDefinition = {
   identifier: "pacs.008.001.08",
   shortCode: "pacs.008",
   rootElement: el("Doc", {
+    // A standard (ISO) constraint with no expression — overlaid in a test below.
+    constraints: [{ name: "StdRule", definition: "Std doc rule" }],
     elements: [
       el("GrpHdr", { baseType: "Text", maxLength: 35 }),
       el("Amt", { baseType: "Amount", minInclusive: 0, maxInclusive: 1000 }),
@@ -183,6 +185,19 @@ describe("validateMessageInstance", () => {
       expect(run(valid(), { Doc: { additionalConstraints: [{ name: "X", definition: "" }] } })).toEqual([])
       expect(run(valid(), constraint("Amt >"))).toEqual([]) // syntax error → skipped
       expect(run(valid(), constraint("contains(Sts, 'A')"))).toEqual([]) // indeterminate → skipped
+    })
+
+    it("evaluates an expression overlaid on a standard (ISO) constraint", () => {
+      // StdRule has no expression by default; the overlay adds one that fails.
+      const d = run(valid(), { Doc: { constraintOverrides: { StdRule: { expression: "Amt > 600" } } } })
+      expect(d).toContainEqual({
+        kind: "constraint",
+        path: "Doc/StdRule",
+        elementName: "StdRule",
+        message: "Std doc rule",
+      })
+      // A passing overlay produces no diagnostic.
+      expect(run(valid(), { Doc: { constraintOverrides: { StdRule: { expression: "Amt > 100" } } } })).toEqual([])
     })
   })
 })

@@ -6,6 +6,7 @@
 // (features/mig/parseMessageXml).
 
 import { createValueValidator } from "./fieldValidation"
+import { resolveConstraints } from "./constraints"
 import { evaluateExpression, parseExpression } from "./expression"
 import type {
   ElementOverride,
@@ -92,10 +93,12 @@ function walk(
     }
   }
 
-  // MIG-added constraint expressions: a boolean predicate over this element,
-  // with paths relative to it. A syntax error (surfaced in the editor) or an
+  // Constraint expressions: a boolean predicate over this element, with paths
+  // relative to it. Covers standard (ISO) and inherited rules carrying an
+  // overlaid expression as well as MIG-added ones — `resolveConstraints` applies
+  // any `constraintOverrides`. A syntax error (surfaced in the editor) or an
   // indeterminate result (unsupported function, bad regex) is skipped here.
-  for (const constraint of overrides[path]?.additionalConstraints ?? []) {
+  for (const { constraint } of resolveConstraints(el, overrides[path])) {
     if (!constraint.expression) continue
     const parsed = parseExpression(constraint.expression)
     if (!parsed.ok) continue
