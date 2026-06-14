@@ -65,13 +65,11 @@ describe("ruleDefinitionToDsl — supported shapes", () => {
     expect(dsl(xml)).toBe("OriginalPaymentInformationAndStatus and not(Removal)")
   })
 
-  it("does NOT drop [1] mid-path, before an attribute, or a higher index", () => {
+  it("does NOT drop [1] mid-path or before an attribute", () => {
     // mid-path: "first A's B" ≠ "any A's B"
     expect(skip(simple(`<mustBe><connector>AND</connector>${presence("/A[1]/B")}</mustBe>`))).toMatch(/unsupported/)
     // attribute leaf: "first Amt's @Ccy" ≠ "any Amt's @Ccy"
     expect(skip(simple(`<mustBe><connector>AND</connector>${presence("/Amt[1]/@Ccy")}</mustBe>`))).toMatch(/unsupported/)
-    // a specific later occurrence is genuinely unrepresentable
-    expect(skip(simple(`<mustBe><connector>AND</connector>${presence("/A[2]")}</mustBe>`))).toMatch(/unsupported/)
   })
 
   it("does NOT drop [1] in a comparison operand (specific occurrence, not existence)", () => {
@@ -254,5 +252,54 @@ describe("ruleDefinitionToDsl — code-set membership with a resolver", () => {
     const unknown = simple(`<mustBe><connector>AND</connector>${withInList("/Tp", "MysterySet")}</mustBe>`)
     const r = ruleDefinitionToDsl(unknown, opts)
     expect(r.ok).toBe(false)
+  })
+})
+
+describe("ruleDefinitionToDsl — occurrence-count idiom (leaf [n>=2])", () => {
+  const card = (type: string, p: string) =>
+    `<BooleanRule xsi:type="${type}"><leftOperand>${p}</leftOperand></BooleanRule>`
+
+  it("maps Presence(/X[2]) to count(X) >= 2 and Absence(/X[2]) to count(X) < 2", () => {
+    expect(dsl(simple(`<mustBe><connector>AND</connector>${card("Presence", "/Tx[2]")}</mustBe>`))).toBe("count(Tx) >= 2")
+    expect(dsl(simple(`<mustBe><connector>AND</connector>${card("Absence", "/Tx[2]")}</mustBe>`))).toBe("count(Tx) < 2")
+  })
+
+  it("real shape: 'present and only once' (OriginalGroupInformationSinglePresenceRule)", () => {
+    const xml = complex(
+      `<mustBe><connector>AND</connector>${card("Absence", "/TransactionInformationAndStatus[*]/OriginalGroupInformation")}</mustBe>`,
+      `<onCondition><connector>AND</connector>` +
+        presence("/OriginalGroupInformationAndStatus[1]") +
+        card("Absence", "/OriginalGroupInformationAndStatus[2]") +
+        `</onCondition>`,
+    )
+    expect(dsl(xml)).toBe(
+      "not(OriginalGroupInformationAndStatus and count(OriginalGroupInformationAndStatus) < 2)" +
+        " or not(TransactionInformationAndStatus/OriginalGroupInformation)",
+    )
+  })
+
+  it("does not apply the idiom to a multi-step indexed path (count would be ambiguous)", () => {
+    expect(skip(simple(`<mustBe><connector>AND</connector>${card("Presence", "/A/B[2]")}</mustBe>`))).toMatch(/unsupported/)
+  })
+})
+
+describe("ruleDefinitionToDsl — uniformity (all-equal)", () => {
+  const eqNode = (l: string, r: string) =>
+    `<BooleanRule xsi:type="EqualToNode"><leftOperand>${l}</leftOperand><rightOperand>${r}</rightOperand></BooleanRule>`
+
+  it("maps X[*]/p = X[1]/p to all-equal(X/p) (real AccountAndCurrencyRule)", () => {
+    const xml = complex(
+      `<mustBe><connector>AND</connector>${eqNode("/Item[*]/Amount/@Currency", "/Item[1]/Amount/@Currency")}</mustBe>`,
+      `<onCondition><connector>AND</connector>${presence("/Account")}</onCondition>`,
+    )
+    expect(dsl(xml)).toBe("not(Account) or all-equal(Item/Amount/@Currency)")
+  })
+
+  it("recognises the pattern in either operand order", () => {
+    expect(dsl(simple(`<mustBe><connector>AND</connector>${eqNode("/X[1]/V", "/X[*]/V")}</mustBe>`))).toBe("all-equal(X/V)")
+  })
+
+  it("still skips a non-uniformity [*] comparison (every-vs-other-field)", () => {
+    expect(skip(simple(`<mustBe><connector>AND</connector>${eqNode("/Item[*]/Ccy", "/Total/Ccy")}</mustBe>`))).toMatch(/unsupported/)
   })
 })

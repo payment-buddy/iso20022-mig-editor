@@ -19,9 +19,12 @@
 // Mapping:
 //   Presence(p)            → p                    (a bare path is an existence test)
 //   Absence(p)             → not(p)
+//   Presence(X[n≥2])       → count(X) >= n        (leaf occurrence-count idiom)
+//   Absence(X[n≥2])        → count(X) < n
 //   EqualToValue(p, v)     → p = 'v'
 //   DifferentFromValue     → p != 'v'
 //   EqualToNode(p, q)      → p = q
+//   EqualToNode(X[*]/p, X[1]/p) → all-equal(X/p)  (uniformity: every occurrence shares a value)
 //   DifferentFromNode      → p != q
 //   block of rules + AND   → r1 and r2 and …
 //   block of rules + OR    → r1 or r2 or …
@@ -141,6 +144,30 @@ function dslPath(raw: string | undefined, existence = false): string | null {
   return p
 }
 
+// A leaf occurrence index >= 2, e.g. `/X[2]`: present iff `count(X) >= n`, absent
+// iff `count(X) < n`. Restricted to a single element step so the count is
+// unambiguous regardless of parent cardinality; `[1]` is handled by `dslPath`'s
+// existence strip.
+function leafCardinality(raw: string | undefined): { base: string; n: number } | null {
+  if (raw == null) return null
+  let p = raw.trim()
+  if (p.startsWith("/")) p = p.slice(1)
+  const m = /^([A-Za-z_][\w.-]*)\[(\d+)\]$/.exec(p)
+  if (!m) return null
+  const n = Number(m[2])
+  return n >= 2 ? { base: m[1], n } : null
+}
+
+// Uniformity: `X[*]/p` compared to `X[1]/p` (same path, differing only in the
+// occurrence marker) asserts every occurrence shares one value → `all-equal(X/p)`.
+function uniformityPath(l: string, r: string): string | null {
+  const star = l.includes("[*]") ? l : r.includes("[*]") ? r : null
+  if (!star) return null
+  const other = star === l ? r : l
+  if (star.replace(/\[\*\]/g, "[1]") !== other) return null
+  return dslPath(star.replace(/\[\*\]/g, ""))
+}
+
 type Resolver = (codeSetName: string) => string[] | undefined
 
 /** Expand a code-set membership to `(p = 'a' or p = 'b' …)`, negated for NOT-in. */
@@ -160,6 +187,15 @@ function renderRule(rule: XmlNode, resolve?: Resolver): Rendered | null {
   switch (type) {
     case "Presence":
     case "Absence": {
+      // A leaf index >= 2 is a cardinality test expressible with count().
+      const card = leafCardinality(leftRaw)
+      if (card) {
+        const expr =
+          type === "Presence"
+            ? `count(${card.base}) >= ${card.n}`
+            : `count(${card.base}) < ${card.n}`
+        return { expr, compound: false }
+      }
       // Existence context — `[*]` and a trailing leaf `[1]` are safe to drop
       // (see `dslPath`).
       const left = dslPath(leftRaw, true)
@@ -175,14 +211,22 @@ function renderRule(rule: XmlNode, resolve?: Resolver): Rendered | null {
       const op = type === "EqualToValue" ? "=" : "!="
       return { expr: `${left} ${op} ${quote(value.trim())}`, compound: false }
     }
-    case "EqualToNode":
+    case "EqualToNode": {
+      const lr = (leftRaw ?? "").trim()
+      const rr = (child(rule, "rightOperand")?.text ?? "").trim()
+      const uniform = uniformityPath(lr, rr)
+      if (uniform) return { expr: `all-equal(${uniform})`, compound: false }
+      const left = dslPath(lr)
+      const right = dslPath(rr)
+      if (!left || !right) return null
+      return { expr: `${left} = ${right}`, compound: false }
+    }
     case "DifferentFromNode": {
       const left = dslPath(leftRaw)
       if (!left) return null
       const right = dslPath(child(rule, "rightOperand")?.text)
       if (!right) return null
-      const op = type === "EqualToNode" ? "=" : "!="
-      return { expr: `${left} ${op} ${right}`, compound: false }
+      return { expr: `${left} != ${right}`, compound: false }
     }
     case "WithInList":
     case "NotWithInList": {
