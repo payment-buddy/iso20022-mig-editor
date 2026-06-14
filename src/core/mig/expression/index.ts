@@ -21,6 +21,16 @@ export { kindOf } from "./ast"
 export { parseExpression, type ExprError, type ParseResult } from "./parser"
 export { collectPaths, pathText, validateExpressionPaths } from "./paths"
 export { evaluateExpression, type EvalNode, type EvalResult } from "./evaluate"
+export {
+  ruleDefinitionToDsl,
+  type TranspileOptions,
+  type TranspileResult,
+} from "./ruleDefinitionToDsl"
+export {
+  buildCodeListResolver,
+  type RepoCode,
+  type RepoCodeSet,
+} from "./codeListResolver"
 
 import { parseExpression } from "./parser"
 import { validateExpressionPaths } from "./paths"
