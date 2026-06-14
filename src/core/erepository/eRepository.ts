@@ -347,6 +347,11 @@ export async function parseRepository(file: File): Promise<ERepository> {
       messageElement.examples.push(...simpleType.examples)
       if (simpleType.currencyIdentifierSet) {
         const ccyData = dataTypes[simpleType.currencyIdentifierSet]
+        // The currency set is itself a SimpleType (a CodeSet like
+        // ActiveCurrencyCode, typically pattern-based); surface its facets on
+        // the synthetic Currency attribute so pattern/codes show in details.
+        const ccyType =
+          ccyData && "examples" in ccyData ? (ccyData as SimpleType) : null
         messageElement.elements.push({
           id: messageElement.id + "/Ccy",
           name: "Currency",
@@ -358,19 +363,19 @@ export async function parseRepository(file: File): Promise<ERepository> {
           maxOccurs: 1,
           typeId: simpleType.currencyIdentifierSet,
           type: ccyData?.name ?? "",
-          baseType: null,
-          minInclusive: null,
-          maxInclusive: null,
-          totalDigits: null,
-          fractionDigits: null,
-          length: null,
-          minLength: null,
-          maxLength: null,
-          pattern: null,
-          baseValue: null,
-          codes: [],
+          baseType: ccyType?.baseType ?? null,
+          minInclusive: ccyType?.minInclusive ?? null,
+          maxInclusive: ccyType?.maxInclusive ?? null,
+          totalDigits: ccyType?.totalDigits ?? null,
+          fractionDigits: ccyType?.fractionDigits ?? null,
+          length: ccyType?.length ?? null,
+          minLength: ccyType?.minLength ?? null,
+          maxLength: ccyType?.maxLength ?? null,
+          pattern: ccyType?.pattern ?? null,
+          baseValue: ccyType?.baseValue ?? null,
+          codes: ccyType ? [...ccyType.codes] : [],
           constraints: [],
-          examples: [],
+          examples: ccyType ? [...ccyType.examples] : [],
           elements: [],
         })
       }
