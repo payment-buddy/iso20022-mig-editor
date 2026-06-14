@@ -8,8 +8,56 @@ import { deleteDatabase } from "@/core/storage/db"
 import { loadMig, saveMig } from "@/core/storage/migStore"
 import { loadRevisions, saveRevisions } from "@/core/storage/revisionStore"
 import { appendRevision } from "@/core/mig/revisions"
-import type { MessageImplementationGuide } from "@/core/types/types"
+import type {
+  ERepository,
+  MessageElement,
+  MessageImplementationGuide,
+} from "@/core/types/types"
 import { MigHistory } from "./MigHistory"
+
+const emptyRepo: ERepository = { businessAreas: [] }
+
+function el(xmlTag: string, elements: MessageElement[] = []): MessageElement {
+  return {
+    id: xmlTag,
+    name: xmlTag,
+    xmlTag,
+    isAttribute: false,
+    definition: "",
+    minOccurs: 1,
+    maxOccurs: 1,
+    typeId: "",
+    type: "",
+    baseType: null,
+    minInclusive: null,
+    maxInclusive: null,
+    totalDigits: null,
+    fractionDigits: null,
+    length: null,
+    minLength: null,
+    maxLength: null,
+    pattern: null,
+    baseValue: null,
+    codes: [],
+    constraints: [],
+    examples: [],
+    elements,
+  }
+}
+
+/** A repo whose message lists its children in non-alphabetical schema order. */
+const repoWith = (root: MessageElement): ERepository => ({
+  businessAreas: [
+    {
+      name: "Payments",
+      code: "pacs",
+      definition: "",
+      messages: [
+        { name: "msg", identifier: "pacs.008.001.08", shortCode: "pacs.008", rootElement: root },
+      ],
+    },
+  ],
+})
 
 const mig = (over: Partial<MessageImplementationGuide> = {}): MessageImplementationGuide => ({
   name: "EPC",
@@ -37,13 +85,13 @@ afterEach(async () => {
 describe("MigHistory", () => {
   it("shows a placeholder when there are no revisions", async () => {
     await saveMig(mig())
-    render(<MigHistory migKey="EPC:1.0" />)
+    render(<MigHistory migKey="EPC:1.0" repo={emptyRepo} />)
     expect(await screen.findByText(/no revisions yet/i)).toBeInTheDocument()
   })
 
   it("diffs the selected revision against the current MIG", async () => {
     await seedHistory()
-    render(<MigHistory migKey="EPC:1.0" />)
+    render(<MigHistory migKey="EPC:1.0" repo={emptyRepo} />)
 
     // Newest revision selected by default == current → no differences.
     expect(await screen.findByText(/no differences/i)).toBeInTheDocument()
@@ -56,7 +104,7 @@ describe("MigHistory", () => {
 
   it("reverts to a revision, restoring content, recording it, and routing back", async () => {
     await seedHistory()
-    render(<MigHistory migKey="EPC:1.0" />)
+    render(<MigHistory migKey="EPC:1.0" repo={emptyRepo} />)
     await screen.findByText("Initial")
 
     const baselineRow = screen.getByText("Initial").closest("li")!
@@ -71,5 +119,20 @@ describe("MigHistory", () => {
     const revs = await loadRevisions("EPC:1.0")
     expect(revs[revs.length - 1].summary).toBe("Reverted")
     expect(window.location.hash).toBe("#mig/EPC%3A1.0")
+  })
+
+  it("orders the diff by message schema order, not alphabetically", async () => {
+    // Message lists Zeb before Amt; current sets both, baseline neither.
+    const repo = repoWith(el("Doc", [el("Zeb"), el("Amt")]))
+    const current = mig({ elementOverrides: { "Doc/Amt": { maxLength: 5 }, "Doc/Zeb": { maxLength: 7 } } })
+    await saveMig(current)
+    await saveRevisions("EPC:1.0", appendRevision(appendRevision([], mig(), 1000), current, 2000))
+    render(<MigHistory migKey="EPC:1.0" repo={repo} />)
+
+    await userEvent.click(await screen.findByText("Initial"))
+    const zeb = await screen.findByText("Doc/Zeb")
+    const amt = screen.getByText("Doc/Amt")
+    // Schema order → Zeb's card precedes Amt's (alphabetical would be the reverse).
+    expect(zeb.compareDocumentPosition(amt) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })

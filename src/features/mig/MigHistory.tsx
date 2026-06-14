@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
 import {
   ArrowCounterClockwiseIcon,
   ArrowLeftIcon,
@@ -6,9 +6,11 @@ import {
 } from "@phosphor-icons/react"
 import { compareMigs, type MigComparison } from "@/core/mig/compareMigs"
 import { appendRevision, type Revision } from "@/core/mig/revisions"
+import { resolveMessage } from "@/core/erepository/resolveMessage"
+import { buildPathOrder } from "@/core/mig/serializeMig"
 import { loadMig, saveMig } from "@/core/storage/migStore"
 import { loadRevisions, saveRevisions } from "@/core/storage/revisionStore"
-import type { MessageImplementationGuide } from "@/core/types/types"
+import type { ERepository, MessageImplementationGuide } from "@/core/types/types"
 import { hashFor, navigate } from "@/app/routes"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { cn } from "@/lib/utils"
@@ -20,7 +22,7 @@ import { cn } from "@/lib/utils"
  * `compareMigs`. Revert restores the revision's document content under the
  * current identity, records a "Reverted" revision, and returns to the editor.
  */
-export function MigHistory({ migKey }: { migKey: string }) {
+export function MigHistory({ migKey, repo }: { migKey: string; repo: ERepository }) {
   const [status, setStatus] = useState<"loading" | "ready">("loading")
   const [mig, setMig] = useState<MessageImplementationGuide | null>(null)
   const [revisions, setRevisions] = useState<Revision[]>([])
@@ -46,6 +48,13 @@ export function MigHistory({ migKey }: { migKey: string }) {
     }
   }, [migKey])
 
+  // Schema (document) order for the diff — resolve the MIG's message once.
+  const order = useMemo(() => {
+    if (!mig) return undefined
+    const message = resolveMessage(repo, mig.messageIdentifier)?.current
+    return message ? buildPathOrder(message.rootElement) : undefined
+  }, [repo, mig])
+
   if (status === "loading") return <Notice title="Loading…" />
   if (!mig) {
     return (
@@ -57,7 +66,7 @@ export function MigHistory({ migKey }: { migKey: string }) {
 
   const ordered = [...revisions].reverse() // newest first
   const selected = revisions.find((r) => r.id === selectedId) ?? null
-  const diff = selected ? compareMigs(selected.mig, mig) : null
+  const diff = selected ? compareMigs(selected.mig, mig, order) : null
 
   const revert = async (rev: Revision) => {
     // Restore the revision's content but keep the current identity (no re-key).

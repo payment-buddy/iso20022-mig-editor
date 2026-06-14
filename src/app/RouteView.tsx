@@ -29,7 +29,7 @@ export function RouteView({
       // Keyed so switching MIGs remounts with a fresh load state.
       return <MigEditor key={route.key} migKey={route.key} repo={repo} />
     case "history":
-      return <MigHistory key={route.key} migKey={route.key} />
+      return <MigHistory key={route.key} migKey={route.key} repo={repo} />
     case "compare":
       return <MigCompare keyA={route.a} keyB={route.b} repo={repo} />
     case "merge":
