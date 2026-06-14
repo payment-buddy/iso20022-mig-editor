@@ -159,6 +159,20 @@ function ConstraintDetail({
           <span className="whitespace-pre-wrap">{constraint.definition}</span>
         </Field>
       )}
+      {constraint.expression && (
+        <Field label="Expression">
+          <code className="text-xs break-words whitespace-pre-wrap">
+            {constraint.expression}
+          </code>
+        </Field>
+      )}
+      {constraint.isoExpression && (
+        <Field label="ISO expression">
+          <code className="text-xs break-all whitespace-pre-wrap text-muted-foreground">
+            {constraint.isoExpression}
+          </code>
+        </Field>
+      )}
     </DetailPanel>
   )
 }

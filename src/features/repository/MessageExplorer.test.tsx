@@ -64,6 +64,8 @@ const REPO: ERepository = {
               {
                 name: "SupplementaryDataRule",
                 definition: "Must not be empty.",
+                expression: "GrpHdr/MsgId",
+                isoExpression: "<RuleDefinition>raw</RuleDefinition>",
               },
             ],
             elements: [
@@ -162,6 +164,11 @@ describe("MessageExplorer", () => {
     expect(within(panel).getByText("Must not be empty.")).toBeInTheDocument()
     // The XML path points at the element that owns the rule, not the rule path.
     expect(within(panel).getByText("/DocumentTag")).toBeInTheDocument()
+    // The derived DSL expression and the raw ISO expression are both shown.
+    expect(within(panel).getByText("GrpHdr/MsgId")).toBeInTheDocument()
+    expect(
+      within(panel).getByText("<RuleDefinition>raw</RuleDefinition>")
+    ).toBeInTheDocument()
   })
 
   it("navigates the tree with arrow keys, expanding and selecting (selection follows focus)", async () => {
